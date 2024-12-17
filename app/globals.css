@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff; /* Fondo principal */
+  --foreground: #171717; /* Texto principal */
+  --title: #b30000; /* Título */
+  --subTitle: #f77c00; /* Subtítulo */
+  --normalText: #006400; /* Texto normal */
+  --bgTitle: #ffcc00; /* Fondo del título */
+  --bgSubTitle: #1e1e1e; /* Fondo del subtítulo */
+  --bgNormalText: #f2f2f2; /* Fondo del texto normal */
+}
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #171717; /* Fondo principal */
+    --foreground: #f2f2f2; /* Texto principal */
+    --title: #ffcc00; /* Título */
+    --subTitle: #f77c00; /* Subtítulo */
+    --normalText: #cccccc; /* Texto normal */
+    --bgTitle: #b30000; /* Fondo del título */
+    --bgSubTitle: #006400; /* Fondo del subtítulo */
+    --bgNormalText: #333333; /* Fondo del texto normal */
+  }
+}
+
+
+/* body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+} */
