@@ -21,7 +21,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-background text-center">
+    <main className="flex flex-col items-center min-h-screen p-8 bg-background text-center">
       <h1 className="text-4xl text-foreground mb-4">Saludos, {user?.name}. Estos son los eventos para ti</h1>
       {
         user && (

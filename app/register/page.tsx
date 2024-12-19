@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [contacto, setContacto] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ export default function RegisterForm() {
       if (email.includes("@admin.")) {
         await setDoc(userRef, {
           name: name,
+          contacto: contacto,
           email: email,
           role: "admin",
           createdAt: new Date(),
@@ -46,6 +48,7 @@ export default function RegisterForm() {
       } else {
         await setDoc(userRef, {
           name: name,
+          contacto: contacto,
           email: email,
           role: "user",
           createdAt: new Date(),
@@ -86,6 +89,17 @@ export default function RegisterForm() {
               className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="tu@correo.com"
               required
+            />
+          </div>
+          <div>
+            <label htmlFor="contacto" className="block text-sm font-medium text-foreground">Número de teléfono</label>
+            <input
+              type="contacto"
+              id="contacto"
+              value={contacto}
+              onChange={(e) => setContacto(e.target.value)}
+              className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder="+51 987654321"
             />
           </div>
           <div>

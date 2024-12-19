@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { auth, db } from './config'; // Asegúrate de usar la versión correcta de Firebase
 import { onAuthStateChanged } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
-
 import { User as FirebaseUser } from 'firebase/auth';
 
 interface UserWithRole extends FirebaseUser {
   role?: string;
-  name?: string; // Agrega cualquier otro campo de Firestore
+  name?: string;
+  contacto?: number;
 }
 
 const useUser = () => {
@@ -40,7 +40,4 @@ const useUser = () => {
 
   return { user, loading };
 };
-
-
-
 export default useUser;
