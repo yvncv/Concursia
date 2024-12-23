@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 
-
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -22,18 +21,36 @@ const Map = ({ eventId }: { eventId: string }) => {
 
   useEffect(() => {
     const fetchEventData = async () => {
-      const eventDoc = await getDoc(doc(db, "eventos", eventId));
-      if (eventDoc.exists()) {
-        const eventData = eventDoc.data();
-        const [lat, lng] = eventData.ubicacion.split(", ").map((coord: string) => parseFloat(coord));
-        setEventLocation({ lat, lng });
-        setEventDetails({
-          nombre: eventData.nombre,
-          lugar: eventData.lugar,
-          descripcion: eventData.descripcion,
-        });
-      } else {
-        console.error("Evento no encontrado en la base de datos.");
+      try {
+        const eventDoc = await getDoc(doc(db, "eventos", eventId));
+        
+        if (eventDoc.exists()) {
+          const eventData = eventDoc.data();
+          
+          // Validación de la ubicación (asegurarse de que sea una cadena válida)
+          if (eventData.ubicacion) {
+            const coords = eventData.ubicacion.split(", ");
+            if (coords.length === 2) {
+              const lat = parseFloat(coords[0]);
+              const lng = parseFloat(coords[1]);
+              setEventLocation({ lat, lng });
+            } else {
+              console.error("Formato de ubicación incorrecto.");
+            }
+          } else {
+            console.error("No se encontró la ubicación del evento.");
+          }
+
+          setEventDetails({
+            nombre: eventData.nombre,
+            lugar: eventData.lugar,
+            descripcion: eventData.descripcion,
+          });
+        } else {
+          console.error("Evento no encontrado en la base de datos.");
+        }
+      } catch (error) {
+        console.error("Error al obtener el evento:", error);
       }
     };
 
@@ -49,11 +66,12 @@ const Map = ({ eventId }: { eventId: string }) => {
       center={[eventLocation.lat, eventLocation.lng]}
       zoom={16}
       style={{ height: "500px", width: "100%" }}
+      attributionControl={false}  // Desactiva la marca de agua
     >
       {/* TileLayer utiliza OpenStreetMap como proveedor gratuito */}
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution=""  // O puedes dejarlo vacío
       />
       {/* Marcador para la ubicación del evento */}
       <Marker position={[eventLocation.lat, eventLocation.lng]}>
