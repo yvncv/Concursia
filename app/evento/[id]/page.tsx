@@ -91,7 +91,11 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           )}
 
           {/* Map component displaying event location */}
-          <Map eventId={ evento.id } />
+          {
+            evento.ubicacion && (
+              <Map eventId={ evento.id } />
+            )
+          }
         </div>
       )}
 
