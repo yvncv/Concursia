@@ -55,9 +55,9 @@ const CreateEvent = () => {
       {/* Error message */}
       {error && <p className="text-red-500">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="w-full max-w-lg">
+      <form onSubmit={handleSubmit} className="w-full max-w-lg bg-foreground p-5">
         <div className="mb-4">
-          <label htmlFor="nombre" className="block text-lg text-foreground">Nombre del Evento</label>
+          <label htmlFor="nombre" className="block text-lg text-background">Nombre del Evento</label>
           <input
             type="text"
             id="nombre"
@@ -66,10 +66,9 @@ const CreateEvent = () => {
             className="w-full p-2 border border-gray-300 rounded text-background"
             required
           />
-        </div> text-background
-
+        </div>
         <div className="mb-4">
-          <label htmlFor="imagen" className="block text-lg text-foreground">Imagen URL</label>
+          <label htmlFor="imagen" className="block text-lg text-background">Imagen URL</label>
           <input
             type="text"
             id="imagen"
@@ -81,7 +80,7 @@ const CreateEvent = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="fecha" className="block text-lg text-foreground">Fecha</label>
+          <label htmlFor="fecha" className="block text-lg text-background">Fecha</label>
           <input
             type="datetime-local"
             id="fecha"
@@ -93,7 +92,7 @@ const CreateEvent = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="lugar" className="block text-lg text-foreground">Lugar</label>
+          <label htmlFor="lugar" className="block text-lg text-background">Lugar</label>
           <input
             type="text"
             id="lugar"
@@ -105,7 +104,7 @@ const CreateEvent = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="descripcion" className="block text-lg text-foreground">Descripción</label>
+          <label htmlFor="descripcion" className="block text-lg text-background">Descripción</label>
           <textarea
             id="descripcion"
             value={descripcion}
@@ -117,7 +116,7 @@ const CreateEvent = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="tipoEvento" className="block text-lg text-foreground">Tipo de Evento</label>
+          <label htmlFor="tipoEvento" className="block text-lg text-background">Tipo de Evento</label>
           <input
             type="text"
             id="tipoEvento"

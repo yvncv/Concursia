@@ -1,89 +1,61 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
 const Map = ({ eventId }: { eventId: string }) => {
-  const [eventLocation, setEventLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [eventDetails, setEventDetails] = useState<{
-    nombre: string;
-    lugar: string;
-    descripcion: string;
-  } | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
+  // Función para generar el src del iframe con las coordenadas y el marcador
+  const generateMapSrc = (lat: number, lng: number) => {
+    // URL para incrustar el mapa sin API key (solo usa el marcador)
+    return `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3901.0176088561384!2d${lat}!3d${lng}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c7e665e59b87%3A0x244b829fd959fdc!2sColiseo%20Eduardo%20Dib%C3%B3s!5e0!3m2!1ses-419!2spe!4v1734985557905!5m2!1ses-419!2spe`;
+  };
+
+  // Obtener la latitud y longitud del evento desde Firestore
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        const eventDoc = await getDoc(doc(db, "eventos", eventId));
-        
-        if (eventDoc.exists()) {
-          const eventData = eventDoc.data();
-          
-          // Validación de la ubicación (asegurarse de que sea una cadena válida)
-          if (eventData.ubicacion) {
-            const coords = eventData.ubicacion.split(", ");
-            if (coords.length === 2) {
-              const lat = parseFloat(coords[0]);
-              const lng = parseFloat(coords[1]);
-              setEventLocation({ lat, lng });
-            } else {
-              console.error("Formato de ubicación incorrecto.");
-            }
-          } else {
-            console.error("No se encontró la ubicación del evento.");
+        const docRef = doc(db, "eventos", eventId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const eventData = docSnap.data();
+          if (eventData?.ubicacion) {
+            const [lat, lng] = eventData.ubicacion.split(",").map((coord: string) => parseFloat(coord));
+            setLatitude(lat);
+            setLongitude(lng);
           }
-
-          setEventDetails({
-            nombre: eventData.nombre,
-            lugar: eventData.lugar,
-            descripcion: eventData.descripcion,
-          });
         } else {
-          console.error("Evento no encontrado en la base de datos.");
+          console.log("No such document!");
         }
       } catch (error) {
-        console.error("Error al obtener el evento:", error);
+        console.error("Error getting document: ", error);
       }
     };
 
-    fetchEventData();
+    if (eventId) {
+      fetchEventData();
+    }
   }, [eventId]);
 
-  if (!eventLocation || !eventDetails) {
-    return <p>Cargando mapa...</p>;
+  // Si las coordenadas no están disponibles, mostrar un mensaje
+  if (latitude === null || longitude === null) {
+    return <p>Cargando ubicación...</p>;
   }
 
   return (
-    <MapContainer
-      center={[eventLocation.lat, eventLocation.lng]}
-      zoom={16}
-      style={{ height: "500px", width: "100%" }}
-      attributionControl={false}  // Desactiva la marca de agua
-    >
-      {/* TileLayer utiliza OpenStreetMap como proveedor gratuito */}
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution=""  // O puedes dejarlo vacío
-      />
-      {/* Marcador para la ubicación del evento */}
-      <Marker position={[eventLocation.lat, eventLocation.lng]}>
-        <Popup>
-          <strong>{eventDetails.nombre}</strong>
-          <br />
-          {eventDetails.lugar}
-          <br />
-          {eventDetails.descripcion}
-        </Popup>
-      </Marker>
-    </MapContainer>
+    <div>
+      <h1>Mapa del Evento</h1>
+      <iframe
+        src={generateMapSrc(latitude, longitude)}
+        width="600"
+        height="450"
+        style={{ border: "0" }}
+        allowFullScreen={true}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
   );
 };
 

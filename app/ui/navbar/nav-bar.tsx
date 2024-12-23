@@ -6,12 +6,12 @@ import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
+// Arreglo con los enlaces, separados por tipo de usuario
 const enlaces = [
-  { href: '/', label: 'Home' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile', label: 'Profile' },
-  { href: '/login', label: 'Iniciar Sesión' },
-  { href: '/crear-evento', label: 'Registrar Evento' },
+  { href: '/login', label: 'Iniciar Sesión', requiresAuth: false },
+  { href: '/profile', label: 'Profile', requiresAuth: true },
+  { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
+  { href: '/crear-evento', label: 'Registrar Evento', requiresAuth: true },
 ]
 
 export default function Navbar() {
@@ -40,13 +40,29 @@ export default function Navbar() {
     <nav className="flex items-center justify-between p-4 bg-bgTitle text-title">
       <div className="text-lg font-bold">Tusuy Perú</div>
       <ul className="flex space-x-6">
-        {enlaces.map((link) => (
-          <li className='hidden sm:list-item' key={link.href}>
-            <Link href={link.href}>
-              {link.label}
-            </Link>
-          </li>
-        ))}
+        <li className='hidden sm:list-item'>
+          <Link href='/'>
+            Home
+          </Link>
+        </li>
+        {enlaces
+          .filter((link) => {
+            // Mostrar enlaces dependiendo si el usuario está logueado o no
+            if (link.requiresAuth && !user) {
+              return false; // Ocultar si requiere autenticación y no hay usuario
+            }
+            if (!link.requiresAuth && user) {
+              return false; // Ocultar si no requiere autenticación pero hay usuario
+            }
+            return true; // Mostrar todos los demás enlaces
+          })
+          .map((link) => (
+            <li className='hidden sm:list-item' key={link.href}>
+              <Link href={link.href}>
+                {link.label}
+              </Link>
+            </li>
+          ))}
         {user && (
           <li>
             <button

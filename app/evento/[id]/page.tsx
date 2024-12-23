@@ -6,11 +6,13 @@ import Image from "next/image";
 import dynamic from "next/dynamic"; // Para cargar dinámicamente el mapa
 import { Evento } from "../../ui/evento/eventoType";
 import { use } from "react";
+import useUser from "@/app/firebase/functions";
 
 // Carga dinámica del mapa para evitar problemas en el renderizado del lado del cliente
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { user } = useUser();
   const { id } = use(params);
   const [evento, setEvento] = useState<Evento | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion">("informacion");
@@ -44,17 +46,15 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
       <div className="flex justify-center space-x-4 mb-6">
         <button
-          className={`px-6 py-2 text-lg font-medium rounded-tl-lg ${
-            activeTab === "informacion" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
+          className={`px-6 py-2 text-lg font-medium rounded-tl-lg ${activeTab === "informacion" ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
           onClick={() => handleTabClick("informacion")}
         >
           Información
         </button>
         <button
-          className={`px-6 py-2 text-lg font-medium rounded-tr-lg ${
-            activeTab === "inscripcion" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
+          className={`px-6 py-2 text-lg font-medium rounded-tr-lg ${activeTab === "inscripcion" ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
           onClick={() => handleTabClick("inscripcion")}
         >
           Inscripción
@@ -93,49 +93,56 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           {/* Map component displaying event location */}
           {
             evento.ubicacion && (
-              <Map eventId={ evento.id } />
+              <Map eventId={evento.id} />
             )
           }
         </div>
       )}
 
-      {activeTab === "inscripcion" && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-center">Inscríbete al evento</h2>
-          <form className="mt-4">
-            <div className="mb-4">
-              <label htmlFor="nombre" className="block text-md text-background">
-                Nombre
-              </label>
-              <input
-                id="nombre"
-                type="text"
-                className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg"
-                placeholder="Escribe tu nombre"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-md text-background">
-                Correo electrónico
-              </label>
-              <input
-                id="email"
-                type="email"
-                className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg"
-                placeholder="Escribe tu correo"
-              />
-            </div>
-            <div className="text-center">
-              <button
-                type="submit"
-                className="px-6 py-3 mt-4 text-foreground bg-blue-600 rounded-full text-lg hover:bg-blue-700 transition duration-300"
-              >
-                Inscribirse
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {user ?
+         (activeTab === "inscripcion" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold text-center">Inscríbete al evento</h2>
+            <form className="mt-4">
+              <div className="mb-4">
+                <label htmlFor="nombre" className="block text-md text-background">
+                  Nombre
+                </label>
+                <input
+                  id="nombre"
+                  type="text"
+                  className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg"
+                  placeholder="Escribe tu nombre"
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="email" className="block text-md text-background">
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg"
+                  placeholder="Escribe tu correo"
+                />
+              </div>
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="px-6 py-3 mt-4 text-foreground bg-blue-600 rounded-full text-lg hover:bg-blue-700 transition duration-300"
+                >
+                  Inscribirse
+                </button>
+              </div>
+            </form>
+          </div>
+        )) 
+        : (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold text-center text-background">Debes iniciar sesión para inscribirte al evento</h2>
+          </div>
+        )
+      }
     </div>
   );
 };
