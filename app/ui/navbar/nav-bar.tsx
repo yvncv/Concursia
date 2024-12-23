@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { links } from "./nav-links";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
-const enlaces = links;
+const enlaces = [
+  { href: '/', label: 'Home' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/profile', label: 'Profile' },
+  { href: '/login', label: 'Iniciar Sesión' },
+  { href: '/crear-evento', label: 'Registrar Evento' },
+]
 
 export default function Navbar() {
   const router = useRouter();

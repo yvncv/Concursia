@@ -9,4 +9,6 @@ export interface Evento {
   fecha: Timestamp;
   lugar: string;
   tipoEvento: string;
+  //mapa
+  ubicacion: string;
 }

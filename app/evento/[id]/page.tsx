@@ -1,14 +1,18 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import { db } from "@/app/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
-import { Evento } from "../../ui/evento/eventoType"; // Ajusta la importación según la ubicación de tu tipo de datos
-import { use } from 'react';
+import dynamic from "next/dynamic"; // Para cargar dinámicamente el mapa
+import { Evento } from "../../ui/evento/eventoType";
+import { use } from "react";
+
+// Carga dinámica del mapa para evitar problemas en el renderizado del lado del cliente
+const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = use(params);
   const [evento, setEvento] = useState<Evento | undefined>(undefined);
-  const { id } = use(params); // Desenvuelve el id de los parámetros
   const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion">("informacion");
 
   useEffect(() => {
@@ -18,6 +22,8 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         if (eventoDoc.exists()) {
           const eventoData = eventoDoc.data() as Evento;
           setEvento(eventoData);
+        } else {
+          console.error("Evento no encontrado");
         }
       };
       fetchEvento();
@@ -28,8 +34,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
     return <p>Cargando...</p>;
   }
 
-  // Estado para manejar qué pestaña está activa
-
   const handleTabClick = (tab: "informacion" | "inscripcion") => {
     setActiveTab(tab);
   };
@@ -38,7 +42,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
     <div className="max-w-4xl mx-auto p-6 bg-foreground shadow-lg rounded-lg">
       <h1 className="text-4xl font-serif text-center text-background">{evento.nombre}</h1>
 
-      {/* Contenedor de tabs */}
       <div className="flex justify-center space-x-4 mb-6">
         <button
           className={`px-6 py-2 text-lg font-medium rounded-tl-lg ${
@@ -58,13 +61,15 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         </button>
       </div>
 
-      {/* Pestaña de Información */}
       {activeTab === "informacion" && (
         <div className="mt-6">
           <p className="text-lg mt-4 text-background">{evento.descripcion}</p>
           <div className="mt-6">
             <p className="text-md text-background">
-              <strong>Fecha:</strong> {new Date(evento.fecha.seconds * 1000).toLocaleString()}
+              <strong>Fecha:</strong>{" "}
+              {new Date(evento.fecha.seconds * 1000).toLocaleString("es-PE", {
+                timeZone: "America/Lima",
+              })}
             </p>
             <p className="text-md text-background">
               <strong>Lugar:</strong> {evento.lugar}
@@ -84,16 +89,20 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               />
             </div>
           )}
+
+          {/* Map component displaying event location */}
+          <Map eventId={ evento.id } />
         </div>
       )}
 
-      {/* Pestaña de Inscripción */}
       {activeTab === "inscripcion" && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-center">Inscríbete al evento</h2>
           <form className="mt-4">
             <div className="mb-4">
-              <label htmlFor="nombre" className="block text-md text-background">Nombre</label>
+              <label htmlFor="nombre" className="block text-md text-background">
+                Nombre
+              </label>
               <input
                 id="nombre"
                 type="text"
@@ -102,7 +111,9 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-md text-background">Correo electrónico</label>
+              <label htmlFor="email" className="block text-md text-background">
+                Correo electrónico
+              </label>
               <input
                 id="email"
                 type="email"
