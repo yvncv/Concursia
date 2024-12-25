@@ -9,6 +9,7 @@ const CreateEvent = () => {
   const [imagen, setImagen] = useState("");
   const [fecha, setFecha] = useState("");
   const [lugar, setLugar] = useState("");
+  const [direccion, setDireccion] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [tipoEvento, setTipoEvento] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,7 @@ const CreateEvent = () => {
         imagen,
         fecha: new Date(fecha),
         lugar,
+        direccion,
         descripcion,
         tipoEvento,
       });
@@ -36,6 +38,7 @@ const CreateEvent = () => {
       setImagen("");
       setFecha("");
       setLugar("");
+      setDireccion("");
       setDescripcion("");
       setTipoEvento("");
     } catch (err) {
@@ -93,6 +96,17 @@ const CreateEvent = () => {
             id="lugar"
             value={lugar}
             onChange={(e) => setLugar(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="direccion" className="block font-medium mb-1">Direccion</label>
+          <input
+            type="text"
+            id="direccion"
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
             required
           />

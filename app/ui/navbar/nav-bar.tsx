@@ -36,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex text-white text-lg w-full items-center justify-between p-4 bg-bgTitle text-title bg-red-500">
+    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-red-500">
       <div className="mx-auto">Tusuy Perú</div>
       <ul className="flex space-x-6 mx-auto justify-center align-middle">
         {enlaces

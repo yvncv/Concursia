@@ -1,7 +1,6 @@
-// ClockIcon.tsx
 import React from "react";
 
-const ClockIcon = () => (
+const ClockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -12,7 +11,7 @@ const ClockIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="icon icon-tabler icons-tabler-outline icon-tabler-clock"
+    {...props} // Permite la propagación de props (incluyendo className)
   >
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
     <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />

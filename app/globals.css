@@ -17,14 +17,6 @@
   }
 } */
 
-html {
-  overflow-y: scroll; 
-}
-
-body {
-  margin: 0;
-}
-
 * {
   font-family: var(--font-geis-mono);
 }

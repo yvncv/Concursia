@@ -48,7 +48,11 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   // Función para abrir el modal
-  const openModal = () => setIsModalOpen(true);
+  const openModal = (evento: Evento) => {
+    setEvento(evento);
+    setIsModalOpen(true);
+  };
+
 
   // Función para cerrar el modal
   const closeModal = () => setIsModalOpen(false);
@@ -59,6 +63,26 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       closeModal();
     }
   };
+
+  // Formato de la fecha (ejemplo: Domingo, 5 de Enero)
+  const formattedDate = new Date(evento.fecha.seconds * 1000).toLocaleDateString("es-PE", {
+    weekday: "long", // Día de la semana
+    day: "numeric",  // Día del mes
+    month: "long",   // Mes en formato largo
+  });
+
+  // Función para capitalizar la primera letra de cada palabra
+  const capitalize = (text: string) => {
+    return text.replace(/\b\w/g, char => char.toUpperCase());
+  };
+
+  // Aplicar la capitalización a la fecha
+  const capitalizedFormattedDate = capitalize(formattedDate);
+
+  // Formato de la hora (ejemplo: 10:00 am)
+  const formattedTime = new Date(evento.fecha.seconds * 1000).toLocaleTimeString("es-PE", {
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  });
 
   return (
     <>
@@ -99,50 +123,66 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         {activeTab === "informacion" && (
           <div className="mt-6">
             {/* Contenedor principal con Flexbox */}
-            <div className="flex flex-col lg:flex-row space-x-6">
+            <div className="flex flex-col lg:flex-row space-x-6 text-2xl">
               {/* Información del evento (mitad del espacio en pantallas grandes) */}
               <div className="lg:w-1/2 flex flex-col space-y-4 mx-auto">
-                <p className="text-lg">{evento.descripcion}</p>
+                <p className="">{evento.descripcion}</p>
                 <div className="space-y-2 flex flex-col">
                   <div className="flex mt-4 items-center space-x-2 text-gray-600">
-                    <CalendarIcon />
+                    <CalendarIcon className="text-red-600 w-5 h-5" />
                     <span>
-                      <strong>Fecha:</strong> {new Date(evento.fecha.seconds * 1000).toLocaleString("es-PE", { timeZone: "America/Lima" })}
+                      <strong>Fecha:</strong> {capitalizedFormattedDate}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <PlaceIcon />
-                    <strong>Lugar:</strong> {evento.lugar}.
+                    <PlaceIcon className="text-blue-600 w-5 h-5" />
                     {
                       evento.ubicacion ? (
-                        <span onClick={openModal} className="text-red-500 cursor-pointer">
-                          <strong>Click aquí para ver el mapa.</strong>
-                        </span>
+                        <>
+                          <span><strong>Lugar:</strong> {evento.lugar}.</span>
+                          <span onClick={() => openModal(evento)} className="text-red-500 cursor-pointer">
+                            <strong>Click aquí para ver el mapa.</strong>
+                          </span>
+                        </>
                       ) : ('')
                     }
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <ClockIcon />
-                    <span><strong>Hora:</strong> {new Date(evento.fecha.seconds * 1000).toLocaleTimeString("es-PE", { timeZone: "America/Lima" })}</span>
+                    <ClockIcon className="text-green-600 w-5 h-5" />
+                    <span><strong>Hora:</strong> {formattedTime}</span>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-4 text-gray-600">
                     <strong>Tipo de Evento:</strong> {evento.tipoEvento}.
                   </div>
                 </div>
               </div>
 
-              {/* Imagen del evento */}
-              <div className="lg:w-1/2 mt-6 lg:mt-0 sm:start-0 mb-6">
+              <div className="relative lg:w-1/2 mt-6 lg:mt-0 sm:start-0 mb-6 overflow-hidden border border-red-500">
+                {/* Imagen desenfocada para los costados */}
+                <div className="absolute inset-0 -z-10">
+                  {evento.imagen && (
+                    <Image
+                      src={evento.imagen}
+                      className="w-full h-full object-cover blur-sm scale-150"
+                      alt={`Blur background of ${evento.nombre}`}
+                      width={900}
+                      height={200}
+                    />
+                  )}
+                </div>
+                {/* Imagen principal */}
                 {evento.imagen && (
                   <Image
                     src={evento.imagen}
+                    className="w-full h-full object-contain"
                     alt={evento.nombre}
-                    width={800}
-                    height={800}
-                    className="lazy w-full h-auto rounded-lg shadow-md border-2 border-red-500"
+                    width={900}
+                    height={200}
                   />
                 )}
               </div>
+
+
             </div>
           </div>
         )}
@@ -187,7 +227,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             <h2 className="text-center text-lg">Debes iniciar sesión para inscribirte al evento</h2>
           </div>
         )}
-      </div>
+      </div >
 
       {/* Modal para mostrar el mapa */}
       {isModalOpen && (
@@ -200,9 +240,10 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             <button onClick={closeModal} className="absolute top-4 right-4 text-gray-600 font-bold">
               X
             </button>
-            <h2 className="text-xl mb-4">Ubicación del Evento</h2>
+            <h2 className="text-xl mb-4">Ubicación del Evento {evento?.nombre}</h2>
             <div className="w-full">
-              <Map eventId={evento.id} />
+              {/* Pasar el evento completo al mapa */}
+              <Map evento={evento} />
             </div>
           </div>
         </div>
