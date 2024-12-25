@@ -44,18 +44,13 @@ const Map = ({ eventId }: { eventId: string }) => {
   }
 
   return (
-    <div>
-      <h1>Mapa del Evento</h1>
-      <iframe
-        src={generateMapSrc(latitude, longitude)}
-        width="600"
-        height="450"
-        style={{ border: "0" }}
-        allowFullScreen={true}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      ></iframe>
-    </div>
+    <iframe
+      src={generateMapSrc(latitude, longitude)}
+      className="w-full h-64 sm:h-96 md:h-[400px] lg:h-[500px] border-2 border-red-500 rounded-lg"
+      allowFullScreen={true}
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    ></iframe>
   );
 };
 

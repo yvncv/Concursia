@@ -15,117 +15,99 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
-    setLoading(true);
+    e.preventDefault();
     setError("");
+    setLoading(true);
+
+    if (!validateEmail(email)) {
+      setError("Por favor ingresa un correo válido.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await assignRole(user.uid); 
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        contacto,
+        email,
+        role: "user",
+        createdAt: new Date(),
+      });
       alert("Registro exitoso");
-      router.push("/"); 
+      router.push("/");
     } catch (err) {
-      setError("Credenciales inválidas. Por favor, intenta nuevamente.");
-      console.error("Error al registrarse:", err);
+      setError("Credenciales inválidas. Intenta nuevamente.");
+      console.error("Error al registrarse.", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const assignRole = async (userId: string) => {
-    try {
-      const userRef = doc(db, "users", userId);
-      if (email.includes("@admin.")) {
-        await setDoc(userRef, {
-          name: name,
-          contacto: contacto,
-          email: email,
-          role: "admin",
-          createdAt: new Date(),
-        });
-      } else {
-        await setDoc(userRef, {
-          name: name,
-          contacto: contacto,
-          email: email,
-          role: "user",
-          createdAt: new Date(),
-        });
-      }
-      console.log("Rol asignado correctamente");
-    } catch (err) {
-      console.error("Error al asignar rol:", err);
-      throw new Error("No se pudo asignar el rol.");
-    }
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="max-w-md p-4 bg-background rounded shadow-md border border-cyan-50">
-        <h1 className="text-2xl font-bold text-center mb-6 text-foreground">Registro</h1>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-6 bg-white shadow-md rounded-lg">
+        <h1 className="text-2xl font-semibold text-center mb-4 text-red-600">Registro</h1>
+        {error && <p className="text-red-500 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <p className="text-red-500 text-sm">{error}</p>}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-foreground">Nombre</label>
+            <label htmlFor="name" className="block font-medium mb-1">Nombre</label>
             <input
               type="text"
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="John Doe"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
               required
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground">Correo electrónico</label>
+            <label htmlFor="email" className="block font-medium mb-1">Correo Electrónico</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="tu@correo.com"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
               required
             />
           </div>
           <div>
-            <label htmlFor="contacto" className="block text-sm font-medium text-foreground">Número de teléfono</label>
+            <label htmlFor="contacto" className="block font-medium mb-1">Teléfono</label>
             <input
-              type="contacto"
+              type="tel"
               id="contacto"
               value={contacto}
               onChange={(e) => setContacto(e.target.value)}
-              className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="+51 987654321"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-foreground">Contraseña</label>
+            <label htmlFor="password" className="block font-medium mb-1">Contraseña</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded border-foreground shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="********"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
               required
             />
           </div>
-          <div>
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 text-foreground py-2 px-4 rounded hover:bg-indigo-700"
-              disabled={loading}
-            >
-              {loading ? "Cargando..." : "Registrarse"}
-            </button>
-          </div>
           <button
-            className="mt-4 text-blue-500 hover:underline"
+            type="submit"
+            className="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? "Cargando..." : "Registrarse"}
+          </button>
+          <button
+            type="button"
             onClick={() => router.push("/login")}
+            className="w-full text-sm text-red-600 hover:underline mt-2"
           >
             ¿Ya tienes cuenta? Inicia sesión.
           </button>

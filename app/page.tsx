@@ -12,8 +12,8 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col items-center min-h-screen p-8 bg-background text-center">
-      <h1 className="text-4xl text-foreground mb-4">Saludos{(user?.name) ? `, ${user?.name}` : ('')}. Estos son los eventos para ti</h1>
+    <main className="flex flex-col items-center min-h-screen p-8 text-center">
+      <h1 className="text-3xl mb-4 text-center">SALUDOS{(user?.name) ? `, ${user?.name.toUpperCase()}` : ('')}.<br></br>ESTOS SON LOS EVENTOS DISPONIBLES.</h1>
       <div>
         <EventosComponents />
       </div>

@@ -11,12 +11,6 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        title: "var(--title)",
-        subTitle: "var(--subTitle)",
-        normalText: "var(--normalText)",
-        bgTitle: "var(--bgTitle)",
-        bgSubTitle: "var(--subTitle)",
-        bgNormalText: "var(--normalText)",
       },
     },
   },

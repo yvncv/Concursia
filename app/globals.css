@@ -3,28 +3,35 @@
 @tailwind utilities;
 
 :root {
+  --font-geis-mono: 'Geist Mono', cursive;
+
   --background: #ffffff; /* Blanco */
   --foreground: #242424; /* Negro */
-  --title: #ff0000; /* Rojo */
-  --subTitle: #ff9501; /* Naranja Claro */
-  --normalText: #17ddc4; /* Verde */
-  --bgTitle: #f9c114; /* Amarillo */
-  --bgSubTitle: #242424; /* Negro */
-  --bgNormalText: #f8f8f6; /* Blanco */
-  --highlightText: #ff0055; /* Rosa */
-  --highlightBg: #ff5933; /* Naranja Oscuro */
-  --linkText: #0195f7; /* Azul */
+  --rojo: #f04343; /* Negro */
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
-    --background: #171717; /* Fondo oscuro */
-    --foreground: #f8f8f6; /* Blanco */
-    --title: #f9c114; /* Amarillo */
-    --subTitle: #ff9501; /* Naranja Claro */
-    --normalText: #cccccc; /* Texto gris */
-    --bgTitle: #ff0000; /* Rojo */
-    --bgSubTitle: #17ddc4; /* Verde */
-    --bgNormalText: #333333; /* Fondo oscuro */
+    --background: #171717;
+    --foreground: #f8f8f6;
   }
+} */
+
+html {
+  overflow-y: scroll; 
+}
+
+body {
+  margin: 0;
+}
+
+* {
+  font-family: var(--font-geis-mono);
+}
+
+*::-webkit-scrollbar{
+  background-color: white;
+}
+*::-webkit-scrollbar-thumb{
+  background-color: var(--rojo);
 }

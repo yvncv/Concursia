@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 import { getDocs, collection } from "firebase/firestore";
@@ -6,9 +6,11 @@ import { db } from "@/app/firebase/config";
 import Image from "next/image";
 import { Evento } from "./eventoType";
 import Link from "next/link";
+import CalendarIcon from "../icons/calendar"; // Import CalendarIcon
+import ClockIcon from "../icons/clock";       // Import ClockIcon
+import PlaceIcon from "../icons/place";       // Import PlaceIcon
 
 export default function EventosComponents() {
-  // Use the defined event type for the state
   const [events, setEvents] = useState<Evento[]>([]);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export default function EventosComponents() {
         const eventsData = eventsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Evento[]; // Cast to Evento type
+        })) as Evento[];
         setEvents(eventsData);
       } catch (error) {
         console.error("Error fetching events", error);
@@ -29,30 +31,59 @@ export default function EventosComponents() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
       {events.map((event) => (
         <div
-          className="bg-foreground rounded-lg shadow-md overflow-hidden transform transition hover:scale-105 hover:shadow-lg"
+          className="relative border border-red-500 rounded-lg shadow-md overflow-hidden transform transition hover:scale-105 hover:shadow-lg max-w-sm mx-auto"
           key={event.id}
         >
-          {/* Conditionally render the image if it exists */}
-          {event.imagen && (
-            <Image
-              src={event.imagen}
-              className="w-full h-48 object-cover"
-              alt={event.nombre}
-              width={200}
-              height={200}
-            />
-          )}
-          <div className="p-4">
-            <h5 className="text-lg font-semibold text-background">{event.nombre}</h5>
-            <p className="text-background text-sm mt-2">{event.tipoEvento}</p>
-            <p className="text-background text-sm mt-2">{event.lugar}</p>
-            <p className="text-background text-sm mt-2">{event.descripcion}</p>
+          {/* Fondo extendido con desenfoque */}
+          <div className="relative w-full h-48 overflow-hidden">
+            {/* Imagen desenfocada para los costados */}
+            <div className="absolute inset-0 -z-10">
+              {event.imagen && (
+                <Image
+                  src={event.imagen}
+                  className="w-full h-full object-cover blur-md scale-110"
+                  alt={`Blur background of ${event.nombre}`}
+                  width={900}
+                  height={200}
+                />
+              )}
+            </div>
+            {/* Imagen principal */}
+            {event.imagen && (
+              <Image
+                src={event.imagen}
+                className="w-full h-full object-contain p-2"
+                alt={event.nombre}
+                width={900}
+                height={200}
+              />
+            )}
+          </div>
+          <div className="justify-center flex items-center space-x-2 text-white bg-red-700">
+            {event.tipoEvento}
+          </div>
+          {/* Contenido del evento */}
+          <div className="p-2 bg-white bg-opacity-80">
+            <h5 className="text-xl font-bold text-gray-800">{event.nombre}</h5>
+            <div className="flex items-center space-x-2 mt-2 text-gray-600">
+              <CalendarIcon />
+              <span>{event.fecha.toDate().toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-2 text-gray-600">
+              <PlaceIcon />
+              <span>{event.lugar}</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-2 text-gray-600">
+              <ClockIcon />
+              <span>{event.fecha.toDate().toLocaleTimeString()}</span>
+            </div>
+            <p className="text-gray-600 mt-2">{event.descripcion}</p>
             <Link
               href={`/evento/${event.id}`}
-              className="block mt-4 text-center bg-blue-600 text-foreground py-2 px-4 rounded hover:bg-blue-700"
+              className="block mt-4 text-center border border-red-500 text-red-500 py-2 px-4 rounded hover:bg-red-500 hover:text-white transition"
             >
               Más información
             </Link>
