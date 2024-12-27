@@ -46,15 +46,15 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {/* Tabs de información e inscripción */}
       <div className="max-w-screen-2xl mx-auto p-6">
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center mt-6 w-4/5 mx-auto">
           <button
-            className={`px-6 py-2 ${activeTab === "informacion" ? "text-red-600 border-b border-red-600" : ""}`}
+            className={`px-6 py-2 w-1/2 ${activeTab === "informacion" ? " text-red-600 border-b border-red-600" : ""}`}
             onClick={() => setActiveTab("informacion")}
           >
             Información
           </button>
           <button
-            className={`px-6 py-2 ${activeTab === "inscripcion" ? "text-red-600 border-b border-red-600" : ""}`}
+            className={`px-6 py-2 w-1/2 ${activeTab === "inscripcion" ? " text-red-600 border-b border-red-600" : ""}`}
             onClick={() => setActiveTab("inscripcion")}
           >
             Inscripción
