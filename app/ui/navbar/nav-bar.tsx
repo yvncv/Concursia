@@ -9,8 +9,8 @@ import { onAuthStateChanged, User } from "firebase/auth";
 const enlaces = [
   { href: '/', label: 'Home', requiresAuth: false },
   { href: '/login', label: 'Iniciar Sesión', requiresAuth: false },
-  { href: '/profile', label: 'Profile', requiresAuth: true },
-  { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
+  // { href: '/profile', label: 'Profile', requiresAuth: true },
+  // { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
   { href: '/crear-evento', label: 'Registrar Evento', requiresAuth: true },
 ];
 

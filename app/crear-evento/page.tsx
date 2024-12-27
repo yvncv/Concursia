@@ -64,6 +64,7 @@ const CreateEvent = () => {
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            placeholder="ej: Evento de Marinera"
             required
           />
         </div>
@@ -75,11 +76,12 @@ const CreateEvent = () => {
             value={imagen}
             onChange={(e) => setImagen(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            placeholder="Seleccione una imagen para el evento."
             required
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="fecha" className="block font-medium mb-1">Fecha</label>
+          <label htmlFor="fecha" className="block font-medium mb-1">Fecha y hora</label>
           <input
             type="datetime-local"
             id="fecha"
@@ -90,24 +92,26 @@ const CreateEvent = () => {
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="lugar" className="block font-medium mb-1">Lugar</label>
+          <label htmlFor="lugar" className="block font-medium mb-1">Nombre del lugar</label>
           <input
             type="text"
             id="lugar"
             value={lugar}
             onChange={(e) => setLugar(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            placeholder="ej: Anfiteatro Gustavo Gutierrez"
             required
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="direccion" className="block font-medium mb-1">Direccion</label>
+          <label htmlFor="direccion" className="block font-medium mb-1">Dirección</label>
           <input
             type="text"
             id="direccion"
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            placeholder="ej: Jr. Angamos 789, Lima"
             required
           />
         </div>
@@ -119,6 +123,7 @@ const CreateEvent = () => {
             onChange={(e) => setDescripcion(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
             rows={4}
+            placeholder="ej: Asistan a este evento con intención benéfica. Evento de Marinera cuyos fondos serán donados a los niños de la Teletón."
             required
           ></textarea>
         </div>
@@ -130,6 +135,7 @@ const CreateEvent = () => {
             value={tipoEvento}
             onChange={(e) => setTipoEvento(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            placeholder="ej: Campeonato, Concurso, Presentación, etc."
             required
           />
         </div>
