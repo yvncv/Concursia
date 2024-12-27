@@ -6,14 +6,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 
-interface UserWithProps extends FirebaseUser {
+interface UserWithRole extends FirebaseUser {
   role?: string;
   name?: string;
   contacto?: number;
 }
 
 const useUser = () => {
-  const [user, setUser] = useState<UserWithProps | null>(null);
+  const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,9 +22,9 @@ const useUser = () => {
         try {
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
-            setUser({ ...firebaseUser, ...userDoc.data() } as UserWithProps);
+            setUser({ ...firebaseUser, ...userDoc.data() } as UserWithRole);
           } else {
-            setUser(firebaseUser as UserWithProps);
+            setUser(firebaseUser as UserWithRole);
           }
         } catch (error) {
           console.error("Error obteniendo datos de Firestore:", error);

@@ -11,5 +11,4 @@ export interface Evento {
   tipoEvento: string;
   //mapa
   ubicacion: string;
-  direccion: string;
 }
