@@ -2,9 +2,9 @@
 import useUser from '../firebase/functions';
 
 const Dashboard = () => {
-  const { user, loading } = useUser(); // Obtén el usuario desde el hook
+  const { user, loadingUser } = useUser(); // Obtén el usuario desde el hook
 
-  if (loading) {
+  if (loadingUser) {
     return <p>Cargando...</p>;
   }
 

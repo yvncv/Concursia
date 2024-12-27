@@ -61,7 +61,7 @@ export default function LoginForm() {
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+            className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
             disabled={loading}
           >
             {loading ? "Cargando..." : "Iniciar sesión"}

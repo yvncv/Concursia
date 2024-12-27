@@ -14,7 +14,7 @@ interface UserWithRole extends FirebaseUser {
 
 const useUser = () => {
   const [user, setUser] = useState<UserWithRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -38,6 +38,6 @@ const useUser = () => {
     return () => unsubscribe();
   }, []);
 
-  return { user, loading };
+  return { user, loadingUser };
 };
 export default useUser;

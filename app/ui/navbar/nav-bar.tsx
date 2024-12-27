@@ -61,7 +61,7 @@ export default function Navbar() {
           <li>
             <button
               onClick={handleSignOut}
-              className="bg-red-600 border px-1 rounded-xl"
+              className="bg-gradient-to-t from-red-600 to-black px-1 rounded-xl"
             >
               Salir
             </button>

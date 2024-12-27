@@ -1,38 +1,15 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { getDocs, collection } from "firebase/firestore";
-import { db } from "@/app/firebase/config";
 import Image from "next/image";
-import { Evento } from "./eventoType";
 import Link from "next/link";
 import CalendarIcon from "../icons/calendar";
 import ClockIcon from "../icons/clock";
 import PlaceIcon from "../icons/place";
+import { Evento } from "./eventoType";
 
-export default function EventosComponents() {
-  const [events, setEvents] = useState<Evento[]>([]);
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const eventsSnapshot = await getDocs(collection(db, "eventos"));
-        const eventsData = eventsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Evento[];
-        setEvents(eventsData);
-      } catch (error) {
-        console.error("Error fetching events", error);
-      }
-    };
-
-    fetchEvents();
-  }, []);
+export default function EventComponent({ event }: { event: Evento }) {
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-      {events.map((event) => (
         <div
           className="relative border rounded-lg shadow-md overflow-hidden bg-white transform transition hover:scale-105 hover:shadow-xl"
           key={event.id}
@@ -90,7 +67,5 @@ export default function EventosComponents() {
             </Link>
           </div>
         </div>
-      ))}
-    </div>
   );
 }
