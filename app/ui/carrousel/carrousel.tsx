@@ -1,23 +1,30 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 const CarruselEvento = ({ imagenes, ids }: { imagenes: string[]; ids: string[] }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const nextSlide = () => {
+    // Crear una versión memoizada de nextSlide usando useCallback
+    const nextSlide = useCallback(() => {
         setCurrentIndex((prevIndex) =>
             prevIndex === imagenes.length - 1 ? 0 : prevIndex + 1
         );
-    };
+    }, [imagenes.length]); // Dependemos del tamaño de las imágenes para que el callback se actualice si cambia el número de imágenes
 
     const prevSlide = () => {
         setCurrentIndex((prevIndex) =>
             prevIndex === 0 ? imagenes.length - 1 : prevIndex - 1
         );
     };
+
+    // Cambiar imagen automáticamente cada 5 segundos
+    useEffect(() => {
+        const intervalId = setInterval(nextSlide, 5000); // 5000 ms = 5 segundos
+        return () => clearInterval(intervalId); // Limpiar intervalo cuando el componente se desmonte
+    }, [nextSlide]); // Ahora 'nextSlide' está incluido en las dependencias
 
     return (
         <div className="relative w-full mx-auto h-[200px] sm:h-[450px] overflow-hidden">
