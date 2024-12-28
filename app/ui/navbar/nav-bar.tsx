@@ -36,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-rojo">
+    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-rojo fixed top-0 left-0 z-10">
       <div className="mx-auto">Tusuy Perú</div>
       <ul className="flex space-x-6 mx-auto justify-center align-middle">
         {enlaces
@@ -61,7 +61,7 @@ export default function Navbar() {
           <li>
             <button
               onClick={handleSignOut}
-              className="bg-gradient-to-t from-rojo to-black px-1 rounded-xl px-2"
+              className=""
             >
               Salir
             </button>

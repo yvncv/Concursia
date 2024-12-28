@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CalendarIcon from "../icons/calendar";
@@ -8,10 +9,37 @@ import PlaceIcon from "../icons/place";
 import { Evento } from "./eventoType";
 
 export default function EventComponent({ event }: { event: Evento }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const elementRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Store the current element reference in a variable
+    const element = elementRef.current;
+
+    // Make sure the ref is defined before observing it
+    if (element) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(element);
+
+      // Cleanup function
+      return () => {
+        observer.unobserve(element); // Unobserve the element when the component unmounts or changes
+      };
+    }
+  }, []);
 
   return (
     <div
-      className="relative flex flex-col rounded-[5px] shadow overflow-hidden cursor-pointer"
+      ref={elementRef}
+      className={`relative flex flex-col rounded-[5px] shadow overflow-hidden cursor-pointer transition-all ${isVisible ? 'animate-fadeIn' : 'opacity-0'}`}
       key={event.id}
       style={{ width: "100%", maxWidth: "300px", margin: "0 auto" }} // Ancho consistente
     >
@@ -33,7 +61,7 @@ export default function EventComponent({ event }: { event: Evento }) {
         {event.imagen && (
           <Image
             src={event.imagen}
-            className="object-cover"  // Centrado de la imagen
+            className="object-cover"
             alt={event.nombre}
             width={900}
             height={200}
@@ -44,8 +72,8 @@ export default function EventComponent({ event }: { event: Evento }) {
       <div className="justify-center flex items-center text-white bg-red-700 py-1">
         {event.tipoEvento}
       </div>
-      <div className="p-4 pt-1"> 
-        <h5 className="ml-[13px] text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">
+      <div className="p-4 pt-1">
+        <h5 className="text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">
           {event.nombre}
         </h5>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate">

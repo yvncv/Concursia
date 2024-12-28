@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-geis-mono: 'Geist Mono', cursive;
+  --font-poppins-regular: 'Poppins', cursive;
 
   --background: #ffffff; /* Blanco */
   --foreground: #242424; /* Negro */
@@ -25,12 +25,28 @@ body {
 }
 
 * {
-  font-family: var(--font-geis-mono);
+  font-family: var(--font-poppins-regular);
 }
 
 *::-webkit-scrollbar{
-  background-color: white;
+  background-color: var(--rojo);
 }
 *::-webkit-scrollbar-thumb{
-  background-color: var(--rojo);
+  background-color: white;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Clase para aplicar la animación */
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
 }

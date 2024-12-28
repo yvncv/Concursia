@@ -3,20 +3,16 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./ui/navbar/nav-bar";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
+const poppins = localFont({
+  src: "./fonts/Poppins-Regular.ttf",
+  variable: "--font-poppins-regular",
   weight: "100 900",
 });
 
 export const metadata: Metadata = {
-  title: "Aplicación de Next", 
-  description: "Creado por GIncarlo Aparicio",
+  title: "Tusuy Perú", 
+  description: "Maqueta de proyecto",
+  keywords: "tusuy, peru, maqueta, proyecto, marinera",
 };
 
 export default function RootLayout({
@@ -27,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" translate="yes">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased   justify-center `}
+        className={`${poppins.variable} antialiased   justify-center `}
       >
         <Navbar />
-        {children}
+        <div className="mt-10">
+          {children}
+        </div>
       </body>
     </html>
   );

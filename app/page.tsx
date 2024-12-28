@@ -27,20 +27,18 @@ export default function Home() {
         ids={events.map((evento) => evento.id)}
       />
 
-
       {/* Mensaje de bienvenida */}
-      <h1 className="text-3xl mb-4 text-center mt-6">
+      <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
         SALUDOS
         {user?.name ? `, ${user.name.toUpperCase()}` : ""}.
-        <br />
         ESTOS SON LOS EVENTOS DISPONIBLES.
       </h1>
 
       {/* Lista de eventos */}
-      <div className="w-full flex flex-col items-center justify-start max-w-[1400px] ">
+      <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
         <div className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
           {events.map((event) => (
-            <EventComponent event={event} key={event.id} />
+            <EventComponent key={event.id} event={event} />
           ))}
         </div>
       </div>
