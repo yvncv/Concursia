@@ -48,13 +48,13 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="max-w-screen-2xl mx-auto p-6">
         <div className="flex justify-center mt-6 w-4/5 mx-auto">
           <button
-            className={`px-6 py-2 w-1/2 ${activeTab === "informacion" ? " text-red-600 border-b border-red-600" : ""}`}
+            className={`px-6 py-2 w-1/2 ${activeTab === "informacion" ? " text-rojo border-b border-rojo" : ""}`}
             onClick={() => setActiveTab("informacion")}
           >
             Información
           </button>
           <button
-            className={`px-6 py-2 w-1/2 ${activeTab === "inscripcion" ? " text-red-600 border-b border-red-600" : ""}`}
+            className={`px-6 py-2 w-1/2 ${activeTab === "inscripcion" ? " text-rojo border-b border-rojo" : ""}`}
             onClick={() => setActiveTab("inscripcion")}
           >
             Inscripción
@@ -87,7 +87,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               {/* Pasar el evento completo al mapa */}
               <Map evento={evento} />
             </div>
-            <button onClick={closeModal} className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all">
+            <button onClick={closeModal} className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all">
               Cerrar mapa
             </button>
           </div>

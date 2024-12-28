@@ -10,62 +10,66 @@ import { Evento } from "./eventoType";
 export default function EventComponent({ event }: { event: Evento }) {
 
   return (
-        <div
-          className="relative border rounded-lg shadow-md overflow-hidden bg-white transform transition hover:scale-105 hover:shadow-xl"
-          key={event.id}
-          style={{ width: "100%", maxWidth: "300px", margin: "0 auto" }} // Ancho consistente
-        >
-          <div className="relative w-full h-56 overflow-hidden">
-            {/* Imagen desenfocada de fondo */}
-            {event.imagen && (
-              <div className="absolute inset-0 -z-10">
-                <Image
-                  src={event.imagen}
-                  className="w-full h-full object-cover blur-sm scale-110"
-                  alt={`Blur background of ${event.nombre}`}
-                  width={900}
-                  height={200}
-                  priority={false}
-                />
-              </div>
-            )}
-            {/* Imagen principal */}
-            {event.imagen && (
-              <Image
-                src={event.imagen}
-                className="w-full h-full object-cover"
-                alt={event.nombre}
-                width={900}
-                height={200}
-                priority={false}
-              />
-            )}
+    <div
+      className="relative flex flex-col rounded-[5px] shadow overflow-hidden cursor-pointer"
+      key={event.id}
+      style={{ width: "100%", maxWidth: "300px", margin: "0 auto" }} // Ancho consistente
+    >
+      <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
+        {/* Imagen desenfocada de fondo */}
+        {event.imagen && (
+          <div className="absolute inset-0 -z-10">
+            <Image
+              src={event.imagen}
+              className="h-full object-cover blur-sm scale-110"
+              alt={`Blur background of ${event.nombre}`}
+              width={900}
+              height={200}
+              priority={false}
+            />
           </div>
-          <div className="justify-center flex items-center space-x-2 text-white bg-red-700 py-1">
-            {event.tipoEvento}
-          </div>
-          <div className="p-4">
-            <h5 className="text-xl font-bold text-gray-800">{event.nombre}</h5>
-            <div className="flex items-center space-x-2 mt-2 text-gray-600">
-              <CalendarIcon className="text-red-600 w-5 h-5" />
-              <span>{event.fecha.toDate().toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center space-x-2 mt-2 text-gray-600">
-              <PlaceIcon className="text-blue-600 w-5 h-5" />
-              <span>{event.lugar}</span>
-            </div>
-            <div className="flex items-center space-x-2 mt-2 text-gray-600">
-              <ClockIcon className="text-green-600 w-5 h-5" />
-              <span>{event.fecha.toDate().toLocaleTimeString()}</span>
-            </div>
-            <p className="text-gray-600 mt-2">{event.descripcion}</p>
-            <Link
-              href={`/evento/${event.id}`}
-              className="block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
-            >
-              Más información
-            </Link>
-          </div>
+        )}
+        {/* Imagen principal */}
+        {event.imagen && (
+          <Image
+            src={event.imagen}
+            className="object-cover"  // Centrado de la imagen
+            alt={event.nombre}
+            width={900}
+            height={200}
+            priority={false}
+          />
+        )}
+      </div>
+      <div className="justify-center flex items-center text-white bg-red-700 py-1">
+        {event.tipoEvento}
+      </div>
+      <div className="p-4 pt-1"> 
+        <h5 className="ml-[13px] text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">
+          {event.nombre}
+        </h5>
+        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate">
+          <CalendarIcon className="text-red-600 w-[15px]" />
+          <span>{event.fecha.toDate().toLocaleDateString()}</span>
         </div>
+        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate">
+          <PlaceIcon className="text-blue-600 w-[15px]" />
+          <span>{event.lugar}</span>
+        </div>
+        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate">
+          <ClockIcon className="text-green-600 w-[15px]" />
+          <span>{event.fecha.toDate().toLocaleTimeString()}</span>
+        </div>
+        <p className="text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate line-clamp-1">
+          {event.descripcion}
+        </p>
+        <Link
+          href={`/evento/${event.id}`}
+          className="text-[13.5px] md:text-[15.5px] block mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+        >
+          Más información
+        </Link>
+      </div>
+    </div>
   );
 }

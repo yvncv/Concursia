@@ -51,8 +51,8 @@ export default function RegisterForm() {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-6 bg-white shadow-md rounded-lg">
-        <h1 className="text-2xl font-semibold text-center mb-4 text-red-600">Registro</h1>
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        <h1 className="text-2xl font-semibold text-center mb-4 text-rojo">Registro</h1>
+        {error && <p className="text-rojo text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block font-medium mb-1">Nombre</label>
@@ -61,7 +61,7 @@ export default function RegisterForm() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-rojo focus:border-rojo"
               required
             />
           </div>
@@ -72,7 +72,7 @@ export default function RegisterForm() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-rojo focus:border-rojo"
               required
             />
           </div>
@@ -83,7 +83,7 @@ export default function RegisterForm() {
               id="contacto"
               value={contacto}
               onChange={(e) => setContacto(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-rojo focus:border-rojo"
             />
           </div>
           <div>
@@ -93,13 +93,13 @@ export default function RegisterForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-rojo focus:border-rojo"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+            className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
             disabled={loading}
           >
             {loading ? "Cargando..." : "Registrarse"}
@@ -107,7 +107,7 @@ export default function RegisterForm() {
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="w-full text-sm text-red-600 hover:underline mt-2"
+            className="w-full text-sm text-rojo hover:underline mt-2"
           >
             ¿Ya tienes cuenta? Inicia sesión.
           </button>

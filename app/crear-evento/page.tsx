@@ -51,9 +51,9 @@ const CreateEvent = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-semibold text-red-600 mb-6">Crear Evento</h1>
+      <h1 className="text-2xl font-semibold text-rojo mb-6">Crear Evento</h1>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && <p className="text-rojo mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-6 border border-gray-300 shadow-md rounded">
         <div className="mb-4">
@@ -63,7 +63,7 @@ const CreateEvent = () => {
             id="nombre"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             placeholder="ej: Evento de Marinera"
             required
           />
@@ -75,7 +75,7 @@ const CreateEvent = () => {
             id="imagen"
             value={imagen}
             onChange={(e) => setImagen(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             placeholder="Seleccione una imagen para el evento."
             required
           />
@@ -87,7 +87,7 @@ const CreateEvent = () => {
             id="fecha"
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             required
           />
         </div>
@@ -98,7 +98,7 @@ const CreateEvent = () => {
             id="lugar"
             value={lugar}
             onChange={(e) => setLugar(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             placeholder="ej: Anfiteatro Gustavo Gutierrez"
             required
           />
@@ -110,7 +110,7 @@ const CreateEvent = () => {
             id="direccion"
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             placeholder="ej: Jr. Angamos 789, Lima"
             required
           />
@@ -121,7 +121,7 @@ const CreateEvent = () => {
             id="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             rows={4}
             placeholder="ej: Asistan a este evento con intención benéfica. Evento de Marinera cuyos fondos serán donados a los niños de la Teletón."
             required
@@ -134,14 +134,14 @@ const CreateEvent = () => {
             id="tipoEvento"
             value={tipoEvento}
             onChange={(e) => setTipoEvento(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:ring-red-500 focus:border-red-500"
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             placeholder="ej: Campeonato, Concurso, Presentación, etc."
             required
           />
         </div>
         <button
           type="submit"
-          className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+          className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
           disabled={loading}
         >
           {loading ? "Creando..." : "Crear Evento"}

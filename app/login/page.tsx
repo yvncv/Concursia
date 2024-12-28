@@ -32,9 +32,9 @@ export default function LoginForm() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center mb-6 text-red-600">Iniciar Sesión</h1>
+        <h1 className="text-2xl font-bold text-center mb-6 text-rojo">Iniciar Sesión</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p className="text-rojo">{error}</p>}
           <div>
             <label htmlFor="email" className="block font-medium text-gray-700">Correo electrónico</label>
             <input
@@ -42,7 +42,7 @@ export default function LoginForm() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-rojo focus:border-rojo"
               placeholder="tu@correo.com"
               required
             />
@@ -54,21 +54,21 @@ export default function LoginForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-rojo focus:border-rojo"
               placeholder="********"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+            className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
             disabled={loading}
           >
             {loading ? "Cargando..." : "Iniciar sesión"}
           </button>
         </form>
         <button
-          className="w-full text-sm text-red-600 hover:underline mt-2"
+          className="w-full text-sm text-rojo hover:underline mt-2"
           onClick={() => router.push('/register')}
         >
           ¿No tienes cuenta? Regístrate aquí.
