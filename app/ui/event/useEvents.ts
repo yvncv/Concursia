@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
-import { Evento } from "./eventoType";
+import { Event } from "./eventoType";
 
 export default function useEvents() {
-  const [events, setEvents] = useState<Evento[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvent, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ export default function useEvents() {
         const eventsData = eventsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Evento[];
+        })) as Event[];
         setEvents(eventsData);
       } catch (err) {
         console.error("Error fetching events", err);

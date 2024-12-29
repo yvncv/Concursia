@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import useEvents from "@/app/ui/evento/useEvents";
+import useEvents from "@/app/ui/event/useEvents";
 import useUser from "@/app/firebase/functions";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
@@ -18,12 +18,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { id } = use(params);
 
-  // Filtrar el evento por ID
-  const evento = events.find((event) => event.id === id);
+  // Filtrar el event por ID
+  const event = events.find((event) => event.id === id);
 
   if (loadingEvent) return <p>Cargando...</p>;
   if (error) return <p>Error: {error}</p>;
-  if (!evento) return <p>Evento no encontrado.</p>;
+  if (!event) return <p>Event no encontrado.</p>;
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -35,12 +35,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${evento.imagen})`,
+            backgroundImage: `url(${event.imagen})`,
             filter: "brightness(0.5) sepia(1) saturate(2) hue-rotate(-50deg)",
           }}
         ></div>
         <h1 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
-          {evento.nombre.toUpperCase()}
+          {event.nombre.toUpperCase()}
         </h1>
       </div>
 
@@ -62,7 +62,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {activeTab === "informacion" && (
-          <EventoInformacion evento={evento} openModal={openModal} />
+          <EventoInformacion event={event} openModal={openModal} />
         )}
 
         {activeTab === "inscripcion" && 
@@ -82,10 +82,10 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           onClick={closeModal}
         >
           <div className="bg-white p-6 rounded-lg w-full sm:w-3/4 lg:w-1/2 max-w-4xl relative">
-            <h2 className="text-xl mb-4">Ubicación del evento: {evento?.nombre}</h2>
+            <h2 className="text-xl mb-4">Ubicación del event: {event?.nombre}</h2>
             <div className="w-full">
-              {/* Pasar el evento completo al mapa */}
-              <Map evento={evento} />
+              {/* Pasar el event completo al mapa */}
+              <Map event={event} />
             </div>
             <button onClick={closeModal} className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all">
               Cerrar mapa

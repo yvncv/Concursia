@@ -37,7 +37,7 @@ const CarruselEvento = ({ imagenes, ids }: { imagenes: string[]; ids: string[] }
             </button>
 
             {/* Imágenes del carrusel con enlace dinámico */}
-            <Link href={`/evento/${ids[currentIndex]}`}>
+            <Link href={`/event/${ids[currentIndex]}`}>
                 <div
                     className="flex transition-transform duration-500 ease-in-out h-full cursor-pointer"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}

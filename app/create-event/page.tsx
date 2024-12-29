@@ -12,6 +12,11 @@ const CreateEvent = () => {
   const [direccion, setDireccion] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [tipoEvento, setTipoEvento] = useState("");
+  const [calle, setCalle] = useState("");
+  const [coordenadas, setCoordenadas] = useState("");
+  const [departamento, setDepartamento] = useState("");
+  const [distrito, setDistrito] = useState("");
+  const [provincia, setProvincia] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,6 +36,11 @@ const CreateEvent = () => {
         direccion,
         descripcion,
         tipoEvento,
+        calle,
+        coordenadas,
+        departamento,
+        distrito,
+        provincia,
       });
 
       alert("Evento creado exitosamente");
@@ -41,6 +51,11 @@ const CreateEvent = () => {
       setDireccion("");
       setDescripcion("");
       setTipoEvento("");
+      setCalle("");
+      setCoordenadas("");
+      setDepartamento("");
+      setDistrito("");
+      setProvincia("");
     } catch (err) {
       console.error("Error creating event: ", err);
       setError("Hubo un error al crear el evento. Intenta nuevamente.");
@@ -88,7 +103,7 @@ const CreateEvent = () => {
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
-            required
+            // required
           />
         </div>
         <div className="mb-4">
@@ -99,7 +114,7 @@ const CreateEvent = () => {
             value={lugar}
             onChange={(e) => setLugar(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
-            placeholder="ej: Anfiteatro Gustavo Gutierrez"
+            placeholder="ej: Plaza de Mayor"
             required
           />
         </div>
@@ -116,6 +131,66 @@ const CreateEvent = () => {
           />
         </div>
         <div className="mb-4">
+          <label htmlFor="calle" className="block font-medium mb-1">Calle</label>
+          <input
+            type="text"
+            id="calle"
+            value={calle}
+            onChange={(e) => setCalle(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+            placeholder="ej: Jirón Batalla de Ayacucho"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="coordenadas" className="block font-medium mb-1">Coordenadas</label>
+          <input
+            type="text"
+            id="coordenadas"
+            value={coordenadas}
+            onChange={(e) => setCoordenadas(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+            placeholder="ej: -12.144941652304556, -77.00457760142407"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="departamento" className="block font-medium mb-1">Departamento</label>
+          <input
+            type="text"
+            id="departamento"
+            value={departamento}
+            onChange={(e) => setDepartamento(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+            placeholder="ej: Lima"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="provincia" className="block font-medium mb-1">Provincia</label>
+          <input
+            type="text"
+            id="provincia"
+            value={provincia}
+            onChange={(e) => setProvincia(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+            placeholder="ej: Lima"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="distrito" className="block font-medium mb-1">Distrito</label>
+          <input
+            type="text"
+            id="distrito"
+            value={distrito}
+            onChange={(e) => setDistrito(e.target.value)}
+            className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+            placeholder="ej: Santiago de Surco"
+            required
+          />
+        </div>
+        <div className="mb-4">
           <label htmlFor="descripcion" className="block font-medium mb-1">Descripción</label>
           <textarea
             id="descripcion"
@@ -123,7 +198,7 @@ const CreateEvent = () => {
             onChange={(e) => setDescripcion(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
             rows={4}
-            placeholder="ej: Asistan a este evento con intención benéfica. Evento de Marinera cuyos fondos serán donados a los niños de la Teletón."
+            placeholder="ej: Presentación de marinera en la plaza de armas, no te lo pierdas."
             required
           ></textarea>
         </div>

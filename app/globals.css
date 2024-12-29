@@ -30,9 +30,11 @@ body {
 
 *::-webkit-scrollbar{
   background-color: var(--rojo);
+  width: 10px;
 }
 *::-webkit-scrollbar-thumb{
   background-color: white;
+  border-radius: 5px;
 }
 
 @keyframes fadeIn {

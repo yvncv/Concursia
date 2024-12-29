@@ -1,8 +1,8 @@
 'use client';
 
 import useUser from "./firebase/functions";
-import useEvents from "./ui/evento/useEvents";
-import EventComponent from "./ui/evento/eventComponent";
+import useEvents from "./ui/event/useEvents";
+import EventComponent from "./ui/event/eventComponent";
 import CarruselEvento from "./ui/carrousel/carrousel";
 import { useState } from "react";
 
@@ -11,7 +11,7 @@ export default function Home() {
   const { events, loadingEvent } = useEvents(); // Estado de los eventos
 
   // Paginación: Cuántos eventos mostrar por página
-  const eventsPerPage = 10;
+  const eventsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Estado de carga general
@@ -42,8 +42,8 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen text-center">
       {/* Carrusel de imágenes */}
       <CarruselEvento
-        imagenes={events.map((evento) => evento.imagen)}
-        ids={events.map((evento) => evento.id)}
+        imagenes={events.map((event) => event.imagen)}
+        ids={events.map((event) => event.id)}
       />
 
       {/* Mensaje de bienvenida */}

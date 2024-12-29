@@ -1,9 +1,9 @@
 import React from "react";
-import { Evento } from "../evento/eventoType";
+import { Event } from "../event/eventoType";
 
-const Map = ({ evento }: { evento: Evento }) => {
-  // Extrae las coordenadas del evento
-  const [latitude, longitude] = evento.ubicacion.split(',').map(coord => parseFloat(coord));
+const Map = ({ event }: { event: Event }) => {
+  // Extrae las coordenadas del event
+  const [latitude, longitude] = event.coordenadas.split(',').map(coord => parseFloat(coord));
 
   return (
     <div className="map-container">
@@ -14,7 +14,7 @@ const Map = ({ evento }: { evento: Evento }) => {
         allowFullScreen
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
-        title="Mapa del evento"  // Añadido por accesibilidad
+        title="Mapa del event"  // Añadido por accesibilidad
       ></iframe>
     </div>
   );

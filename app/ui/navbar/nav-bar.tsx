@@ -11,7 +11,7 @@ const enlaces = [
   { href: '/login', label: 'Iniciar Sesión', requiresAuth: false },
   // { href: '/profile', label: 'Profile', requiresAuth: true },
   // { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
-  { href: '/crear-evento', label: 'Registrar Evento', requiresAuth: true },
+  { href: '/create-event', label: 'Registrar Evento', requiresAuth: true },
 ];
 
 export default function Navbar() {
@@ -36,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-rojo fixed top-0 left-0 z-10">
+    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-rojo fixed top-0 left-0 z-50">
       <div className="mx-auto">Tusuy Perú</div>
       <ul className="flex space-x-6 mx-auto justify-center align-middle">
         {enlaces
