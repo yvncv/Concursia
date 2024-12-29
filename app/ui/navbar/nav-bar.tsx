@@ -1,67 +1,67 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/app/firebase/config";
+import useUser from "@/app/firebase/functions";
 
 const enlaces = [
-  { href: '/', label: 'Home', requiresAuth: false },
-  { href: '/login', label: 'Iniciar Sesión', requiresAuth: false },
-  // { href: '/profile', label: 'Profile', requiresAuth: true },
-  // { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
-  { href: '/create-event', label: 'Registrar Evento', requiresAuth: true },
+  { href: "/", label: "Home", requiresAuth: false },
+  { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
+  { href: "/create-event", label: "Registrar Evento", requiresAuth: true, requiresRole: "organizador" },
 ];
 
 export default function Navbar() {
+  const { user, loadingUser } = useUser();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
+  // Mientras el estado de usuario está cargando, mostramos un mensaje
+  if (loadingUser) {
+    return <div>Cargando...</div>;
+  }
 
   const handleSignOut = async () => {
     try {
       await auth.signOut();
-      router.push('/login');
-      console.log("Sesión cerrada exitosamente");
+      router.push("/login");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
   };
 
   return (
-    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-bgTitle text-title bg-rojo fixed top-0 left-0 z-50">
+    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-rojo fixed top-0 left-0 z-50">
       <div className="mx-auto">Tusuy Perú</div>
-      <ul className="flex space-x-6 mx-auto justify-center align-middle">
+      <ul className="flex space-x-6 mx-auto justify-center">
         {enlaces
           .filter((link) => {
-            // Mostrar enlaces dependiendo del estado de autenticación
-            if (link.requiresAuth && !user) {
-              return false; // Ocultar si requiere autenticación y no hay usuario
+            // Ocultar "Iniciar Sesión" si el usuario está autenticado
+            if (link.href === "/login" && user) return false;
+
+            // Si requiere autenticación
+            if (link.requiresAuth) {
+              if (!user) return false; // Ocultar si no hay usuario autenticado
+
+              // Si requiere un rol específico
+              if (link.requiresRole) {
+                return user.role === link.requiresRole; // Mostrar solo si coincide el rol
+              }
+
+              return true; // Mostrar si no requiere rol
             }
-            if (link.href === '/' || (!link.requiresAuth && !user) || (link.requiresAuth && user)) {
-              return true; // Mostrar siempre "Home", enlaces públicos o privados según el estado
-            }
-            return false;
+
+            return true; // Mostrar rutas públicas
           })
           .map((link) => (
-            <li className="hidden sm:list-item" key={link.href}>
-              <Link href={link.href}>
-                {link.label}
-              </Link>
+            <li key={link.href}>
+              <Link href={link.href}>{link.label}</Link>
             </li>
           ))}
         {user && (
           <li>
             <button
               onClick={handleSignOut}
-              className=""
+              className="bg-gray-800 hover:bg-gray-700 px-4 rounded"
             >
               Salir
             </button>

@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./ui/navbar/nav-bar";
 
+// variable de tipografía
 const poppins = localFont({
   src: "./fonts/Poppins-Regular.ttf",
   variable: "--font-poppins-regular",
@@ -23,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" translate="yes">
       <body
-        className={`${poppins.variable} antialiased   justify-center `}
+        className={`${poppins.variable} antialiased justify-center `}
       >
         <Navbar />
         <div className="mt-10">

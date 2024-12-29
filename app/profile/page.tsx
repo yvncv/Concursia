@@ -2,9 +2,9 @@
 import useUser from '../firebase/functions';
 
 const Profile = () => {
-  const { user, loading } = useUser();
+  const { user, loadingUser } = useUser();
   return (
-    loading ? (
+    loadingUser ? (
       <div>Cargando...</div>
     ) : !user || !user.role ? (
       <div>No tienes un rol definido. Contacta con un administrador.</div>

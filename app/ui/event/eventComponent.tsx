@@ -36,7 +36,7 @@ export default function EventComponent({ event }: { event: Event }) {
     }
   }, []);
 
-  return (
+  return ( 
     <div
       ref={elementRef}
       className={`relative flex flex-col rounded-[5px] shadow overflow-hidden cursor-pointer transition-all ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02]`}
