@@ -7,7 +7,7 @@ const enlaces = [
   { href: "/", label: "Home", requiresAuth: false },
   { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
   { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizador" },
-  { href: "/profile", label: "Perfil", requiresAuth: true },
+  { href: "/my-profile", label: "Perfil", requiresAuth: true },
 ];
 
 export default function Navbar() {
