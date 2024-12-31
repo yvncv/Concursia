@@ -7,9 +7,11 @@ import { getDoc, doc, Timestamp } from 'firebase/firestore';
 
 interface UserWithProps extends FirebaseUser {
   id: string; // Identificador único del usuario
-    name: string; // Nombre del usuario
-    email: string; // Correo electrónico del usuario
-    contacto: number; // Número de contacto del usuario
+    name: string; // Correo electrónico del usuario
+    contacto: {
+      telefono: string;
+      correo: string;
+    }; // Número de contacto del usuario
     role: "user" | "organizador" | "admin"; // Rol del usuario en el sistema
     idAcademia?: string; // ID de la academia asociada al usuario (opcional)
     eventos: {

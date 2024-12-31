@@ -11,7 +11,7 @@ import TusuyImage from "@/app/TusuyPeru.jpg";
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [contacto, setContacto] = useState("");
+  const [contactoTelefono, setContactoTelefono] = useState(""); // Solo teléfono
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,11 +35,18 @@ export default function RegisterForm() {
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
         name,
-        contacto,
-        email,
+        contacto: {
+          correo: email, // Establecemos el correo de contacto como el correo de registro
+          telefono: contactoTelefono, // Guardamos el teléfono
+        },
+        eventos: {
+          espectados: [],
+          participados: [],
+        },
         role: "user",
         createdAt: new Date(),
       });
+      
       alert("Registro exitoso");
       router.push("/");
     } catch (err) {
@@ -83,12 +90,12 @@ export default function RegisterForm() {
               />
             </div>
             <div>
-              <label htmlFor="contacto" className="block text-sm font-medium text-gray-700">Teléfono</label>
+              <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
               <input
                 type="tel"
-                id="contacto"
-                value={contacto}
-                onChange={(e) => setContacto(e.target.value)}
+                id="contactoTelefono"
+                value={contactoTelefono}
+                onChange={(e) => setContactoTelefono(e.target.value)}
                 className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
                 placeholder="Tu número de contacto"
               />
@@ -136,3 +143,4 @@ export default function RegisterForm() {
     </div>
   );
 }
+

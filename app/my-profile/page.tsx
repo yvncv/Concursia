@@ -37,14 +37,14 @@ const ProfilePage = () => {
           <div className="ml-6">
             <h1 className="text-3xl font-bold text-gray-800">{user.name}</h1>
             <p className="text-lg text-gray-600">{user.role}</p>
-            <p className="text-gray-500">{user.email}</p>
+            <p className="text-gray-500">{user.contacto.correo}</p>
           </div>
         </div>
 
         <div className="mt-6 space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Información de Contacto</h2>
-            <p className="text-gray-600">Teléfono: {user.contacto}</p>
+            <p className="text-gray-600">Teléfono: {user.contacto.telefono}</p>
             <p className="text-gray-600">Correo electrónico: {user.email}</p>
             {user.idAcademia && (
               loadingAcademia ? (<p className="text-gray-600">Obteniendo acadeima...</p>) : (<p className="text-gray-600">Academia: {academia?.nombre}</p>)
