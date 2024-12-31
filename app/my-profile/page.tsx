@@ -3,10 +3,12 @@
 import useUser from '../firebase/functions'; // Asegúrate de que la ruta sea la correcta
 import { auth } from '../firebase/config';
 import { useRouter } from 'next/navigation';
+import useAcademia from '../hooks/useAcademia';
 
 const ProfilePage = () => {
   const { user, loadingUser } = useUser();
   const router = useRouter();
+  const { academia, loadingAcademia } = useAcademia();
 
   if (loadingUser) {
     return <div className="text-center text-gray-600">Cargando perfil...</div>;
@@ -45,7 +47,7 @@ const ProfilePage = () => {
             <p className="text-gray-600">Teléfono: {user.contacto}</p>
             <p className="text-gray-600">Correo electrónico: {user.email}</p>
             {user.idAcademia && (
-              <p className="text-gray-600">Academia: {user.idAcademia}</p>
+              loadingAcademia ? (<p className="text-gray-600">Obteniendo acadeima...</p>) : (<p className="text-gray-600">Academia: {academia?.nombre}</p>)
             )}
           </div>
 
@@ -91,7 +93,7 @@ const ProfilePage = () => {
             Editar Perfil
           </button>
           <button
-            onClick={handleSignOut} 
+            onClick={handleSignOut}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 transition">
             Cerrar Sesión
           </button>
