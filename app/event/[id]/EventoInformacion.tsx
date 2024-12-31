@@ -1,7 +1,7 @@
 import CalendarIcon from "@/app/ui/icons/calendar";
 import ClockIcon from "@/app/ui/icons/clock";
 import PlaceIcon from "@/app/ui/icons/marker";
-import { Event } from "@/app/ui/event/eventoType";
+import { Event } from "@/app/types/eventType";
 import Image from "next/image";
 import IdIcon from "@/app/ui/icons/id";
 import MapIcon from "@/app/ui/icons/map";
@@ -57,14 +57,14 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                     {/* Información del event: Lugar */}
                     <div className="flex items-center space-x-3 text-gray-600">
                         <PlaceIcon className="text-blue-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">{event.lugar}</span>
+                        <span className="text-sm md:text-base">{event.lugar.nombreLugar}</span>
                     </div>
 
                     {/* Información del event: Lugar */}
                     <div className="flex items-center space-x-3 text-gray-600">
                         <MapIcon className="text-orange-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">{event.calle}, {event.distrito}, {event.provincia}, {event.departamento}</span>
-                        {event.coordenadas && (
+                        <span className="text-sm md:text-base">{event.lugar.calle}, {event.lugar.distrito}, {event.lugar.provincia}, {event.lugar.departamento}</span>
+                        {event.lugar.coordenadas && (
                             <button onClick={openModal} className="text-rojo text-sm md:text-base border border-transparent border-b-rojo">
                                 Ver mapa
                             </button>

@@ -1,9 +1,9 @@
 import React from "react";
-import { Event } from "../event/eventoType";
+import { Event } from "../../types/eventType";
 
 const Map = ({ event }: { event: Event }) => {
   // Extrae las coordenadas del event
-  const [latitude, longitude] = event.coordenadas.split(',').map(coord => parseFloat(coord));
+  const [latitude, longitude] = event.lugar.coordenadas.split(',').map(coord => parseFloat(coord));
 
   return (
     <div className="map-container">

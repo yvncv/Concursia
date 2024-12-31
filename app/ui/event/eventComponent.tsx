@@ -4,7 +4,7 @@ import Link from "next/link";
 import CalendarIcon from "../icons/calendar";
 import ClockIcon from "../icons/clock";
 import PlaceIcon from "../icons/marker";
-import { Event } from "./eventoType";
+import { Event } from "../../types/eventType";
 
 export default function EventComponent({ event }: { event: Event }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -86,7 +86,7 @@ export default function EventComponent({ event }: { event: Event }) {
         </div>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
           <PlaceIcon className="text-blue-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{event.lugar}</span>
+          <span className="line-clamp-1 truncate">{event.lugar.nombreLugar}</span>
         </div>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
           <ClockIcon className="text-green-600 w-[15px]" />

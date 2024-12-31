@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
-import { Event } from "./eventoType";
+import { Event } from "../types/eventType";
 
 export default function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);

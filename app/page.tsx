@@ -1,7 +1,7 @@
 'use client';
 
 import useUser from "./firebase/functions";
-import useEvents from "./ui/event/useEvents";
+import useEvents from "./hooks/useEvents";
 import EventComponent from "./ui/event/eventComponent";
 import CarruselEvento from "./ui/carrousel/carrousel";
 import { useState } from "react";

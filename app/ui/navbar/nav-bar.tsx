@@ -1,33 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { auth } from "@/app/firebase/config";
 import useUser from "@/app/firebase/functions";
 
 const enlaces = [
   { href: "/", label: "Home", requiresAuth: false },
   { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
-  { href: "/create-event", label: "Registrar Evento", requiresAuth: true, requiresRole: "organizador" },
+  { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizador" },
+  { href: "/profile", label: "Perfil", requiresAuth: true },
 ];
 
 export default function Navbar() {
   const { user, loadingUser } = useUser();
-  const router = useRouter();
 
   // Mientras el estado de usuario está cargando, mostramos un mensaje
   if (loadingUser) {
     return <div>Cargando...</div>;
   }
-
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      router.push("/login");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
 
   return (
     <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-rojo fixed top-0 left-0 z-50">
@@ -57,16 +46,6 @@ export default function Navbar() {
               <Link href={link.href}>{link.label}</Link>
             </li>
           ))}
-        {user && (
-          <li>
-            <button
-              onClick={handleSignOut}
-              className="bg-gray-800 hover:bg-gray-700 px-4 rounded"
-            >
-              Salir
-            </button>
-          </li>
-        )}
       </ul>
     </nav>
   );

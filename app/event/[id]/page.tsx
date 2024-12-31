@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import useEvents from "@/app/ui/event/useEvents";
+import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/firebase/functions";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
