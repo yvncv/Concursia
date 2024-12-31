@@ -7,6 +7,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/app/TusuyPeru.jpg";
+import MarineraImage from "@/public/marinera.jpg";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
@@ -132,7 +133,7 @@ export default function RegisterForm() {
         {/* Contenedor de la imagen */}
         <div className="hidden md:block md:w-1/2">
           <Image
-            src={TusuyImage}
+            src={MarineraImage}
             alt="Imagen de marinera"
             width={800}
             height={600}
