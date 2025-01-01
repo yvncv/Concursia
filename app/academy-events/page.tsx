@@ -8,6 +8,7 @@ import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import Link from "next/link";
 import { Academy } from "../types/academyType";
+import { Timestamp } from "firebase/firestore";
 
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
@@ -18,13 +19,13 @@ export default function MisEventos() {
 
   useEffect(() => {
     const fetchAcademia = async () => {
-      if (user && user.idAcademia) {
-        const academiaRef = doc(db, "academias", user.idAcademia);  // Suponiendo que el idAcademia está guardado en Firestore
+      if (user && user.academyId) {
+        const academiaRef = doc(db, "academias", user.academyId);  // Suponiendo que el idAcademia está guardado en Firestore
         const docSnap = await getDoc(academiaRef);
-
+  
         if (docSnap.exists()) {
           const data = docSnap.data();
-
+  
           // Verificar si todos los campos requeridos están presentes
           if (data && data.nombre && data.id && data.idOrganizador && data.contacto && data.lugar) {
             const academiaData: Academy = {
@@ -32,7 +33,9 @@ export default function MisEventos() {
               idOrganizador: data.idOrganizador,
               nombre: data.nombre,
               contacto: data.contacto,
-              lugar: data.lugar
+              lugar: data.lugar,
+              createdAt: data.createdAt ? data.createdAt : Timestamp.fromDate(new Date()),  // Asegúrate de tener createdAt
+              updatedAt: data.updatedAt ? data.updatedAt : Timestamp.fromDate(new Date())   // Asegúrate de tener updatedAt
             };
             setAcademia(academiaData);
           } else {
@@ -43,7 +46,7 @@ export default function MisEventos() {
         }
       }
     };
-
+  
     fetchAcademia();
   }, [user]);
 
@@ -55,7 +58,7 @@ export default function MisEventos() {
   }
 
   const filteredEvents = events.filter(
-    (event) => event.idAcademia === user?.idAcademia
+    (event) => event.idAcademia === user?.academyId
   );
 
   const indexOfLastEvent = currentPage * eventsPerPage;
@@ -87,7 +90,7 @@ export default function MisEventos() {
       />
 
       <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
-        SALUDOS{user?.name ? `, ${user.name.toUpperCase()}` : ""}. ESTOS SON LOS EVENTOS DE LA ACADEMIA {(academia?.nombre || "Cargando academia...").toUpperCase()}.
+        SALUDOS{user?.firstName ? `, ${user.firstName.toUpperCase()}` : ""}. ESTOS SON LOS EVENTOS DE LA ACADEMIA {(academia?.nombre || "Cargando academia...").toUpperCase()}.
       </h1>
 
       <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">

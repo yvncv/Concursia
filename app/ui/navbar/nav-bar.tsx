@@ -6,7 +6,7 @@ import useUser from "@/app/firebase/functions";
 const enlaces = [
   { href: "/", label: "Home", requiresAuth: false },
   { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
-  { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizador" },
+  { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizer" },
   { href: "/my-profile", label: "Perfil", requiresAuth: true },
 ];
 
@@ -19,7 +19,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="flex text-white text-xl w-full items-center justify-between p-4 bg-rojo fixed top-0 left-0 z-50">
+    <nav className="flex text-white text-xl w-full p-4 bg-rojo fixed top-0 left-0 z-50">
       <div className="mx-auto">Tusuy Perú</div>
       <ul className="flex space-x-6 mx-auto justify-center">
         {enlaces
@@ -33,7 +33,7 @@ export default function Navbar() {
 
               // Si requiere un rol específico
               if (link.requiresRole) {
-                return user.role === link.requiresRole; // Mostrar solo si coincide el rol
+                return user.roleId === link.requiresRole; // Mostrar solo si coincide el rol
               }
 
               return true; // Mostrar si no requiere rol

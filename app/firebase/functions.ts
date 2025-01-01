@@ -2,27 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { auth, db } from './config'; // Asegúrate de usar la versión correcta de Firebase
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getDoc, doc, Timestamp } from 'firebase/firestore';
-
-interface UserWithProps extends FirebaseUser {
-  id: string; // Identificador único del usuario
-    name: string; // Correo electrónico del usuario
-    contacto: {
-      telefono: string;
-      correo: string;
-    }; // Número de contacto del usuario
-    role: "user" | "organizador" | "admin"; // Rol del usuario en el sistema
-    idAcademia?: string; // ID de la academia asociada al usuario (opcional)
-    eventos: {
-      espectados: string[]; // IDs de eventos que el usuario ha presenciado
-      participados: string[]; // IDs de eventos en los que el usuario ha participado
-    }; // Relación con eventos
-    createdAt: Timestamp; // Fecha de creación del usuario
-}
+import { onAuthStateChanged } from 'firebase/auth';
+import { getDoc, doc } from 'firebase/firestore';
+import { User } from '../types/userType';
 
 const useUser = () => {
-  const [user, setUser] = useState<UserWithProps | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,9 +16,9 @@ const useUser = () => {
         try {
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
-            setUser({ ...firebaseUser, ...userDoc.data() } as UserWithProps);
+            setUser({ ...firebaseUser, ...userDoc.data() } as User);
           } else {
-            setUser(firebaseUser as UserWithProps);
+            setUser(firebaseUser as User);
           }
         } catch (error) {
           console.error("Error obteniendo datos de Firestore:", error);

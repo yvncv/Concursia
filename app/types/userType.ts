@@ -2,16 +2,25 @@
   import { Timestamp } from 'firebase/firestore';
 
   export type User = FirebaseUser & {
-    name: string; // Nombre del usuario
-    contacto: {
-        correo: string;
-        telefono: string;
+    roleId: string;
+    dni: string;
+    fullName: string;
+    firstName: string;
+    lastName: string;
+    birthDate: Timestamp;
+    gender: string;
+    email: string[];
+    phoneNumber: string[];
+    attendedEvents?: string[];
+    participatedEvents?: string[];
+    level?: string;
+    academyId?: string;
+    createdAt: Timestamp;
+    socials?: {
+      facebook?: string;
+      twitter?: string;
+      instagram?: string;
+      tiktok?: string;
+      youtube?: string;
     }
-    role: "user" | "organizador" | "admin"; // Rol del usuario en el sistema
-    idAcademia?: string; // ID de la academia asociada al usuario (opcional)
-    eventos: {
-      espectados: string[]; // IDs de eventos que el usuario ha presenciado
-      participados: string[]; // IDs de eventos en los que el usuario ha participado
-    }; // Relación con eventos
-    createdAt: Timestamp; // Fecha de creación del usuario
   };
