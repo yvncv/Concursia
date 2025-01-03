@@ -10,7 +10,7 @@ import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúr
 
 const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
-  const { user } = useUser()
+  const { user } = useUser();
   const [name, setName] = useState<string>("");
   const [smallImage, setSmallImage] = useState<string>("");
   const [bannerImage, setBannerImage] = useState<string>("");
@@ -18,6 +18,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const [endDate, setEndDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [eventType, setEventType] = useState<string>("");
+  const [capacity, setCapacity] = useState<string>("");
   const [street, setStreet] = useState<string>("");
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
@@ -77,6 +78,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           setEndDate(eventData.endDate ? eventData.endDate.toDate().toISOString().slice(0, 16) : "");
           setDescription(eventData.description);
           setEventType(eventData.eventType);
+          setCapacity(eventData.capacity);
           setStreet(eventData.location?.street);
           setLatitude(eventData.location?.coordinates?.latitude);
           setLongitude(eventData.location?.coordinates?.longitude);
@@ -126,9 +128,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           },
         },
         eventType,
-        capacity: {
-          day1: 0,
-        },
+        capacity,
         status: "pendiente",
         settings: {
           categories: [],
@@ -167,6 +167,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
           { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
           { label: "Tipo de Evento", id: "eventType", value: eventType, setValue: setEventType, type: "text" },
+          { label: "Capacidad", id: "capacity", value: capacity, setValue: setCapacity, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
               <label htmlFor={id} className="block font-medium mb-1">{label}</label>
