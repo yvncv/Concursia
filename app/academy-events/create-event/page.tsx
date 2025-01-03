@@ -1,23 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useUser from "@/app/firebase/functions"; // Asegúrate de que esta ruta sea correcta
 import { db } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp } from "firebase/firestore";
 import { Event } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
 
+
 const CreateEvent = () => {
-  const [nombre, setNombre] = useState<string>("");
-  const [imagen, setImagen] = useState<string>("");
-  const [fecha, setFecha] = useState<string>("");
-  const [lugar, setLugar] = useState<string>("");
-  const [descripcion, setDescripcion] = useState<string>("");
-  const [tipoEvento, setTipoEvento] = useState<string>("");
-  const [calle, setCalle] = useState<string>("");
-  const [coordenadas, setCoordenadas] = useState<string>("");
-  const [departamento, setDepartamento] = useState<string>("");
-  const [provincia, setProvincia] = useState<string>("");
-  const [distrito, setDistrito] = useState<string>("");
+  const { user } = useUser();
+  const [name, setName] = useState<string>("");
+  const [smallImage, setSmallImage] = useState<string>("");
+  const [bannerImage, setBannerImage] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [type, setType] = useState<string>("");
+  const [street, setStreet] = useState<string>("");
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
+  const [department, setDepartment] = useState<string>("");
+  const [province, setProvince] = useState<string>("");
+  const [district, setDistrict] = useState<string>("");
+  const [placeName, setPlaceName] = useState<string>("");
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -39,12 +45,12 @@ const CreateEvent = () => {
 
   // Filtrar provincias según departamento seleccionado
   const filteredProvinces = ubigeoData.filter(
-    (item) => item.departamento === departamento && item.provincia !== "00" && item.distrito === "00"
+    (item) => item.departamento === department && item.provincia !== "00" && item.distrito === "00"
   );
 
   // Filtrar distritos según provincia seleccionada
   const filteredDistricts = ubigeoData.filter(
-    (item) => item.departamento === departamento && item.provincia === provincia && item.distrito !== "00"
+    (item) => item.departamento === department && item.provincia === province && item.distrito !== "00"
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,39 +59,67 @@ const CreateEvent = () => {
     setError("");
 
     try {
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
+
       const eventId = new Date().getTime().toString();
 
       const event: Event = {
         id: eventId,
-        nombre,
-        imagen,
-        descripcion,
-        fecha: Timestamp.fromDate(new Date(fecha)),
-        tipoEvento,
-        lugar: {
-          calle,
-          coordenadas,
-          distrito: distrito || "", // Valor predeterminado
-          provincia,
-          departamento,
-          nombreLugar: lugar,
+        name,
+        description,
+        startDate: Timestamp.fromDate(new Date(startDate)),
+        endDate: Timestamp.fromDate(new Date(endDate)),
+        academyId: user.academyId,
+        organizerId: user.uid,
+        smallImage,
+        bannerImage,
+        location: {
+          street,
+          district,
+          province,
+          department,
+          placeName,
+          coordinates: {
+            latitude: latitude,
+            longitude: longitude,
+          },
         },
+        type,
+        capacity: {
+          day1: 0,
+        },
+        status: "pendiente",
+        settings: {
+          categories: [],
+          levels: [],
+          registrationType: [],
+          prices: {},
+        },
+        createdBy: user?.fullName,
+        lastUpdatedBy: user?.fullName,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       };
 
       await setDoc(doc(db, "eventos", eventId), event);
 
       alert("Evento creado exitosamente");
-      setNombre("");
-      setImagen("");
-      setFecha("");
-      setLugar("");
-      setDescripcion("");
-      setTipoEvento("");
-      setCalle("");
-      setCoordenadas("");
-      setDepartamento("");
-      setDistrito("");
-      setProvincia("");
+      setName("");
+      setSmallImage("");
+      setBannerImage("");
+      setStartDate("");
+      setEndDate("");
+      setDescription("");
+      setType("");
+      setStreet("");
+      setLatitude("");
+      setLongitude("");
+      setDepartment("");
+      setProvince("");
+      setDistrict("");
+      setPlaceName("");
     } catch (err) {
       console.error("Error creando el evento: ", err);
       setError("Hubo un error al crear el evento. Intenta nuevamente.");
@@ -104,12 +138,13 @@ const CreateEvent = () => {
         {/* Información del Evento */}
         <h2 className="text-xl font-semibold mb-4 text-rojo border border-transparent border-b-rojo">Información del Evento</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { label: "Nombre del Evento", id: "nombre", value: nombre, setValue: setNombre, type: "text" },
-            { label: "Imagen URL", id: "imagen", value: imagen, setValue: setImagen, type: "text" },
-            { label: "Fecha y Hora", id: "fecha", value: fecha, setValue: setFecha, type: "datetime-local" },
-            { label: "Descripción", id: "descripcion", value: descripcion, setValue: setDescripcion, type: "textarea" },
-            { label: "Tipo de Evento", id: "tipoEvento", value: tipoEvento, setValue: setTipoEvento, type: "text" },
+          {[{ label: "Nombre del Evento", id: "name", value: name, setValue: setName, type: "text" },
+          { label: "Imagen Pequeña", id: "smallImage", value: smallImage, setValue: setSmallImage, type: "text" },
+          { label: "Banner del Evento", id: "bannerImage", value: bannerImage, setValue: setBannerImage, type: "text" },
+          { label: "Fecha de Inicio", id: "startDate", value: startDate, setValue: setStartDate, type: "datetime-local" },
+          { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
+          { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
+          { label: "Tipo de Evento", id: "type", value: type, setValue: setType, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
               <label htmlFor={id} className="block font-medium mb-1">{label}</label>
@@ -141,33 +176,13 @@ const CreateEvent = () => {
         {/* Información del Lugar */}
         <h2 className="text-xl font-semibold mt-8 mb-4 text-rojo border border-transparent border-b-rojo">Información del Lugar</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { label: "Nombre del Lugar", id: "lugar", value: lugar, setValue: setLugar, type: "text" },
-            { label: "Calle", id: "calle", value: calle, setValue: setCalle, type: "text" },
-            { label: "Coordenadas", id: "coordenadas", value: coordenadas, setValue: setCoordenadas, type: "text" },
-          ].map(({ label, id, value, setValue, type }) => (
-            <div key={id} className="mb-4">
-              <label htmlFor={id} className="block font-medium mb-1">{label}</label>
-              <input
-                type={type}
-                id={id}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
-                placeholder={`ej: ${label}`}
-                required
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Selección de Ubigeo (Departamento, Provincia, Distrito) */}
-        <h2 className="text-xl font-semibold mt-8 mb-4 text-rojo border border-transparent border-b-rojo">Ubicación</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { label: "Departamento", id: "departamento", value: departamento, setValue: setDepartamento, type: "select" },
-            { label: "Provincia", id: "provincia", value: provincia, setValue: setProvincia, type: "select" },
-            { label: "Distrito", id: "distrito", value: distrito, setValue: setDistrito, type: "select" },
+          {[{ label: "Nombre del Lugar", id: "placeName", value: placeName, setValue: setPlaceName, type: "text" },
+          { label: "Calle", id: "street", value: street, setValue: setStreet, type: "text" },
+          { label: "Latitud", id: "latitude", value: latitude, setValue: setLatitude, type: "text" },
+          { label: "Longitud", id: "longitude", value: longitude, setValue: setLongitude, type: "text" },
+          { label: "Departamento", id: "department", value: department, setValue: setDepartment, type: "select" },
+          { label: "Provincia", id: "province", value: province, setValue: setProvince, type: "select" },
+          { label: "Distrito", id: "district", value: district, setValue: setDistrict, type: "select" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
               <label htmlFor={id} className="block font-medium mb-1">{label}</label>
@@ -178,17 +193,17 @@ const CreateEvent = () => {
                   onChange={(e) => {
                     setValue(e.target.value);
                     if (id === "departamento") {
-                      setProvincia("");
-                      setDistrito("");
+                      setProvince("");
+                      setDistrict("");
                     } else if (id === "provincia") {
-                      setDistrito("");
+                      setDistrict("");
                     }
                   }}
                   className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
                   required
                 >
                   <option value="">Selecciona {label.toLowerCase()}</option>
-                  {id === "departamento"
+                  {id === "department"
                     ? ubigeoData
                       .filter((item) => item.provincia === "00" && item.distrito === "00")
                       .map((dep) => (
@@ -196,14 +211,14 @@ const CreateEvent = () => {
                           {dep.nombre}
                         </option>
                       ))
-                    : id === "provincia"
+                    : id === "province"
                       ? filteredProvinces.map((prov) => (
-                        <option key={`${departamento}-${prov.provincia}-00`} value={prov.provincia}>
+                        <option key={`${department}-${prov.provincia}-00`} value={prov.provincia}>
                           {prov.nombre}
                         </option>
                       ))
                       : filteredDistricts.map((dist) => (
-                        <option key={`${departamento}-${provincia}-${dist.distrito}`} value={dist.distrito}>
+                        <option key={`${department}-${province}-${dist.distrito}`} value={dist.distrito}>
                           {dist.nombre}
                         </option>
                       ))}
@@ -223,17 +238,18 @@ const CreateEvent = () => {
           ))}
         </div>
 
-        {/* Botón de Envío */}
-        <button
-          type="submit"
-          className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
-          disabled={loading}
-        >
-          {loading ? "Creando..." : "Crear Evento"}
-        </button>
+        {/* Botones */}
+        <div className="mt-8 flex justify-end">
+          <button
+            type="submit"
+            className={`px-6 py-2 text-white font-semibold rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-rojo hover:bg-red-700"
+              }`}
+            disabled={loading}
+          >
+            {loading ? "Creando..." : "Crear Evento"}
+          </button>
+        </div>
       </form>
-
-
     </div>
   );
 };
