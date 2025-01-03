@@ -66,7 +66,7 @@ const ProfilePage = () => {
               loadingAcademia ? (
                 <p className="text-gray-600">Obteniendo academia...</p>
               ) : (
-                <p className="text-gray-600">Academia: {academia?.nombre}</p>
+                <p className="text-gray-600">Academia: {academia?.name}</p>
               )
             )}
           </div>

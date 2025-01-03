@@ -70,7 +70,7 @@ export default function EventComponent({ event }: { event: Event }) {
       }
       </div>
       <div className="justify-center flex items-center text-white bg-red-700 py-1">
-        {event.type}
+        {event.eventType}
       </div>
       <div className="p-4 pt-1">
         <h5 className="text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">

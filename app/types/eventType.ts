@@ -22,7 +22,7 @@ export interface Event {
       longitude: string; // Longitud del lugar del evento
     };
   };
-  type: string; // Tipo de evento (ejemplo: "concurso")
+  eventType: string; // Tipo de evento (ejemplo: "concurso")
   capacity: string;
   status: string; // Estado del evento (ejemplo: "pendiente", "en curso", "finalizado")
   settings: {

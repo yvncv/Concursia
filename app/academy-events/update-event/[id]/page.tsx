@@ -17,7 +17,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [type, setType] = useState<string>("");
+  const [eventType, setEventType] = useState<string>("");
   const [street, setStreet] = useState<string>("");
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
@@ -76,7 +76,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           setStartDate(eventData.startDate ? eventData.startDate.toDate().toISOString().slice(0, 16) : "");
           setEndDate(eventData.endDate ? eventData.endDate.toDate().toISOString().slice(0, 16) : "");
           setDescription(eventData.description);
-          setType(eventData.type);
+          setEventType(eventData.eventType);
           setStreet(eventData.location?.street);
           setLatitude(eventData.location?.coordinates?.latitude);
           setLongitude(eventData.location?.coordinates?.longitude);
@@ -125,7 +125,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
             longitude: longitude,
           },
         },
-        type,
+        eventType,
         capacity: {
           day1: 0,
         },
@@ -166,7 +166,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           { label: "Fecha de Inicio", id: "startDate", value: startDate, setValue: setStartDate, type: "datetime-local" },
           { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
           { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
-          { label: "Tipo de Evento", id: "type", value: type, setValue: setType, type: "text" },
+          { label: "Tipo de Evento", id: "eventType", value: eventType, setValue: setEventType, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
               <label htmlFor={id} className="block font-medium mb-1">{label}</label>

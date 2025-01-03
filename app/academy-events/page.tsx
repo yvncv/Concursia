@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useState, useEffect } from "react";
 import useUser from "../firebase/functions";
 import useEvents from "../hooks/useEvents";
@@ -20,22 +20,51 @@ export default function MisEventos() {
   useEffect(() => {
     const fetchAcademia = async () => {
       if (user && user.academyId) {
-        const academiaRef = doc(db, "academias", user.academyId);  // Suponiendo que el idAcademia está guardado en Firestore
+        const academiaRef = doc(db, "academias", user.academyId);
         const docSnap = await getDoc(academiaRef);
-  
+
         if (docSnap.exists()) {
           const data = docSnap.data();
-  
+
           // Verificar si todos los campos requeridos están presentes
-          if (data && data.nombre && data.id && data.idOrganizador && data.contacto && data.lugar) {
+          if (
+            data &&
+            data.name &&
+            data.id &&
+            data.organizerId &&
+            data.email &&
+            data.phoneNumber &&
+            data.location &&
+            data.location.coordinates &&
+            data.location.street &&
+            data.location.district &&
+            data.location.province &&
+            data.location.department &&
+            data.location.placeName
+          ) {
             const academiaData: Academy = {
               id: data.id,
-              idOrganizador: data.idOrganizador,
-              nombre: data.nombre,
-              contacto: data.contacto,
-              lugar: data.lugar,
-              createdAt: data.createdAt ? data.createdAt : Timestamp.fromDate(new Date()),  // Asegúrate de tener createdAt
-              updatedAt: data.updatedAt ? data.updatedAt : Timestamp.fromDate(new Date())   // Asegúrate de tener updatedAt
+              organizerId: data.organizerId,
+              name: data.name,
+              email: data.email,
+              phoneNumber: data.phoneNumber,
+              location: {
+                street: data.location.street,
+                district: data.location.district,
+                province: data.location.province,
+                department: data.location.department,
+                placeName: data.location.placeName,
+                coordinates: {
+                  latitude: data.location.coordinates.latitude,
+                  longitude: data.location.coordinates.longitude,
+                },
+              },
+              createdAt: data.createdAt
+                ? data.createdAt
+                : Timestamp.fromDate(new Date()),
+              updatedAt: data.updatedAt
+                ? data.updatedAt
+                : Timestamp.fromDate(new Date()),
             };
             setAcademia(academiaData);
           } else {
@@ -46,7 +75,7 @@ export default function MisEventos() {
         }
       }
     };
-  
+
     fetchAcademia();
   }, [user]);
 
@@ -74,14 +103,13 @@ export default function MisEventos() {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      await deleteDoc(doc(db, "eventos", eventId)); // Eliminar el evento de Firestore
+      await deleteDoc(doc(db, "eventos", eventId));
       alert("Evento eliminado");
     } catch (err) {
       console.error("Error eliminando el evento: ", err);
       alert("Hubo un error al eliminar el evento");
     }
   };
-  
 
   return (
     <main className="flex flex-col items-center min-h-screen text-center">
@@ -91,7 +119,7 @@ export default function MisEventos() {
       />
 
       <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
-        SALUDOS{user?.firstName ? `, ${user.firstName.toUpperCase()}` : ""}. ESTOS SON LOS EVENTOS DE LA ACADEMIA {(academia?.nombre || "Cargando academia...").toUpperCase()}.
+        SALUDOS{user?.firstName ? `, ${user.firstName.toUpperCase()}` : ""}. ESTOS SON LOS EVENTOS DE LA ACADEMIA {(academia?.name || "Cargando academia...").toUpperCase()}.
       </h1>
 
       <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">

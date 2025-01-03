@@ -1,21 +1,22 @@
 import { Timestamp } from "firebase/firestore";
 
 export interface Academy {
-    id: string;
-    idOrganizador: string;
-    nombre: string;
-    contacto: {
-        correo: string;
-        telefono: string;
-    }
-    lugar: {
-      nombreLugar: string;
-      calle: string;
-      coordenadas: string;
-      departamento: string;
-      distrito: string;
-      provincia: string;
+  id: string;
+  organizerId: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  location: {
+    street: string; // Calle del lugar del evento
+    district: string; // Distrito del lugar del evento
+    province: string; // Provincia del lugar del evento
+    department: string; // Departamento del lugar del evento
+    placeName: string; // Nombre del lugar del evento
+    coordinates: {
+      latitude: string; // Latitud del lugar del evento
+      longitude: string; // Longitud del lugar del evento
     };
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-  }
+  };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}

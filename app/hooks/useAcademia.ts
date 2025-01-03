@@ -18,7 +18,7 @@ export default function useAcademia() {
     }
 
     const fetchAcademia = () => {
-      const q = query(collection(db, "academias"), where("idOrganizador", "==", user.uid));
+      const q = query(collection(db, "academias"), where("organizerId", "==", user.uid));
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         if (!querySnapshot.empty) {
           const docData = querySnapshot.docs[0].data();

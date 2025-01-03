@@ -53,7 +53,7 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
             <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
                 <article className="order-2 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
                     {/* Nombre del evento */}
-                    <h1 className="text-2xl font-bold text-gray-800">{event.type}: {event.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
 
                     {/* Descripción del evento */}
                     <p className="text-gray-700 text-base md:text-lg leading-relaxed">

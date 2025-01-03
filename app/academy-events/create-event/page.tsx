@@ -16,7 +16,7 @@ const CreateEvent = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [type, setType] = useState<string>("");
+  const [eventType, setEventType] = useState<string>("");
   const [capacity, setCapacity] = useState<string>("");
   const [street, setStreet] = useState<string>("");
   const [latitude, setLatitude] = useState<string>("");
@@ -92,7 +92,7 @@ const CreateEvent = () => {
             longitude: longitude,
           },
         },
-        type,
+        eventType,
         capacity,
         status: "pendiente",
         settings: {
@@ -116,7 +116,7 @@ const CreateEvent = () => {
       setStartDate("");
       setEndDate("");
       setDescription("");
-      setType("");
+      setEventType("");
       setStreet("");
       setLatitude("");
       setLongitude("");
@@ -150,7 +150,7 @@ const CreateEvent = () => {
           { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
           { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
           { label: "Capacidad", id: "capacity", value: capacity, setValue: setCapacity, type: "text" },
-          { label: "Tipo de Evento", id: "type", value: type, setValue: setType, type: "text" },
+          { label: "Tipo de Evento", id: "eventType", value: eventType, setValue: setEventType, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
               <label htmlFor={id} className="block font-medium mb-1">{label}</label>
