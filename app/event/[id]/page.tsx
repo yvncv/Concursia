@@ -35,12 +35,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${event.imagen})`,
+            backgroundImage: `url(${event.smallImage})`,
             filter: "brightness(0.5) sepia(1) saturate(2) hue-rotate(-50deg)",
           }}
         ></div>
         <h1 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
-          {event.nombre.toUpperCase()}
+          {event.name.toUpperCase()}
         </h1>
       </div>
 
@@ -82,7 +82,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           onClick={closeModal}
         >
           <div className="bg-white p-6 rounded-lg w-full sm:w-3/4 lg:w-1/2 max-w-4xl relative">
-            <h2 className="text-xl mb-4">Ubicación del event: {event?.nombre}</h2>
+            <h2 className="text-xl mb-4">Ubicación del event: {event?.name}</h2>
             <div className="w-full">
               {/* Pasar el event completo al mapa */}
               <Map event={event} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { Academy } from "../types/academyType";
 import useUser from "./useUser";
 
@@ -16,14 +16,10 @@ export default function useAcademia() {
       setLoading(false);
       return;
     }
-  
-    const fetchAcademia = async () => {
-      try {
-        setLoading(true);
-        const academiasRef = collection(db, "academias");
-        const q = query(academiasRef, where("idOrganizador", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-  
+
+    const fetchAcademia = () => {
+      const q = query(collection(db, "academias"), where("idOrganizador", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
         if (!querySnapshot.empty) {
           const docData = querySnapshot.docs[0].data();
           const docId = querySnapshot.docs[0].id;
@@ -31,19 +27,21 @@ export default function useAcademia() {
         } else {
           setError("No se encontraron academias para este organizador.");
         }
-      } catch (error) {
+        setLoading(false);
+      }, (error) => {
         console.error("Error al obtener los datos de la academia", error);
         setError("Error al obtener los datos de la academia.");
-      } finally {
         setLoading(false);
-      }
+      });
+
+      // Limpiar el listener cuando el componente se desmonte
+      return () => unsubscribe();
     };
-  
+
     if (user?.uid) {
       fetchAcademia();
     }
   }, [user]);  // Dependencia en el `user`
-  
 
   return { academia, loadingAcademia, errorAcademia };
 }

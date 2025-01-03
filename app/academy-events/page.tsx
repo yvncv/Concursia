@@ -58,7 +58,7 @@ export default function MisEventos() {
   }
 
   const filteredEvents = events.filter(
-    (event) => event.idAcademia === user?.academyId
+    (event) => event.academyId === user?.academyId
   );
 
   const indexOfLastEvent = currentPage * eventsPerPage;
@@ -74,18 +74,19 @@ export default function MisEventos() {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      await deleteDoc(doc(db, "events", eventId));
+      await deleteDoc(doc(db, "eventos", eventId)); // Eliminar el evento de Firestore
       alert("Evento eliminado");
     } catch (err) {
       console.error("Error eliminando el evento: ", err);
       alert("Hubo un error al eliminar el evento");
     }
   };
+  
 
   return (
     <main className="flex flex-col items-center min-h-screen text-center">
       <CarruselEvento
-        imagenes={filteredEvents.map((event) => event.imagen)}
+        imagenes={filteredEvents.map((event) => event.smallImage)}
         ids={filteredEvents.map((event) => event.id)}
       />
 

@@ -9,8 +9,8 @@ export interface Event {
   endDate: Timestamp; // Fecha y hora de culminación del evento
   academyId?: string; // ID de la academia asociada al evento (opcional)
   organizerId?: string; // ID del organizador del evento (opcional)
-  smallImage?: string; // URL de la imagen pequeña para vistas previas (opcional)
-  bannerImage?: string; // URL del banner del evento (opcional)
+  smallImage: string; // URL de la imagen pequeña para vistas previas (opcional)
+  bannerImage: string; // URL del banner del evento (opcional)
   location: {
     street: string; // Calle del lugar del evento
     district: string; // Distrito del lugar del evento
@@ -23,10 +23,7 @@ export interface Event {
     };
   };
   type: string; // Tipo de evento (ejemplo: "concurso")
-  capacity: {
-    day1: number; // Capacidad del primer día del evento
-    day2?: number; // Capacidad del segundo día del evento (opcional)
-  };
+  capacity: string;
   status: string; // Estado del evento (ejemplo: "pendiente", "en curso", "finalizado")
   settings: {
     categories: string[]; // Categorías incluidas en el evento

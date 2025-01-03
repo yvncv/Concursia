@@ -17,6 +17,7 @@ const CreateEvent = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [type, setType] = useState<string>("");
+  const [capacity, setCapacity] = useState<string>("");
   const [street, setStreet] = useState<string>("");
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
@@ -57,14 +58,19 @@ const CreateEvent = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+  
     try {
       if (!user) {
         throw new Error("Usuario no autenticado");
       }
-
+  
+      // Buscar los nombres de departamento, provincia y distrito
+      const departmentName = ubigeoData.find(item => item.departamento === department && item.provincia === "00" && item.distrito === "00")?.nombre;
+      const provinceName = ubigeoData.find(item => item.provincia === province && item.departamento === department && item.distrito === "00")?.nombre;
+      const districtName = ubigeoData.find(item => item.distrito === district && item.departamento === department && item.provincia === province)?.nombre;
+  
       const eventId = new Date().getTime().toString();
-
+  
       const event: Event = {
         id: eventId,
         name,
@@ -77,9 +83,9 @@ const CreateEvent = () => {
         bannerImage,
         location: {
           street,
-          district,
-          province,
-          department,
+          district: districtName || district, // Usar nombre si se encuentra, sino el código
+          province: provinceName || province, // Usar nombre si se encuentra, sino el código
+          department: departmentName || department, // Usar nombre si se encuentra, sino el código
           placeName,
           coordinates: {
             latitude: latitude,
@@ -87,9 +93,7 @@ const CreateEvent = () => {
           },
         },
         type,
-        capacity: {
-          day1: 0,
-        },
+        capacity,
         status: "pendiente",
         settings: {
           categories: [],
@@ -102,9 +106,9 @@ const CreateEvent = () => {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
-
+  
       await setDoc(doc(db, "eventos", eventId), event);
-
+  
       alert("Evento creado exitosamente");
       setName("");
       setSmallImage("");
@@ -127,6 +131,7 @@ const CreateEvent = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
@@ -144,6 +149,7 @@ const CreateEvent = () => {
           { label: "Fecha de Inicio", id: "startDate", value: startDate, setValue: setStartDate, type: "datetime-local" },
           { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
           { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
+          { label: "Capacidad", id: "capacity", value: capacity, setValue: setCapacity, type: "text" },
           { label: "Tipo de Evento", id: "type", value: type, setValue: setType, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">

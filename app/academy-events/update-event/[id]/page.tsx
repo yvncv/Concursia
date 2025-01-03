@@ -269,7 +269,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
               }`}
             disabled={loading}
           >
-            {loading ? "Creando..." : "Crear Evento"}
+            {loading ? "Creando..." : "Actualizar Evento"}
           </button>
         </div>
       </form>
