@@ -1,8 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { getDocs, collection } from "firebase/firestore";
+import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
+import { collection, query, onSnapshot } from "firebase/firestore";
 import { Event } from "../types/eventType";
 
 export default function useEvents() {
@@ -11,24 +9,30 @@ export default function useEvents() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const eventsSnapshot = await getDocs(collection(db, "eventos"));
-        const eventsData = eventsSnapshot.docs.map((doc) => ({
+    const fetchEvents = () => {
+      const q = query(collection(db, "eventos"));
+      
+      // Usar onSnapshot para escuchar cambios en tiempo real
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const eventsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Event[];
+
         setEvents(eventsData);
-      } catch (err) {
+        setLoading(false);  // Datos cargados
+      }, (err) => {
         console.error("Error fetching events", err);
         setError("Failed to fetch events");
-      } finally {
         setLoading(false);
-      }
+      });
+
+      // Limpiar el listener cuando el componente se desmonte
+      return () => unsubscribe();
     };
 
     fetchEvents();
-  }, []); // El efecto se ejecutará solo una vez al montar el componente
+  }, []); // Solo se ejecuta al montar el componente
 
   return { events, loadingEvent, error };
 }

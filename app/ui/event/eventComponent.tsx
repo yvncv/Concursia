@@ -45,22 +45,22 @@ export default function EventComponent({ event }: { event: Event }) {
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {/* Imagen desenfocada de fondo */}
-        {event.imagen && (
+        {event.smallImage && (
           <>
             <div className="absolute inset-0 -z-10">
               <Image
-                src={event.imagen}
+                src={event.smallImage}
                 className="h-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
-                alt={`Blur background of ${event.nombre}`}
+                alt={`Blur background of ${event.name}`}
                 width={900}
                 height={200}
                 priority={false}
               />
             </div>
             <Image
-              src={event.imagen}
+              src={event.smallImage}
               className="object-cover"
-              alt={event.nombre}
+              alt={event.smallImage}
               width={900}
               height={200}
               priority={false}
@@ -70,15 +70,15 @@ export default function EventComponent({ event }: { event: Event }) {
       }
       </div>
       <div className="justify-center flex items-center text-white bg-red-700 py-1">
-        {event.tipoEvento}
+        {event.eventType}
       </div>
       <div className="p-4 pt-1">
         <h5 className="text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">
-          {event.nombre}
+          {event.name}
         </h5>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
           <CalendarIcon className="text-red-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{capitalizeFirstLetter(event.fecha.toDate().toLocaleDateString("es-PE", {
+          <span className="line-clamp-1 truncate">{capitalizeFirstLetter(event.startDate.toDate().toLocaleDateString("es-PE", {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -86,14 +86,14 @@ export default function EventComponent({ event }: { event: Event }) {
         </div>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
           <PlaceIcon className="text-blue-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{event.lugar.nombreLugar}</span>
+          <span className="line-clamp-1 truncate">{event.location.placeName}</span>
         </div>
         <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
           <ClockIcon className="text-green-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{event.fecha.toDate().toLocaleTimeString()}</span>
+          <span className="line-clamp-1 truncate">{event.startDate.toDate().toLocaleTimeString()}</span>
         </div>
         <p className="text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate line-clamp-2">
-          {event.descripcion}
+          {event.description}
         </p>
         <Link
           href={`/event/${event.id}`}

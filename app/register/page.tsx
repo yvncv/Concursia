@@ -3,55 +3,81 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/app/firebase/config";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/app/TusuyPeru.jpg";
 import MarineraImage from "@/public/marinera.jpg";
 
 export default function RegisterForm() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [contactoTelefono, setContactoTelefono] = useState(""); // Solo teléfono
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");  // Nuevo estado para confirmar la contraseña
+  const [error1, setError1] = useState("");
+  const [error2, setError2] = useState("");
+  const [passwordError, setPasswordError] = useState("");  // Estado para mostrar el error de contraseñas no coincidentes
   const [loading, setLoading] = useState(false);
+  const [dni, setDni] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [step, setStep] = useState(1);
+  const [level, setLevel] = useState("");
   const router = useRouter();
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
+  
+  const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
     if (!validateEmail(email)) {
-      setError("Por favor ingresa un correo válido.");
+      setError1("Por favor ingresa un correo válido.");
+      return;
+    }
+    if (password !== confirmPassword) {  // Validación de contraseñas
+      setPasswordError("Las contraseñas no coinciden.");
       setLoading(false);
       return;
     }
+    setStep(2);
+  };
+
+  const handleSubmitStep2 = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!validateNumber(phoneNumber)) {
+      setError2("Por favor ingresa un número de teléfono válido.");
+      return;
+    }
+    e.preventDefault();
+    setPasswordError("");  // Limpiar el error de contraseña en este paso
+    setLoading(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
       await setDoc(doc(db, "users", user.uid), {
-        name,
-        contacto: {
-          correo: email, // Establecemos el correo de contacto como el correo de registro
-          telefono: contactoTelefono, // Guardamos el teléfono
-        },
-        eventos: {
-          espectados: [],
-          participados: [],
-        },
-        role: "user",
+        roleId: "user",
+        dni,
+        fullName: `${firstName} ${lastName}`,
+        firstName,
+        lastName,
+        birthDate: Timestamp.fromDate(new Date(birthDate)),
+        gender,
+        email: [email, ""],
+        phoneNumber: [phoneNumber, ""],
+        attendedEvents: [""],
+        participatedEvents: [""],
+        level: level,
+        academyId: "",
         createdAt: new Date(),
       });
-      
       alert("Registro exitoso");
       router.push("/");
     } catch (err) {
-      setError("No se pudo registrar. Por favor, intenta nuevamente.");
       console.error("Error al registrarse:", err);
     } finally {
       setLoading(false);
@@ -64,84 +90,183 @@ export default function RegisterForm() {
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
           <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Regístrate aquí</h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <p className="text-red-500">{error}</p>}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nombre</label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                placeholder="Tu nombre"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                placeholder="Correo electrónico"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
-              <input
-                type="tel"
-                id="contactoTelefono"
-                value={contactoTelefono}
-                onChange={(e) => setContactoTelefono(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                placeholder="Tu número de contacto"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                placeholder="Contraseña"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
-              disabled={loading}
-            >
-              {loading ? "Cargando..." : "Registrarse"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="w-full text-sm text-rose-500 hover:underline mt-2"
-            >
-              ¿Ya tienes cuenta? Inicia sesión.
-            </button>
-          </form>
-        </div>
+          <div className="flex justify-center space-x-4 mb-6">
+            {[1, 2].map((num) => (
+              <button
+                key={num}
+                onClick={() => step >= num && setStep(num)}
+                className={`w-8 h-8 flex items-center justify-center rounded-full font-semibold text-white 
+                  ${step >= num ? "bg-red-500" : "bg-gray-400"} 
+                  ${step < num ? "cursor-not-allowed" : ""}`}
+                disabled={step < num}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
 
-        {/* Contenedor de la imagen */}
-        <div className="hidden md:block md:w-1/2">
-          <Image
-            src={MarineraImage}
-            alt="Imagen de marinera"
-            width={800}
-            height={600}
-            className="h-full w-full object-cover"
-          />
+          {/* Paso 1: Información básica */}
+          {step === 1 ? (
+            <form onSubmit={handleSubmitStep1} className="space-y-4">
+              {error1 && <p className="text-red-500">{error1}</p>}
+              <div className="flex gap-x-2">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  placeholder="Correo electrónico"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  placeholder="Contraseña"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  placeholder="Confirmar Contraseña"
+                  required
+                />
+              </div>
+              {passwordError && <p className="text-red-500">{passwordError}</p>}  {/* Mostrar el error si las contraseñas no coinciden */}
+              <button
+                type="submit"
+                className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+                disabled={!firstName || !lastName || !email || !password || !confirmPassword} // Habilitar solo si los campos están llenos
+              >
+                {loading ? "Cargando..." : "Siguiente"}
+              </button>
+            </form>
+          ) : step === 2 ? (
+            <form onSubmit={handleSubmitStep2} className="space-y-4">
+              {error2 && <p className="text-red-500">{error2}</p>}
+              <div>
+                <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
+                <input
+                  type="text"
+                  id="dni"
+                  value={dni}
+                  onChange={(e) => setDni(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  placeholder="Número de DNI"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input
+                  type="tel"
+                  id="contactoTelefono"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  placeholder="Tu número de contacto"
+                />
+              </div>
+              <div>
+                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+                <input
+                  type="datetime-local"
+                  id="birthDate"
+                  min={`${new Date().getFullYear() - 100}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
+                  max={`${new Date().getFullYear() - 5}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)} // Método actualizado
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Género</label>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                >
+                  <option value="">Selecciona tu género</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="level" className="block text-sm font-medium text-gray-700">Nivel de Baile</label>
+                <select
+                  id="level"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                >
+                  <option value="">Selecciona tu nivel</option>
+                  <option value="De la Unidad">De la Unidad</option>
+                  <option value="Oro">Oro</option>
+                  <option value="Pre Infante">Pre Infante</option>
+                  <option value="Infante">Infante</option>
+                  <option value="Novel">Novel</option>
+                  <option value="Infantil">Infantil</option>
+                  <option value="Junior">Junior</option>
+                  <option value="Máster">Máster</option>
+                  <option value="Senior">Senior</option>
+                  <option value="Juvenil">Juvenil</option>
+                  <option value="Adulto">Adulto</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+              >
+                {loading ? "Cargando..." : "Registrarse"}
+              </button>
+            </form>
+          ) : null}
+        </div>
+        <div className="w-full md:w-1/2">
+          <Image src={TusuyImage} alt="Tusuy Perú" className="w-full h-full object-cover" />
         </div>
       </div>
     </div>
   );
 }
-

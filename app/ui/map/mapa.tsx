@@ -3,7 +3,7 @@ import { Event } from "../../types/eventType";
 
 const Map = ({ event }: { event: Event }) => {
   // Extrae las coordenadas del event
-  const [latitude, longitude] = event.lugar.coordenadas.split(',').map(coord => parseFloat(coord));
+  const [latitude, longitude] = [event.location.coordinates.latitude, event.location.coordinates.longitude]
 
   return (
     <div className="map-container">

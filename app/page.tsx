@@ -42,14 +42,14 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen text-center">
       {/* Carrusel de imágenes */}
       <CarruselEvento
-        imagenes={events.map((event) => event.imagen)}
+        imagenes={events.map((event) => event.smallImage)}
         ids={events.map((event) => event.id)}
       />
 
       {/* Mensaje de bienvenida */}
       <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
         SALUDOS
-        {user?.name ? `, ${user.name.toUpperCase()}` : ""}.
+        {user?.firstName ? `, ${user.firstName.toUpperCase()}` : ""}.
         ESTOS SON LOS EVENTOS DISPONIBLES.
       </h1>
 
