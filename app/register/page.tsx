@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/app/firebase/config";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import TusuyImage from "@/app/TusuyPeru.jpg";
+import TusuyImage from "@/public/TusuyPeru.jpg";
+import MarineraImage from "@/public/marinera.jpg";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export default function RegisterForm() {
   const [dni, setDni] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [category, setCategory] = useState("");
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [step, setStep] = useState(1);
@@ -28,7 +30,27 @@ export default function RegisterForm() {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
-  
+
+  useEffect(() => {
+    if (birthDate) {
+      const birthYear = new Date(birthDate).getFullYear();
+      determineCategory(birthYear);
+    }
+  }, [birthDate]);
+
+  const determineCategory = (birthYear: number) => {
+    if (birthYear >= 2021) setCategory('Baby');
+    else if (birthYear >= 2018) setCategory('Pre Infante');
+    else if (birthYear >= 2015) setCategory('Infante');
+    else if (birthYear >= 2011) setCategory('Infantil');
+    else if (birthYear >= 2007) setCategory('Junior');
+    else if (birthYear >= 2003) setCategory('Juvenil');
+    else if (birthYear >= 1990) setCategory('Adulto');
+    else if (birthYear >= 1975) setCategory('Senior');
+    else if (birthYear >= 1963) setCategory('Master');
+    else setCategory('Oro');
+  };
+
   const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateEmail(email)) {
@@ -50,6 +72,7 @@ export default function RegisterForm() {
       setError2("Por favor ingresa un número de teléfono válido.");
       return;
     }
+
     e.preventDefault();
     setPasswordError("");  // Limpiar el error de contraseña en este paso
     setLoading(true);
@@ -64,8 +87,9 @@ export default function RegisterForm() {
         fullName: `${firstName} ${lastName}`,
         firstName,
         lastName,
-        birthDate: Timestamp.fromDate(new Date(birthDate)),
+        birthDate: Timestamp.fromDate(new Date(`${birthDate}T00:00:00`)),
         gender,
+        category: category,
         email: [email, ""],
         phoneNumber: [phoneNumber, ""],
         attendedEvents: [""],
@@ -84,11 +108,17 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#d9c0c0]">
-      <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl w-full">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--rosado-claro)] px-4 py-8">
+      <div className="flex flex-col md:flex-row bg-[var(--blanco)] rounded-3xl shadow-lg overflow-hidden max-w-4xl w-full">
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
-          <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Regístrate aquí</h1>
+          <button
+            onClick={() => router.push("/")}
+            className="text-rose-500 hover:underline mb-4"
+          >
+            ← Inicio
+          </button>
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Regístrate aquí</h1>
           <div className="flex justify-center space-x-4 mb-6">
             {[1, 2].map((num) => (
               <button
@@ -116,8 +146,8 @@ export default function RegisterForm() {
                     id="firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                    placeholder="John"
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    placeholder="Juan"
                     required
                   />
                 </div>
@@ -128,8 +158,8 @@ export default function RegisterForm() {
                     id="lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                    placeholder="Doe"
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    placeholder="Perez Prado"
                     required
                   />
                 </div>
@@ -141,7 +171,7 @@ export default function RegisterForm() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Correo electrónico"
                   required
                 />
@@ -153,7 +183,7 @@ export default function RegisterForm() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Contraseña"
                   required
                 />
@@ -165,7 +195,7 @@ export default function RegisterForm() {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Confirmar Contraseña"
                   required
                 />
@@ -173,10 +203,17 @@ export default function RegisterForm() {
               {passwordError && <p className="text-red-500">{passwordError}</p>}  {/* Mostrar el error si las contraseñas no coinciden */}
               <button
                 type="submit"
-                className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+                className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
                 disabled={!firstName || !lastName || !email || !password || !confirmPassword} // Habilitar solo si los campos están llenos
               >
                 {loading ? "Cargando..." : "Siguiente"}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/login")}
+                className="w-full text-sm text-rose-500 hover:underline mt-2"
+              >
+                ¿Ya tienes una cuenta? Inicia Sesión.
               </button>
             </form>
           ) : step === 2 ? (
@@ -189,7 +226,7 @@ export default function RegisterForm() {
                   id="dni"
                   value={dni}
                   onChange={(e) => setDni(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Número de DNI"
                   required
                 />
@@ -201,20 +238,20 @@ export default function RegisterForm() {
                   id="contactoTelefono"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Tu número de contacto"
                 />
               </div>
               <div>
                 <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   id="birthDate"
-                  min={`${new Date().getFullYear() - 100}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
-                  max={`${new Date().getFullYear() - 5}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
+                  min={`${new Date().getFullYear() - 120}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
+                  max={`${new Date().getFullYear() - 1}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)} // Método actualizado
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 />
               </div>
 
@@ -224,14 +261,14 @@ export default function RegisterForm() {
                   id="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 >
                   <option value="">Selecciona tu género</option>
                   <option value="Masculino">Masculino</option>
                   <option value="Femenino">Femenino</option>
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label htmlFor="level" className="block text-sm font-medium text-gray-700">Nivel de Baile</label>
                 <select
                   id="level"
@@ -253,16 +290,17 @@ export default function RegisterForm() {
                   <option value="Adulto">Adulto</option>
                 </select>
               </div>
+               */}
               <button
                 type="submit"
-                className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+                className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
               >
                 {loading ? "Cargando..." : "Registrarse"}
               </button>
             </form>
           ) : null}
         </div>
-        <div className="w-full md:w-1/2">
+        <div className="hidden md:block md:w-1/2">
           <Image src={TusuyImage} alt="Tusuy Perú" className="w-full h-full object-cover" />
         </div>
       </div>

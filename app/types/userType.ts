@@ -11,16 +11,10 @@ export type User = FirebaseUser & {
   gender: string;
   email: string[];
   phoneNumber: string[];
+  category: string;
   attendedEvents?: string[];
   participatedEvents?: string[];
   level?: string;
   academyId?: string;
   createdAt: Timestamp;
-  socials?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-    tiktok?: string;
-    youtube?: string;
-  };
 };

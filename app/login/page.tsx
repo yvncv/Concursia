@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import TusuyImage from "@/app/TusuyPeru.jpg";
+import MarineraImage from "@/public/marinera.jpg";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -32,43 +32,48 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#d9c0c0]">
-      <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl w-full">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--rosado-claro)] px-4 py-8">
+      <div className="flex flex-col md:flex-row bg-[var(--blanco)] rounded-3xl shadow-lg overflow-hidden max-w-3xl w-full">
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
-          <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Inicia sesión aquí</h1>
+          <button
+            onClick={() => router.push("/")}
+            className="text-rose-500 hover:underline mb-4"
+          >
+            ← Inicio
+          </button>
+          <h1 className="text-3xl font-bold mb-12 mt-10 text-center text-gray-800">Inicia sesión aquí</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-red-500">{error}</p>}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                className="w-full px-4 py-5 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 placeholder="Correo electrónico"
                 required
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
+              {/* <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label> */}
               <input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
+                className="w-full mt-3 mb-8 px-4 py-5 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 placeholder="Contraseña"
                 required
               />
             </div>
             <div className="flex items-center justify-between">
-              <a href="#" className="text-sm text-rose-500 hover:underline">¿Olvidaste la contraseña?</a>
+              <a href="#" className="mb-8 text-sm text-rose-500 hover:underline">¿Olvidaste la contraseña?</a>
             </div>
             <button
               type="submit"
-              className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+              className="w-4/5 mx-auto block text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
               disabled={loading}
             >
               {loading ? "Cargando..." : "Iniciar Sesión"}
@@ -86,7 +91,7 @@ export default function LoginForm() {
         {/* Contenedor de la imagen */}
         <div className="hidden md:block md:w-1/2">
           <Image
-            src={TusuyImage}
+            src={MarineraImage}
             alt="Imagen de marinera"
             width={800}
             height={600}
