@@ -74,7 +74,7 @@ const ProfilePage = () => {
 
         <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Fecha de Registro</h2>
-          <p className="text-gray-600">{capitalizeFirstLetter(user.birthDate.toDate().toLocaleDateString("es-PE", {
+          <p className="text-gray-600">{capitalizeFirstLetter(user.createdAt.toDate().toLocaleDateString("es-PE", {
             weekday: "long",
             day: "numeric",
             month: "long",
