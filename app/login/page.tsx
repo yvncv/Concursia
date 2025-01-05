@@ -5,7 +5,6 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import TusuyImage from "@/public/TusuyPeru.jpg";
 import MarineraImage from "@/public/marinera.jpg";
 
 export default function LoginForm() {
