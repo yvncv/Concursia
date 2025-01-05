@@ -58,19 +58,27 @@ const CreateEvent = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
+
     try {
       if (!user) {
         throw new Error("Usuario no autenticado");
       }
-  
+
       // Buscar los nombres de departamento, provincia y distrito
-      const departmentName = ubigeoData.find(item => item.departamento === department && item.provincia === "00" && item.distrito === "00")?.nombre;
-      const provinceName = ubigeoData.find(item => item.provincia === province && item.departamento === department && item.distrito === "00")?.nombre;
-      const districtName = ubigeoData.find(item => item.distrito === district && item.departamento === department && item.provincia === province)?.nombre;
-  
+      const departmentName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === "00" && item.distrito === "00"
+      )?.nombre || department;
+
+      const provinceName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === province && item.distrito === "00"
+      )?.nombre || province;
+
+      const districtName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === province && item.distrito === district
+      )?.nombre || district;
+
       const eventId = new Date().getTime().toString();
-  
+
       const event: Event = {
         id: eventId,
         name,
@@ -83,9 +91,9 @@ const CreateEvent = () => {
         bannerImage,
         location: {
           street,
-          district: districtName || district, // Usar nombre si se encuentra, sino el código
-          province: provinceName || province, // Usar nombre si se encuentra, sino el código
-          department: departmentName || department, // Usar nombre si se encuentra, sino el código
+          district: districtName,  // Usar nombre de distrito
+          province: provinceName,  // Usar nombre de provincia
+          department: departmentName,  // Usar nombre de departamento
           placeName,
           coordinates: {
             latitude: latitude,
@@ -106,9 +114,9 @@ const CreateEvent = () => {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
-  
+
       await setDoc(doc(db, "eventos", eventId), event);
-  
+
       alert("Evento creado exitosamente");
       setName("");
       setSmallImage("");
@@ -131,7 +139,7 @@ const CreateEvent = () => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
@@ -198,10 +206,10 @@ const CreateEvent = () => {
                   value={value}
                   onChange={(e) => {
                     setValue(e.target.value);
-                    if (id === "departamento") {
+                    if (id === "department") {
                       setProvince("");
                       setDistrict("");
-                    } else if (id === "provincia") {
+                    } else if (id === "province") {
                       setDistrict("");
                     }
                   }}
