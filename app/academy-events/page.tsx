@@ -1,89 +1,32 @@
 'use client';
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useUser from "../firebase/functions";
 import useEvents from "../hooks/useEvents";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import Link from "next/link";
-import { Academy } from "../types/academyType";
-import { Timestamp } from "firebase/firestore";
+import useAcademia from "../hooks/useAcademia"; // Importamos el hook
 
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvent } = useEvents();
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 12;
-  const [academia, setAcademia] = useState<Academy | null>(null);
 
-  useEffect(() => {
-    const fetchAcademia = async () => {
-      if (user && user.academyId) {
-        const academiaRef = doc(db, "academias", user.academyId);
-        const docSnap = await getDoc(academiaRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-
-          // Verificar si todos los campos requeridos están presentes
-          if (
-            data &&
-            data.name &&
-            data.id &&
-            data.organizerId &&
-            data.email &&
-            data.phoneNumber &&
-            data.location &&
-            data.location.coordinates &&
-            data.location.street &&
-            data.location.district &&
-            data.location.province &&
-            data.location.department &&
-            data.location.placeName
-          ) {
-            const academiaData: Academy = {
-              id: data.id,
-              organizerId: data.organizerId,
-              name: data.name,
-              email: data.email,
-              phoneNumber: data.phoneNumber,
-              location: {
-                street: data.location.street,
-                district: data.location.district,
-                province: data.location.province,
-                department: data.location.department,
-                placeName: data.location.placeName,
-                coordinates: {
-                  latitude: data.location.coordinates.latitude,
-                  longitude: data.location.coordinates.longitude,
-                },
-              },
-              createdAt: data.createdAt
-                ? data.createdAt
-                : Timestamp.fromDate(new Date()),
-              updatedAt: data.updatedAt
-                ? data.updatedAt
-                : Timestamp.fromDate(new Date()),
-            };
-            setAcademia(academiaData);
-          } else {
-            console.error("Datos incompletos de la academia.");
-          }
-        } else {
-          console.error("No se encontró la academia.");
-        }
-      }
-    };
-
-    fetchAcademia();
-  }, [user]);
+  // Usamos el hook useAcademia en lugar del useEffect
+  const { academia, loadingAcademia, errorAcademia } = useAcademia();
 
   const loadingMessage =
     loadingUser ? "Obteniendo usuario..." : loadingEvent ? "Cargando eventos..." : null;
 
-  if (loadingMessage) {
-    return <div className="text-center text-gray-600">{loadingMessage}</div>;
+  if (loadingMessage || loadingAcademia) {
+    return <div className="text-center text-gray-600">{loadingMessage || "Cargando academia..."}</div>;
+  }
+
+  if (errorAcademia) {
+    return <div className="text-center text-red-600">{errorAcademia}</div>;
   }
 
   const filteredEvents = events.filter(
