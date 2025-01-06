@@ -2,51 +2,105 @@
 
 import Link from "next/link";
 import useUser from "@/app/firebase/functions";
+import { useState } from "react";
+import CalendarIcon from "../icons/calendar";
+import { HomeIcon } from "../icons/home";
+import { LoginIcon } from "../icons/login";
+import { ProfileIcon } from "../icons/profile";
+import { MenuIcon } from "../icons/menu";
+import { CloseIcon } from "../icons/close";
 
 const enlaces = [
-  { href: "/", label: "Home", requiresAuth: false },
-  { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
-  { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizer" },
-  { href: "/my-profile", label: "Perfil", requiresAuth: true },
+  { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
+  { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
+  { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
+  { href: "/my-profile", label: "Perfil", icon: ProfileIcon, requiresAuth: true },
 ];
 
 export default function Navbar() {
   const { user, loadingUser } = useUser();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Mientras el estado de usuario está cargando, mostramos un mensaje
   if (loadingUser) {
-    return <div>Cargando...</div>;
+    return (
+      <div className="flex h-16 items-center justify-center bg-rojo">
+        <div className="animate-pulse text-white">Cargando...</div>
+      </div>
+    );
   }
 
+  const filteredLinks = enlaces.filter((link) => {
+    if (link.href === "/login" && user) return false;
+    if (link.requiresAuth) {
+      if (!user) return false;
+      if (link.requiresRole) {
+        return user.roleId === link.requiresRole;
+      }
+      return true;
+    }
+    return true;
+  });
+
   return (
-    <nav className="flex text-white text-xl w-full p-4 bg-rojo fixed top-0 left-0 z-50">
-      <div className="mx-auto">Tusuy Perú</div>
-      <ul className="flex space-x-6 mx-auto justify-center">
-        {enlaces
-          .filter((link) => {
-            // Ocultar "Iniciar Sesión" si el usuario está autenticado
-            if (link.href === "/login" && user) return false;
+    <nav className="fixed left-0 top-0 z-50 w-full bg-rojo shadow-lg">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200">
+              Tusuy Perú
+            </Link>
+          </div>
 
-            // Si requiere autenticación
-            if (link.requiresAuth) {
-              if (!user) return false; // Ocultar si no hay usuario autenticado
+          {/* Desktop Menu */}
+          <div className="hidden md:block">
+            <ul className="flex space-x-8">
+              {filteredLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-              // Si requiere un rol específico
-              if (link.requiresRole) {
-                return user.roleId === link.requiresRole; // Mostrar solo si coincide el rol
-              }
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white hover:text-gray-200 focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
 
-              return true; // Mostrar si no requiere rol
-            }
-
-            return true; // Mostrar rutas públicas
-          })
-          .map((link) => (
-            <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
-            </li>
-          ))}
-      </ul>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <ul className="space-y-4 px-2 pb-4 pt-2">
+              {filteredLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center space-x-3 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
