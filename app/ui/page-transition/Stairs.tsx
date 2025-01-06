@@ -8,12 +8,12 @@ const stairAnimation = {
     exit: { bottom: ["100%", "0%"] },
 };
 
-const reverseIndex = (index: number) => 6 - index - 1;
+const reverseIndex = (index: number) => 5 - index - 1;
 
 const Stairs = () => {
     return (
         <>
-            {[...Array(6)].map((_, index) => {
+            {[...Array(5)].map((_, index) => {
                 return (
                     <motion.div
                         key={index}
