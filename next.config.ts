@@ -2,7 +2,28 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["www.peru.travel", "portal.andina.pe", "cdn.www.gob.pe", "perusumaq.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.peru.travel",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "portal.andina.pe",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.www.gob.pe",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "perusumaq.com",
+        pathname: "/**",
+      },
+    ],
   },
 };
 
