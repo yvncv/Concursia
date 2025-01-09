@@ -7,7 +7,6 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
-import MarineraImage from "@/public/marinera.jpg";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -25,7 +24,6 @@ export default function RegisterForm() {
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [step, setStep] = useState(1);
-  const [level, setLevel] = useState("");
   const router = useRouter();
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -94,7 +92,7 @@ export default function RegisterForm() {
         phoneNumber: [phoneNumber, ""],
         attendedEvents: [""],
         participatedEvents: [""],
-        level: level,
+        level: "",
         academyId: "",
         createdAt: new Date(),
       });
@@ -268,29 +266,6 @@ export default function RegisterForm() {
                   <option value="Femenino">Femenino</option>
                 </select>
               </div>
-              {/* <div>
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700">Nivel de Baile</label>
-                <select
-                  id="level"
-                  value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500"
-                >
-                  <option value="">Selecciona tu nivel</option>
-                  <option value="De la Unidad">De la Unidad</option>
-                  <option value="Oro">Oro</option>
-                  <option value="Pre Infante">Pre Infante</option>
-                  <option value="Infante">Infante</option>
-                  <option value="Novel">Novel</option>
-                  <option value="Infantil">Infantil</option>
-                  <option value="Junior">Junior</option>
-                  <option value="Máster">Máster</option>
-                  <option value="Senior">Senior</option>
-                  <option value="Juvenil">Juvenil</option>
-                  <option value="Adulto">Adulto</option>
-                </select>
-              </div>
-               */}
               <button
                 type="submit"
                 className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"

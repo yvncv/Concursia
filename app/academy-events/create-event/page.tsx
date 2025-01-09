@@ -58,19 +58,27 @@ const CreateEvent = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
+
     try {
       if (!user) {
         throw new Error("Usuario no autenticado");
       }
-  
+
       // Buscar los nombres de departamento, provincia y distrito
-      const departmentName = ubigeoData.find(item => item.departamento === department && item.provincia === "00" && item.distrito === "00")?.nombre;
-      const provinceName = ubigeoData.find(item => item.provincia === province && item.departamento === department && item.distrito === "00")?.nombre;
-      const districtName = ubigeoData.find(item => item.distrito === district && item.departamento === department && item.provincia === province)?.nombre;
-  
+      const departmentName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === "00" && item.distrito === "00"
+      )?.nombre || department;
+
+      const provinceName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === province && item.distrito === "00"
+      )?.nombre || province;
+
+      const districtName = ubigeoData.find(
+        (item) => item.departamento === department && item.provincia === province && item.distrito === district
+      )?.nombre || district;
+
       const eventId = new Date().getTime().toString();
-  
+
       const event: Event = {
         id: eventId,
         name,
@@ -83,9 +91,9 @@ const CreateEvent = () => {
         bannerImage,
         location: {
           street,
-          district: districtName || district, // Usar nombre si se encuentra, sino el código
-          province: provinceName || province, // Usar nombre si se encuentra, sino el código
-          department: departmentName || department, // Usar nombre si se encuentra, sino el código
+          district: districtName,  // Usar nombre de distrito
+          province: provinceName,  // Usar nombre de provincia
+          department: departmentName,  // Usar nombre de departamento
           placeName,
           coordinates: {
             latitude: latitude,
@@ -106,9 +114,9 @@ const CreateEvent = () => {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
-  
+
       await setDoc(doc(db, "eventos", eventId), event);
-  
+
       alert("Evento creado exitosamente");
       setName("");
       setSmallImage("");
@@ -131,17 +139,17 @@ const CreateEvent = () => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-semibold text-rojo m-6">Crear Evento</h1>
+      <h1 className="text-2xl font-semibold text-green-600 m-6">Crear Evento</h1>
 
-      {error && <p className="text-rojo mb-4">{error}</p>}
+      {error && <p className="text-green-600 mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="w-full max-w-7xl bg-white p-6 border border-gray-300 shadow-md rounded">
         {/* Información del Evento */}
-        <h2 className="text-xl font-semibold mb-4 text-rojo border border-transparent border-b-rojo">Información del Evento</h2>
+        <h2 className="text-xl font-semibold mb-4 text-green-600 border border-transparent border-b-green-600">Información del Evento</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Evento", id: "name", value: name, setValue: setName, type: "text" },
           { label: "Imagen Pequeña", id: "smallImage", value: smallImage, setValue: setSmallImage, type: "text" },
@@ -159,7 +167,7 @@ const CreateEvent = () => {
                   id={id}
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-green-600 focus:border-green-600"
                   rows={4}
                   placeholder={`ej: ${label}`}
                   required
@@ -170,7 +178,7 @@ const CreateEvent = () => {
                   id={id}
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-green-600 focus:border-green-600"
                   placeholder={`ej: ${label}`}
                   required
                 />
@@ -180,7 +188,7 @@ const CreateEvent = () => {
         </div>
 
         {/* Información del Lugar */}
-        <h2 className="text-xl font-semibold mt-8 mb-4 text-rojo border border-transparent border-b-rojo">Información del Lugar</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4 text-green-600 border border-transparent border-b-green-600">Información del Lugar</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Lugar", id: "placeName", value: placeName, setValue: setPlaceName, type: "text" },
           { label: "Calle", id: "street", value: street, setValue: setStreet, type: "text" },
@@ -198,14 +206,14 @@ const CreateEvent = () => {
                   value={value}
                   onChange={(e) => {
                     setValue(e.target.value);
-                    if (id === "departamento") {
+                    if (id === "department") {
                       setProvince("");
                       setDistrict("");
-                    } else if (id === "provincia") {
+                    } else if (id === "province") {
                       setDistrict("");
                     }
                   }}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-green-600 focus:border-green-600"
                   required
                 >
                   <option value="">Selecciona {label.toLowerCase()}</option>
@@ -235,7 +243,7 @@ const CreateEvent = () => {
                   id={id}
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-green-600 focus:border-green-600"
                   placeholder={`ej: ${label}`}
                   required
                 />
@@ -245,10 +253,10 @@ const CreateEvent = () => {
         </div>
 
         {/* Botones */}
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex">
           <button
             type="submit"
-            className={`px-6 py-2 text-white font-semibold rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-rojo hover:bg-red-700"
+            className={`mx-auto w-4/5 px-6 py-2 text-white font-semibold rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
               }`}
             disabled={loading}
           >

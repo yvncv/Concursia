@@ -50,7 +50,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const filteredProvinces = ubigeoData.filter(
     (item) => item.departamento === department && item.provincia !== "00" && item.distrito === "00"
   );
-
+  
   // Filtrar distritos según provincia seleccionada
   const filteredDistricts = ubigeoData.filter(
     (item) => item.departamento === department && item.provincia === province && item.distrito !== "00"
@@ -105,9 +105,23 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+  
+    // Buscar el nombre completo del departamento, provincia y distrito
+    const departmentName = ubigeoData.find(
+      (item) => item.departamento === department && item.provincia === "00" && item.distrito === "00"
+    )?.nombre || department;
+    
+    const provinceName = ubigeoData.find(
+      (item) => item.departamento === department && item.provincia === province && item.distrito === "00"
+    )?.nombre || province;
+    
+    const districtName = ubigeoData.find(
+      (item) => item.departamento === department && item.provincia === province && item.distrito === district
+    )?.nombre || district;
+    
+  
     try {
-      // Update the event in Firestore
+      // Actualizar el evento en Firestore
       const eventRef = doc(db, "eventos", id);
       await updateDoc(eventRef, {
         name,
@@ -118,13 +132,13 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         bannerImage,
         location: {
           street,
-          district,
-          province,
-          department,
+          district: districtName,  // Usar nombre de distrito
+          province: provinceName,  // Usar nombre de provincia
+          department: departmentName,  // Usar nombre de departamento
           placeName,
           coordinates: {
-            latitude: latitude,
-            longitude: longitude,
+            latitude,
+            longitude,
           },
         },
         eventType,
@@ -138,10 +152,10 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        lastUpdateBy: user?.fullName
-      },
-      );
-      router.push("/academy-events"); // Redirect to events page after update
+        lastUpdateBy: user?.fullName,
+      });
+  
+      router.push("/academy-events"); // Redirigir a la página de eventos después de la actualización
     } catch (err) {
       setError("Error al actualizar el evento.");
       console.error("Error al actualizar el evento: ", err);
@@ -149,16 +163,17 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-semibold text-rojo m-6">Crear Evento</h1>
+      <h1 className="text-2xl font-semibold text-yellow-600 m-6">Editar Evento</h1>
 
-      {error && <p className="text-rojo mb-4">{error}</p>}
+      {error && <p className="text-yellow-600 mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="w-full max-w-7xl bg-white p-6 border border-gray-300 shadow-md rounded">
         {/* Información del Evento */}
-        <h2 className="text-xl font-semibold mb-4 text-rojo border border-transparent border-b-rojo">Información del Evento</h2>
+        <h2 className="text-xl font-semibold mb-4 text-yellow-600 border border-transparent border-b-yellow-600">Información del Evento</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Evento", id: "name", value: name, setValue: setName, type: "text" },
           { label: "Imagen Pequeña", id: "smallImage", value: smallImage, setValue: setSmallImage, type: "text" },
@@ -176,7 +191,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
                   id={id}
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-yellow-600 focus:border-yellow-600"
                   rows={4}
                   placeholder={`ej: ${label}`}
                   required
@@ -187,7 +202,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
                   id={id}
                   value={value || ""}  // Asegúrate de que el valor nunca sea undefined
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-yellow-600 focus:border-yellow-600"
                   placeholder={`ej: ${label}`}
                   required
                 />
@@ -197,7 +212,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Información del Lugar */}
-        <h2 className="text-xl font-semibold mt-8 mb-4 text-rojo border border-transparent border-b-rojo">Información del Lugar</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4 text-yellow-600 border border-transparent border-b-yellow-600">Información del Lugar</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Lugar", id: "placeName", value: placeName, setValue: setPlaceName, type: "text" },
           { label: "Calle", id: "street", value: street, setValue: setStreet, type: "text" },
@@ -222,7 +237,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
                       setDistrict("");
                     }
                   }}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-yellow-600 focus:border-yellow-600"
                   required
                 >
                   <option value="">Selecciona {label.toLowerCase()}</option>
@@ -252,7 +267,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
                   id={id}
                   value={value || ""}  // Asegúrate de que el valor nunca sea undefined
                   onChange={(e) => setValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:ring-rojo focus:border-rojo"
+                  className="w-full px-3 py-2 border rounded focus:ring-yellow-600 focus:border-rojo"
                   placeholder={`ej: ${label}`}
                   required
                 />
@@ -263,14 +278,14 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Botones */}
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex">
           <button
             type="submit"
-            className={`px-6 py-2 text-white font-semibold rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-rojo hover:bg-red-700"
+            className={`mx-auto w-4/5 px-6 py-2 text-white font-semibold rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
               }`}
             disabled={loading}
           >
-            {loading ? "Creando..." : "Actualizar Evento"}
+            {loading ? "Creando..." : "Guardar Evento"}
           </button>
         </div>
       </form>

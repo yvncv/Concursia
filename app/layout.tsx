@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import NavbarControl from "./ui/navbar/navbar-control";
-import ContentWrapper from "./ui/navbar/content-wrapper"; // Nuevo componente para gestionar el margen
+import ContentWrapper from "./ui/navbar/content-wrapper";
+import PageTransition from "./ui/page-transition/PageTransition";
+import StairTransition from "./ui/page-transition/StairTransition";
 
 const poppins = localFont({
   src: "./fonts/Poppins-Regular.ttf",
@@ -18,10 +20,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${poppins.variable} antialiased justify-center`}>
+    <html lang="es" translate="yes">
+      <body className={`${poppins.variable} antialiased`}>
         <NavbarControl />
-        <ContentWrapper>{children}</ContentWrapper>
+        <StairTransition />
+        <ContentWrapper>
+          <PageTransition>{children}
+          </PageTransition>
+        </ContentWrapper>
       </body>
     </html>
   );
