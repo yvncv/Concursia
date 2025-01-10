@@ -39,8 +39,14 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             filter: "brightness(0.5) sepia(1) saturate(2) hue-rotate(-50deg)",
           }}
         ></div>
+        <h1 className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
+          {event.eventType.toUpperCase()}
+        </h1>
         <h1 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
           {event.name.toUpperCase()}
+        </h1>
+        <h1 className="absolute top-2/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
+          {event.location.province.toUpperCase()}, {event.location.department.toUpperCase()}
         </h1>
       </div>
 

@@ -1,48 +1,44 @@
 'use client';
+
 import { useState } from "react";
 import useUser from "../firebase/functions";
 import useEvents from "../hooks/useEvents";
+import useAcademia from "../hooks/useAcademia";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
+import Pagination from "../ui/pagination/Pagination";
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import Link from "next/link";
-import useAcademia from "../hooks/useAcademia"; // Importamos el hook
 
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvent } = useEvents();
-  const [currentPage, setCurrentPage] = useState(1);
-  const eventsPerPage = 12;
-
-  // Usamos el hook useAcademia en lugar del useEffect
   const { academia, loadingAcademia, errorAcademia } = useAcademia();
-
+  // pagionation
+  const eventsPerPage = 12;
+  const [currentPage, setCurrentPage] = useState(1);
+  //loading
   const loadingMessage =
-    loadingUser ? "Obteniendo usuario..." : loadingEvent ? "Cargando eventos..." : null;
+    loadingUser || loadingAcademia
+      ? "Cargando datos..."
+      : loadingEvent
+      ? "Cargando eventos..."
+      : null;
 
-  if (loadingMessage || loadingAcademia) {
-    return <div className="text-center text-gray-600">{loadingMessage || "Cargando academia..."}</div>;
+  if (loadingMessage) {
+    return <div className="text-center text-gray-600">{loadingMessage}</div>;
   }
 
   if (errorAcademia) {
     return <div className="text-center text-rojo">{errorAcademia}</div>;
   }
-
-  const filteredEvents = events.filter(
-    (event) => event.academyId === user?.academyId
-  );
+  // filter
+  const filteredEvents = events.filter((event) => event.academyId === user?.academyId);
 
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-
-  const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(filteredEvents.length / eventsPerPage); i++) {
-    pageNumbers.push(i);
-  }
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const deleteEvent = async (eventId: string) => {
     try {
@@ -62,7 +58,7 @@ export default function MisEventos() {
       />
 
       <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
-        SALUDOS{user?.firstName ? `, ${user.firstName.toUpperCase()}` : ""}. ESTOS SON LOS EVENTOS DE LA ACADEMIA {(academia?.name || "Cargando academia...").toUpperCase()}.
+        SALUDOS, {user?.firstName?.toUpperCase()}. ESTOS SON LOS EVENTOS DE {(academia?.name || "CARGANDO ACADEMIA").toUpperCase()}.
       </h1>
 
       <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
@@ -75,11 +71,11 @@ export default function MisEventos() {
           </Link>
         </div>
 
-        {filteredEvents.length > 0 ? (
+        {currentEvents.length > 0 ? (
           <div className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
             {currentEvents.map((event) => (
               <div key={event.id} className="relative">
-                <EventComponent key={event.id} event={event} />
+                <EventComponent event={event} />
                 <div className="absolute top-0 right-0 m-2 bg-white rounded-full flex">
                   <Link
                     href={`/academy-events/update-event/${event.id}`}
@@ -102,22 +98,12 @@ export default function MisEventos() {
         )}
       </div>
 
-      {filteredEvents.length > eventsPerPage && (
-        <div className="flex justify-center items-center m-6">
-          {pageNumbers.map((number) => (
-            <button
-              key={number}
-              onClick={() => paginate(number)}
-              className={`px-4 py-2 rounded-3xl mx-2 ${currentPage === number
-                ? "bg-rojo text-white"
-                : "bg-gray-300 text-gray-700"
-                } hover:bg-red-500 transition-all`}
-            >
-              {number}
-            </button>
-          ))}
-        </div>
-      )}
+      <Pagination
+        totalItems={filteredEvents.length}
+        itemsPerPage={eventsPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
     </main>
   );
 }

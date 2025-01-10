@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import useUser from "@/app/firebase/functions"; // Asegúrate de que esta ruta sea correcta
 import { db } from "@/app/firebase/config";
-import { setDoc, doc, Timestamp } from "firebase/firestore";
+import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import { Event } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
 
@@ -25,6 +25,7 @@ const CreateEvent = () => {
   const [province, setProvince] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
+  const [academyName, setAcademyName] = useState<string>("");
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,6 +44,24 @@ const CreateEvent = () => {
 
     fetchData();
   }, []);
+
+  // Obtener el nombre de la academia utilizando academyId
+  useEffect(() => {
+    const fetchAcademyName = async () => {
+      if (user && user.academyId) {
+        const academyRef = doc(db, "academias", user.academyId);
+        const academySnap = await getDoc(academyRef);
+        if (academySnap.exists()) {
+          setAcademyName(academySnap.data().name); // Asegúrate de que el campo del nombre de la academia es 'name'
+        } else {
+          console.error("Academia no encontrada.");
+          setAcademyName(""); // Asegúrate de que el campo del nombre de la academia es 'name'
+        }
+      }
+    };
+
+    fetchAcademyName();
+  }, [user]);
 
   // Filtrar provincias según departamento seleccionado
   const filteredProvinces = ubigeoData.filter(
@@ -86,6 +105,7 @@ const CreateEvent = () => {
         startDate: Timestamp.fromDate(new Date(startDate)),
         endDate: Timestamp.fromDate(new Date(endDate)),
         academyId: user.academyId,
+        academyName,
         organizerId: user.uid,
         smallImage,
         bannerImage,

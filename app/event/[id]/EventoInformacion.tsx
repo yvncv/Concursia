@@ -86,20 +86,14 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                                 <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
                             </button>
                         )
-                        : (
-                            <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
-                        )}
+                            : (
+                                <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
+                            )}
                     </div>
-
-                    {/* ID del evento */}
+                    
                     <div className="flex items-center space-x-3 text-gray-600">
                         <IdIcon className="text-purple-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">ID del evento: {event.id}</span>
-                    </div>
-
-                    {/* Información adicional */}
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <span className="text-sm md:text-base">Academia ID: {event.academyId}</span>
+                        <span className="text-sm md:text-base">Academia: {event.academyName}</span>
                     </div>
                 </article>
 
