@@ -16,5 +16,6 @@ export type User = FirebaseUser & {
   participatedEvents?: string[];
   level?: string;
   academyId?: string;
+  academyName?: string;
   createdAt: Timestamp;
 };

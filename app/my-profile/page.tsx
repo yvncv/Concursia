@@ -13,7 +13,7 @@ const ProfilePage = () => {
     emailSecondary: '',
     phonePrimary: '',
     phoneSecondary: '',
-    academyId: ''
+    academyId: '',
   });
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const ProfilePage = () => {
         emailSecondary: user.email[1] || '',
         phonePrimary: user.phoneNumber[0] || '',
         phoneSecondary: user.phoneNumber[1] || '',
-        academyId: user.academyId || ''
+        academyId: user.academyId || '',
       });
     }
   }, [user]);
@@ -37,17 +37,17 @@ const ProfilePage = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user?.uid) return;
 
     try {
       const userRef = doc(db, "users", user.uid);
-      
+
       // Preparar los datos para actualizar
       const updateData = {
         email: [user.email[0], contactInfo.emailSecondary],
         phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
-        academyId: contactInfo.academyId
+        academyId: contactInfo.academyId,
       };
 
       await updateDoc(userRef, updateData);
@@ -85,19 +85,13 @@ const ProfilePage = () => {
     <main className="min-h-screen bg-gray-100 p-6 md:p-12">
       <form onSubmit={handleUpdateProfile}>
         <div className="w-full mx-auto bg-white rounded-lg shadow-xl p-8">
-          <div className="flex items-center mb-8">
+          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">
             <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
               {user.firstName[0]}
             </div>
             <div className="ml-6">
-              <h1 className="text-3xl font-semibold text-gray-800">{user.fullName}</h1>
-              <p className="text-lg text-gray-600">
-                {user.roleId === "user"
-                  ? "Usuario"
-                  : user.roleId === "organizer"
-                    ? "Organizador"
-                    : "Rol Desconocido"}
-              </p>
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{user.fullName}</h1>
+              <strong className="text-lg text-rojo">{capitalizeFirstLetter(user.roleId)}</strong> { user.academyId && (<span> from <strong className="text-lg text-rojo">{user.academyName}</strong></span>) }
             </div>
           </div>
 
@@ -109,7 +103,7 @@ const ProfilePage = () => {
                 <input
                   type="text"
                   value={user.dni}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                   readOnly
                 />
               </div>
@@ -119,7 +113,7 @@ const ProfilePage = () => {
                   <input
                     type="text"
                     value={user.firstName}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                     readOnly
                   />
                 </div>
@@ -128,7 +122,7 @@ const ProfilePage = () => {
                   <input
                     type="text"
                     value={user.lastName}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                     readOnly
                   />
                 </div>
@@ -138,7 +132,7 @@ const ProfilePage = () => {
                 <input
                   type="date"
                   value={user.birthDate.toDate().toISOString().split('T')[0]}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                   readOnly
                 />
               </div>
@@ -147,7 +141,7 @@ const ProfilePage = () => {
                 <input
                   type="text"
                   value={user.gender}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                   readOnly
                 />
               </div>
@@ -156,13 +150,11 @@ const ProfilePage = () => {
                 <input
                   type="text"
                   value={user.category}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                   readOnly
                 />
               </div>
             </div>
-            {/* jola */}
-
 
             <div className="bg-gray-50 p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Información de Contacto</h2>
@@ -172,7 +164,7 @@ const ProfilePage = () => {
                   type="email"
                   id="emailPrimary"
                   value={user?.email[0] || ''}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                   readOnly
                 />
               </div>
@@ -183,7 +175,7 @@ const ProfilePage = () => {
                   id="emailSecondary"
                   value={contactInfo.emailSecondary}
                   onChange={handleInputChange}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-white placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none"
                 />
               </div>
               <div className="mt-4">
@@ -193,7 +185,7 @@ const ProfilePage = () => {
                   id="phonePrimary"
                   value={contactInfo.phonePrimary}
                   onChange={handleInputChange}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-white placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none"
                   required
                 />
               </div>
@@ -204,26 +196,9 @@ const ProfilePage = () => {
                   id="phoneSecondary"
                   value={contactInfo.phoneSecondary}
                   onChange={handleInputChange}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-white placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none"
                 />
               </div>
-              <div className="mt-4">
-                <label htmlFor="academyId" className="block text-sm font-medium text-gray-700">Academia</label>
-                <input
-                  type="text"
-                  id="academyId"
-                  value={contactInfo.academyId}
-                  onChange={handleInputChange}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                />
-              </div>
-              {/* {user.academyId && (
-                loadingAcademia ? (
-                  <p className="text-gray-600">Obteniendo academia...</p>
-                ) : (
-                  <p className="text-gray-600">Academia: {academia?.name}</p>
-                )
-              )} */}
             </div>
           </div>
 
@@ -237,18 +212,16 @@ const ProfilePage = () => {
             }))}</p>
           </div>
 
-
-
-          <div className="mt-8 flex justify-end items-center space-x-4">
+          <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
             <button
               type="submit"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-500 transition duration-300"
+              className="bg-green-600 w-full text-white px-6 py-3 rounded-lg hover:bg-green-500 transition duration-300"
             >
               Guardar Cambios
             </button>
             <button
               onClick={handleSignOut}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-500 transition duration-300"
+              className="bg-red-600 w-full text-white px-6 py-3 rounded-lg hover:bg-red-500 transition duration-300"
             >
               Cerrar Sesión
             </button>
