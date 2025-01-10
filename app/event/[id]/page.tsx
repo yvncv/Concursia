@@ -14,7 +14,6 @@ const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { user } = useUser();
   const { events, loadingEvent, error } = useEvents();
-  const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion">("informacion");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { id } = use(params);
 
@@ -45,32 +44,9 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Tabs de información e inscripción */}
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex justify-center mt-6 w-4/5 mx-auto">
-          <button
-            className={`px-6 w-1/2 ${activeTab === "informacion" ? " text-rojo border-b border-rojo" : ""}`}
-            onClick={() => setActiveTab("informacion")}
-          >
-            Información
-          </button>
-          <button
-            className={`px-6 w-1/2 ${activeTab === "inscripcion" ? " text-rojo border-b border-rojo" : ""}`}
-            onClick={() => setActiveTab("inscripcion")}
-          >
-            Inscripción
-          </button>
-        </div>
+      <div className="max-w-screen-3xl mx-auto">
 
-        {activeTab === "informacion" && (
           <EventoInformacion event={event} openModal={openModal} />
-        )}
-
-        {activeTab === "inscripcion" && 
-          (user ? (
-          <EventoInscripcion />
-        ) : (
-          <p className="text-center mt-6">Debes iniciar sesión para inscribirte.</p>
-        ))}
 
       </div>
 

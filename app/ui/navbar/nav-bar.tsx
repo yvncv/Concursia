@@ -2,85 +2,105 @@
 
 import Link from "next/link";
 import useUser from "@/app/firebase/functions";
-import UserIcon from "@/app/ui/icons/user";
 import { useState } from "react";
-import { auth } from "@/app/firebase/config";
-import { useRouter } from "next/navigation";
-
-
+import CalendarIcon from "../icons/calendar";
+import { HomeIcon } from "../icons/home";
+import { LoginIcon } from "../icons/login";
+import { ProfileIcon } from "../icons/profile";
+import { MenuIcon } from "../icons/menu";
+import { CloseIcon } from "../icons/close";
 
 const enlaces = [
-  { href: "/login", label: "Iniciar Sesión", requiresAuth: false },
-  { href: "/academy-events", label: "Eventos Academia", requiresAuth: true, requiresRole: "organizer" },
+  { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
+  { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
+  { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
+  { href: "/my-profile", label: "Perfil", icon: ProfileIcon, requiresAuth: true },
 ];
 
 export default function Navbar() {
   const { user, loadingUser } = useUser();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      router.push("/login");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (loadingUser) {
-    return <div>Cargando...</div>;
+    return (
+      <div className="flex h-16 items-center justify-center bg-rojo">
+        <div className="animate-pulse text-white">Cargando...</div>
+      </div>
+    );
   }
 
-  return (
-    <nav className="flex text-white text-xl w-full p-4 bg-rojo fixed top-0 left-0 z-50">
-      <div className="flex mx-auto items-center">
-        <Link href={"/"}>Tusuy Perú</Link>
-        </div>
-      <ul className="flex space-x-6 mx-auto justify-center items-center">
-        {enlaces
-          .filter((link) => {
-            if (link.href === "/login" && user) return false;
-            if (link.requiresAuth) {
-              if (!user) return false;
-              if (link.requiresRole) {
-                return user.roleId === link.requiresRole;
-              }
-              return true;
-            }
-            return true;
-          })
-          .map((link) => (
-            <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
-            </li>
-          ))}
+  const filteredLinks = enlaces.filter((link) => {
+    if (link.href === "/login" && user) return false;
+    if (link.requiresAuth) {
+      if (!user) return false;
+      if (link.requiresRole) {
+        return user.roleId === link.requiresRole;
+      }
+      return true;
+    }
+    return true;
+  });
 
-        {user && (
-          <li className="relative">
-            <div
-              className="w-10 h-10 border-2 border-white rounded-full flex justify-center items-center cursor-pointer"
-              onClick={() => setMenuOpen(!menuOpen)}
+  return (
+    <nav className="fixed left-0 top-0 z-50 w-full bg-rojo shadow-lg">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200">
+              Tusuy Perú
+            </Link>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:block">
+            <ul className="flex space-x-8">
+              {filteredLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white hover:text-gray-200 focus:outline-none"
+              aria-label="Toggle menu"
             >
-              <UserIcon width={24} height={24} />
-            </div>
-            {menuOpen && (
-              <div className="absolute top-full left-[-19px] mt-2 bg-white text-black rounded shadow-lg w-40">
-                <Link href="/my-profile">
-                  <div className="p-2 cursor-pointer hover:bg-gray-200"><p>Perfil</p></div>
-                </Link>
-                <div
-                  onClick={handleSignOut}
-                  className="p-2 flex item-center cursor-pointer hover:bg-gray-200"
-                >
-                  <p>Cerrar Sesión</p>
-                </div>
-              </div>
-            )}
-          </li>
+              {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <ul className="space-y-4 px-2 pb-4 pt-2">
+              {filteredLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center space-x-3 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-      </ul>
+      </div>
     </nav>
   );
 }

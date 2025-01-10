@@ -50,27 +50,33 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
-            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
+            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-10 mb-20">
                 <article className="order-2 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
+
+                    <div className="flex items-center justify-beetwen space-x-3 text-gray-600">
+                        <CalendarIcon className="text-green-600 w-6 h-6" />
+                        <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
+                        <CalendarIcon className="text-rojo w-6 h-6" />
+                        <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
+                    </div>
 
                     {/* Descripción del evento */}
                     <p className="text-gray-700 text-base md:text-lg leading-relaxed">
                         {event.description}
                     </p>
 
-                    {/* Información del evento: Fecha de inicio */}
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <CalendarIcon className="text-green-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
-                    </div>
+                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                        <strong>Categorias:</strong>
+                    </p>
+                    <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
+                        <li>Baby</li>
+                        <li>Pre-Infante</li>
+                        <li>Infante</li>
+                        <li>Infantil</li>
+                    </ul>
 
-                    {/* Información del evento: Fecha de fin */}
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <CalendarIcon className="text-rojo w-6 h-6" />
-                        <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
-                    </div>
 
                     {/* Información del evento: Lugar */}
                     <div className="flex items-center space-x-3 text-gray-600">
@@ -86,34 +92,25 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                                 <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
                             </button>
                         )
-                        : (
-                            <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
-                        )}
-                    </div>
-
-                    {/* ID del evento */}
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <IdIcon className="text-purple-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">ID del evento: {event.id}</span>
-                    </div>
-
-                    {/* Información adicional */}
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <span className="text-sm md:text-base">Academia ID: {event.academyId}</span>
+                            : (
+                                <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
+                            )}
                     </div>
                 </article>
 
                 {/* Imagen del evento */}
-                <div className="order-1 lg:order-2 w-full flex items-start justify-center h-[100%]">
-                    {event.bannerImage && (
-                        <Image
-                            src={event.bannerImage}
-                            alt={event.name}
-                            width={900}
-                            height={600}
-                            className="object-cover rounded-lg shadow-lg"
-                        />
-                    )}
+                <div className="order-1 lg:order-2 w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md flex flex-col gap-6">
+                <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                        <strong>Precios:</strong>
+                    </p>
+                    <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
+                        <li>Seriado: S/.15</li>
+                        <li>Individual: S/.15</li>
+                        <li>Novel Novel: S/.50</li>
+                        <li>Novel Abierto A: S/.50</li>
+                        <li>Novel Abierto B: S/.50</li>
+                        <li>Nacional: S/.60</li>
+                    </ul>
                 </div>
             </div>
         </div>
