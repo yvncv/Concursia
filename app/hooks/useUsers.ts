@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import { User } from "../types/userType";
+import { getAuth } from "firebase/auth";
 
 export default function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -9,29 +10,37 @@ export default function useUsers() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUsers = () => {
-      const q = query(collection(db, "users"));
-      
-      // Usar onSnapshot para escuchar cambios en tiempo real
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const usersData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as User[];
+    const auth = getAuth();
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) {
+        const fetchUsers = () => {
+          const q = query(collection(db, "users"));
+          
+          const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const usersData = querySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as User[];
 
-        setUsers(usersData);
-        setLoading(false);  // Datos cargados
-      }, (err) => {
-        console.error("Error fetching users", err);
-        setError("Failed to fetch users");
+            setUsers(usersData);
+            setLoading(false);  // Datos cargados
+          }, (err) => {
+            console.error("Error fetching users", err);
+            setError("Failed to fetch users");
+            setLoading(false);
+          });
+
+          return () => unsubscribe();
+        };
+
+        fetchUsers();
+      } else {
+        setUsers([]);
         setLoading(false);
-      });
+      }
+    });
 
-      // Limpiar el listener cuando el componente se desmonte
-      return () => unsubscribe();
-    };
-
-    fetchUsers();
+    return () => unsubscribeAuth();  // Limpiar el observador de autenticación
   }, []); // Solo se ejecuta al montar el componente
 
   return { users, loadingUsers, error };

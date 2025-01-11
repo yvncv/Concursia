@@ -84,6 +84,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
         }
     };
 
+    
     // Comprobar si el usuario logueado es el mismo que el encontrado
     const canEdit = foundUser?.id === user?.id;
 
@@ -223,24 +224,25 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
 
                     {canEdit && (
-                        <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
-                            <button
-                                type="submit"
-                                className="bg-green-600 w-full text-white px-6 py-3 rounded-lg hover:bg-green-500 transition duration-300"
-                            >
-                                Guardar Cambios
-                            </button>
-                        </div>
+                        <>
+                            <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
+                                <button
+                                    type="submit"
+                                    className="bg-green-600 w-full text-white px-6 py-3 rounded-lg hover:bg-green-500 transition duration-300"
+                                >
+                                    Guardar Cambios
+                                </button>
+                            </div>
+                            <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="bg-red-600 w-full text-white px-6 py-3 rounded-lg hover:bg-red-500 transition duration-300"
+                                >
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+                        </>
                     )}
-
-                    <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
-                        <button
-                            onClick={handleSignOut}
-                            className="bg-red-600 w-full text-white px-6 py-3 rounded-lg hover:bg-red-500 transition duration-300"
-                        >
-                            Cerrar Sesión
-                        </button>
-                    </div>
                 </div>
             </form>
         </main>
