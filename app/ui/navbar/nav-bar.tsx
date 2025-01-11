@@ -10,16 +10,15 @@ import { ProfileIcon } from "../icons/profile";
 import { MenuIcon } from "../icons/menu";
 import { CloseIcon } from "../icons/close";
 
-const enlaces = [
-  { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
-  { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
-  { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
-  { href: "/my-profile", label: "Perfil", icon: ProfileIcon, requiresAuth: true },
-];
-
 export default function Navbar() {
   const { user, loadingUser } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const enlaces = [
+    { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
+    { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
+    { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
+    { href: `/user/${user?.id}`, label: "Perfil", icon: ProfileIcon, requiresAuth: true },
+  ];
 
   if (loadingUser) {
     return (

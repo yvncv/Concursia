@@ -2,6 +2,7 @@ import { User as FirebaseUser } from "firebase/auth";
 import { Timestamp } from "firebase/firestore";
 
 export type User = FirebaseUser & {
+  id: string;
   roleId: string;
   dni: string;
   fullName: string;
