@@ -1,5 +1,4 @@
-'use client';
-
+"use client"
 import { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/firebase/functions";
@@ -7,8 +6,10 @@ import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
 import dynamic from "next/dynamic";
 import { use } from "react";
+import PlaceIcon from "@/app/ui/icons/marker";
+import CalendarIcon from "@/app/ui/icons/calendar";
+import { ProfileIcon } from "@/app/ui/icons/profile";
 
-// Carga dinámica del mapa
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
@@ -18,88 +19,123 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { id } = use(params);
 
-  // Filtrar el event por ID
   const event = events.find((event) => event.id === id);
 
-  if (loadingEvent) return <p>Cargando...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!event) return <p>Event no encontrado.</p>;
+  if (loadingEvent) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="bg-red-100 p-4 rounded-lg text-red-700">
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="bg-yellow-100 p-4 rounded-lg text-yellow-700">
+          Evento no encontrado.
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {/* Imagen principal */}
-      <div className="relative w-full h-64 bg-cover bg-center">
+    <div className="min-h-screen">
+      <div className="relative h-96 overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-500"
           style={{
             backgroundImage: `url(${event.smallImage})`,
-            filter: "brightness(0.5) sepia(1) saturate(2) hue-rotate(-50deg)",
+            filter: "brightness(0.6)",
           }}
         ></div>
-        <h1 className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
-          {event.eventType.toUpperCase()}
-        </h1>
-        <h1 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
-          {event.name.toUpperCase()}
-        </h1>
-        <h1 className="absolute top-2/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white text-center">
-          {event.location.province.toUpperCase()}, {event.location.department.toUpperCase()}
-        </h1>
-      </div>
-
-      {/* Tabs de información e inscripción */}
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex justify-center mt-6 w-4/5 mx-auto">
-          <button
-            className={`px-6 w-1/2 ${activeTab === "informacion" ? " text-rojo border-b border-rojo" : ""}`}
-            onClick={() => setActiveTab("informacion")}
-          >
-            Información
-          </button>
-          <button
-            className={`px-6 w-1/2 ${activeTab === "inscripcion" ? " text-rojo border-b border-rojo" : ""}`}
-            onClick={() => setActiveTab("inscripcion")}
-          >
-            Inscripción
-          </button>
-        </div>
-
-        {activeTab === "informacion" && (
-          <EventoInformacion event={event} openModal={openModal} />
-        )}
-
-        {activeTab === "inscripcion" && 
-          (user ? (
-          <EventoInscripcion />
-        ) : (
-          <p className="text-center mt-6">Debes iniciar sesión para inscribirte.</p>
-        ))}
-
-      </div>
-
-      {/* Modal del mapa */}
-      {isModalOpen && (
-        <div
-          id="modal-overlay"
-          className="fixed inset-0 bg-black-600 bg-opacity-50 flex justify-center items-center z-50"
-          onClick={closeModal}
-        >
-          <div className="bg-white p-6 rounded-lg w-full sm:w-3/4 lg:w-1/2 max-w-4xl relative">
-            <h2 className="text-xl mb-4">Ubicación del event: {event?.name}</h2>
-            <div className="w-full">
-              {/* Pasar el event completo al mapa */}
-              <Map event={event} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center space-x-2 mb-2">
+              <CalendarIcon className="w-5 h-5" />
+              <span className="text-sm font-medium">{event.eventType}</span>
             </div>
-            <button onClick={closeModal} className="w-full block mb-0 mt-4 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all">
-              Cerrar mapa
+            <h1 className="text-4xl font-bold mb-2">{event.name}</h1>
+            <div className="flex items-center space-x-2">
+              <PlaceIcon className="w-5 h-5" />
+              <span>{event.location.province}, {event.location.department}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-white/80 rounded-xl shadow-sm mb-8">
+          <div className="flex border-b">
+            <button
+              className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+                ${activeTab === "informacion" 
+                  ? "text-red-600 border-b-2 border-red-600" 
+                  : "text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("informacion")}
+            >
+              Información
             </button>
+            <button
+              className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+                ${activeTab === "inscripcion" 
+                  ? "text-red-600 border-b-2 border-red-600" 
+                  : "text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("inscripcion")}
+            >
+              Inscripción
+            </button>
+          </div>
+
+          <div className="p-6">
+            {activeTab === "informacion" ? (
+              <EventoInformacion event={event} openModal={() => setIsModalOpen(true)} />
+            ) : (
+              user ? (
+                <EventoInscripcion />
+              ) : (
+                <div className="flex flex-col items-center py-12 text-gray-500">
+                  <ProfileIcon className="w-12 h-12 mb-4" />
+                  <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold">
+                Ubicación: {event.name}
+              </h2>
+              <div className="aspect-square rounded-lg overflow-hidden">
+                <Map event={event} />
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="mt-6 w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3 px-4 rounded-lg hover:from-red-500 hover:to-red-400 transition-all duration-300 font-medium"
+              >
+                Cerrar mapa
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

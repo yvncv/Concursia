@@ -57,8 +57,8 @@ export default function MisEventos() {
         ids={filteredEvents.map((event) => event.id)}
       />
 
-      <h1 className="text-2xl mb-4 text-left mt-6 text-rojo font-semibold">
-        SALUDOS, {user?.firstName?.toUpperCase()}. ESTOS SON LOS EVENTOS DE {(academia?.name || "CARGANDO ACADEMIA").toUpperCase()}.
+      <h1 className="bg-white/80 backdrop-blur-sm rounded-xl p-6 m-4 shadow-lg text-rojo text-2xl">
+        Saludos, {user?.firstName}. Estos son los eventos de {(academia?.name || "Cargando academia")}.
       </h1>
 
       <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
@@ -72,9 +72,9 @@ export default function MisEventos() {
         </div>
 
         {currentEvents.length > 0 ? (
-          <div className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {currentEvents.map((event) => (
-              <div key={event.id} className="relative">
+              <div key={event.id} className="transform transition duration-300 hover:scale-105">
                 <EventComponent event={event} />
                 <div className="absolute top-0 right-0 m-2 bg-white rounded-full flex">
                   <Link

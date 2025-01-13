@@ -50,7 +50,7 @@ const CarruselEvento = ({ imagenes, ids }: { imagenes: string[]; ids: string[] }
                                     <Image
                                         fill
                                         src={imagen}
-                                        className="w-full h-full object-cover blur-sm scale-110"
+                                        className="h-full object-cover blur-xl scale-110"
                                         alt={`Blur background`}
                                         priority={index === currentIndex} // Solo carga la imagen actual con alta prioridad
                                     />

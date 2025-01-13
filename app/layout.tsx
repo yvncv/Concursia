@@ -22,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" translate="yes">
       <body className={`${poppins.variable} antialiased`}>
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
         <NavbarControl />
         <StairTransition />
         <ContentWrapper>

@@ -117,7 +117,7 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
         ))}
       </select>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-col md:flex-row justify-start">
         <span>Desde:</span>
         <input
           type="date"

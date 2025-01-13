@@ -89,9 +89,9 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     const canEdit = foundUser?.id === user?.id;
 
     return (
-        <main className="min-h-screen bg-gray-100 p-6 md:p-12">
+        <main className="min-h-screen p-6 md:p-12">
             <form onSubmit={handleUpdateProfile}>
-                <div className="w-full mx-auto bg-white rounded-lg shadow-xl p-8">
+                <div className="w-full mx-auto bg-white/80 rounded-lg shadow-xl p-8">
                     <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">
                         <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
                             {foundUser.firstName[0]}
