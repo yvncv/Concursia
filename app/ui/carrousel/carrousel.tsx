@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const CarruselEvento = ({ imagenes, ids }: { imagenes: string[]; ids: string[] }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
 
-    // Crear una versión memoizada de nextSlide usando useCallback
     const nextSlide = useCallback(() => {
         setCurrentIndex((prevIndex) =>
             prevIndex === imagenes.length - 1 ? 0 : prevIndex + 1
@@ -20,74 +21,89 @@ const CarruselEvento = ({ imagenes, ids }: { imagenes: string[]; ids: string[] }
         );
     };
 
-    // Cambiar imagen automáticamente cada 5 segundos
     useEffect(() => {
-        const intervalId = setInterval(nextSlide, 5000); // 5000 ms = 5 segundos
-        return () => clearInterval(intervalId); // Limpiar intervalo cuando el componente se desmonte
-    }, [nextSlide]);
+        if (!isHovered) {
+            const intervalId = setInterval(nextSlide, 5000);
+            return () => clearInterval(intervalId);
+        }
+    }, [nextSlide, isHovered]);
+
+    if (imagenes.length === 0) return null;
 
     return (
-        imagenes.length > 0 ? (
-            <div className="relative w-full mx-auto h-[200px] sm:h-[450px] overflow-hidden">
-                {/* Botón anterior */}
-                <button
-                    onClick={prevSlide}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white p-2 rounded-full shadow-lg hover:bg-gray-200 transition"
-                >
-                    ❮
-                </button>
+        <div 
+            className="relative w-full mx-auto h-[200px] sm:h-[450px] overflow-hidden shadow-lg group"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Botones de navegación */}
+            <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                aria-label="Previous slide"
+            >
+                <ChevronLeft className="w-6 h-6" />
+            </button>
 
-                {/* Imágenes del carrusel con enlace dinámico */}
-                <Link href={`/event/${ids[currentIndex]}`}>
-                    <div
-                        className="flex transition-transform duration-500 ease-in-out h-full cursor-pointer"
-                        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-                    >
-                        {imagenes.map((imagen, index) => (
-                            <div key={index} className="w-full h-full flex-shrink-0 relative">
-                                {/* Imagen desenfocada de fondo */}
-                                <div className="absolute inset-0 -z-10">
-                                    <Image
-                                        fill
-                                        src={imagen}
-                                        className="h-full object-cover blur-xl scale-110"
-                                        alt={`Blur background`}
-                                        priority={index === currentIndex} // Solo carga la imagen actual con alta prioridad
-                                    />
-                                </div>
-                                {/* Imagen principal */}
+            {/* Contenedor de imágenes */}
+            <Link href={`/event/${ids[currentIndex]}`}>
+                <div
+                    className="flex transition-transform duration-500 ease-out h-full"
+                    style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                >
+                    {imagenes.map((imagen, index) => (
+                        <div key={index} className="w-full h-full flex-shrink-0 relative">
+                            {/* Fondo con efecto de desenfoque */}
+                            <div className="absolute inset-0 -z-10">
+                                <Image
+                                    fill
+                                    src={imagen}
+                                    className="h-full object-fill blur-xl scale-200 brightness-75"
+                                    alt={`Background ${index + 1}`}
+                                    priority={index === currentIndex}
+                                />
+                            </div>
+                            
+                            {/* Imagen principal con efecto hover */}
+                            <div className="relative h-full transition-transform duration-500 hover:scale-105">
                                 <Image
                                     fill
                                     src={imagen}
                                     className="w-full h-full object-contain object-center"
                                     alt={`Slide ${index + 1}`}
-                                    priority={index === currentIndex} // Solo carga la imagen actual con alta prioridad
+                                    priority={index === currentIndex}
                                 />
                             </div>
-                        ))}
-                    </div>
-                </Link>
-
-                {/* Botón siguiente */}
-                <button
-                    onClick={nextSlide}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white p-2 rounded-full shadow-lg hover:bg-gray-200 transition"
-                >
-                    ❯
-                </button>
-
-                {/* Indicadores */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                    {imagenes.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`w-3 h-3 rounded-full ${index === currentIndex ? "bg-rojo" : "bg-gray-300"}`}
-                        ></button>
+                        </div>
                     ))}
                 </div>
+            </Link>
+
+            {/* Botón siguiente */}
+            <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                aria-label="Next slide"
+            >
+                <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Indicadores */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
+                {imagenes.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            index === currentIndex 
+                                ? "bg-white w-4" 
+                                : "bg-white/50 hover:bg-white/75"
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                    ></button>
+                ))}
             </div>
-        ) : null
+        </div>
     );
 };
 

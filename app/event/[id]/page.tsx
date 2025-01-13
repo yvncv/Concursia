@@ -80,8 +80,8 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="flex border-b">
             <button
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors
-                ${activeTab === "informacion" 
-                  ? "text-red-600 border-b-2 border-red-600" 
+                ${activeTab === "informacion"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"}`}
               onClick={() => setActiveTab("informacion")}
             >
@@ -89,8 +89,8 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             </button>
             <button
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors
-                ${activeTab === "inscripcion" 
-                  ? "text-red-600 border-b-2 border-red-600" 
+                ${activeTab === "inscripcion"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"}`}
               onClick={() => setActiveTab("inscripcion")}
             >
@@ -116,16 +116,17 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-semibold">
                 Ubicación: {event.name}
               </h2>
-              <div className="aspect-square rounded-lg overflow-hidden">
-                <Map event={event} />
+              <div className="rounded-lg overflow-hidden">
+                {/* Assuming the Map component accepts props like latitude, longitude etc. */}
+                <Map event={event}/>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="mt-6 w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3 px-4 rounded-lg hover:from-red-500 hover:to-red-400 transition-all duration-300 font-medium"
               >
