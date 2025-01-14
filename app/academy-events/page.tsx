@@ -86,10 +86,12 @@ export default function MisEventos() {
       <section className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-8">
         {/* Welcome Message */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-red-600 mb-6">
+          <h1 className="text-2xl text-red-600">
             Saludos, {user?.firstName}. Estos son los eventos de{" "}
             {academia?.name || "Cargando academia"}.
           </h1>
+        </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">
           <Link
             href="/academy-events/create-event"
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500 transition-all"
