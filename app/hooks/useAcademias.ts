@@ -1,29 +1,29 @@
 import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
 import { collection, query, onSnapshot } from "firebase/firestore";
-import { Event } from "../types/eventType";
+import { Academy } from "../types/academyType";
 
-export default function useEvents() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loadingEvents, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export default function useAcademias() {
+  const [academias, setAcademias] = useState<Academy[]>([]);
+  const [loadingAcademias, setLoading] = useState<boolean>(true);
+  const [errorAcademias, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEvents = () => {
-      const q = query(collection(db, "eventos"));
+    const fetchAcademias = () => {
+      const q = query(collection(db, "academias"));
       
       // Usar onSnapshot para escuchar cambios en tiempo real
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const eventsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Event[];
+        })) as Academy[];
 
-        setEvents(eventsData);
+        setAcademias(eventsData);
         setLoading(false);  // Datos cargados
       }, (err) => {
-        console.error("Error fetching events", err);
-        setError("Failed to fetch events");
+        console.error("Error fetching academias", err);
+        setError("Failed to fetch academias");
         setLoading(false);
       });
 
@@ -31,8 +31,8 @@ export default function useEvents() {
       return () => unsubscribe();
     };
 
-    fetchEvents();
+    fetchAcademias();
   }, []); // Solo se ejecuta al montar el componente
 
-  return { events, loadingEvents, error };
+  return { academias, loadingAcademias, errorAcademias };
 }
