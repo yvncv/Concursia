@@ -51,9 +51,9 @@ export default function TodosEventos() {
         </div>
 
         {/* Grid de Eventos */}
-        <div className="space-y-8">
+        <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
           {currentEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
               {currentEvents.map((event) => (
                 <div
                   key={event.id}

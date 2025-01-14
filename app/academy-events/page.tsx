@@ -101,16 +101,16 @@ export default function MisEventos() {
         </div>
 
         {/* Events Grid */}
-        <div className="space-y-8">
+        <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
           {currentEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
               {currentEvents.map((event) => (
                 <div
                   key={event.id}
                   className="transform transition-all duration-300 hover:scale-[1.02]"
                 >
                   <EventComponent event={event} />
-                  <div className="absolute top-2 right-4 rounded-full flex space-x-2">
+                  <div className="absolute top-1 left-0 md:top-2 md:right-4 rounded-full flex space-x-2 w-10 md:w-auto">
                     <Link
                       href={`/academy-events/update-event/${event.id}`}
                       className="text-yellow-600 px-3 py-1 bg-white rounded-full w-full hover:bg-yellow-500 hover:text-white transition-all"

@@ -42,25 +42,7 @@ export default function EventComponent({ event }: { event: Event }) {
   return ( 
     <div
       ref={elementRef}
-      className={`
-        bg-white 
-        relative 
-        flex 
-        flex-col 
-        rounded-lg 
-        shadow-md 
-        overflow-hidden 
-        cursor-pointer 
-        transition-all 
-        duration-300
-        w-full 
-        max-w-[300px] 
-        mx-auto
-        ${isVisible ? 'animate-fadeIn' : 'opacity-0'} 
-        hover:shadow-lg 
-        hover:scale-[1.02]
-        group
-      `}
+      className={`bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {event.smallImage && (
@@ -125,28 +107,7 @@ export default function EventComponent({ event }: { event: Event }) {
 
         <Link
           href={`/event/${event.id}`}
-          className="
-            block 
-            w-full 
-            text-center 
-            bg-gradient-to-r 
-            from-red-500 
-            to-red-600 
-            text-white 
-            py-2 
-            px-4 
-            rounded-lg 
-            text-sm 
-            md:text-base 
-            font-medium
-            transition-all 
-            duration-300
-            hover:shadow-md
-            hover:from-red-600
-            hover:to-red-700
-            active:scale-[0.98]
-          "
-        >
+          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
           Más información
         </Link>
       </div>
