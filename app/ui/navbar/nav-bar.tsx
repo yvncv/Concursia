@@ -7,6 +7,7 @@ import { LoginIcon } from "../icons/login";
 import { ProfileIcon } from "../icons/profile";
 import { MenuIcon } from "../icons/menu";
 import { CloseIcon } from "../icons/close";
+import AdminIcon from "../icons/admin";
 import CalendarIcon from "../icons/calendar";
 import useEvents from "@/app/hooks/useEvents";
 
@@ -21,6 +22,7 @@ export default function Navbar() {
     { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
     { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
     { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
+    { href: "/admin", label: "Panel Admin.", icon: AdminIcon, requiresAuth: true, requiresRole: "admin" },
     { href: `/user/${user?.id}`, label: "Perfil", icon: ProfileIcon, requiresAuth: true },
   ];
 

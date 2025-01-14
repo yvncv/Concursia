@@ -8,7 +8,7 @@ export default function ContentWrapper({ children }: { children: React.ReactNode
   const shouldApplyMargin = !noMarginRoutes.includes(pathname);
 
   return (
-    <div className={shouldApplyMargin ? "mt-10" : ""}>
+    <div className={shouldApplyMargin ? "mt-[64px]" : ""}>
       {children}
     </div>
   );

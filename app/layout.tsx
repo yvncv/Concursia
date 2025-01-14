@@ -25,11 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="wave"></div>
         <div className="wave"></div>
         <div className="wave"></div>
-        <NavbarControl />
+        <NavbarControl/>
         <StairTransition />
         <ContentWrapper>
-          <PageTransition>{children}
-          </PageTransition>
+          <PageTransition>{children}</PageTransition>
         </ContentWrapper>
       </body>
     </html>
