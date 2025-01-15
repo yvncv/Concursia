@@ -10,10 +10,10 @@ import Pagination from "../ui/pagination/Pagination";
 export default function TodosEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvents } = useEvents();
+  
   const eventsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Loading states
   const loadingMessage =
     loadingUser ? "Obteniendo usuario..." : loadingEvents ? "Cargando eventos..." : null;
 
@@ -27,7 +27,6 @@ export default function TodosEventos() {
     );
   }
 
-  // Paginación
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
@@ -35,18 +34,22 @@ export default function TodosEventos() {
   return (
     <main className="flex flex-col items-center min-h-screen text-center">
       {/* Carrusel de Eventos */}
-      <div className="w-full max-w-[1920px] relative">
-        <CarruselEvento
-          imagenes={events.map((event) => event.smallImage)}
-          ids={events.map((event) => event.id)}
-        />
-      </div>
+        <section className="relative h-[200px] sm:h-[450px] flex items-center justify-center w-full">
+          {/* Carrusel de ancho completo */}
+          <div className="absolute inset-0">
+            <CarruselEvento events={events} />
+          </div>
+          {/* <div className="relative z-1 text-center text-white px-4">
+            <h1 className="text-5xl font-bold mb-4">Vive la Pasión de la Marinera Norteña</h1>
+            <p className="text-xl mb-8">Descubre los mejores eventos y competencias en Perú</p>
+          </div> */}
+        </section>
 
       {/* Contenido Principal */}
       <div className="w-full max-w-[1400px] px-4 md:px-8 mt-12">
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
           <h1 className="text-2xl font-bold text-red-600">
-            {user?.firstName ? `¡Bienvenido, ${user.firstName}` : "¡Bienvenido a Tusuy Perú"}, estos son los eventos disponibles!
+            {user?.firstName ? `¡Bienvenido, ${user.firstName}` : "¡Bienvenido a Tusuy Perú"}, estos son los eventos de la fecha!
           </h1>
         </div>
 

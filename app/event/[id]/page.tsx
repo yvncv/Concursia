@@ -14,14 +14,14 @@ const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { user } = useUser();
-  const { events, loadingEvent, error } = useEvents();
+  const { events, loadingEvents, error } = useEvents();
   const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion">("informacion");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { id } = use(params);
 
   const event = events.find((event) => event.id === id);
 
-  if (loadingEvent) {
+  if (loadingEvents) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
@@ -55,7 +55,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         <div
           className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-500"
           style={{
-            backgroundImage: `url(${event.smallImage})`,
+            backgroundImage: `url(${event.bannerImage})`,
             filter: "brightness(0.6)",
           }}
         ></div>

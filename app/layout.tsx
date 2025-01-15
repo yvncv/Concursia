@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import NavbarControl from "./ui/navbar/navbar-control";
-import ContentWrapper from "./ui/navbar/content-wrapper";
 import PageTransition from "./ui/page-transition/PageTransition";
 import StairTransition from "./ui/page-transition/StairTransition";
+import Footer from "./ui/footer/footer";
+import { brandName } from "./page";
 
 const poppins = localFont({
   src: "./fonts/Poppins-Regular.ttf",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
   keywords: "tusuy, peru, maqueta, proyecto, marinera",
 };
 
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" translate="yes">
@@ -25,11 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="wave"></div>
         <div className="wave"></div>
         <div className="wave"></div>
-        <NavbarControl/>
+        <NavbarControl brandName={brandName} />
         <StairTransition />
-        <ContentWrapper>
-          <PageTransition>{children}</PageTransition>
-        </ContentWrapper>
+        <PageTransition>{children}</PageTransition>
+        <Footer brandName={brandName} />
       </body>
     </html>
   );

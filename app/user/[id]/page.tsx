@@ -78,7 +78,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     const handleSignOut = async () => {
         try {
             await auth.signOut();
-            router.push("/login");
+            router.push("/calendario");
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
         }
@@ -89,7 +89,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     const canEdit = foundUser?.id === user?.id;
 
     return (
-        <main className="min-h-screen p-6 md:p-12">
+        <main className="min-h-screen">
             <form onSubmit={handleUpdateProfile}>
                 <div className="w-full mx-auto bg-white/80 rounded-lg shadow-xl p-8">
                     <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">

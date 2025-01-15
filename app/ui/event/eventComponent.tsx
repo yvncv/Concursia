@@ -42,7 +42,7 @@ export default function EventComponent({ event }: { event: Event }) {
   return ( 
     <div
       ref={elementRef}
-      className={`bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
+      className={`bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {event.smallImage && (

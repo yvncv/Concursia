@@ -77,8 +77,7 @@ export default function MisEventos() {
       {/* Hero Carousel */}
       <section className="w-full max-w-[1920px] mx-auto relative">
         <CarruselEvento
-          imagenes={filteredEvents.map((event) => event.smallImage)}
-          ids={filteredEvents.map((event) => event.id)}
+          events={filteredEvents}
         />
       </section>
 
