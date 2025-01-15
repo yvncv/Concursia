@@ -18,50 +18,50 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
         emailSecondary: '',
         phonePrimary: '',
         phoneSecondary: '',
-        academyId: '',
-    });
-
-    useEffect(() => {
-        if (foundUser) {
-            setContactInfo({
-                emailSecondary: foundUser.email[1] || '',
-                phonePrimary: foundUser.phoneNumber[0] || '',
-                phoneSecondary: foundUser.phoneNumber[1] || '',
-                academyId: foundUser.academyId || '',
-            });
+        academyId: ''
+      });
+    
+      useEffect(() => {
+        if (user) {
+          setContactInfo({
+            emailSecondary: user.email[1] || '',
+            phonePrimary: user.phoneNumber[0] || '',
+            phoneSecondary: user.phoneNumber[1] || '',
+            academyId: user.academyId || ''
+          });
         }
-    }, [foundUser]);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      }, [user]);
+    
+      const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setContactInfo(prev => ({
-            ...prev,
-            [id]: value
+          ...prev,
+          [id]: value
         }));
-    };
-
-    const handleUpdateProfile = async (e: React.FormEvent) => {
+      };
+    
+      const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!foundUser?.uid) return;
-
+        
+        if (!user?.uid) return;
+    
         try {
-            const userRef = doc(db, "users", foundUser.uid);
-
-            // Preparar los datos para actualizar
-            const updateData = {
-                email: [foundUser.email[0], contactInfo.emailSecondary],
-                phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
-                academyId: contactInfo.academyId,
-            };
-
-            await updateDoc(userRef, updateData);
-            alert('Perfil actualizado exitosamente');
+          const userRef = doc(db, "users", user.uid);
+          
+          // Preparar los datos para actualizar
+          const updateData = {
+            email: [user.email[0], contactInfo.emailSecondary],
+            phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
+            academyId: contactInfo.academyId
+          };
+    
+          await updateDoc(userRef, updateData);
+          alert('Perfil actualizado exitosamente');
         } catch (error) {
-            console.error("Error al actualizar el perfil:", error);
-            alert('Error al actualizar el perfil');
+          console.error("Error al actualizar el perfil:", error);
+          alert('Error al actualizar el perfil');
         }
-    };
+      };
 
     if (loadingUsers) {
         return <div className="text-center text-gray-600">Cargando perfil...</div>;
@@ -170,7 +170,8 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                                 <input
                                     type="email"
                                     id="emailPrimary"
-                                    value={foundUser?.email[0] || ''}
+                                    value={foundUser?.email[0]}
+                                    onChange={handleInputChange}
                                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
                                     readOnly
                                 />
@@ -180,7 +181,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                                 <input
                                     type="email"
                                     id="emailSecondary"
-                                    value={contactInfo.emailSecondary}
+                                    value={contactInfo.emailSecondary || ""}
                                     onChange={handleInputChange}
                                     className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
                                     readOnly={!canEdit}
@@ -191,7 +192,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                                 <input
                                     type="tel"
                                     id="phonePrimary"
-                                    value={contactInfo.phonePrimary}
+                                    value={contactInfo.phonePrimary || ""}
                                     onChange={handleInputChange}
                                     className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
                                     required
@@ -203,7 +204,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                                 <input
                                     type="tel"
                                     id="phoneSecondary"
-                                    value={contactInfo.phoneSecondary}
+                                    value={contactInfo.phoneSecondary || ""}
                                     onChange={handleInputChange}
                                     className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
                                     readOnly={!canEdit}
