@@ -185,8 +185,8 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-semibold text-yellow-600 m-6">Editar Evento</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <h1 className="text-2xl font-semibold text-white mb-6 py-2 px-4 rounded-xl bg-yellow-600">Editar Evento</h1>
 
       {error && <p className="text-yellow-600 mb-4">{error}</p>}
 
