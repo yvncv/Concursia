@@ -23,6 +23,8 @@ html {
   overflow-y: scroll; 
 }
 
+/* fondo animado */
+
 body {
   margin: auto;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -92,6 +94,8 @@ body {
       transform: translateX(1);
   }
 }
+
+/* fondo animado */
 
 * {
   font-family: var(--font-poppins-regular);

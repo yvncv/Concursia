@@ -13,7 +13,7 @@ import Link from "next/link";
 
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
-  const { events, loadingEvent } = useEvents();
+  const { events, loadingEvents } = useEvents();
   const { academia, loadingAcademia, errorAcademia } = useAcademia();
 
   // Pagination
@@ -24,7 +24,7 @@ export default function MisEventos() {
   const loadingMessage =
     loadingUser || loadingAcademia
       ? "Cargando datos..."
-      : loadingEvent
+      : loadingEvents
       ? "Cargando eventos..."
       : null;
 
@@ -110,16 +110,16 @@ export default function MisEventos() {
                   className="transform transition-all duration-300 hover:scale-[1.02]"
                 >
                   <EventComponent event={event} />
-                  <div className="absolute top-1 left-0 md:top-2 md:right-4 rounded-full flex space-x-2 w-10 md:w-auto">
+                  <div className="absolute top-1 right-2 md:top-2 md:right-4 rounded-full flex w-10 md:w-auto">
                     <Link
                       href={`/academy-events/update-event/${event.id}`}
-                      className="text-yellow-600 px-3 py-1 bg-white rounded-full w-full hover:bg-yellow-500 hover:text-white transition-all"
+                      className="text-yellow-600 px-3 py-1 bg-white rounded-l-full hover:bg-yellow-500 hover:text-white transition-all"
                     >
                       Editar
                     </Link>
                     <button
                       onClick={() => deleteEvent(event.id)}
-                      className="text-red-600 px-3 py-1 bg-white rounded-full w-full hover:bg-red-500 hover:text-white transition-all"
+                      className="text-red-600 px-3 py-1 bg-white rounded-r-full hover:bg-red-500 hover:text-white transition-all"
                     >
                       Eliminar
                     </button>

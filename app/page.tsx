@@ -9,13 +9,13 @@ import Pagination from "./ui/pagination/Pagination";
 
 export default function TodosEventos() {
   const { user, loadingUser } = useUser();
-  const { events, loadingEvent } = useEvents();
+  const { events, loadingEvents } = useEvents();
   const eventsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Loading states
   const loadingMessage =
-    loadingUser ? "Obteniendo usuario..." : loadingEvent ? "Cargando eventos..." : null;
+    loadingUser ? "Obteniendo usuario..." : loadingEvents ? "Cargando eventos..." : null;
 
   if (loadingMessage) {
     return (
