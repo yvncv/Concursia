@@ -8,6 +8,7 @@ export interface Event {
   startDate: Timestamp; // Fecha y hora de inicio del evento
   endDate: Timestamp; // Fecha y hora de culminación del evento
   academyId?: string; // ID de la academia asociada al evento (opcional)
+  academyName?: string; // Nombre de la academia asociada al evento (opcional)
   organizerId?: string; // ID del organizador del evento (opcional)
   smallImage: string; // URL de la imagen pequeña para vistas previas (opcional)
   bannerImage: string; // URL del banner del evento (opcional)

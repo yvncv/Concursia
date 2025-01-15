@@ -88,13 +88,18 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                     <div className="flex items-center space-x-3 text-gray-600">
                         <MapIcon className="text-orange-600 w-6 h-6" />
                         {event.location.coordinates ? (
-                            <button onClick={openModal} className="text-sm md:text-base rounded-lg hover:text-rojo underline underline-offset-4">
+                            <button onClick={openModal} className="text-sm md:text-base rounded-lg hover:text-rojo underline underline-offset-4 text-start">
                                 <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
                             </button>
                         )
                             : (
                                 <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
                             )}
+                    </div>
+
+                    <div className="flex items-center space-x-3 text-gray-600">
+                        <IdIcon className="text-purple-600 w-6 h-6" />
+                        <span className="text-sm md:text-base">Academia: {event.academyName}</span>
                     </div>
                 </article>
 

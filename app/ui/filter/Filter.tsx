@@ -103,3 +103,4 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
         </div>
     );
 }
+

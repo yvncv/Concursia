@@ -6,7 +6,7 @@ import useUser from "@/app/firebase/functions";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { Event } from "@/app/types/eventType";
-import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
+import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; 
 
 const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
@@ -26,11 +26,11 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const [province, setProvince] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
+  const [academyName, setAcademyName] = useState<string>("");
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-
 
   // Cargar datos de Ubigeo al montar el componente
   useEffect(() => {
@@ -45,6 +45,24 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
 
     fetchData();
   }, []);
+
+  // Obtener el nombre de la academia utilizando academyId
+  useEffect(() => {
+    const fetchAcademyName = async () => {
+      if (user && user.academyId) {
+        const academyRef = doc(db, "academias", user.academyId);
+        const academySnap = await getDoc(academyRef);
+        if (academySnap.exists()) {
+          setAcademyName(academySnap.data().name); // Asegúrate de que el campo del nombre de la academia es 'name'
+        } else {
+          console.error("Academia no encontrada.");
+          setAcademyName(""); // Asegúrate de que el campo del nombre de la academia es 'name'
+        }
+      }
+    };
+
+    fetchAcademyName();
+  }, [user]);
 
   // Filtrar provincias según departamento seleccionado
   const filteredProvinces = ubigeoData.filter(
@@ -128,6 +146,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         description,
         startDate: Timestamp.fromDate(new Date(startDate)),
         endDate: Timestamp.fromDate(new Date(endDate)),
+        academyName,
         smallImage,
         bannerImage,
         location: {

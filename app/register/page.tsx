@@ -80,6 +80,7 @@ export default function RegisterForm() {
       const user = userCredential.user;
 
       await setDoc(doc(db, "users", user.uid), {
+        id: user.uid,
         roleId: "user",
         dni,
         fullName: `${firstName} ${lastName}`,

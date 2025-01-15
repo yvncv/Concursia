@@ -10,10 +10,13 @@ export default function EventComponent({ event }: { event: Event }) {
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement | null>(null);
 
-  // Función para capitalizar la primera letra de una cadena
-  function capitalizeFirstLetter(text: string): string {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString("es-PE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).replace(/^\w/, (c) => c.toUpperCase());
+  };
 
   useEffect(() => {
     const element = elementRef.current;
@@ -39,19 +42,16 @@ export default function EventComponent({ event }: { event: Event }) {
   return ( 
     <div
       ref={elementRef}
-      className={`relative flex flex-col rounded-[5px] shadow overflow-hidden cursor-pointer transition-all ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02]`}
-      key={event.id}
-      style={{ width: "100%", maxWidth: "300px", margin: "0 auto" }}
+      className={`bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
-        {/* Imagen desenfocada de fondo */}
         {event.smallImage && (
           <>
             <div className="absolute inset-0 -z-10">
               <Image
                 src={event.smallImage}
-                className="h-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
-                alt={`Blur background of ${event.name}`}
+                className="h-full w-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
+                alt={`Fondo de ${event.name}`}
                 width={900}
                 height={200}
                 priority={false}
@@ -59,46 +59,55 @@ export default function EventComponent({ event }: { event: Event }) {
             </div>
             <Image
               src={event.smallImage}
-              className="object-cover"
-              alt={event.smallImage}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              alt={event.name}
               width={900}
               height={200}
               priority={false}
             />
           </>
-        ) 
-      }
+        )}
       </div>
-      <div className="justify-center flex items-center text-white bg-red-700 py-1">
+
+      <div className="justify-center flex items-center text-white bg-red-600 py-1.5 text-sm font-medium">
         {event.eventType}
       </div>
-      <div className="p-4 pt-1">
-        <h5 className="text-start text-s-mmc text-[15px] md:text-[20px] font-bold truncate text-rojo">
+
+      <div className="p-4 space-y-3">
+        <h5 className="text-lg md:text-xl font-bold truncate text-red-600">
           {event.name}
         </h5>
-        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
-          <CalendarIcon className="text-red-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{capitalizeFirstLetter(event.startDate.toDate().toLocaleDateString("es-PE", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          }))}</span>
+
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-gray-600">
+            <CalendarIcon className="text-red-500 w-4 flex-shrink-0" />
+            <span className="text-sm md:text-base truncate">
+              {formatDate(event.startDate.toDate())}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-600">
+            <PlaceIcon className="text-blue-500 w-4 flex-shrink-0" />
+            <span className="text-sm md:text-base truncate">
+              {event.location.placeName}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-600">
+            <ClockIcon className="text-green-500 w-4 flex-shrink-0" />
+            <span className="text-sm md:text-base truncate">
+              {event.startDate.toDate().toLocaleTimeString()}
+            </span>
+          </div>
+
+          <p className="text-sm md:text-base text-gray-600 line-clamp-2">
+            {event.description}
+          </p>
         </div>
-        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
-          <PlaceIcon className="text-blue-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{event.location.placeName}</span>
-        </div>
-        <div className="flex flex-row space-x-1 items-center align-center text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500">
-          <ClockIcon className="text-green-600 w-[15px]" />
-          <span className="line-clamp-1 truncate">{event.startDate.toDate().toLocaleTimeString()}</span>
-        </div>
-        <p className="text-[13.5px] flex-1 md:text-[15.5px] text-start text-gray-500 truncate line-clamp-2">
-          {event.description}
-        </p>
+
         <Link
           href={`/event/${event.id}`}
-          className="text-[13.5px] md:text-[15.5px] block mt-4 text-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all"
-        >
+          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
           Más información
         </Link>
       </div>
