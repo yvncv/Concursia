@@ -1,5 +1,6 @@
+"use client"
 import React from "react";
-import useUsers from "../hooks/useUsers";
+import useUsers from "@/app/hooks/useUsers";
 
 const Users: React.FC = () => {
   const { users, loadingUsers, error } = useUsers();

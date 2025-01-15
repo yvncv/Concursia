@@ -10,6 +10,7 @@ import { CloseIcon } from "../icons/close";
 import AdminIcon from "../icons/admin";
 import CalendarIcon from "../icons/calendar";
 import useEvents from "@/app/hooks/useEvents";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { user, loadingUser } = useUser();
@@ -17,9 +18,10 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const pathname = usePathname();
 
   const enlaces = [
-    { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
+    { href: "/calendario", label: "Home", icon: HomeIcon, requiresAuth: false },
     { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
     { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
     { href: "/admin", label: "Panel Admin.", icon: AdminIcon, requiresAuth: true, requiresRole: "admin" },
@@ -118,7 +120,11 @@ export default function Navbar() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                    className={`flex items-center space-x-2 p-2 rounded-lg text-white transition-colors duration-200 text-lg
+                      ${pathname.includes(link.href)
+                        ? "bg-white/80 text-black font-bold"
+                        : "hover:bg-white/50 hover:text-black"
+                      }`}
                     onClick={handleLinkClick}
                   >
                     <link.icon className="w-5 h-5" />
