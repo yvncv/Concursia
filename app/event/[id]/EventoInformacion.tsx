@@ -46,12 +46,11 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                 <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">{event.description}</p>
 
                     <div className="flex items-center justify-beetwen space-x-3 text-gray-600">
-                        <CalendarIcon className="text-green-600 w-6 h-6" />
+                        <Calendar className="text-green-600 w-6 h-6" />
                         <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
-                        <CalendarIcon className="text-rojo w-6 h-6" />
+                        <Calendar className="text-rojo w-6 h-6" />
                         <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
                     </div>
 
