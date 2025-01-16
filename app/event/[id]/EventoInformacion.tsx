@@ -7,7 +7,7 @@ import Image from "next/image";
 import IdIcon from "@/app/ui/icons/id";
 import MapIcon from "@/app/ui/icons/map";
 
-const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () => void }) => {
+const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, openModal: () => void, onInscribir: () => void }) => {
     // Función para capitalizar la primera letra de una cadena
     function capitalizeFirstLetter(text: string): string {
         return text.charAt(0).toUpperCase() + text.slice(1);
@@ -50,8 +50,8 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
-            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-10 mb-20">
-                <article className="order-2 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
+            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 mb-20">
+                <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
 
@@ -103,9 +103,8 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                     </div>
                 </article>
 
-                {/* Imagen del evento */}
-                <div className="order-1 lg:order-2 w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md flex flex-col gap-6">
-                <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                <div className="order-2 lg:order-2 w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit">
+                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
                         <strong>Precios:</strong>
                     </p>
                     <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
@@ -116,6 +115,11 @@ const EventoInformacion = ({ event, openModal }: { event: Event, openModal: () =
                         <li>Novel Abierto B: S/.50</li>
                         <li>Nacional: S/.60</li>
                     </ul>
+                    <button
+                        onClick={onInscribir}
+                        className="mt-3 w-2/5 ml-auto block text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
+                        Inscribir
+                    </button>
                 </div>
             </div>
         </div>

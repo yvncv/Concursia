@@ -14,13 +14,20 @@ const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { user } = useUser();
-  const { events, loadingEvent, error } = useEvents();
+  const { events, loadingEvents, error } = useEvents();
+  const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion">("informacion");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inscripcionEnabled, setInscripcionEnabled] = useState(false);
   const { id } = use(params);
 
   const event = events.find((event) => event.id === id);
 
-  if (loadingEvent) {
+  const handleInscribirClick = () => {
+    setInscripcionEnabled(true);
+    setActiveTab("inscripcion");
+  };
+
+  if (loadingEvents) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
@@ -90,8 +97,10 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                 ${activeTab === "inscripcion"
                   ? "text-red-600 border-b-2 border-red-600"
-                  : "text-gray-500 hover:text-gray-700"}`}
-              onClick={() => setActiveTab("inscripcion")}
+                  : "text-gray-500 hover:text-gray-700"}
+                ${!inscripcionEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={() => inscripcionEnabled && setActiveTab("inscripcion")}
+              disabled={!inscripcionEnabled}
             >
               Inscripción
             </button>
@@ -99,7 +108,11 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
           <div className="p-6">
             {activeTab === "informacion" ? (
-              <EventoInformacion event={event} openModal={() => setIsModalOpen(true)} />
+              <EventoInformacion 
+                event={event} 
+                openModal={() => setIsModalOpen(true)} 
+                onInscribir={handleInscribirClick}
+              />
             ) : (
               user ? (
                 <EventoInscripcion />
@@ -116,13 +129,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6">
               <h2 className="text-xl font-semibold">
                 Ubicación: {event.name}
               </h2>
               <div className="rounded-lg overflow-hidden">
-                {/* Assuming the Map component accepts props like latitude, longitude etc. */}
                 <Map event={event}/>
               </div>
               <button
