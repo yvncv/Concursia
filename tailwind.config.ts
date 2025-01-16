@@ -13,6 +13,7 @@ export default {
         foreground: "var(--foreground)",
         rojo: "var(--rojo)",
         rosadoClaro: "var(--rosado-claro)",
+        blanco: "var(--blanco)",
       },
     },
   },

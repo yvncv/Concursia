@@ -6,9 +6,7 @@ import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
 import dynamic from "next/dynamic";
 import { use } from "react";
-import PlaceIcon from "@/app/ui/icons/marker";
-import CalendarIcon from "@/app/ui/icons/calendar";
-import { ProfileIcon } from "@/app/ui/icons/profile";
+import { MapPin, Calendar, User } from "lucide-react";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
@@ -61,7 +59,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         <div
           className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-500"
           style={{
-            backgroundImage: `url(${event.smallImage})`,
+            backgroundImage: `url(${event.bannerImage})`,
             filter: "brightness(0.6)",
           }}
         ></div>
@@ -69,12 +67,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center space-x-2 mb-2">
-              <CalendarIcon className="w-5 h-5" />
+              <Calendar className="w-5 h-5" />
               <span className="text-sm font-medium">{event.eventType}</span>
             </div>
             <h1 className="text-4xl font-bold mb-2">{event.name}</h1>
             <div className="flex items-center space-x-2">
-              <PlaceIcon className="w-5 h-5" />
+              <MapPin className="w-5 h-5" />
               <span>{event.location.province}, {event.location.department}</span>
             </div>
           </div>
@@ -118,7 +116,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 <EventoInscripcion />
               ) : (
                 <div className="flex flex-col items-center py-12 text-gray-500">
-                  <ProfileIcon className="w-12 h-12 mb-4" />
+                  <User className="w-12 h-12 mb-4" />
                   <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
                 </div>
               )

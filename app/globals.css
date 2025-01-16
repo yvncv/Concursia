@@ -5,7 +5,6 @@
 :root {
   --font-poppins-regular: 'Poppins', cursive;
 
-  --blanco: #ffffff;
   --foreground: #242424;
   --rojo: #c11414;
   --gris-claro: #EEEEEE;
@@ -21,6 +20,7 @@
 } */
 html {
   overflow-y: scroll; 
+  scroll-behavior: smooth;
 }
 
 /* fondo animado */

@@ -1,5 +1,6 @@
+"use client"
 import React from "react";
-import useEvents from "../hooks/useEvents"; // Suponiendo que tienes un hook similar para eventos
+import useEvents from "@/app/hooks/useEvents";// Suponiendo que tienes un hook similar para eventos
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();

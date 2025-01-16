@@ -1,52 +1,44 @@
 'use client';
 
-import CalendarIcon from "@/app/ui/icons/calendar";
-import PlaceIcon from "@/app/ui/icons/marker";
 import { Event } from "@/app/types/eventType";
 import Image from "next/image";
-import IdIcon from "@/app/ui/icons/id";
-import MapIcon from "@/app/ui/icons/map";
+import { Calendar, MapPin, Map, BadgeCheck } from "lucide-react";
 
 const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, openModal: () => void, onInscribir: () => void }) => {
     // Función para capitalizar la primera letra de una cadena
-    function capitalizeFirstLetter(text: string): string {
-        return text.charAt(0).toUpperCase() + text.slice(1);
-    }
+    const capitalizeFirstLetter = (text: string): string =>
+        text.charAt(0).toUpperCase() + text.slice(1);
 
-    // Verificar que startDate y endDate no sean undefined antes de formatear
-    const formattedStartDate = event.startDate && event.startDate.seconds
-        ? capitalizeFirstLetter(
-            new Date(event.startDate.seconds * 1000).toLocaleDateString("es-PE", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-            })
-        ) : "";
+    // Función utilitaria para formatear fechas
+    const formatDate = (timestamp: number, options: Intl.DateTimeFormatOptions): string =>
+        capitalizeFirstLetter(
+            new Date(timestamp * 1000).toLocaleDateString("es-PE", options)
+        );
 
-    const formattedStartTime = event.startDate && event.startDate.seconds
-        ? new Date(event.startDate.seconds * 1000).toLocaleTimeString("es-PE", {
+    const formatTime = (timestamp: number): string =>
+        new Date(timestamp * 1000).toLocaleTimeString("es-PE", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: true,
-        })
+        });
+
+    const formattedStartDate = event.startDate?.seconds
+        ? formatDate(event.startDate.seconds, { weekday: "long", day: "numeric", month: "long" })
         : "";
 
-    const formattedEndDate = event.endDate && event.endDate.seconds
-        ? capitalizeFirstLetter(
-            new Date(event.endDate.seconds * 1000).toLocaleDateString("es-PE", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-            })
-        ) : "";
-
-    const formattedEndTime = event.endDate && event.endDate.seconds
-        ? new Date(event.endDate.seconds * 1000).toLocaleTimeString("es-PE", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        })
+    const formattedStartTime = event.startDate?.seconds
+        ? formatTime(event.startDate.seconds)
         : "";
+
+    const formattedEndDate = event.endDate?.seconds
+        ? formatDate(event.endDate.seconds, { weekday: "long", day: "numeric", month: "long" })
+        : "";
+
+    const formattedEndTime = event.endDate?.seconds
+        ? formatTime(event.endDate.seconds)
+        : "";
+
+    const iconClass = "w-6 h-6";
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
@@ -54,6 +46,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                 <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
+                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">{event.description}</p>
 
                     <div className="flex items-center justify-beetwen space-x-3 text-gray-600">
                         <CalendarIcon className="text-green-600 w-6 h-6" />
@@ -78,28 +71,32 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                     </ul>
 
 
-                    {/* Información del evento: Lugar */}
                     <div className="flex items-center space-x-3 text-gray-600">
-                        <PlaceIcon className="text-blue-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}</span>
+                        <MapPin className={`${iconClass} text-blue-600`} />
+                        <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
                     </div>
 
-                    {/* Información del evento: Coordenadas y mapa */}
                     <div className="flex items-center space-x-3 text-gray-600">
-                        <MapIcon className="text-orange-600 w-6 h-6" />
+                        <Map className={`${iconClass} text-orange-600`} />
                         {event.location.coordinates ? (
-                            <button onClick={openModal} className="text-sm md:text-base rounded-lg hover:text-rojo underline underline-offset-4 text-start">
-                                <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
+                            <button
+                                onClick={openModal}
+                                className="text-sm md:text-base hover:text-red-600 underline underline-offset-4 ml-2 text-start"
+                            >
+                            Dirección: {event.location.street}, {event.location.district},{" "}
+                            {event.location.province}, {event.location.department}.
                             </button>
-                        )
-                            : (
-                                <span className="text-sm md:text-base">Dirección: {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}</span>
-                            )}
+                        ) : (
+                            <span className="text-sm md:text-base">
+                                Dirección: {event.location.street}, {event.location.district},{" "}
+                                {event.location.province}, {event.location.department}
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex items-center space-x-3 text-gray-600">
-                        <IdIcon className="text-purple-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">Academia: {event.academyName}</span>
+                        <BadgeCheck className={`${iconClass} text-purple-600`} />
+                        <span className="text-sm md:text-base">Academia: {event.academyName}.</span>
                     </div>
                 </article>
 

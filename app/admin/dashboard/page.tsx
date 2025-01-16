@@ -1,7 +1,8 @@
+"use client"
 import React from "react";
-import useUsers from "../hooks/useUsers";
-import useAcademias from "../hooks/useAcademias";
-import useEvents from "../hooks/useEvents";
+import useUsers from "@/app/hooks/useUsers";
+import useAcademias from "@/app/hooks/useAcademias";
+import useEvents from "@/app/hooks/useEvents";
 
 const Dashboard: React.FC = () => {
   const { users, loadingUsers } = useUsers();

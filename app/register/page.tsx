@@ -107,8 +107,8 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--rosado-claro)] px-4 py-8">
-      <div className="flex flex-col md:flex-row bg-[var(--blanco)] rounded-3xl shadow-lg overflow-hidden max-w-4xl w-full">
+    <div className="flex items-center justify-center min-h-screen px-4 py-8">
+      <div className="flex flex-col md:flex-row bg-white rounded-3xl shadow-lg overflow-hidden max-w-4xl w-full">
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
           <button

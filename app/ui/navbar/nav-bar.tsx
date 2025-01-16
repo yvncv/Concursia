@@ -1,29 +1,25 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Home, LogIn, User, Menu, X, Shield, Calendar } from "lucide-react";
 import useUser from "@/app/firebase/functions";
-import { Event } from "@/app/types/eventType";
-import { HomeIcon } from "../icons/home";
-import { LoginIcon } from "../icons/login";
-import { ProfileIcon } from "../icons/profile";
-import { MenuIcon } from "../icons/menu";
-import { CloseIcon } from "../icons/close";
-import AdminIcon from "../icons/admin";
-import CalendarIcon from "../icons/calendar";
 import useEvents from "@/app/hooks/useEvents";
+import { Event } from "@/app/types/eventType";
 
-export default function Navbar() {
+export default function Navbar({ brandName }: { brandName: string }) {
   const { user, loadingUser } = useUser();
   const { events } = useEvents();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const pathname = usePathname();
 
   const enlaces = [
-    { href: "/", label: "Home", icon: HomeIcon, requiresAuth: false },
-    { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
-    { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
-    { href: "/admin", label: "Panel Admin.", icon: AdminIcon, requiresAuth: true, requiresRole: "admin" },
-    { href: `/user/${user?.id}`, label: "Perfil", icon: ProfileIcon, requiresAuth: true },
+    { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
+    { href: "/login", label: "Iniciar Sesión", icon: LogIn, requiresAuth: false },
+    { href: "/academy-events", label: "Eventos Academia", icon: Calendar, requiresAuth: true, requiresRole: "organizer" },
+    { href: "/admin", label: "Panel Admin.", icon: Shield, requiresAuth: true, requiresRole: "admin" },
+    { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
   ];
 
   useEffect(() => {
@@ -74,17 +70,64 @@ export default function Navbar() {
     );
   }
 
+  if (pathname === "/") {
+    return (
+      <header className="bg-white shadow-md">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
+          <div>
+            <Link href="/" className="text-2xl font-bold text-red-700">{brandName}</Link>
+          </div>
+    
+          {/* Menú en Desktop */}
+          <nav className="hidden md:block">
+            <ul className="flex space-x-4">
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendario</Link></li>
+              <li><Link href="#eventos" className="text-gray-600 hover:text-red-700">Eventos Recientes</Link></li>
+              <li><Link href="#galeria" className="text-gray-600 hover:text-red-700">Galería</Link></li>
+              <li><Link href="#acerca" className="text-gray-600 hover:text-red-700">Acerca de</Link></li>
+              <li><Link href="#contacto" className="text-gray-600 hover:text-red-700">Contacto</Link></li>
+            </ul>
+          </nav>
+    
+          {/* Botón de menú para mobile */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-red-700 hover:text-gray-200 focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+    
+        {/* Menú para Mobile */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white shadow-md">
+            <ul className="space-y-4 px-4 pb-4 pt-2">
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario</Link></li>
+              <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
+              <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
+              <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
+              <li><Link href="#contacto" className="text-gray-600 hover:text-red-700 block">Contacto</Link></li>
+            </ul>
+          </div>
+        )}
+      </header>
+    );
+  }
+  
   return (
-    <nav className="fixed left-0 top-0 z-50 w-full bg-rojo shadow-lg">
+    <nav className="bg-white shadow-md py-3">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200" onClick={handleLinkClick}>
-              Tusuy Perú
+            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-gray-200" onClick={handleLinkClick}>
+              {brandName}
             </Link>
           </div>
-
+  
           {/* Search Bar */}
           <div className="relative hidden w-full max-w-md md:block">
             <input
@@ -92,7 +135,7 @@ export default function Navbar() {
               placeholder="Buscar eventos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rojo"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             {filteredEvents.length > 0 && (
               <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg">
@@ -110,37 +153,43 @@ export default function Navbar() {
               </ul>
             )}
           </div>
-
+  
           {/* Desktop Menu */}
           <div className="hidden md:block">
-            <ul className="flex space-x-8">
-              {filteredLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
-                    onClick={handleLinkClick}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <nav>
+              <ul className="flex space-x-8">
+                {filteredLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                        ${pathname.includes(link.href)
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                        }`}
+                      onClick={handleLinkClick}
+                    >
+                      <link.icon className="w-5 h-5" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
-
+  
           {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:text-gray-200 focus:outline-none"
+              className="text-red-700 hover:text-gray-200 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
-
+  
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden">
@@ -149,9 +198,13 @@ export default function Navbar() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex items-center space-x-3 text-white hover:text-gray-200 transition-colors duration-200 text-lg"
+                    className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
+                          ${pathname.includes(link.href)
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                        }`}
                     onClick={() => {
-                      setIsMenuOpen(false);
+                      setIsMenuOpen(false);   
                       handleLinkClick();
                     }}
                   >
@@ -166,4 +219,5 @@ export default function Navbar() {
       </div>
     </nav>
   );
+  
 }
