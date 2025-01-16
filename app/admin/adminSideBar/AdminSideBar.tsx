@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu as MenuIcon, X } from "lucide-react";
+import { X, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
 
@@ -20,19 +20,19 @@ const AdminSideBar: React.FC = () => {
   return (
     <>
       {/* Botón para abrir/cerrar sidebar en pantallas pequeñas */}
-      <div className="md:hidden fixed top-10 left-4 z-50">
+      <div className="md:hidden fixed top-9 left-4 z-10">
         <button
           onClick={toggleMenu}
-          className="text-white bg-black/50 p-2 rounded-full hover:bg-white hover:text-black"
+          className="hover:text-white hover:bg-red-900/50 p-2 rounded-full bg-white text-red-900"
           aria-label="Toggle sidebar"
         >
-          {isMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+          {isMenuOpen ? <X className="w-6 h-6" /> : <PanelLeft className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Sidebar */}
       <div
-        className={`fixed h-full text-white shadow-lg transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        className={`z-0 fixed h-full text-white bg-rojo md:bg-transparent shadow-lg transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 md:w-64`}
       >
         <div className="p-6">
