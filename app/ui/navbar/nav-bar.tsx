@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon } from "../icons/home";
-import { LoginIcon } from "../icons/login";
-import { ProfileIcon } from "../icons/profile";
-import { MenuIcon } from "../icons/menu";
-import { CloseIcon } from "../icons/close";
-import AdminIcon from "../icons/admin";
-import CalendarIcon from "../icons/calendar";
+import { Home, LogIn, User, Menu, X, Shield, Calendar } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import useEvents from "@/app/hooks/useEvents";
 import { Event } from "@/app/types/eventType";
@@ -21,11 +15,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const pathname = usePathname();
 
   const enlaces = [
-    { href: "/calendario", label: "Calendario", icon: HomeIcon, requiresAuth: false },
-    { href: "/login", label: "Iniciar Sesión", icon: LoginIcon, requiresAuth: false },
-    { href: "/academy-events", label: "Eventos Academia", icon: CalendarIcon, requiresAuth: true, requiresRole: "organizer" },
-    { href: "/admin", label: "Panel Admin.", icon: AdminIcon, requiresAuth: true, requiresRole: "admin" },
-    { href: `/user/${user?.id}`, label: "Perfil", icon: ProfileIcon, requiresAuth: true },
+    { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
+    { href: "/login", label: "Iniciar Sesión", icon: LogIn, requiresAuth: false },
+    { href: "/academy-events", label: "Eventos Academia", icon: Calendar, requiresAuth: true, requiresRole: "organizer" },
+    { href: "/admin", label: "Panel Admin.", icon: Shield, requiresAuth: true, requiresRole: "admin" },
+    { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
   ];
 
   useEffect(() => {
@@ -102,7 +96,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
               className="text-red-700 hover:text-gray-200 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -191,7 +185,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
               className="text-red-700 hover:text-gray-200 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>

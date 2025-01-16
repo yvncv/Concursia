@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu as MenuIcon } from "lucide-react";
-import { CloseIcon } from "@/app/ui/icons/close";
+import { Menu as MenuIcon, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
 
@@ -27,7 +26,7 @@ const AdminSideBar: React.FC = () => {
           className="text-white bg-black/50 p-2 rounded-full hover:bg-white hover:text-black"
           aria-label="Toggle sidebar"
         >
-          {isMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+          {isMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
         </button>
       </div>
 

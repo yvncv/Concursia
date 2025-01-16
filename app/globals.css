@@ -20,6 +20,7 @@
 } */
 html {
   overflow-y: scroll; 
+  scroll-behavior: smooth;
 }
 
 /* fondo animado */
