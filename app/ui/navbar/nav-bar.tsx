@@ -131,7 +131,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           {/* Search Bar */}
           <div className="relative hidden w-full max-w-md md:block">
             <input
-              type="text"
+              type="search"
               placeholder="Buscar eventos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -146,7 +146,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={handleLinkClick}
                     >
-                      {event.name}
+                      {event.eventType} {event.name} - {event.location.district}, {event.location.department}
                     </Link>
                   </li>
                 ))}
