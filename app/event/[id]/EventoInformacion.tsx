@@ -1,7 +1,8 @@
 'use client';
 
 import { Event } from "@/app/types/eventType";
-import { Calendar, MapPin, Map, BadgeCheck, Coins } from "lucide-react";
+import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins } from "lucide-react";
+import Map from "@/app/ui/map/mapa";
 
 const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, openModal: () => void, onInscribir: () => void }) => {
     // Función para capitalizar la primera letra de una cadena
@@ -46,44 +47,37 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-beetwen space-y-3 md:space-x-3 text-gray-600">
-                        <div className="flex flex-row space-x-3 items-center">
-                            <Calendar className="text-green-600 w-6 h-6" />
-                            <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
-                        </div>
-                        <div className="flex flex-row space-x-3 items-center">
-                            <Calendar className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
-                        </div>
-                    </div>
-
                     {/* Descripción del evento */}
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                    <section className="text-gray-700 text-base md:text-lg leading-relaxed">
                         {event.description}
-                    </p>
+                    </section>
 
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
-                        <strong>Categorias:</strong>
-                    </p>
-                    <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
-                        {Object.entries(event.settings.categoriesPrices).map(([category]) => (
-                            <li key={category}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)}.
-                            </li>
-                        ))}
-                    </ul>
+                    <section className="flex flex-col md:flex-row md:items-center md:space-x-6 text-gray-600 space-y-3 md:space-y-0">
+                        <div className="flex items-center space-x-3">
+                            <Calendar className="text-green-600 w-6 h-6 shrink-0" />
+                            <span className="text-sm md:text-base leading-tight">
+                                <strong>Inicio:</strong> {formattedStartDate} - {formattedStartTime}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <Calendar className="text-rojo w-6 h-6 shrink-0" />
+                            <span className="text-sm md:text-base leading-tight">
+                                <strong>Fin:</strong> {formattedEndDate} - {formattedEndTime}
+                            </span>
+                        </div>
+                    </section>
 
-                    <div className="flex items-center space-x-3 text-gray-600">
+                    <section className="flex items-center space-x-3 text-gray-600">
                         <MapPin className={`${iconClass} text-blue-600`} />
                         <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
-                    </div>
+                    </section>
 
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <Map className={`${iconClass} text-orange-600`} />
+                    <section className="flex items-center space-x-3 text-gray-600">
+                        <MapIcon className={`${iconClass} text-orange-600`} />
                         {event.location.coordinates ? (
                             <button
                                 onClick={openModal}
-                                className="text-sm md:text-base hover:text-red-600 underline underline-offset-4 ml-2 text-start"
+                                className="text-sm md:text-base text-red-900 hover:text-purple-900 underline underline-offset-4 ml-2 text-start"
                             >
                                 Dirección: {event.location.street}, {event.location.district},{" "}
                                 {event.location.province}, {event.location.department}.
@@ -94,32 +88,61 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                                 {event.location.province}, {event.location.department}
                             </span>
                         )}
-                    </div>
+                    </section>
 
-                    <div className="flex items-center space-x-3 text-gray-600">
+                    <section className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
+                        <div className="flex items-center space-x-3">
+                            <ChartBarStacked className="text-rojo w-6 h-6" />
+                            <span className="text-sm md:text-base">Categorias:</span>
+                        </div>
+                        <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
+                            {Object.entries(event.settings.categoriesPrices).map(([category]) => (
+                                <li key={category}>
+                                    {category.charAt(0).toUpperCase() + category.slice(1)}.
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+
+                    <section className="flex items-center space-x-3 text-gray-600">
                         <BadgeCheck className={`${iconClass} text-purple-600`} />
                         <span className="text-sm md:text-base">Academia: {event.academyName}.</span>
-                    </div>
+                    </section>
                 </article>
 
-                <div className="order-2 lg:order-2 w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit">
-                    <div className="flex items-center space-x-3">
-                        <Coins className="text-yellow-600 w-6 h-6" />
-                        <strong className="text-gray-700 text-base md:text-lg leading-relaxed">Precios:</strong>
+                <div className="order-2 h-full flex flex-col space-y-6 justify-between">
+                    {/* Sección de Precios */}
+                    <div className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
+                        {/* Título */}
+                        <div className="flex items-center space-x-3">
+                            <Coins className="text-yellow-600 w-6 h-6" />
+                            <span className="text-md md:text-base font-medium text-gray-800">Precios:</span>
+                        </div>
+
+                        {/* Lista de precios */}
+                        <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
+                            {Object.entries(event.settings.categoriesPrices).map(([category, price]) => (
+                                <li key={category} className="leading-relaxed">
+                                    {category.charAt(0).toUpperCase() + category.slice(1)}: <span className="font-semibold">S/. {price}</span>
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* Botón Inscribir */}
+                        <button
+                            onClick={onInscribir}
+                            className="mt-4 w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-95"
+                        >
+                            Inscribir
+                        </button>
                     </div>
-                    <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
-                        {Object.entries(event.settings.categoriesPrices).map(([category, price]) => (
-                            <li key={category}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)}: S/. {price}
-                            </li>
-                        ))}
-                    </ul>
-                    <button
-                        onClick={onInscribir}
-                        className="mt-3 w-2/5 ml-auto block text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
-                        Inscribir
-                    </button>
+
+                    {/* Sección del Mapa */}
+                    <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-lg">
+                        <Map event={event} />
+                    </div>
                 </div>
+
             </div>
         </div>
     );

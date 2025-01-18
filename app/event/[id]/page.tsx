@@ -106,9 +106,9 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
           <div className="p-6">
             {activeTab === "informacion" ? (
-              <EventoInformacion 
-                event={event} 
-                openModal={() => setIsModalOpen(true)} 
+              <EventoInformacion
+                event={event}
+                openModal={() => setIsModalOpen(true)}
                 onInscribir={handleInscribirClick}
               />
             ) : (
@@ -126,25 +126,41 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6">
-              <h2 className="text-xl font-semibold">
-                Ubicación: {event.name}
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Encabezado del modal */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                Ubicación de{" "}
+                <span className="text-red-600">
+                  {event.eventType}: {event.name}
+                </span>
               </h2>
-              <div className="rounded-lg overflow-hidden">
-                <Map event={event}/>
-              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="mt-6 w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3 px-4 rounded-lg hover:from-red-500 hover:to-red-400 transition-all duration-300 font-medium"
+                className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
+                aria-label="Cerrar modal"
               >
-                Cerrar mapa
+                ✕
               </button>
+            </div>
+
+            {/* Contenido principal */}
+            <div className="p-4 h-[400px] sm:h-[500px]">
+              <div className="rounded-lg overflow-hidden h-full">
+                <Map event={event} />
+              </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

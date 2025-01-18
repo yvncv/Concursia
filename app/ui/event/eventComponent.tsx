@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock, MapPin } from "lucide-react"
+import { BadgeCheck, Calendar, Clock, MapPin } from "lucide-react"
 import { Event } from "../../types/eventType";
 
 export default function EventComponent({ event }: { event: Event }) {
@@ -15,6 +15,17 @@ export default function EventComponent({ event }: { event: Event }) {
       month: "long",
     }).replace(/^\w/, (c) => c.toUpperCase());
   };
+
+  const formatTime = (timestamp: number): string =>
+    new Date(timestamp * 1000).toLocaleTimeString("es-PE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+  const formattedStartTime = event.startDate?.seconds
+    ? formatTime(event.startDate.seconds)
+    : "";
 
   useEffect(() => {
     const element = elementRef.current;
@@ -37,10 +48,10 @@ export default function EventComponent({ event }: { event: Event }) {
     }
   }, []);
 
-  return ( 
+  return (
     <div
       ref={elementRef}
-      className={`bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
+      className={`text-xs md:text-base bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {event.smallImage && (
@@ -67,45 +78,52 @@ export default function EventComponent({ event }: { event: Event }) {
         )}
       </div>
 
-      <div className="justify-center flex items-center text-white bg-red-600 py-1.5 text-sm font-medium">
+      <div className="justify-center flex items-center text-white bg-red-600 md:py-1.5 text-sm font-medium">
         {event.eventType}
       </div>
 
-      <div className="p-4 space-y-3">
-        <h5 className="text-lg md:text-xl font-bold truncate text-red-600">
+      <div className="p-4 space-y-1 md:space-y-3">
+        <h5 className="text-sm md:text-xl font-bold truncate text-red-600">
           {event.name}
         </h5>
 
-        <div className="space-y-2">
+        <p className="text-gray-600 line-clamp-2">
+          {event.description}
+        </p>
+
+        <div className="md:space-y-2 space-y-0">
           <div className="flex items-center gap-2 text-gray-600">
             <Calendar className="text-red-500 w-4 flex-shrink-0" />
-            <span className="text-sm md:text-base truncate">
+            <span className="truncate">
               {formatDate(event.startDate.toDate())}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-gray-600">
+            <Clock className="text-green-500 w-4 flex-shrink-0" />
+            <span className="truncate">
+              {formattedStartTime}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="text-blue-500 w-4 flex-shrink-0" />
-            <span className="text-sm md:text-base truncate">
+            <span className="truncate">
               {event.location.placeName}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="text-green-500 w-4 flex-shrink-0" />
-            <span className="text-sm md:text-base truncate">
-              {event.startDate.toDate().toLocaleTimeString()}
+          <BadgeCheck className="text-purple-500 w-4 flex-shrink-0" />
+            <span className="truncate">
+              {event.academyName}
             </span>
           </div>
-
-          <p className="text-sm md:text-base text-gray-600 line-clamp-2">
-            {event.description}
-          </p>
         </div>
 
         <Link
           href={`/event/${event.id}`}
-          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
+          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
           Más información
         </Link>
       </div>

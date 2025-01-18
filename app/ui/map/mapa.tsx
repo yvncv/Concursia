@@ -6,17 +6,15 @@ const Map = ({ event }: { event: Event }) => {
   const [latitude, longitude] = [event.location.coordinates.latitude, event.location.coordinates.longitude]
 
   return (
-    <div className="map-container">
-      <iframe
-        src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=es-419&z=16&output=embed`}  // Ajusta z para el nivel de zoom
-        width="100%"  // Para que ocupe todo el ancho disponible
-        height="400"  // Altura fija
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        title="Mapa del event"  // Añadido por accesibilidad
-      ></iframe>
-    </div>
+    <iframe
+      src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=es-419&z=15&output=embed`}  // Ajusta z para el nivel de zoom
+      width="100%"  // Para que ocupe todo el ancho disponible
+      height="100%" // Altura fija
+      allowFullScreen
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+      title="Mapa del event"  // Añadido por accesibilidad
+    ></iframe>
   );
 };
 
