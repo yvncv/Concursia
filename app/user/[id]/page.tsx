@@ -91,7 +91,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     return (
         <main className="min-h-screen">
             <form onSubmit={handleUpdateProfile}>
-                <div className="w-full mx-auto bg-white/80 rounded-lg shadow-xl p-8">
+                <div className="w-4/5 mx-auto my-4 bg-white/80 rounded-lg shadow-xl p-8">
                     <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">
                         <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
                             {foundUser.firstName[0]}

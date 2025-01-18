@@ -32,7 +32,7 @@ const AdminSideBar: React.FC = () => {
 
       {/* Sidebar */}
       <div
-        className={`z-0 fixed h-full text-white bg-rojo md:bg-transparent shadow-lg transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        className={`z-0 mt-0 fixed h-full text-white bg-rojo md:bg-transparent shadow-lg transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 md:w-64`}
       >
         <div className="p-6">

@@ -93,7 +93,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                     <section className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
                         <div className="flex items-center space-x-3">
                             <ChartBarStacked className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Categorias:</span>
+                            <span className="text-sm md:text-base">Niveles:</span>
                         </div>
                         <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
                             {Object.entries(event.settings.categoriesPrices).map(([category]) => (
