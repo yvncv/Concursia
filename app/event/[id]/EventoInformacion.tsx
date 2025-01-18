@@ -46,11 +46,15 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                     {/* Nombre del evento */}
                     <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
 
-                    <div className="flex items-center justify-beetwen space-x-3 text-gray-600">
-                        <Calendar className="text-green-600 w-6 h-6" />
-                        <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
-                        <Calendar className="text-rojo w-6 h-6" />
-                        <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
+                    <div className="flex flex-col md:flex-row md:items-center justify-beetwen space-y-3 md:space-x-3 text-gray-600">
+                        <div className="flex flex-row space-x-3 items-center">
+                            <Calendar className="text-green-600 w-6 h-6" />
+                            <span className="text-sm md:text-base">Inicio: {formattedStartDate} - {formattedStartTime}</span>
+                        </div>
+                        <div className="flex flex-row space-x-3 items-center">
+                            <Calendar className="text-rojo w-6 h-6" />
+                            <span className="text-sm md:text-base">Fin: {formattedEndDate} - {formattedEndTime}</span>
+                        </div>
                     </div>
 
                     {/* Descripción del evento */}
@@ -68,7 +72,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                             </li>
                         ))}
                     </ul>
-                    
+
                     <div className="flex items-center space-x-3 text-gray-600">
                         <MapPin className={`${iconClass} text-blue-600`} />
                         <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
