@@ -1,8 +1,7 @@
 'use client';
 
 import { Event } from "@/app/types/eventType";
-import Image from "next/image";
-import { Calendar, MapPin, Map, BadgeCheck } from "lucide-react";
+import { Calendar, MapPin, Map, BadgeCheck, Coins } from "lucide-react";
 
 const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, openModal: () => void, onInscribir: () => void }) => {
     // Función para capitalizar la primera letra de una cadena
@@ -63,13 +62,13 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                         <strong>Categorias:</strong>
                     </p>
                     <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
-                        <li>Baby</li>
-                        <li>Pre-Infante</li>
-                        <li>Infante</li>
-                        <li>Infantil</li>
+                        {Object.entries(event.settings.categoriesPrices).map(([category]) => (
+                            <li key={category}>
+                                {category.charAt(0).toUpperCase() + category.slice(1)}.
+                            </li>
+                        ))}
                     </ul>
-
-
+                    
                     <div className="flex items-center space-x-3 text-gray-600">
                         <MapPin className={`${iconClass} text-blue-600`} />
                         <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
@@ -82,8 +81,8 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                                 onClick={openModal}
                                 className="text-sm md:text-base hover:text-red-600 underline underline-offset-4 ml-2 text-start"
                             >
-                            Dirección: {event.location.street}, {event.location.district},{" "}
-                            {event.location.province}, {event.location.department}.
+                                Dirección: {event.location.street}, {event.location.district},{" "}
+                                {event.location.province}, {event.location.department}.
                             </button>
                         ) : (
                             <span className="text-sm md:text-base">
@@ -100,16 +99,16 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                 </article>
 
                 <div className="order-2 lg:order-2 w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit">
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
-                        <strong>Precios:</strong>
-                    </p>
+                    <div className="flex items-center space-x-3">
+                        <Coins className="text-yellow-600 w-6 h-6" />
+                        <strong className="text-gray-700 text-base md:text-lg leading-relaxed">Precios:</strong>
+                    </div>
                     <ul className="list-disc pl-6 text-gray-700 text-base md:text-lg leading-relaxed">
-                        <li>Seriado: S/.15</li>
-                        <li>Individual: S/.15</li>
-                        <li>Novel Novel: S/.50</li>
-                        <li>Novel Abierto A: S/.50</li>
-                        <li>Novel Abierto B: S/.50</li>
-                        <li>Nacional: S/.60</li>
+                        {Object.entries(event.settings.categoriesPrices).map(([category, price]) => (
+                            <li key={category}>
+                                {category.charAt(0).toUpperCase() + category.slice(1)}: S/. {price}
+                            </li>
+                        ))}
                     </ul>
                     <button
                         onClick={onInscribir}

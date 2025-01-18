@@ -7,6 +7,8 @@ import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import { Event } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
 
+const categoriesList = ["Seriado", "Individual", "Novel Novel", "Novel Abierto A", "Novel Abierto B", "Nacional"];
+const levelsList = ["Baby", "Pre-Infante", "Infante", "Juvenil", "Adulto"];
 
 const CreateEvent = () => {
   const { user } = useUser();
@@ -26,6 +28,8 @@ const CreateEvent = () => {
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
   const [academyName, setAcademyName] = useState<string>("");
+  const [selectedCategories, setSelectedCategories] = useState<{ category: string; price: string }[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -72,6 +76,29 @@ const CreateEvent = () => {
   const filteredDistricts = ubigeoData.filter(
     (item) => item.departamento === department && item.provincia === province && item.distrito !== "00"
   );
+
+  const handleAddCategory = (category: string) => {
+    if (!selectedCategories.some((item) => item.category === category)) {
+      setSelectedCategories([...selectedCategories, { category, price: "" }]);
+    }
+  };
+
+  const handleRemoveCategory = (index: number) => {
+    const updatedCategories = selectedCategories.filter((_, i) => i !== index);
+    setSelectedCategories(updatedCategories); // Actualiza el estado con las categorías restantes
+  };
+
+  const handlePriceChange = (index: number, value: string) => {
+    const updatedCategories = [...selectedCategories];
+    updatedCategories[index].price = value;
+    setSelectedCategories(updatedCategories);
+  };
+
+  const handleLevelChange = (level: string) => {
+    setSelectedLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,10 +151,12 @@ const CreateEvent = () => {
         capacity,
         status: "pendiente",
         settings: {
-          categories: [],
-          levels: [],
+          categoriesPrices: selectedCategories.reduce(
+            (acc, item) => ({ ...acc, [item.category]: parseFloat(item.price) || 0 }),
+            {}
+          ),
+          levels: selectedLevels,
           registrationType: [],
-          prices: {},
         },
         createdBy: user?.fullName,
         lastUpdatedBy: user?.fullName,
@@ -177,7 +206,7 @@ const CreateEvent = () => {
           { label: "Fecha de Inicio", id: "startDate", value: startDate, setValue: setStartDate, type: "datetime-local" },
           { label: "Fecha de Finalización", id: "endDate", value: endDate, setValue: setEndDate, type: "datetime-local" },
           { label: "Descripción", id: "description", value: description, setValue: setDescription, type: "textarea" },
-          { label: "Capacidad", id: "capacity", value: capacity, setValue: setCapacity, type: "text" },
+          { label: "Capacidad", id: "capacity", value: capacity, setValue: setCapacity, type: "number" },
           { label: "Tipo de Evento", id: "eventType", value: eventType, setValue: setEventType, type: "text" },
           ].map(({ label, id, value, setValue, type }) => (
             <div key={id} className="mb-4">
@@ -270,6 +299,71 @@ const CreateEvent = () => {
               )}
             </div>
           ))}
+
+          {/* Formulario para editar categorías, niveles y precios */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+            <h2 className="text-lg font-semibold mb-2">Editar Categorías y Precios</h2>
+
+            <h2 className="text-lg font-semibold mb-2">Seleccionar Categorías</h2>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {categoriesList.map((category) => (
+                <button
+                  type="button"  // Asegúrate de que no sea un botón de tipo submit
+                  key={category}
+                  onClick={() => handleAddCategory(category)}
+                  className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-400 transition-all"
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            {selectedCategories.length > 0 ? (
+              <ul className="space-y-2 mb-4">
+                {selectedCategories.map((item, index) => (
+                  <li key={item.category} className="ml-1 pl-5 flex items-center gap-4 py-2 px-2 rounded-full bg-green-200 hover:bg-red-200">
+                    <span className="text-gray-700">{item.category}</span>
+                    <div>
+                      <span className="hidden md:visible px-2 py-1 w-20 rounded-full bg-white text-md">S/.</span>
+                      <span className="hidden md:visible px-2 py-1 w-20 rounded-full bg-white text-md"> = </span>
+                      <input
+                        type="number"
+                        placeholder="Precio"
+                        value={item.price}
+                        onChange={(e) => handlePriceChange(index, e.target.value)}
+                        className="px-2 py-1 w-20 rounded-full text-md"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCategory(index)}
+                      className="text-rojo px-2 rounded-full hover:bg-rojo hover:text-white"
+                    >
+                      X
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600 mb-4">No hay categorías seleccionadas.</p>
+            )}
+
+            <h2 className="text-lg font-semibold mb-2">Seleccionar Niveles</h2>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {levelsList.map((level) => (
+                <button
+                  type="button"  // Asegúrate de que no sea un botón de tipo submit
+                  key={level}
+                  onClick={() => handleLevelChange(level)}
+                  className={`py-1 px-3 rounded transition-all ${selectedLevels.includes(level)
+                    ? "bg-green-500 text-white hover:bg-green-400"
+                    : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                    }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Botones */}

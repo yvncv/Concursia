@@ -16,6 +16,10 @@ export default function MisEventos() {
   const { events, loadingEvents } = useEvents();
   const { academia, loadingAcademia, errorAcademia } = useAcademia();
 
+  const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null); // Evento que se va a eliminar
+  const [eventName, setEventName] = useState<string>(''); // Nombre del evento a eliminar
+
   // Pagination
   const eventsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,8 +29,8 @@ export default function MisEventos() {
     loadingUser || loadingAcademia
       ? "Cargando datos..."
       : loadingEvents
-      ? "Cargando eventos..."
-      : null;
+        ? "Cargando eventos..."
+        : null;
 
   if (loadingMessage) {
     return (
@@ -64,8 +68,11 @@ export default function MisEventos() {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      await deleteDoc(doc(db, "eventos", eventId));
-      alert("Evento eliminado");
+      if (eventId && eventId === eventToDelete) {
+        await deleteDoc(doc(db, "eventos", eventId));
+        alert("Evento eliminado");
+        setShowModal(false); // Cerrar el modal después de la eliminación
+      }
     } catch (err) {
       console.error("Error eliminando el evento: ", err);
       alert("Hubo un error al eliminar el evento");
@@ -73,7 +80,7 @@ export default function MisEventos() {
   };
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen" >
       {/* Hero Carousel */}
       <section className="w-full max-w-[1920px] mx-auto relative">
         <CarruselEvento
@@ -86,8 +93,7 @@ export default function MisEventos() {
         {/* Welcome Message */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">
           <h1 className="text-2xl text-red-600">
-            Saludos, {user?.firstName}. Estos son los eventos de{" "}
-            {academia?.name || "Cargando academia"}.
+            Saludos, {user?.firstName}. Estos son los eventos de {academia?.name || "Cargando academia"}.
           </h1>
         </div>
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">
@@ -117,7 +123,11 @@ export default function MisEventos() {
                       Editar
                     </Link>
                     <button
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => {
+                        setEventToDelete(event.id); // Establecer el evento a eliminar
+                        setEventName(event.name); // Establecer el nombre del evento a eliminar
+                        setShowModal(true); // Mostrar el modal
+                      }}
                       className="text-red-600 px-3 py-1 bg-white rounded-r-full hover:bg-red-500 hover:text-white transition-all"
                     >
                       Eliminar
@@ -147,6 +157,46 @@ export default function MisEventos() {
           )}
         </div>
       </section>
+
+      {/* Modal de confirmación */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+          <div className="bg-white backdrop-blur-xl p-6 rounded-2xl shadow-lg w-[90%] sm:w-[400px] max-w-lg">
+            <h2 className="font-semibold text-center mb-4 text-gray-600 text-2xl">
+              ¿Seguro que desea eliminar el evento: <span className="text-rojo underline underline-offset-2">{eventName}</span>?
+            </h2>
+            <div className="mb-4">
+              <p className="text-center text-gray-600">Escriba el nombre exacto del evento para confirmar:</p>
+              <input
+                type="text"
+                className="w-full p-3 placeholder:text-red-200 mt-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder={eventName}
+              />
+            </div>
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all rounded-full"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (eventName === eventToDelete) {
+                    deleteEvent(eventToDelete!);
+                  } else {
+                    alert("El nombre del evento no coincide. No se puede eliminar.");
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-500 transition-all rounded-full"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

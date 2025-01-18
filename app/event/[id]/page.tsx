@@ -113,7 +113,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               />
             ) : (
               user ? (
-                <EventoInscripcion />
+                <EventoInscripcion event={event} />
               ) : (
                 <div className="flex flex-col items-center py-12 text-gray-500">
                   <User className="w-12 h-12 mb-4" />
