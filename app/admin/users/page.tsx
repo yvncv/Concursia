@@ -1,61 +1,73 @@
-"use client"
+"use client";
 import React from "react";
 import useUsers from "@/app/hooks/useUsers";
+import { Eye, UserPen, Trash2 } from "lucide-react"; // Iconos de react-icons
 
 const Users: React.FC = () => {
   const { users, loadingUsers, error } = useUsers();
 
-  // Calcular estadísticas de usuarios
-  const totalUsers = users.length;
-  const genderStats = users.reduce(
-    (acc, user) => {
-      if (user.gender === "Masculino") acc.male++;
-      if (user.gender === "Femenino") acc.female++;
-      return acc;
-    },
-    { male: 0, female: 0 }
-  );
-
-  const rolesStats = users.reduce((acc, user) => {
-    acc[user.roleId] = (acc[user.roleId] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Estadísticas de Usuarios</h1>
+      <h1 className="text-2xl font-bold mb-6">Gestión de Usuarios</h1>
 
       {loadingUsers ? (
         <p>Cargando usuarios...</p>
       ) : error ? (
         <p className="text-red-500">Error: {error}</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Tarjeta Total de Usuarios */}
-          <div className="bg-white p-4 shadow-md rounded-lg">
-            <h2 className="text-lg font-semibold">Total de Usuarios</h2>
-            <p className="text-2xl font-bold">{totalUsers}</p>
-          </div>
-
-          {/* Tarjeta Género: Masculino */}
-          <div className="bg-white p-4 shadow-md rounded-lg">
-            <h2 className="text-lg font-semibold">Hombres</h2>
-            <p className="text-2xl font-bold">{genderStats.male}</p>
-          </div>
-
-          {/* Tarjeta Género: Femenino */}
-          <div className="bg-white p-4 shadow-md rounded-lg">
-            <h2 className="text-lg font-semibold">Mujeres</h2>
-            <p className="text-2xl font-bold">{genderStats.female}</p>
-          </div>
-
-          {/* Tarjetas por Roles */}
-          {Object.keys(rolesStats).map((roleId) => (
-            <div key={roleId} className="bg-white p-4 shadow-md rounded-lg">
-              <h2 className="text-lg font-semibold">Rol: {roleId}</h2>
-              <p className="text-2xl font-bold">{rolesStats[roleId]}</p>
-            </div>
-          ))}
+        <div className="overflow-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border border-gray-300 px-4 py-2">Nombre</th>
+                <th className="border border-gray-300 px-4 py-2">Correo</th>
+                <th className="border border-gray-300 px-4 py-2">Rol</th>
+                <th className="border border-gray-300 px-4 py-2">Género</th>
+                <th className="border border-gray-300 px-4 py-2">Nacimiento</th>
+                {/* <th className="border border-gray-300 px-4 py-2">Estado</th> */}
+                <th className="border border-gray-300 px-4 py-2">Registro</th>
+                <th className="border border-gray-300 px-4 py-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50">
+                  <td className="border border-gray-300 px-4 py-2">{user.fullName}</td>
+                  <td className="border border-gray-300 px-4 py-2">{user.email[0]}</td>
+                  <td className="border border-gray-300 px-4 py-2">{user.roleId}</td>
+                  <td className="border border-gray-300 px-4 py-2">{user.gender}</td>
+                  <td className="border border-gray-300 px-4 py-2">{user.birthDate.toDate().toLocaleDateString()}</td>
+                  <td className="border border-gray-300 px-4 py-2">{user.createdAt.toDate().toLocaleDateString()}</td>
+                  {/* <td className="border border-gray-300 px-4 py-2">
+                    {user.status === "active" ? "Activo" : "Inactivo"}
+                  </td> */}
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    <button
+                      className="text-blue-500 hover:text-blue-700 mr-2"
+                      title="Visualizar"
+                      onClick={() => console.log("Visualizar", user.id)}
+                    >
+                      <Eye />
+                    </button>
+                    <button
+                      className="text-yellow-500 hover:text-yellow-700 mr-2"
+                      title="Editar"
+                      onClick={() => console.log("Editar", user.id)}
+                    >
+                      <UserPen />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      title="Eliminar"
+                      onClick={() => console.log("Eliminar", user.id)}
+                    >
+                      <Trash2 />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

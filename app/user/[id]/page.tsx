@@ -56,10 +56,10 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
           };
     
           await updateDoc(userRef, updateData);
-          alert('Perfil actualizado exitosamente');
+          console.log('Perfil actualizado exitosamente');
         } catch (error) {
           console.error("Error al actualizar el perfil:", error);
-          alert('Error al actualizar el perfil');
+          console.log('Error al actualizar el perfil');
         }
       };
 

@@ -98,7 +98,7 @@ export default function RegisterForm() {
         createdAt: new Date(),
       });
       alert("Registro exitoso");
-      router.push("/");
+      router.push("/calendario");
     } catch (err) {
       console.error("Error al registrarse:", err);
     } finally {
@@ -112,7 +112,7 @@ export default function RegisterForm() {
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/calendario")}
             className="text-rose-500 hover:underline mb-4"
           >
             ← Inicio

@@ -22,7 +22,7 @@ export default function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log("Usuario autenticado:", userCredential.user);
-      router.push("/");
+      router.push("/calendario");
     } catch (err) {
       setError("Credenciales inválidas. Por favor, intenta nuevamente.");
       console.error("Error al iniciar sesión:", err);
@@ -37,7 +37,7 @@ export default function LoginForm() {
         {/* Contenedor del formulario */}
         <div className="md:w-1/2 p-8">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/calendario")}
             className="text-rose-500 hover:underline mb-4"
           >
             ← Inicio
