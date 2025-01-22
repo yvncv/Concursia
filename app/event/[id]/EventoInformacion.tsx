@@ -91,9 +91,10 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                     </section>
 
                     <section className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        <div className="flex items-center space-x-3">
+                        {/* Categorías
+                        <div className="flex items-center space-x-3 mb-4">
                             <ChartBarStacked className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Niveles:</span>
+                            <span className="text-sm md:text-base">Categorías:</span>
                         </div>
                         <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
                             {Object.entries(event.settings.categoriesPrices).map(([category]) => (
@@ -101,7 +102,23 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                                     {category.charAt(0).toUpperCase() + category.slice(1)}.
                                 </li>
                             ))}
-                        </ul>
+                        </ul> */}
+
+                        {/* Niveles */}
+                        <div className="flex items-center space-x-3">
+                            <ChartBarStacked className="text-rojo w-6 h-6" />
+                            <span className="text-sm md:text-base">Niveles:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {event.settings.levels.map((level) => (
+                                <span
+                                    key={level}
+                                    className="px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-xs md:text-sm font-medium"
+                                >
+                                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                                </span>
+                            ))}
+                        </div>
                     </section>
 
                     <section className="flex items-center space-x-3 text-gray-600">
@@ -144,7 +161,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                 </div>
 
             </div>
-        </div>
+        </div >
     );
 };
 
