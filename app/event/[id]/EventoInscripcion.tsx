@@ -87,12 +87,104 @@ const EventoInscripcion = ({ event }: { event: Event }) => {
         {currentStep === 1 && (
           <div className="p-4">
             <h3 className="text-xl font-semibold mb-4">Confirmar Datos</h3>
-            <p className="mb-4">
-              Categoría seleccionada: <span className="font-semibold">{selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}</span>
-            </p>
-            {/* Aquí irá tu formulario de confirmación de datos */}
+            <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Campos readonly */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">DNI</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="12345678" // Sustituir con los datos reales
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nombres</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Juan"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Apellidos</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Perez"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Género</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Masculino"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                <input
+                  type="date"
+                  readOnly
+                  value="1990-01-01"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                <input
+                  type="email"
+                  readOnly
+                  value="juan.perez@example.com"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nivel</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Intermedio"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+
+              {/* Campos editables */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Celular</label>
+                <input
+                  type="tel"
+                  value=""
+                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Academia</label>
+                <input
+                  type="text"
+                  value=""
+                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Correo Opcional</label>
+                <input
+                  type="email"
+                  value=""
+                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+            </form>
           </div>
         )}
+
         {currentStep === 2 && (
           <div className="p-4">
             <h3 className="text-xl font-semibold mb-4">Finalizar Inscripción</h3>
