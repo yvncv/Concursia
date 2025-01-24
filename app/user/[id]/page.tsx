@@ -46,14 +46,14 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
 
     const handleChangeEmail = async (e: React.FormEvent) => {
         e.preventDefault();
-    
+
         if (!auth.currentUser) {
             alert('No hay usuario autenticado');
             return;
         }
 
         if (!user?.uid) return;
-    
+
         try {
             // Validar el formato del correo
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,36 +61,36 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 alert('Por favor ingrese un correo electrónico válido');
                 return;
             }
-    
+
             // Re-autenticación
             const currentEmail = auth.currentUser.email ?? '';
             const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
             await reauthenticateWithCredential(auth.currentUser, credential);
-    
+
             // Cambiar el correo en Authentication
             await updateEmail(auth.currentUser, newEmail);
-    
+
             // Enviar un correo de verificación
             await sendEmailVerification(auth.currentUser);
-    
+
             // Actualizar el correo en Firestore
             const userRef = doc(db, 'users', user.uid); // Suponiendo que el ID del documento es el UID del usuario autenticado
             const updateData = {
-                email: [newEmail,user.email[1]]
+                email: [newEmail, user.email[1]]
             }
 
             await updateDoc(userRef, updateData);
             console.log('Perfil actualizado exitosamente');
-    
+
             // Restablecer los estados del modal
             setIsEmailModalOpen(false);
             setNewEmail('');
             setCurrentPassword('');
-    
+
             alert('Correo actualizado y sincronizado en Firestore. Se ha enviado un correo de verificación.');
         } catch (error: any) {
             console.error('Error cambiando email:', error);
-    
+
             // Manejo de errores específicos
             switch (error.code) {
                 case 'auth/invalid-email':
@@ -233,29 +233,34 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                         <div className="bg-gray-50 p-6 rounded-lg shadow-md">
                             <h2 className="text-xl font-semibold text-gray-800 mb-4">Información de Contacto</h2>
                             <div className="mt-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Principal</label>
-                                <input
-                                    type="email"
-                                    id="emailPrimary"
-                                    value={foundUser?.email[0]}
-                                    onChange={handleInputChange}
-                                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                    readOnly
-                                />
-                                {canEdit && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEmailModalOpen(true)}
-                                        className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-                                    >
-                                        Cambiar
-                                    </button>
-                                )}
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                    Correo Principal
+                                </label>
+                                <div className="flex items-center mt-1">
+                                    <input
+                                        type="email"
+                                        id="emailPrimary"
+                                        value={foundUser?.email[0]}
+                                        onChange={handleInputChange}
+                                        className="flex-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                                        readOnly
+                                    />
+                                    {canEdit && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEmailModalOpen(true)}
+                                            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                                        >
+                                            Actualizar
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+
                             {isEmailModalOpen && (
                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                                     <div className="bg-white p-8 rounded-lg w-96">
-                                        <h2 className="text-xl font-semibold mb-4">Cambiar Correo Electrónico</h2>
+                                        <h2 className="text-xl font-semibold mb-4">Actualizar Correo Electrónico</h2>
                                         <div>
                                             <div className="mb-4">
                                                 <label htmlFor="currentPassword" className="block mb-2">Contraseña Actual</label>
@@ -288,7 +293,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                                                     onClick={handleChangeEmail}
                                                     className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                                                 >
-                                                    Cambiar Correo
+                                                    Actualizar Correo
                                                 </button>
                                             </div>
                                         </div>

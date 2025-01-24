@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Event } from "@/app/types/eventType";
+import useAcademias from "@/app/hooks/useAcademias";
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -39,6 +40,47 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
   );
 };
 
+const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string) => void }) => {
+  const { academias, loadingAcademias, errorAcademias } = useAcademias();
+  const [selectedAcademy, setSelectedAcademy] = useState<string>("");
+
+  const handleAcademyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    setSelectedAcademy(selectedId);
+    onAcademySelect(selectedId); // Notificamos al componente padre la academia seleccionada
+  };
+
+  return (
+    <div className="w-full">
+      <label htmlFor="academyId" className="block text-sm font-medium text-gray-700">
+        Academia
+      </label>
+      {loadingAcademias ? (
+        <div className="mt-1 px-4 py-4 text-gray-500">Cargando academias...</div>
+      ) : errorAcademias ? (
+        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademias}</div>
+      ) : (
+        <select
+          id="academyId"
+          value={selectedAcademy}
+          onChange={handleAcademyChange}
+          className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+        >
+          <option value="" disabled>
+            Selecciona una academia
+          </option>
+          {academias.map((academy) => (
+            <option key={academy.id} value={academy.id}>
+              {academy.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
+};
+
+
 // Componente para la selección de categoría
 const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCategorySelect: (category: string) => void }) => {
   return (
@@ -57,13 +99,20 @@ const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCatego
   );
 };
 
-const EventoInscripcion = ({ event }: { event: Event }) => {
+const EventoInscripcion = ({ event, user }: { event: Event; user: any }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
+  const [selectedPhone, setSelectedPhone] = useState(user.phoneNumber?.[0] || "");
+  const [selectedAcademy, setSelectedAcademy] = useState<string>("");
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setCurrentStep(1); // Avanza al siguiente paso
+  };
+
+  const handleAcademySelect = (academyId: string) => {
+    setSelectedAcademy(academyId); // Guardamos la academia seleccionada
   };
 
   const handleNext = () => {
@@ -77,7 +126,7 @@ const EventoInscripcion = ({ event }: { event: Event }) => {
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
-      <div className="mt-8">
+      <div className="mt-2">
         {currentStep === 0 && event && (
           <CategorySelection
             event={event}
@@ -89,98 +138,100 @@ const EventoInscripcion = ({ event }: { event: Event }) => {
             <h3 className="text-xl font-semibold mb-4">Confirmar Datos</h3>
             <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Campos readonly */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">DNI</label>
+              <div className="w-full">
+                <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
                 <input
                   type="text"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.dni}
                   readOnly
-                  value="12345678" // Sustituir con los datos reales
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Nombres</label>
+              <div className="w-full">
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombres</label>
                 <input
                   type="text"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.firstName}
                   readOnly
-                  value="Juan"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Apellidos</label>
+              <div className="w-full">
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
                 <input
                   type="text"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.lastName}
                   readOnly
-                  value="Perez"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Género</label>
-                <input
-                  type="text"
-                  readOnly
-                  value="Masculino"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+              <div className="w-full">
+                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
                 <input
                   type="date"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.birthDate.toDate().toISOString().split('T')[0]}
                   readOnly
-                  value="1990-01-01"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-                <input
-                  type="email"
-                  readOnly
-                  value="juan.perez@example.com"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Nivel</label>
+              <div className="w-full">
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Género</label>
                 <input
                   type="text"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.gender}
                   readOnly
-                  value="Intermedio"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
-
-              {/* Campos editables */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Celular</label>
-                <input
-                  type="tel"
-                  value=""
-                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Academia</label>
+              <div className="w-full">
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoría</label>
                 <input
                   type="text"
-                  value=""
-                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={user.category}
+                  readOnly
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Correo Opcional</label>
+              <div className="w-full">
+                <label htmlFor="level" className="block text-sm font-medium text-gray-700">Nivel</label>
                 <input
-                  type="email"
-                  value=""
-                  onChange={(e) => console.log(e.target.value)} // Actualiza el estado del valor real
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500"
+                  type="text"
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  value={selectedCategory}
+                  readOnly
                 />
               </div>
+              <div className="w-full">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo de contacto</label>
+                <select
+                  id="email"
+                  value={selectedEmail}
+                  onChange={(e) => setSelectedEmail(e.target.value)}
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                >
+                  {user.email.map((email: string, index: number) => (
+                    <option key={index} value={email}>
+                      {email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-full">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Celular de contacto</label>
+                <select
+                  id="phoneNumber"
+                  value={selectedPhone}
+                  onChange={(e) => setSelectedPhone(e.target.value)}
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                >
+                  {user.phoneNumber.map((phoneNumber: string, index: number) => (
+                    <option key={index} value={phoneNumber}>
+                      {phoneNumber}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <AcademySelector onAcademySelect={handleAcademySelect} />
             </form>
           </div>
         )}
