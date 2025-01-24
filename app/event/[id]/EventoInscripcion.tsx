@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Event } from "@/app/types/eventType";
 import useAcademias from "@/app/hooks/useAcademias";
+import { User } from '@/app/types/userType';
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -99,7 +100,7 @@ const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCatego
   );
 };
 
-const EventoInscripcion = ({ event, user }: { event: Event; user: any }) => {
+const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
@@ -138,69 +139,31 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: any }) => {
             <h3 className="text-xl font-semibold mb-4">Confirmar Datos</h3>
             <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Campos readonly */}
-              <div className="w-full">
-                <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.dni}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombres</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.firstName}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.lastName}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
-                <input
-                  type="date"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.birthDate.toDate().toISOString().split('T')[0]}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Género</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.gender}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoría</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={user.category}
-                  readOnly
-                />
-              </div>
-              <div className="w-full">
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700">Nivel</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  value={selectedCategory}
-                  readOnly
-                />
-              </div>
+              {[
+                { id: "firstName", label: "Nombres", value: user.firstName, type: "text" },
+                { id: "lastName", label: "Apellido(s)", value: user.lastName, type: "text" },
+                { id: "dni", label: "DNI", value: user.dni, type: "text" },
+                {
+                  id: "birthDate",
+                  label: "Fecha de Nacimiento",
+                  value: user.birthDate.toDate().toISOString().split('T')[0],
+                  type: "text"
+                },
+                { id: "gender", label: "Género", value: user.gender, type: "text" },
+                { id: "category", label: "Categoría", value: user.category, type: "text" },
+                { id: "level", label: "Nivel", value: selectedCategory, type: "text" },
+              ].map(({ id, label, value, type }) => (
+                <div key={id} className="w-full">
+                  <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+                  <input
+                    id={id}
+                    type={type}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-100 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                    placeholder={value}
+                    readOnly
+                  />
+                </div>
+              ))}
               <div className="w-full">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo de contacto</label>
                 <select
