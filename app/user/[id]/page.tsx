@@ -19,49 +19,49 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
         phonePrimary: '',
         phoneSecondary: '',
         academyId: ''
-      });
-    
-      useEffect(() => {
+    });
+
+    useEffect(() => {
         if (user) {
-          setContactInfo({
-            emailSecondary: user.email[1] || '',
-            phonePrimary: user.phoneNumber[0] || '',
-            phoneSecondary: user.phoneNumber[1] || '',
-            academyId: user.academyId || ''
-          });
+            setContactInfo({
+                emailSecondary: user.email[1] || '',
+                phonePrimary: user.phoneNumber[0] || '',
+                phoneSecondary: user.phoneNumber[1] || '',
+                academyId: user.academyId || ''
+            });
         }
-      }, [user]);
-    
-      const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    }, [user]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setContactInfo(prev => ({
-          ...prev,
-          [id]: value
+            ...prev,
+            [id]: value
         }));
-      };
-    
-      const handleUpdateProfile = async (e: React.FormEvent) => {
+    };
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!user?.uid) return;
-    
+
         try {
-          const userRef = doc(db, "users", user.uid);
-          
-          // Preparar los datos para actualizar
-          const updateData = {
-            email: [user.email[0], contactInfo.emailSecondary],
-            phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
-            academyId: contactInfo.academyId
-          };
-    
-          await updateDoc(userRef, updateData);
-          console.log('Perfil actualizado exitosamente');
+            const userRef = doc(db, "users", user.uid);
+
+            // Preparar los datos para actualizar
+            const updateData = {
+                email: [user.email[0], contactInfo.emailSecondary],
+                phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
+                academyId: contactInfo.academyId
+            };
+
+            await updateDoc(userRef, updateData);
+            console.log('Perfil actualizado exitosamente');
         } catch (error) {
-          console.error("Error al actualizar el perfil:", error);
-          console.log('Error al actualizar el perfil');
+            console.error("Error al actualizar el perfil:", error);
+            console.log('Error al actualizar el perfil');
         }
-      };
+    };
 
     if (loadingUsers) {
         return <div className="text-center text-gray-600">Cargando perfil...</div>;
@@ -84,7 +84,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
         }
     };
 
-    
+
     // Comprobar si el usuario logueado es el mismo que el encontrado
     const canEdit = foundUser?.id === user?.id;
 

@@ -75,9 +75,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
-            <Link href="/" className="text-2xl font-bold text-red-700">{brandName}</Link>
+            <Link href="/" className="text-xs lg:text-2xl font-bold text-red-700">{brandName}</Link>
           </div>
-    
+
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
             <ul className="flex space-x-4">
@@ -88,7 +88,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
               <li><Link href="#contacto" className="text-gray-600 hover:text-red-700">Contacto</Link></li>
             </ul>
           </nav>
-    
+
           {/* Botón de menú para mobile */}
           <div className="md:hidden">
             <button
@@ -100,7 +100,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </button>
           </div>
         </div>
-    
+
         {/* Menú para Mobile */}
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
@@ -116,7 +116,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
       </header>
     );
   }
-  
+
   return (
     <nav className="bg-white shadow-md py-3">
       <div className="mx-auto max-w-7xl px-4">
@@ -127,9 +127,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
               {brandName}
             </Link>
           </div>
-  
+
           {/* Search Bar */}
-          <div className="relative hidden w-full max-w-md md:block">
+          <div className="relative hidden w-full max-w-sm lg:block">
             <input
               type="search"
               placeholder="Buscar eventos..."
@@ -153,9 +153,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </ul>
             )}
           </div>
-  
+
           {/* Desktop Menu */}
-          <div className="hidden md:block">
+          <div className="">
             <nav>
               <ul className="flex space-x-8">
                 {filteredLinks.map((link) => (
@@ -170,14 +170,14 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       onClick={handleLinkClick}
                     >
                       <link.icon className="w-5 h-5" />
-                      <span>{link.label}</span>
+                      <span className="hidden md:block">{link.label}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </nav>
           </div>
-  
+
           {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
@@ -189,7 +189,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </button>
           </div>
         </div>
-  
+
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden">
@@ -200,11 +200,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     href={link.href}
                     className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
                           ${pathname.includes(link.href)
-                          ? "bg-red-100 text-red-700 font-bold"
-                          : "hover:bg-gray-100 hover:text-black text-red-700"
-                        }`}
+                        ? "bg-red-100 text-red-700 font-bold"
+                        : "hover:bg-gray-100 hover:text-black text-red-700"
+                      }`}
                     onClick={() => {
-                      setIsMenuOpen(false);   
+                      setIsMenuOpen(false);
                       handleLinkClick();
                     }}
                   >
@@ -219,5 +219,5 @@ export default function Navbar({ brandName }: { brandName: string }) {
       </div>
     </nav>
   );
-  
+
 }
