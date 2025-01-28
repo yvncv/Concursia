@@ -85,14 +85,13 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
 const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCategorySelect: (category: string) => void }) => {
   return (
     <div className="flex flex-wrap gap-4 p-4 justify-center">
-      {Object.entries(event.settings.categoriesPrices).map(([category]) => (
+      {Object.entries(event.settings.levels).map(([level]) => (
         <button
-          key={category}
-          onClick={() => onCategorySelect(category)}
-          className={`w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-700 to-red-500 "
-            } text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all`}
+          key={level}
+          onClick={() => onCategorySelect(level)}
+          className="w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-700 to-red-500 text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all"
         >
-          {category.charAt(0).toUpperCase() + category.slice(1)}
+          {level.charAt(0).toUpperCase() + level.slice(1)}
         </button>
       ))}
     </div>
@@ -135,7 +134,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: any }) => {
         )}
         {currentStep === 1 && (
           <div className="p-4">
-            <h3 className="text-xl font-semibold mb-4">Confirmar Datos</h3>
+            <h3 className="text-xl font-semibold mb-4">Confirmar tus datos</h3>
             <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Campos readonly */}
               <div className="w-full">

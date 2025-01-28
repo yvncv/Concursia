@@ -107,15 +107,15 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                         {/* Niveles */}
                         <div className="flex items-center space-x-3">
                             <ChartBarStacked className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Niveles:</span>
+                            <span className="text-sm md:text-base">Categorias:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {event.settings.levels.map((level) => (
+                            {event.settings.categories.map((category) => (
                                 <span
-                                    key={level}
+                                    key={category}
                                     className="px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-xs md:text-sm font-medium"
                                 >
-                                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                                    {category.charAt(0).toUpperCase() + category.slice(1)}
                                 </span>
                             ))}
                         </div>
@@ -138,10 +138,10 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
 
                         {/* Lista de precios */}
                         <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
-                            {Object.entries(event.settings.categoriesPrices).map(([category, price]) => (
-                                <li key={category} className="leading-relaxed">
-                                    {category.charAt(0).toUpperCase() + category.slice(1)}: <span className="font-semibold">S/. {price}</span>
-                                </li>
+                            {Object.entries(event.settings.levels).map(([level, { price, couple }]) => (
+                                <li key={level} className="leading-relaxed">
+                                    <span className="font-semibold">{level.charAt(0).toUpperCase() + level.slice(1)}</span>:
+                                    <span className="font-medium"> S/. {price}</span>                                </li>
                             ))}
                         </ul>
 
