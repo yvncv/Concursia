@@ -114,7 +114,7 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
                     className="mt-2 text-blue-500 cursor-pointer"
                     onClick={() => setIsNewAcademy(true)}
                   >
-                    ¿Quiere usar "{searchQuery}" como academia de todos modos?
+                    ¿Quiere usar {`"${searchQuery}"`} como academia de todos modos?
                   </div>
                 </div>
               )}
@@ -171,7 +171,12 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
   const [selectedAcademy, setSelectedAcademy] = useState<string>("");
   const [dniPareja, setDniPareja] = useState('');
   const [pareja, setPareja] = useState<User | null>(null);
-  const { users, loadingUsers, error } = useUsers();
+  const { users, loadingUsers } = useUsers();
+
+  const validEmailsUser = user.email.filter(email => email.trim() !== "");
+  const validEmailsPareja = pareja?.email.filter(email => email.trim() !== "");
+  const validPhonesUser = user.phoneNumber.filter(email => email.trim() !== "");
+  const validPhonesPareja = pareja?.phoneNumber.filter(email => email.trim() !== "");
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
@@ -201,6 +206,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
     setCurrentStep((prev) => Math.max(prev - 1));
   };
 
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
@@ -218,17 +224,12 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
               {/* Campos readonly */}
               {[
                 { id: "dni", label: "DNI", value: user.dni, type: "text" },
-                {
-                  id: "birthDate",
-                  label: "Fecha de Nacimiento",
-                  value: user.birthDate.toDate().toISOString().split('T')[0],
-                  type: "text"
-                },
+                { id: "birthDate", label: "Fecha de Nacimiento", value: user.birthDate.toDate().toISOString().split('T')[0], type: "text" },
                 { id: "firstName", label: "Nombres", value: user.firstName, type: "text" },
                 { id: "lastName", label: "Apellido(s)", value: user.lastName, type: "text" },
                 { id: "gender", label: "Género", value: user.gender, type: "text" },
                 { id: "category", label: "Categoría", value: user.category, type: "text" },
-                { id: "level", label: "Nivel", value: selectedCategory, type: "text" },
+                { id: "level", label: "Nivel", value: selectedCategory, type: "text" }
               ].map(({ id, label, value, type }) => (
                 <div key={id} className="w-full">
                   <label htmlFor={id} className="block text-sm font-medium text-white">{label}</label>
@@ -236,49 +237,88 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                     id={id}
                     type={type}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-100 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                    placeholder={value}
+                    value={value}
                     readOnly
                   />
                 </div>
               ))}
 
-              <div className="w-full">
-                <label htmlFor="email" className="block text-sm font-medium text-white">Correo de contacto</label>
-                <select
-                  required
-                  id="email"
-                  value={selectedEmail}
-                  onChange={(e) => setSelectedEmail(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                >
-                  {user.email.map((email: string, index: number) => (
-                    <option key={index} value={email}>
-                      {email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-full">
-                <label htmlFor="phone" className="block text-sm font-medium text-white">Celular de contacto</label>
-                <select
-                  required
-                  id="phoneNumber"
-                  value={selectedPhone}
-                  onChange={(e) => setSelectedPhone(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                >
-                  {user.phoneNumber.map((phoneNumber: string, index: number) => (
-                    <option key={index} value={phoneNumber}>
-                      {phoneNumber}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Selector de Email */}
+              {validEmailsUser.length > 1 ? (
+                <div className="w-full">
+                  <label htmlFor="emailUser" className="block text-sm font-medium text-white">
+                    Correo de contacto
+                  </label>
+                  <select
+                    required
+                    id="emailUser"
+                    value={selectedEmail}
+                    onChange={(e) => setSelectedEmail(e.target.value)}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  >
+                    {validEmailsUser.map((email, index) => (
+                      <option key={index} value={email}>
+                        {email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="w-full">
+                  <label htmlFor="emailUser" className="block text-sm font-medium text-white">
+                    Correo de contacto
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    id="emailUser"
+                    value={validEmailsUser[0] || ""}
+                    readOnly
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Selector de Celular */}
+              {validPhonesUser.length > 1 ? (
+                <div className="w-full">
+                  <label htmlFor="phoneUser" className="block text-sm font-medium text-white">
+                    Número de teléfono
+                  </label>
+                  <select
+                    required
+                    id="phoneUser"
+                    value={selectedPhone}
+                    onChange={(e) => setSelectedPhone(e.target.value)}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  >
+                    {validPhonesUser.map((number, index) => (
+                      <option key={index} value={number}>
+                        {number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="w-full">
+                  <label htmlFor="phoneUser" className="block text-sm font-medium text-white">
+                  Número de teléfono
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    id="phoneUser"
+                    value={validPhonesUser[0] || ""}
+                    readOnly
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  />
+                </div>
+              )}
               <AcademySelector onAcademySelect={handleAcademySelect} />
             </form>
 
+            {/* Sección para la pareja */}
             <div className="w-full my-4 p-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded-2xl">
-              {/* Campos de la pareja */}
               <label htmlFor="dniPareja" className="block text-md font-medium text-white">DNI de la Pareja</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 <div className="w-full">
@@ -304,25 +344,18 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
               </div>
             </div>
 
-
             {/* Mostrar datos de la pareja si se encuentra */}
             {pareja && (
               <>
                 <h3 className="text-xl font-semibold mb-4 text-white border-b">Datos de la Pareja</h3>
                 <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Campos readonly */}
                   {[
                     { id: "firstName", label: "Nombres", value: pareja.firstName, type: "text" },
                     { id: "lastName", label: "Apellido(s)", value: pareja.lastName, type: "text" },
-                    {
-                      id: "birthDate",
-                      label: "Fecha de Nacimiento",
-                      value: pareja.birthDate.toDate().toISOString().split('T')[0],
-                      type: "text"
-                    },
+                    { id: "birthDate", label: "Fecha de Nacimiento", value: pareja.birthDate.toDate().toISOString().split('T')[0], type: "text" },
                     { id: "gender", label: "Género", value: pareja.gender, type: "text" },
                     { id: "category", label: "Categoría", value: pareja.category, type: "text" },
-                    { id: "level", label: "Nivel", value: selectedCategory, type: "text" },
+                    { id: "level", label: "Nivel", value: selectedCategory, type: "text" }
                   ].map(({ id, label, value, type }) => (
                     <div key={id} className="w-full">
                       <label htmlFor={id} className="block text-sm font-medium text-white">{label} de la pareja</label>
@@ -330,49 +363,89 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                         id={id}
                         type={type}
                         className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-100 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                        placeholder={value}
+                        value={value}
                         readOnly
                       />
                     </div>
                   ))}
 
-                  <div className="w-full">
-                    <label htmlFor="email" className="block text-sm font-medium text-white">Correo de contacto de la pareja</label>
-                    <select
-                      required
-                      id="email"
-                      value={selectedEmail}
-                      onChange={(e) => setSelectedEmail(e.target.value)}
-                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                    >
-                      {pareja.email.map((email: string, index: number) => (
-                        <option key={index} value={email}>
-                          {email}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="w-full">
-                    <label htmlFor="phone" className="block text-sm font-medium text-white">Celular de contacto de la pareja</label>
-                    <select
-                      required
-                      id="phoneNumber"
-                      value={selectedPhone}
-                      onChange={(e) => setSelectedPhone(e.target.value)}
-                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                    >
-                      {pareja.phoneNumber.map((phoneNumber: string, index: number) => (
-                        <option key={index} value={phoneNumber}>
-                          {phoneNumber}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Selector de Email de la pareja */}
+                  { validEmailsPareja && validEmailsPareja.length > 1 ? (
+                    <div className="w-full">
+                      <label htmlFor="emailPareja" className="block text-sm font-medium text-white">
+                        Correo de contacto de la pareja
+                      </label>
+                      <select
+                        required
+                        id="emailPareja"
+                        value={selectedEmail}
+                        onChange={(e) => setSelectedEmail(e.target.value)}
+                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                      >
+                        {validEmailsPareja.map((email, index) => (
+                          <option key={index} value={email}>
+                            {email}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <label htmlFor="emailPareja" className="block text-sm font-medium text-white">
+                        Correo de contacto de la pareja
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        id="emailPareja"
+                        value={validEmailsPareja && validEmailsPareja[0] || ""}
+                        readOnly
+                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Selector de Celular */}
+                  {validPhonesPareja && validPhonesPareja.length > 1 ? (
+                    <div className="w-full">
+                      <label htmlFor="phonePareja" className="block text-sm font-medium text-white">
+                        Número de teléfono de la pareja
+                      </label>
+                      <select
+                        required
+                        id="phonePareja"
+                        value={selectedPhone}
+                        onChange={(e) => setSelectedPhone(e.target.value)}
+                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                      >
+                        {validPhonesPareja?.map((email, index) => (
+                          <option key={index} value={email}>
+                            {email}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <label htmlFor="phonePareja" className="block text-sm font-medium text-white">
+                      Número de teléfono de la pareja
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        id="phonePareja"
+                        value={validPhonesPareja && validPhonesPareja[0] || ""}
+                        readOnly
+                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                      />
+                    </div>
+                  )}
                   <AcademySelector onAcademySelect={handleAcademySelect} />
                 </form>
               </>
             )}
           </div>
+
         )}
 
         {currentStep === 2 && (
@@ -386,7 +459,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
           {currentStep > 0 && (
             <button
               onClick={handleBack}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
+              className="px-6 py-2 border rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all"
             >
               Atrás
             </button>
