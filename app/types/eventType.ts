@@ -27,10 +27,13 @@ export interface Event {
   capacity: string;
   status: string; // Estado del evento (ejemplo: "pendiente", "en curso", "finalizado")
   settings: {
-    categoriesPrices: { 
-      [category: string]: number 
-    }; // Detalle de precios para tipos de inscripción
-    levels: string[]; // Niveles permitidos (ejemplo: "novel", "nacional")
+    categories: string[];  // categorias permitidas (ejemplo: "baby", "infante")
+    levels: {
+      [levelName: string]: {
+        couple: boolean;
+        price: number;
+      }
+    }; // Niveles permitidos (ejemplo: "novel", "nacional")
     registrationType: string[]; // Tipos de inscripción permitidos (ejemplo: "individual", "grupal")
   };
   createdBy: string;

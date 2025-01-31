@@ -38,7 +38,7 @@ export default function RegisterForm() {
 
   const determineCategory = (birthYear: number) => {
     if (birthYear >= 2021) setCategory('Baby');
-    else if (birthYear >= 2018) setCategory('Pre Infante');
+    else if (birthYear >= 2018) setCategory('Pre-Infante');
     else if (birthYear >= 2015) setCategory('Infante');
     else if (birthYear >= 2011) setCategory('Infantil');
     else if (birthYear >= 2007) setCategory('Junior');

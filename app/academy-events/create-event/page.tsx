@@ -7,8 +7,8 @@ import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import { Event } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
 
-const categoriesList = ["Seriado", "Individual", "Novel Novel", "Novel Abierto A", "Novel Abierto B", "Nacional"];
-const levelsList = ["Baby", "Pre-Infante", "Infante", "Juvenil", "Adulto"];
+const levelsList = ["Seriado", "Individual", "Novel Novel", "Novel Abierto","Novel Abierto A", "Novel Abierto B", "Nacional"];
+const categoriesList = ["Baby", "Pre-Infante", "Infante", "Juvenil", "Adulto"];
 
 const CreateEvent = () => {
   const { user } = useUser();
@@ -28,8 +28,8 @@ const CreateEvent = () => {
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
   const [academyName, setAcademyName] = useState<string>("");
-  const [selectedCategories, setSelectedCategories] = useState<{ category: string; price: string }[]>([]);
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState<{ level: string; price: string; couple: boolean }[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -77,26 +77,43 @@ const CreateEvent = () => {
     (item) => item.departamento === department && item.provincia === province && item.distrito !== "00"
   );
 
-  const handleAddCategory = (category: string) => {
-    if (!selectedCategories.some((item) => item.category === category)) {
-      setSelectedCategories([...selectedCategories, { category, price: "" }]);
+  const handleAddLevel = (level: string) => {
+    // Define los valores fijos de "couple" según el nivel
+    const coupleMapping: { [key: string]: boolean } = {
+      "Seriado": false,
+      "Novel Novel": true,
+      "Novel Abierto": true,
+      "Novel Abierto A": true,
+      "Novel Abierto B": true,
+      "Nacional": true,
+      "Individual": false,
+    };
+  
+    // Verifica si el nivel existe en el mapeo
+    const couple = coupleMapping[level] ?? false;
+  
+    if (!selectedLevels.some((item) => item.level === level)) {
+      setSelectedLevels((prev) => [
+        ...prev,
+        { level, price: "", couple }, // El precio se inicializa con ""
+      ]);
     }
   };
 
-  const handleRemoveCategory = (index: number) => {
-    const updatedCategories = selectedCategories.filter((_, i) => i !== index);
-    setSelectedCategories(updatedCategories); // Actualiza el estado con las categorías restantes
+  const handleRemoveLevel = (index: number) => {
+    const updatedLevels = selectedLevels.filter((_, i) => i !== index);
+    setSelectedLevels(updatedLevels); // Actualiza el estado con las categorías restantes
   };
 
   const handlePriceChange = (index: number, value: string) => {
-    const updatedCategories = [...selectedCategories];
-    updatedCategories[index].price = value;
-    setSelectedCategories(updatedCategories);
+    const updatedLevels = [...selectedLevels];
+    updatedLevels[index].price = value;
+    setSelectedLevels(updatedLevels);
   };
 
-  const handleLevelChange = (level: string) => {
-    setSelectedLevels((prev) =>
-      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
+  const handleLevelChange = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((l) => l !== category) : [...prev, category]
     );
   };
 
@@ -151,12 +168,15 @@ const CreateEvent = () => {
         capacity,
         status: "pendiente",
         settings: {
-          categoriesPrices: selectedCategories.reduce(
-            (acc, item) => ({ ...acc, [item.category]: parseFloat(item.price) || 0 }),
+          categories: selectedCategories, // Ahora es un array de strings
+          levels: selectedLevels.reduce(
+            (acc, item) => ({
+              ...acc,
+              [item.level]: { price: parseFloat(item.price) || 0, couple: item.couple },
+            }),
             {}
           ),
-          levels: selectedLevels,
-          registrationType: [],
+          registrationType: [], // Esto permanece vacío o lo que corresponda según tu lógica
         },
         createdBy: user?.fullName,
         lastUpdatedBy: user?.fullName,
@@ -302,27 +322,27 @@ const CreateEvent = () => {
 
           {/* Formulario para editar categorías, niveles y precios */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-            <h2 className="text-lg font-semibold mb-2">Editar Categorías y Precios</h2>
+            <h2 className="text-lg font-semibold mb-2">Editar Niveles y Categorías</h2>
 
-            <h2 className="text-lg font-semibold mb-2">Seleccionar Categorías</h2>
+            <h2 className="text-lg font-semibold mb-2">Seleccionar Niveles</h2>
             <div className="flex flex-wrap gap-2 mb-4">
-              {categoriesList.map((category) => (
+              {levelsList.map((level) => (
                 <button
                   type="button"  // Asegúrate de que no sea un botón de tipo submit
-                  key={category}
-                  onClick={() => handleAddCategory(category)}
+                  key={level}
+                  onClick={() => handleAddLevel(level)}
                   className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-400 transition-all"
                 >
-                  {category}
+                  {level}
                 </button>
               ))}
             </div>
 
-            {selectedCategories.length > 0 ? (
+            {selectedLevels.length > 0 ? (
               <ul className="space-y-2 mb-4">
-                {selectedCategories.map((item, index) => (
-                  <li key={item.category} className="ml-1 pl-5 flex items-center gap-4 py-2 px-2 rounded-full bg-green-200 hover:bg-red-200">
-                    <span className="text-gray-700">{item.category}</span>
+                {selectedLevels.map((item, index) => (
+                  <li key={item.level} className="ml-1 pl-5 flex items-center gap-4 py-2 px-2 rounded-full bg-green-200 hover:bg-red-200">
+                    <span className="text-gray-700">{item.level}</span>
                     <div>
                       <span className="hidden md:visible px-2 py-1 w-20 rounded-full bg-white text-md">S/.</span>
                       <span className="hidden md:visible px-2 py-1 w-20 rounded-full bg-white text-md"> = </span>
@@ -335,7 +355,7 @@ const CreateEvent = () => {
                       />
                     </div>
                     <button
-                      onClick={() => handleRemoveCategory(index)}
+                      onClick={() => handleRemoveLevel(index)}
                       className="text-rojo px-2 rounded-full hover:bg-rojo hover:text-white"
                     >
                       X
@@ -344,22 +364,22 @@ const CreateEvent = () => {
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-600 mb-4">No hay categorías seleccionadas.</p>
+              <p className="text-gray-600 mb-4">No hay niveles seleccionados.</p>
             )}
 
-            <h2 className="text-lg font-semibold mb-2">Seleccionar Niveles</h2>
+            <h2 className="text-lg font-semibold mb-2">Seleccionar Categorías</h2>
             <div className="flex flex-wrap gap-2 mb-4">
-              {levelsList.map((level) => (
+              {categoriesList.map((category) => (
                 <button
                   type="button"  // Asegúrate de que no sea un botón de tipo submit
-                  key={level}
-                  onClick={() => handleLevelChange(level)}
-                  className={`py-1 px-3 rounded transition-all ${selectedLevels.includes(level)
+                  key={category}
+                  onClick={() => handleLevelChange(category)}
+                  className={`py-1 px-3 rounded transition-all ${selectedCategories.includes(category)
                     ? "bg-green-500 text-white hover:bg-green-400"
                     : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                     }`}
                 >
-                  {level}
+                  {category}
                 </button>
               ))}
             </div>
