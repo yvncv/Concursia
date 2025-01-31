@@ -27,7 +27,7 @@ export interface Event {
   capacity: string;
   status: string; // Estado del evento (ejemplo: "pendiente", "en curso", "finalizado")
   settings: {
-    categories: string[]; // Detalle de precios para tipos de inscripción
+    categories: string[];  // categorias permitidas (ejemplo: "baby", "infante")
     levels: {
       [levelName: string]: {
         couple: boolean;
