@@ -171,7 +171,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
   const [selectedAcademy, setSelectedAcademy] = useState<string>("");
   const [dniPareja, setDniPareja] = useState('');
   const [pareja, setPareja] = useState<User | null>(null);
-  const { users, loadingUsers, errorUsers } = useUsers();
+  const { users, loadingUsers, error } = useUsers();
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
