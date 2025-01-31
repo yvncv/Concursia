@@ -90,40 +90,32 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                         )}
                     </section>
 
-                    <section className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        {/* Categorías
-                        <div className="flex items-center space-x-3 mb-4">
-                            <ChartBarStacked className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Categorías:</span>
-                        </div>
-                        <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
-                            {Object.entries(event.settings.categoriesPrices).map(([category]) => (
-                                <li key={category}>
-                                    {category.charAt(0).toUpperCase() + category.slice(1)}.
-                                </li>
-                            ))}
-                        </ul> */}
-
+                    <section className="w-full bg-[#fef6ff] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
                         {/* Niveles */}
                         <div className="flex items-center space-x-3">
-                            <ChartBarStacked className="text-rojo w-6 h-6" />
-                            <span className="text-sm md:text-base">Niveles:</span>
+                            <ChartBarStacked className="text-purple-600 w-6 h-6" />
+                            <span className="text-sm md:text-base">Categorías:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {event.settings.levels.map((level) => (
-                                <span
-                                    key={level}
-                                    className="px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-xs md:text-sm font-medium"
-                                >
-                                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                                </span>
-                            ))}
+                            {event?.settings?.categories && event.settings.categories.length > 0 ? (
+                                event.settings.categories.map((category) => (
+                                    <span
+                                        key={category}
+                                        className="px-3 py-1 bg-gradient-to-t from-purple-500 bg-blue-600 text-white rounded-full text-xs md:text-sm font-medium"
+                                    >
+                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-sm md:text-base text-gray-500">Sin categorías establecidas.</span>
+                            )}
                         </div>
+
                     </section>
 
-                    <section className="flex items-center space-x-3 text-gray-600">
-                        <BadgeCheck className={`${iconClass} text-purple-600`} />
-                        <span className="text-sm md:text-base">Academia: {event.academyName}.</span>
+                    <section className="flex items-center space-x-3 text-gray-600 p-2 bg-gradient-to-tr from-red-500 to-yellow-600 rounded-full w-auto justify-center">
+                        <BadgeCheck className={`${iconClass} text-white`} />
+                        <span className="text-sm md:text-base text-white">Academia: {event.academyName}.</span>
                     </section>
                 </article>
 
@@ -133,16 +125,26 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
                         {/* Título */}
                         <div className="flex items-center space-x-3">
                             <Coins className="text-yellow-600 w-6 h-6" />
-                            <span className="text-md md:text-base font-medium text-gray-800">Precios:</span>
+                            <span className="text-md md:text-base font-medium text-gray-800">Precios por nivel:</span>
                         </div>
+                        <div className="flex flex-wrap gap-2">
+                            {event?.settings?.levels && Object.keys(event.settings.levels ?? {}).length > 0 ? (
+                                Object.entries(event.settings.levels ?? {}).map(([level, details]) => (
+                                    <span
+                                        key={level}
+                                        className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
+                                    >
+                                        {level.charAt(0).toUpperCase() + level.slice(1)} - S/. {details?.price ?? "N/A"}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-sm md:text-base text-gray-500">Sin niveles definidos.</span>
+                            )}
+                        </div>
+
 
                         {/* Lista de precios */}
                         <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
-                            {Object.entries(event.settings.categoriesPrices).map(([category, price]) => (
-                                <li key={category} className="leading-relaxed">
-                                    {category.charAt(0).toUpperCase() + category.slice(1)}: <span className="font-semibold">S/. {price}</span>
-                                </li>
-                            ))}
                         </ul>
 
                         {/* Botón Inscribir */}
