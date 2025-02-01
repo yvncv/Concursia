@@ -17,8 +17,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const enlaces = [
     { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
     { href: "/login", label: "Iniciar Sesión", icon: LogIn, requiresAuth: false },
-    { href: "/academy-events", label: "Eventos Academia", icon: Calendar, requiresAuth: true, requiresRole: "organizer" },
-    { href: "/admin", label: "Panel Admin.", icon: Shield, requiresAuth: true, requiresRole: "admin" },
+    { href: "/organizer", label: "Panel Organizador", icon: Shield, requiresAuth: true, requiresRole: "organizer" },
+    { href: "/admin", label: "Panel Admin", icon: Shield, requiresAuth: true, requiresRole: "admin" },
     { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
   ];
 
