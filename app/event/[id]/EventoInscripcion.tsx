@@ -201,6 +201,9 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
     setCurrentStep((prev) => Math.max(prev - 1));
   };
 
+  const isCoupleRequired = event.settings.levels[selectedCategory]?.couple;
+
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
@@ -277,6 +280,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
               <AcademySelector onAcademySelect={handleAcademySelect} />
             </form>
 
+            {isCoupleRequired && (
             <div className="w-full my-4 p-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded-2xl">
               {/* Campos de la pareja */}
               <label htmlFor="dniPareja" className="block text-md font-medium text-white">DNI de la Pareja</label>
@@ -303,7 +307,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                 </div>
               </div>
             </div>
-
+            )}
 
             {/* Mostrar datos de la pareja si se encuentra */}
             {pareja && (
@@ -372,6 +376,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                 </form>
               </>
             )}
+
           </div>
         )}
 
