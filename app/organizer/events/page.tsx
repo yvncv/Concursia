@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
-import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
+import { Eye, FilePenLine, Trash2, Plus, CircleX, Save } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import CreateEvent from "../../academy-events/create-event/page";
 import GeneralInfo from "./event-creation/GeneralInfo"
@@ -42,10 +42,10 @@ const Events: React.FC = () => {
 
   const tabs = [
     { id: "general", label: "General" },
-    { id: "dates", label: "Dates" },
-    { id: "details", label: "Details" },
-    { id: "location", label: "Location" },
-    { id: "dance", label: "Dance" },
+    { id: "dates", label: "Días" },
+    { id: "details", label: "Detalles" },
+    { id: "location", label: "Ubicación" },
+    { id: "dance", label: "Categoría/Niveles" },
   ]
 
   return (
@@ -137,17 +137,9 @@ const Events: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Create New Event</h2>
+              <h2 className="text-2xl font-bold">Crear nuevo evento</h2>
               <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <CircleX size={40} className="text-red-500 hover:text-red-600 transition-colors" />
               </button>
             </div>
 
@@ -157,7 +149,7 @@ const Events: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 ${activeTab === tab.id ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"
+                    className={`px-4 py-2 ${activeTab === tab.id ? "border-b-2 border-green-600 text-green-600" : "text-gray-500"
                       }`}
                   >
                     {tab.label}
@@ -177,8 +169,9 @@ const Events: React.FC = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 flex items-center justify-between  gap-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
+                <Save size={20}/>
                 Save Event
               </button>
             </div>

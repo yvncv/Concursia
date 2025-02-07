@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
 import { useState, useEffect, useRef } from "react";
+import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 declare global {
   interface Window {
@@ -11,15 +12,19 @@ declare global {
 export default function EventLocation() {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
-  const [location, setLocation] = useState({
-    name: "",
-    street: "",
-    lat: 0,
-    lng: 0,
-    department: "",
-    province: "",
-    district: "",
-  });
+  const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
+  const [filteredProvinces, setFilteredProvinces] = useState<Ubigeo[]>([]);
+  const [filteredDistricts, setFilteredDistricts] = useState<Ubigeo[]>([]);
+
+  // Estados separados
+  const [name, setName] = useState("");
+  const [street, setStreet] = useState("");
+  const [department, setDepartment] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [lat, setLat] = useState(0);
+  const [lng, setLng] = useState(0);
+
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -33,6 +38,46 @@ export default function EventLocation() {
       document.body.removeChild(script);
     };
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data: Ubigeo[] = await fetchUbigeoINEI();
+        setUbigeoData(data);
+      } catch (error) {
+        console.error("Error al cargar los datos de Ubigeo:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (department) {
+      setFilteredProvinces(
+        ubigeoData.filter(
+          (item) => item.departamento === department && item.provincia !== "00" && item.distrito === "00"
+        )
+      );
+      setProvince("");
+      setDistrict("");
+    } else {
+      setFilteredProvinces([]);
+    }
+  }, [department, ubigeoData]);
+
+  useEffect(() => {
+    if (province) {
+      setFilteredDistricts(
+        ubigeoData.filter(
+          (item) => item.departamento === department && item.provincia === province && item.distrito !== "00"
+        )
+      );
+      setDistrict("");
+    } else {
+      setFilteredDistricts([]);
+    }
+  }, [province, department, ubigeoData]);
 
   function initMap() {
     const mapElement = document.getElementById("map");
@@ -67,28 +112,13 @@ export default function EventLocation() {
           newMap.setCenter({ lat, lng });
           newMap.setZoom(15);
 
-          const addressComponents = place.address_components || [];
-          let department = "", province = "", district = "";
-
-          addressComponents.forEach((component: any) => {
-            if (component.types.includes("administrative_area_level_1")) {
-              department = component.long_name;
-            } else if (component.types.includes("administrative_area_level_2")) {
-              province = component.long_name;
-            } else if (component.types.includes("administrative_area_level_3")) {
-              district = component.long_name;
-            }
-          });
-
-          setLocation({
-            name: place.name || "",
-            street: place.formatted_address || "",
-            lat,
-            lng,
-            department,
-            province,
-            district,
-          });
+          setName(place.name || "");
+          setStreet(place.formatted_address || "");
+          setLat(lat);
+          setLng(lng);
+          setDepartment("");
+          setProvince("");
+          setDistrict("");
         });
       }
     }
@@ -100,38 +130,81 @@ export default function EventLocation() {
         type="text"
         ref={searchInputRef}
         placeholder="Buscar ubicación"
-        className="w-full p-2 border rounded"
+        className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
       />
       <div id="map" style={{ width: "100%", height: "300px" }}></div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Nombre</label>
-        <input type="text" value={location.name} readOnly className="w-full p-2 border rounded bg-gray-100" />
+        <label className="block text-sm font-medium text-gray-700">Nombre del lugar</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          readOnly
+        />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Dirección</label>
-        <input type="text" value={location.street} readOnly className="w-full p-2 border rounded bg-gray-100" />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Latitud</label>
-          <input type="text" value={location.lat} readOnly className="w-full p-2 border rounded bg-gray-100" />
+      <div className="flex gap-x-2 w-full">
+        <div className="flex-1">
+          <label className="text-sm font-medium text-gray-700">Dirección</label>
+          <input
+            type="text"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            className="w-full px-4 py-[4.9px] border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+            readOnly
+          />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Longitud</label>
-          <input type="text" value={location.lng} readOnly className="w-full p-2 border rounded bg-gray-100" />
+        <div className="flex-1">
+          <label className="text-sm font-medium text-gray-700">Departamento</label>
+          <select
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+            required
+          >
+            <option value="">Selecciona departamento</option>
+            {ubigeoData
+              .filter((item) => item.provincia === "00" && item.distrito === "00")
+              .map((dep) => (
+                <option key={dep.departamento} value={dep.departamento}>
+                  {dep.nombre}
+                </option>
+              ))}
+          </select>
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Departamento</label>
-        <input type="text" value={location.department} readOnly className="w-full p-2 border rounded bg-gray-100" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Provincia</label>
-        <input type="text" value={location.province} readOnly className="w-full p-2 border rounded bg-gray-100" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Distrito</label>
-        <input type="text" value={location.district} readOnly className="w-full p-2 border rounded bg-gray-100" />
+
+      <div className="flex gap-x-2 w-full">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Provincia</label>
+          <select
+            value={province}
+            onChange={(e) => setProvince(e.target.value)}
+            className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          >
+            <option value="">Selecciona provincia</option>
+            {filteredProvinces.map((prov) => (
+              <option key={prov.provincia} value={prov.provincia}>
+                {prov.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Distrito</label>
+          <select
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          >
+            <option value="">Selecciona distrito</option>
+            {filteredDistricts.map((dist) => (
+              <option key={dist.distrito} value={dist.distrito}>
+                {dist.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
