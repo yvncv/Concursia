@@ -31,7 +31,8 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const [placeName, setPlaceName] = useState<string>("");
   const [academyName, setAcademyName] = useState<string>("");
   const [selectedCategories, setSelectedCategories] = useState<{ category: string; price: string }[]>([]);
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState([""]);
+
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -97,10 +98,15 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
     setSelectedCategories(updatedCategories);
   };
 
-  const handleLevelChange = (level: string) => {
-    setSelectedLevels((prev) =>
-      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
-    );
+  const handleLevelChange = (levelName: string) => {
+    // Ensure selectedLevels is always an array
+    setSelectedLevels((prev) => {
+      if (Array.isArray(prev)) {
+        return prev.includes(levelName) ? prev.filter((l) => l !== levelName) : [...prev, levelName];
+      }
+      // If it's not an array, reset it to an empty array and add the level
+      return [levelName];
+    });
   };
 
   const router = useRouter();
@@ -134,15 +140,15 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
           setDistrict(eventData.location?.district);
           setPlaceName(eventData.location?.placeName);
           setSelectedCategories(
-            eventData.settings?.categoriesPrices
-              ? Object.entries(eventData.settings.categoriesPrices).map(([category, price]) => ({
+            eventData.settings?.categories
+              ? Object.entries(eventData.settings.categories).map(([category, price]) => ({
                 category,
                 price: price.toString()  // Convierte el precio a string
               }))
               : [] // Retorna un array vacío si categoriesPrices es undefined o null
           );
 
-          setSelectedLevels(eventData.settings?.levels);
+          setSelectedLevels(Object.keys(eventData.settings?.levels || []));
 
         } else {
           setError("Evento no encontrado.");
@@ -212,7 +218,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        lastUpdateBy: user?.fullName,
+        lastUpdatedBy: user?.fullName,
       });
 
       router.push("/academy-events"); // Redirigir a la página de eventos después de la actualización
@@ -389,7 +395,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
                 <button
                   key={level}
                   onClick={() => handleLevelChange(level)}
-                  className={`py-1 px-3 rounded transition-all ${selectedLevels.includes(level)
+                  className={`py-1 px-3 rounded transition-all ${selectedLevels && Array.isArray(selectedLevels) && selectedLevels.includes(level)}
                     ? "bg-green-500 text-white hover:bg-green-400"
                     : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                     }`}

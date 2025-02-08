@@ -171,7 +171,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
   const [selectedAcademy, setSelectedAcademy] = useState<string>("");
   const [dniPareja, setDniPareja] = useState('');
   const [pareja, setPareja] = useState<User | null>(null);
-  const { users, loadingUsers } = useUsers();
+  const { users } = useUsers();
 
   const validEmailsUser = user.email.filter(email => email.trim() !== "");
   const validEmailsPareja = pareja?.email.filter(email => email.trim() !== "");
@@ -302,7 +302,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
               ) : (
                 <div className="w-full">
                   <label htmlFor="phoneUser" className="block text-sm font-medium text-white">
-                  Número de teléfono
+                    Número de teléfono
                   </label>
                   <input
                     required
@@ -317,32 +317,35 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
               <AcademySelector onAcademySelect={handleAcademySelect} />
             </form>
 
-            {/* Sección para la pareja */}
-            <div className="w-full my-4 p-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded-2xl">
-              <label htmlFor="dniPareja" className="block text-md font-medium text-white">DNI de la Pareja</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div className="w-full">
-                  <input
-                    required
-                    id="dniPareja"
-                    type="text"
-                    value={dniPareja}
-                    onChange={(e) => setDniPareja(e.target.value)}
-                    className="w-full mt-1 px-4 py-3 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                    placeholder="Ingresa el DNI de la pareja"
-                  />
-                </div>
-                <div className="w-full">
-                  <button
-                    type="button"
-                    onClick={buscarPareja}
-                    className="px-6 py-3 text-white rounded-2xl bg-gradient-to-r from-red-600 to-red-400 transition-all"
-                  >
-                    Buscar Pareja
-                  </button>
+            <section className='my-4'>
+              <h3 className="text-xl font-semibold mb-4 text-white border-b">Selección de Pareja</h3>
+              {/* Sección para la pareja */}
+              <div className="w-full my-4 p-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded-2xl">
+                <label htmlFor="dniPareja" className="block text-md font-medium text-white">DNI de la Pareja</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <div className="w-full">
+                    <input
+                      required
+                      id="dniPareja"
+                      type="text"
+                      value={dniPareja}
+                      onChange={(e) => setDniPareja(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                      placeholder="Ingresa el DNI de la pareja"
+                    />
+                  </div>
+                  <div className="w-full">
+                    <button
+                      type="button"
+                      onClick={buscarPareja}
+                      className="px-6 py-3 text-white rounded-2xl bg-gradient-to-r from-red-600 to-red-400 transition-all"
+                    >
+                      Buscar Pareja
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Mostrar datos de la pareja si se encuentra */}
             {pareja && (
@@ -370,7 +373,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                   ))}
 
                   {/* Selector de Email de la pareja */}
-                  { validEmailsPareja && validEmailsPareja.length > 1 ? (
+                  {validEmailsPareja && validEmailsPareja.length > 1 ? (
                     <div className="w-full">
                       <label htmlFor="emailPareja" className="block text-sm font-medium text-white">
                         Correo de contacto de la pareja
@@ -428,7 +431,7 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
                   ) : (
                     <div className="w-full">
                       <label htmlFor="phonePareja" className="block text-sm font-medium text-white">
-                      Número de teléfono de la pareja
+                        Número de teléfono de la pareja
                       </label>
                       <input
                         required

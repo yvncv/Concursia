@@ -149,7 +149,7 @@ const CreateEvent = () => {
         startDate: Timestamp.fromDate(new Date(startDate)),
         endDate: Timestamp.fromDate(new Date(endDate)),
         academyId: user.academyId,
-        academyName,
+        academyName: user.academyName,
         organizerId: user.uid,
         smallImage,
         bannerImage,
