@@ -10,11 +10,85 @@ import EventDetails from "./event-creation/EventDetails"
 import EventLocation from "./event-creation/EventLocation"
 import DanceInfo from "./event-creation/DanceInfo"
 
+// Primero las interfaces
+interface GeneralData {
+  name: string;
+  smallImage: string | File;
+  bannerImage: string | File;
+  description: string;
+  smallImagePreview?: string;
+  bannerImagePreview?: string;
+}
+
+interface DatesData {
+  startDate: string;
+  endDate: string;
+}
+
+interface DetailsData {
+  capacity: number;
+  eventType: string;
+}
+
+interface LocationData {
+  latitude: string;
+  longitude: string;
+  department: string;
+  district: string;
+  placeName: string;
+  province: string;
+  street: string;
+}
+
+interface EventFormData {
+  general: GeneralData;
+  dates: DatesData;
+  details: DetailsData;
+  location: LocationData;
+}
+
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
+  const [eventData, setEventData] = useState<EventFormData>({
+    general: {
+      name: '',
+      smallImage: '',
+      bannerImage: '',
+      description: '',
+      smallImagePreview: '',
+      bannerImagePreview: ''
+    },
+    dates: {
+      startDate: '',
+      endDate: ''
+    },
+    details: {
+      capacity: 0,
+      eventType: ''
+    },
+    location: {
+      latitude: '',
+      longitude: '',
+      department: '',
+      district: '',
+      placeName: '',
+      province: '',
+      street: ''
+    }
+  });
+
+  const updateEventData = (section: 'general' | 'dates' | 'details' | 'location', data: any) => {
+    setEventData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        ...data
+      }
+    }));
+  };
 
   // Loading states
   const loadingMessage =
@@ -135,7 +209,7 @@ const Events: React.FC = () => {
       {/* Modal de Crear Evento */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[70vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Crear nuevo evento</h2>
               <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-500 hover:text-gray-700">
@@ -159,10 +233,26 @@ const Events: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              {activeTab === "general" && <GeneralInfo />}
-              {activeTab === "dates" && <EventDates />}
-              {activeTab === "details" && <EventDetails />}
-              {activeTab === "location" && <EventLocation />}
+              {activeTab === "general" &&
+                <GeneralInfo
+                  data={eventData.general}
+                  updateData={(data) => updateEventData('general', data)}
+                />}
+              {activeTab === "dates" &&
+                <EventDates
+                  data={eventData.dates}
+                  updateData={(data) => updateEventData('dates', data)}
+                />}
+              {activeTab === "details" &&
+                <EventDetails
+                  data={eventData.details}
+                  updateData={(data) => updateEventData('details', data)}
+                />}
+              {activeTab === "location" &&
+                <EventLocation
+                  data={eventData.location}
+                  updateData={(data) => updateEventData('location', data)}
+                />}
               {activeTab === "dance" && <DanceInfo />}
             </div>
 
@@ -171,8 +261,8 @@ const Events: React.FC = () => {
                 onClick={() => setIsCreateModalOpen(false)}
                 className="px-4 py-2 flex items-center justify-between  gap-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                <Save size={20}/>
-                Save Event
+                <Save size={20} />
+                Guardar Evento
               </button>
             </div>
           </div>

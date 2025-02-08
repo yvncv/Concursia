@@ -1,4 +1,12 @@
-export default function EventDetails() {
+interface EventDetailsProps {
+  data: {
+    capacity: number;
+    eventType: string;
+  }
+  updateData: (data: any) => void;
+}
+
+export default function EventDetails({ data, updateData }: EventDetailsProps) {
   const eventTypes = [
     { value: '', label: 'Selecciona el tipo de evento' },
     { value: 'competition', label: 'Concurso' },
@@ -16,6 +24,8 @@ export default function EventDetails() {
           type="number"
           id="capacity"
           min="1"
+          value={data.capacity}
+          onChange={(e) => updateData({ ...data, capacity: e.target.value })}
           className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
           placeholder="Ingrese la capacidad del evento"
         />
@@ -26,6 +36,8 @@ export default function EventDetails() {
         </label>
         <select
           id="eventType"
+          value={data.eventType}
+          onChange={(e) => updateData({ ...data, eventType: e.target.value })}
           className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
         >
           {eventTypes.map((type) => (
