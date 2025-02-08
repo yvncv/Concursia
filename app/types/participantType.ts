@@ -2,8 +2,8 @@ import { Timestamp } from "firebase/firestore";
 
 // Define el tipo de Event para TypeScript
 export interface Participant {
-  id: string;
-  code: string;
+  id: string; // Autogenerado por Firebase
+  code: string; // Codigo en la espalda del participante
   usersId: string[];
   eventId: string;
   category: string;
@@ -14,6 +14,10 @@ export interface Participant {
     judgesId: string;
     score: number;
   }[];
+  ticket:{
+    id: string;
+    status: string;
+  };
   phase: string;
   status: string;
   createdAt: Timestamp; // Fecha y hora de creación del participante (Timestamp)
