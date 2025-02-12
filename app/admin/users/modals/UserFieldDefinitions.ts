@@ -18,7 +18,6 @@ export const getUserFieldDefinitions = (user: User): FieldDefinition[] => {
     { key: "id", label: "ID", formatter: () => user.id || "N/A" },
     { key: "roleId", label: "Role ID", formatter: () => user.roleId || "N/A" },
     { key: "dni", label: "DNI", formatter: () => user.dni || "N/A" },
-    { key: "fullName", label: "Nombre Completo", formatter: () => user.fullName || "N/A" },
     { key: "firstName", label: "Nombre", formatter: () => user.firstName || "N/A" },
     { key: "lastName", label: "Apellido", formatter: () => user.lastName || "N/A" },
     { key: "birthDate", label: "Fecha de Nacimiento", formatter: () => formatDate(user.birthDate) },

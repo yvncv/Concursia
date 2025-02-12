@@ -14,7 +14,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ user, onClose }) => {
   const [input, setInput] = useState("");
 
   const handleDelete = async () => {
-    if (input === user.fullName) {
+    if (input === `${user?.firstName} ${user?.lastName}`) {
       try {
         await deleteDoc(doc(db, "users", user.id));
         onClose();
@@ -25,18 +25,18 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ user, onClose }) => {
       alert("El nombre no coincide. No se puede eliminar.");
     }
   };
-
+ 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
       <div className="bg-white backdrop-blur-xl p-6 rounded-2xl shadow-lg w-[90%] sm:w-[400px] max-w-lg">
         <h2 className="font-semibold text-center mb-4 text-gray-600 text-2xl">
           ¿Seguro que desea eliminar a{" "}
-          <span className="text-red-500 underline">{user.fullName}</span>?
+          <span className="text-red-500 underline">{`${user?.firstName} ${user?.lastName}`}</span>?
         </h2>
         <input
           type="text"
           className="w-full p-3 placeholder:text-red-200 mt-2 border border-gray-300 rounded-full shadow-sm"
-          placeholder={user.fullName}
+          placeholder={`${user?.firstName} ${user?.lastName}`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />

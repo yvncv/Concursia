@@ -5,7 +5,6 @@ export type User = FirebaseUser & {
   id: string;
   roleId: string;
   dni: string;
-  fullName: string;
   firstName: string;
   lastName: string;
   birthDate: Timestamp;

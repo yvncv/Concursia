@@ -83,7 +83,6 @@ export default function RegisterForm() {
         id: user.uid,
         roleId: "user",
         dni,
-        fullName: `${firstName} ${lastName}`,
         firstName,
         lastName,
         birthDate: Timestamp.fromDate(new Date(`${birthDate}T00:00:00`)),

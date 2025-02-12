@@ -218,7 +218,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        lastUpdatedBy: user?.fullName,
+        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
       });
 
       router.push("/academy-events"); // Redirigir a la página de eventos después de la actualización

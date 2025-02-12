@@ -9,10 +9,9 @@ import { Timestamp } from "firebase/firestore";
 interface UserEditModalProps {
   user: User;
   onClose: () => void;
-  onSave: (updatedUser: User) => void;
 }
 
-const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose, onSave }) => {
+const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
   // Se inicializa el estado con el objeto user recibido.
   const [editedUser, setEditedUser] = useState<{ [key: string]: any }>(user);
   const fields: FieldDefinition[] = getUserFieldDefinitions(user);
@@ -21,7 +20,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose, onSave }) 
   const handleChange = (key: string, value: any) => {
     setEditedUser((prev) => ({ ...prev, [key]: value }));
   };
-
+ 
   /**
    * Función para formatear un Timestamp o Date a "YYYY-MM-DDTHH:MM"
    * requerido por el input "datetime-local".
@@ -42,7 +41,6 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose, onSave }) 
     try {
       await updateDoc(doc(db, "users", user.id), editedUser);
       onClose();
-      onSave(editedUser);
     } catch (error) {
       console.error("Error updating user:", error);
     }
@@ -54,7 +52,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose, onSave }) 
         {/* Cabecera del Modal */}
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-6 flex justify-between items-center rounded-t-xl">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Editar {user.fullName}
+            Editar {`${user?.firstName} ${user?.lastName}`}
           </h2>
           <button
             onClick={onClose}

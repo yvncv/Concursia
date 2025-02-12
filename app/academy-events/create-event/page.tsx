@@ -178,8 +178,8 @@ const CreateEvent = () => {
           ),
           registrationType: [], // Esto permanece vacío o lo que corresponda según tu lógica
         },
-        createdBy: user?.fullName,
-        lastUpdatedBy: user?.fullName,
+        createdBy: `${user?.firstName} ${user?.lastName}`,
+        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };

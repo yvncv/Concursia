@@ -9,7 +9,6 @@ import { Timestamp } from "firebase/firestore";
 interface EventEditModalProps {
   event: Event;
   onClose: () => void;
-  onSave: (updatedEvent: Event) => void;
 }
 
 /**
@@ -52,7 +51,7 @@ const EventEditModal: React.FC<EventEditModalProps> = ({ event, onClose }) => {
         },
       }));
       return;
-    }
+    } 
     // Para latitud y longitud, que están dentro de location.coordinates
     if (["latitude", "longitude"].includes(key)) {
       setEditedEvent((prev) => ({
