@@ -39,7 +39,6 @@ const useTicket = (ticketId: string) => {
     const saveTicket = async (ticketData: Omit<Ticket, 'id'>) => {
         try {
             const docRef = await addDoc(collection(db, "tickets"), ticketData);
-            alert(`Ticket saved successfully with ID: ${docRef.id}`);
             return docRef; // Devuelve el docRef que contiene la ID del ticket creado
         } catch (error) {
             console.error('Error saving ticket:', error);
