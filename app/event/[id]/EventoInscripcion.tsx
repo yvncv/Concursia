@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Event } from "@/app/types/eventType";
 import useAcademias from "@/app/hooks/useAcademias";
+import useAcademia from "@/app/hooks/useAcademia";
 import { User } from '@/app/types/userType';
 import useUsers from '@/app/hooks/useUsers';
 
 import {Timestamp} from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
 import {Ticket} from "@/app/types/ticketType";
+import {Map as MapIcon} from "lucide-react";
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -166,7 +168,7 @@ const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCatego
 
 };
 
-const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
+const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal: () => void; user: User }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
@@ -177,6 +179,9 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
   const [ticketId, setTicketId] = useState<string | null>(null);
   const { users, loadingUsers, error } = useUsers();
   const { saveTicket } = useTicket('');
+  const { academy, loadingAcademy, errorAcademy } = useAcademia(event.academyId);
+  const iconClass = "w-6 h-6";
+
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
@@ -417,14 +422,67 @@ const EventoInscripcion = ({ event, user }: { event: Event; user: User }) => {
           )}
 
           {currentStep === 2 && (
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-4">Inscripción Finalizada y Ticket Generado</h3>
-                {ticketId && (
-                    <p className="mt-4 text-green-600">Ticket creado con ID: {ticketId}</p>
-                )}
+              <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
+                <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-10 mb-20">
+                  <div className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
+                    <h3 className="text-xl font-semibold mb-4">Inscripción Finalizada</h3>
+                    {ticketId && (
+                        <p className="text-xl font-semibold mb-4 text-green-600">ID del Ticket : {ticketId}</p>
+                    )}
+                    <h3 className="text-xl font-semibold mb-4">Completa el pago y confirmar tu inscripción.</h3>
+                  </div>
+                  <div className="order-2 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
+                    <div className="flex items-center space-x-3 text-gray-600 p-2 bg-gradient-to-tr from-red-500 to-yellow-600 rounded-full w-auto justify-center">
+                      <span className="text-sm md:text-xl text-white">Contacta con {event.academyName}.</span>
+                    </div>
+                    {loadingAcademy ? (
+                        <p>Cargando datos de la academia...</p>
+                    ) : errorAcademy ? (
+                        <p>Error: {errorAcademy}</p>
+                    ) : academy ? (
+                        <>
+                          <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10 ">
+
+                            <div className="flex items-center space-x-3  p-2  w-auto justify-center">
+                              <p className="text-sm md:text-xl">Teléfono : {academy.phoneNumber}</p>
+                            </div>
+
+                            <div className="flex items-center space-x-3 text-gray-600 p-2 bg-green-600 rounded-full w-auto justify-center">
+                              <a href={`https://wa.me/${academy.phoneNumber.replace(/\s+/g, '')}`}
+                                 target="_blank" rel="noopener noreferrer"
+                                 className="text-sm md:text-xl text-white">Chatear</a>
+                            </div>
+                          </div>
+
+                          <div>
+                            <section className="flex items-center space-x-3 text-gray-600">
+                              <MapIcon className={`${iconClass} text-orange-600`}/>
+                              {event.location.coordinates ? (
+                                  <button
+                                      onClick={openModal}
+                                      className="text-sm md:text-base text-red-900 hover:text-purple-900 underline underline-offset-4 ml-2 text-start"
+                                  >
+                                    Dirección: {academy.location.street}, {academy.location.district},{" "}
+                                    {academy.location.province}, {academy.location.department}.
+                                  </button>
+                              ) : (
+                                  <span className="text-sm md:text-base">
+                                  Dirección: {academy.location.street}, {academy.location.district},{" "}
+                                    {academy.location.province}, {academy.location.department}
+                                </span>
+                              )}
+                            </section>
+                          </div>
+
+
+                        </>
+                    ) : (
+                        <p>Academia no encontrada.</p>
+                    )}
+                  </div>
+                </div>
               </div>
           )}
-
           <div className="flex justify-between mt-8 px-4 pb-4">
             {currentStep > 0 && (
                 <button
