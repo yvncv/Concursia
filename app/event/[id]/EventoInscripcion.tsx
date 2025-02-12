@@ -11,6 +11,8 @@ import {Timestamp} from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
 import {Ticket} from "@/app/types/ticketType";
 import {Map as MapIcon} from "lucide-react";
+import {resolveHref} from "next/dist/client/resolve-href";
+import Link from "next/link";
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -241,6 +243,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
     handleNext();
     handleSave();
   };
+
 
   return (
       <div className="w-full max-w-6xl mx-auto px-4">
@@ -484,7 +487,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
               </div>
           )}
           <div className="flex justify-between mt-8 px-4 pb-4">
-            {currentStep > 0 && (
+            {currentStep === 1 && (
                 <button
                     onClick={handleBack}
                     className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
@@ -499,6 +502,14 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
                 >
                   Guardar Inscripción
                 </button>
+            )}
+            {currentStep === 2 && (
+                <Link
+                    className="ml-auto px-6 py-2 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-400 transition-all"
+                    href="/calendario"
+                >
+                  Salir
+                </Link>
             )}
           </div>
         </div>
