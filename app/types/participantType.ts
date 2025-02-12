@@ -20,5 +20,4 @@ export interface Participant {
   };
   phase: string;
   status: string;
-  createdAt: Timestamp; // Fecha y hora de creación del participante (Timestamp)
 }

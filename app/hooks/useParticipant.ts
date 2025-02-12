@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { Participant } from '../types/participantType';
 
 const useParticipant = (participantId: string) => {
@@ -31,7 +31,17 @@ const useParticipant = (participantId: string) => {
         fetchParticipant();
     }, [participantId]);
 
-    return { participant, loadingParticipant, error };
+    const saveParticipant = async (participantData: Omit<Participant, 'id'>) => {
+        try {
+            const docRef = await addDoc(collection(db, "participants"), participantData);
+            alert(`Participant saved successfully with ID: ${docRef.id}`);
+        } catch (error) {
+            console.error('Error saving participant:', error);
+            alert('Failed to save participant.');
+        }
+    };
+
+    return { participant, loadingParticipant, error, saveParticipant };
 };
 
 export default useParticipant;
