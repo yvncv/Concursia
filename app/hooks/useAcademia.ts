@@ -3,7 +3,7 @@ import { db } from "../firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import { Academy } from "../types/academyType";
 
-export default function useAcademia(academyId: string) {
+export default function useAcademia(academyId: string | undefined) {
   const [academy, setAcademy] = useState<Academy | null>(null);
   const [loadingAcademy, setLoading] = useState(true);
   const [errorAcademy, setError] = useState<string | null>(null);

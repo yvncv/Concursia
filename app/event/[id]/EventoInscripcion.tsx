@@ -121,7 +121,7 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
                     className="mt-2 text-blue-500 cursor-pointer"
                     onClick={() => setIsNewAcademy(true)}
                   >
-                    ¿Quiere usar "{searchQuery}" como academia de todos modos?
+                    ¿Quiere usar {`"${searchQuery}"`}como academia de todos modos?
                   </div>
                 </div>
               )}
@@ -218,7 +218,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   const handleSave = async () => {
     const ticketData: Omit<Ticket, 'id'> = {
       status: 'Pendiente',
-      usersId: [user.id, pareja?.id || ''],
+      usersId: pareja ? [user.id, pareja.id] : [user.id],
       eventId: event.id,
       category: user.category,
       level: selectedCategory,
