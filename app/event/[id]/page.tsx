@@ -7,7 +7,7 @@ import EventoInscripcion from "./EventoInscripcion";
 import dynamic from "next/dynamic";
 import { use } from "react";
 import { MapPin, Calendar, User } from "lucide-react";
-import useAcademia from "@/app/hooks/useAcademia";
+import useAcademy from "@/app/hooks/useAcademy";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
@@ -21,7 +21,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
 
   const event = events.find((event) => event.id === id);
-  const { academy, loadingAcademy, errorAcademy } = useAcademia(event?.academyId);
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(event?.academyId);
 
   const handleInscribirClick = () => {
     setInscripcionEnabled(true);

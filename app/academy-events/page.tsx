@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useUser from "../firebase/functions";
 import useEvents from "../hooks/useEvents";
-import useAcademia from "../hooks/useAcademia";
+import useAcademy from "../hooks/useAcademy";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
 import Pagination from "../ui/pagination/Pagination";
@@ -14,7 +14,7 @@ import Link from "next/link";
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvents } = useEvents();
-  const { academy, loadingAcademy, errorAcademy } = useAcademia(user?.academyId);
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(user?.academyId);
 
   const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
   const [eventToDelete, setEventToDelete] = useState<string | null>(null); // Evento que se va a eliminar

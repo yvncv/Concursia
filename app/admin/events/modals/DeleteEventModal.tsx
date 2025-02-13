@@ -11,7 +11,7 @@ interface DeleteEventModalProps {
 
 const DeleteEventModal: React.FC<DeleteEventModalProps> = ({ event, onClose }) => {
   const [input, setInput] = useState("");
-
+ 
   const handleDelete = async () => {
     if (input === event.name) {
       try {
@@ -26,7 +26,7 @@ const DeleteEventModal: React.FC<DeleteEventModalProps> = ({ event, onClose }) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" onClick={onClose}>
       <div className="bg-white backdrop-blur-xl p-6 rounded-2xl shadow-lg w-[90%] sm:w-[400px] max-w-lg">
         <h2 className="font-semibold text-center mb-4 text-gray-600 text-2xl">
           ¿Seguro que desea eliminar el evento{" "}

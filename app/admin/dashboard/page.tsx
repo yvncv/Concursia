@@ -1,12 +1,12 @@
 "use client"
 import React from "react";
 import useUsers from "@/app/hooks/useUsers";
-import useAcademias from "@/app/hooks/useAcademias";
+import useAcademies from "@/app/hooks/useAcademies";
 import useEvents from "@/app/hooks/useEvents";
 
 const Dashboard: React.FC = () => {
   const { users, loadingUsers } = useUsers();
-  const { academias, loadingAcademias, errorAcademias } = useAcademias();
+  const { academias, loadingAcademias, errorAcademias } = useAcademies();
   const { events, loadingEvents } = useEvents();
 
   const eventosActivos = events.filter((evento) => evento.status === "en curso");

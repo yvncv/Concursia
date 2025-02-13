@@ -9,10 +9,10 @@ interface EventModalProps {
 }
 
 const EventModal: React.FC<EventModalProps> = ({ event, onClose }) => {
-  const fields: FieldDefinition[] = getFieldDefinitions(event);
+  const fields: FieldDefinition[] = getFieldDefinitions(event); 
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40 backdrop-blur-sm">
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto transform transition-all ease-in-out duration-300">
         {/* Cabecera del Modal */}
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-6 flex justify-between items-center rounded-t-xl z-10">

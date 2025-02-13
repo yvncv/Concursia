@@ -10,7 +10,7 @@ export interface FieldDefinition {
   span?: number;
   formatter?: (value: any) => string | JSX.Element;
 }
- 
+
 const formatDate = (timestamp: Timestamp) =>
   timestamp?.toDate().toLocaleString() || "Fecha no disponible";
 

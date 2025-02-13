@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Event } from "@/app/types/eventType";
-import useAcademias from "@/app/hooks/useAcademias";
-import useAcademia from "@/app/hooks/useAcademia";
+import useAcademies from "@/app/hooks/useAcademies";
+import useAcademy from "@/app/hooks/useAcademy";
 import { User } from '@/app/types/userType';
 import useUsers from '@/app/hooks/useUsers';
 
@@ -52,7 +52,7 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
 
 // Componente para el selector de academias con búsqueda
 const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string) => void }) => {
-  const { academias, loadingAcademias, errorAcademias } = useAcademias(); // Asegúrate de que saveAcademy esté disponible
+  const { academias, loadingAcademias, errorAcademias } = useAcademies(); // Asegúrate de que saveAcademy esté disponible
   const [selectedAcademy, setSelectedAcademy] = useState<string>(''); // Para almacenar el nombre de la academia seleccionada
   const [searchQuery, setSearchQuery] = useState<string>(''); // Para el texto de búsqueda
   const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false); // Para saber si el usuario está creando una nueva academia
@@ -181,7 +181,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   const [ticketId, setTicketId] = useState<string | null>(null);
   const { users, loadingUsers, error } = useUsers();
   const { saveTicket } = useTicket('');
-  const { academy, loadingAcademy, errorAcademy } = useAcademia(event.academyId);
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
   const iconClass = "w-6 h-6";
 
 

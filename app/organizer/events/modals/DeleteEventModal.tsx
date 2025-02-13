@@ -1,42 +1,41 @@
-// /app/components/modals/DeleteUserModal.tsx
 "use client";
 import React, { useState } from "react";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
-import { User } from "@/app/types/userType";
+import { Event } from "@/app/types/eventType";
 
-interface DeleteUserModalProps {
-  user: User;
+interface DeleteEventModalProps {
+  event: Event; 
   onClose: () => void;
 }
 
-const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ user, onClose }) => {
+const DeleteEventModal: React.FC<DeleteEventModalProps> = ({ event, onClose }) => {
   const [input, setInput] = useState("");
 
   const handleDelete = async () => {
-    if (input === `${user?.firstName} ${user?.lastName}`) {
+    if (input === event.name) {
       try {
-        await deleteDoc(doc(db, "users", user.id));
+        await deleteDoc(doc(db, "events", event.id));
         onClose();
       } catch (error) {
-        console.error("Error deleting user:", error);
+        console.error("Error deleting event:", error);
       }
     } else {
       alert("El nombre no coincide. No se puede eliminar.");
     }
   };
- 
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" onClick={onClose}>
       <div className="bg-white backdrop-blur-xl p-6 rounded-2xl shadow-lg w-[90%] sm:w-[400px] max-w-lg">
         <h2 className="font-semibold text-center mb-4 text-gray-600 text-2xl">
-          ¿Seguro que desea eliminar a{" "}
-          <span className="text-red-500 underline">{`${user?.firstName} ${user?.lastName}`}</span>?
+          ¿Seguro que desea eliminar el evento{" "}
+          <span className="text-red-500 underline">{event.name}</span>?
         </h2>
         <input
           type="text"
           className="w-full p-3 placeholder:text-red-200 mt-2 border border-gray-300 rounded-full shadow-sm"
-          placeholder={`${user?.firstName} ${user?.lastName}`}
+          placeholder={event.name}
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
@@ -59,4 +58,4 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ user, onClose }) => {
   );
 };
 
-export default DeleteUserModal;
+export default DeleteEventModal;

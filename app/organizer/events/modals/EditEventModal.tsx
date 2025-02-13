@@ -9,7 +9,7 @@ import { Timestamp } from "firebase/firestore";
 interface EventEditModalProps {
   event: Event;
   onClose: () => void;
-} 
+}
 
 /**
  * Función auxiliar para obtener el valor del campo, teniendo en cuenta
