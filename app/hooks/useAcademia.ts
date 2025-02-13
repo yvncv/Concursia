@@ -1,41 +1,37 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase/config";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { Academy } from "../types/academyType";
-import useUser from "./useUser";
 
-export default function useAcademia() {
-  const [academia, setAcademia] = useState<Academy | null>(null);
-  const [loadingAcademia, setLoading] = useState(true);
-  const [errorAcademia, setError] = useState<string | null>(null);
-  const { user } = useUser(); // Obtener el usuario actual
+export default function useAcademia(academyId: string) {
+  const [academy, setAcademy] = useState<Academy | null>(null);
+  const [loadingAcademy, setLoading] = useState(true);
+  const [errorAcademy, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!academyId) {
       setLoading(false);
-      return; // Evita hacer la llamada a Firestore si no hay un organizerId
+      return;
     }
-  
-    const q = query(collection(db, "academias"), where("organizerId", "==", user.uid));
-  
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (!querySnapshot.empty) {
-        const docData = querySnapshot.docs[0].data();
-        const docId = querySnapshot.docs[0].id;
-        setAcademia({ id: docId, ...docData } as Academy);
-      } else {
-        setError("No se encontraron academias para este organizador.");
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error("Error al obtener los datos de la academia", error);
-      setError("Error al obtener los datos de la academia.");
-      setLoading(false);
-    });
-  
-    return () => unsubscribe();
-  }, [user]);
-  
 
-  return { academia, loadingAcademia, errorAcademia };
+    const fetchAcademy = async () => {
+      try {
+        const academyDoc = await getDoc(doc(db, "academias", academyId));
+        if (academyDoc.exists()) {
+          setAcademy(academyDoc.data() as Academy);
+        } else {
+          setError("Academia no encontrada.");
+        }
+      } catch (err) {
+        console.error("Error fetching academy:", err);
+        setError("Error al obtener los datos de la academia.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAcademy();
+  }, [academyId]);
+
+  return { academy, loadingAcademy, errorAcademy };
 }

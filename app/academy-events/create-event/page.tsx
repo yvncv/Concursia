@@ -211,14 +211,13 @@ const CreateEvent = () => {
 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-2xl font-semibold text-white mb-6 py-2 px-4 rounded-xl bg-green-600">Crear Evento</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-2">
 
       {error && <p className="text-green-600 mb-4">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="w-full max-w-7xl bg-white p-6 border border-gray-300 shadow-md rounded">
+      <form onSubmit={handleSubmit} className="w-full max-w-7xl">
         {/* Información del Evento */}
-        <h2 className="text-xl font-semibold mb-4 text-green-600 border border-transparent border-b-green-600">Información del Evento</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-green-600 border border-transparent border-b-green-600">Información del Evento</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Evento", id: "name", value: name, setValue: setName, type: "text" },
           { label: "Imagen Pequeña", id: "smallImage", value: smallImage, setValue: setSmallImage, type: "text" },
@@ -257,7 +256,7 @@ const CreateEvent = () => {
         </div>
 
         {/* Información del Lugar */}
-        <h2 className="text-xl font-semibold mt-8 mb-4 text-green-600 border border-transparent border-b-green-600">Información del Lugar</h2>
+        <h2 className="text-2xl font-semibold mt-8 mb-4 text-green-600 border border-transparent border-b-green-600">Información del Lugar</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[{ label: "Nombre del Lugar", id: "placeName", value: placeName, setValue: setPlaceName, type: "text" },
           { label: "Calle", id: "street", value: street, setValue: setStreet, type: "text" },

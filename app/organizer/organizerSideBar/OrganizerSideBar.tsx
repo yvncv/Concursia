@@ -1,0 +1,64 @@
+"use client";
+
+import React, { useState } from "react";
+import { X, PanelLeft } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from 'next/navigation'
+
+const OrganizerSideBar: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname()
+
+  const enlaces = [
+    { label: "Dashboard", href: "/organizer" },
+    { label: "Users", href: "/organizer/users" },
+    { label: "Events", href: "/organizer/events" },
+  ];
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  return (
+    <>
+      {/* Botón para abrir/cerrar sidebar en pantallas pequeñas */}
+      <div className="md:hidden fixed top-9 left-4 z-10">
+        <button
+          onClick={toggleMenu}
+          className="hover:text-white hover:bg-red-900/50 p-2 rounded-full bg-white text-red-900"
+          aria-label="Toggle sidebar"
+        >
+          {isMenuOpen ? <X className="w-6 h-6" /> : <PanelLeft className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        className={`z-0 mt-0 fixed h-full text-white bg-rojo md:bg-transparent shadow-lg transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 md:w-64`}
+      >
+        <div className="p-6">
+          <h1 className="text-2xl font-bold mb-6">Panel de Organizador</h1>
+          <nav>
+            <ul className="space-y-4">
+              {enlaces.map((enlace) => (
+                <li key={enlace.href}>
+                  <Link
+                    href={enlace.href}
+                    className={`block w-full px-4 py-2 rounded-md transition ${pathname === enlace.href
+                        ? "bg-white text-black font-bold"
+                        : "hover:bg-white/80 hover:text-black"
+                      }`}
+                    onClick={() => setIsMenuOpen(false)} // Cierra el menú en pantallas pequeñas
+                  >
+                    {enlace.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default OrganizerSideBar;

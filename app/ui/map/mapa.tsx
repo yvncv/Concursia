@@ -1,13 +1,12 @@
 import React from "react";
-import { Event } from "../../types/eventType";
 
-const Map = ({ event }: { event: Event }) => {
+const Map = ({ latitude, longitude }: { latitude:string, longitude:string }) => {
   // Extrae las coordenadas del event
-  const [latitude, longitude] = [event.location.coordinates.latitude, event.location.coordinates.longitude]
+  const { lat, long } = { lat: latitude, long: longitude };
 
   return (
     <iframe
-      src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=es-419&z=15&output=embed`}  // Ajusta z para el nivel de zoom
+      src={`https://www.google.com/maps?q=${lat},${long}&hl=es-419&z=15&output=embed`}  // Ajusta z para el nivel de zoom
       width="100%"  // Para que ocupe todo el ancho disponible
       height="100%" // Altura fija
       allowFullScreen
@@ -17,5 +16,6 @@ const Map = ({ event }: { event: Event }) => {
     ></iframe>
   );
 };
+
 
 export default Map;

@@ -40,6 +40,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
 
     const iconClass = "w-6 h-6";
 
+
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
             <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 mb-20">
