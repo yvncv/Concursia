@@ -9,15 +9,13 @@ import EventDates from "./event-creation/EventDates"
 import EventDetails from "./event-creation/EventDetails"
 import EventLocation from "./event-creation/EventLocation"
 import DanceInfo from "./event-creation/DanceInfo"
+import EventImages from "./event-creation/EventImages";
+import { useEventCreation } from "@/app/hooks/useEventCreation";
 
 // Primero las interfaces
 interface GeneralData {
   name: string;
-  smallImage: string | File;
-  bannerImage: string | File;
   description: string;
-  smallImagePreview?: string;
-  bannerImagePreview?: string;
 }
 
 interface DatesData {
@@ -26,7 +24,7 @@ interface DatesData {
 }
 
 interface DetailsData {
-  capacity: number;
+  capacity: string;
   eventType: string;
 }
 
@@ -40,33 +38,50 @@ interface LocationData {
   street: string;
 }
 
+interface DanceData {
+  levels: {
+    [key: string]: {
+      selected: boolean;
+      price: string;
+      couple: boolean;
+    };
+  };
+  categories: string[];
+}
+
+interface ImagesData {
+  smallImage: string | File;
+  bannerImage: string | File;
+  smallImagePreview?: string;
+  bannerImagePreview?: string;
+}
+
 interface EventFormData {
   general: GeneralData;
   dates: DatesData;
   details: DetailsData;
   location: LocationData;
+  dance: DanceData;
+  images: ImagesData;
 }
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
+  const { createEvent, loading: creatingEvent, error: createError } = useEventCreation();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
       name: '',
-      smallImage: '',
-      bannerImage: '',
-      description: '',
-      smallImagePreview: '',
-      bannerImagePreview: ''
+      description: ''
     },
     dates: {
       startDate: '',
       endDate: ''
     },
     details: {
-      capacity: 0,
+      capacity: '',
       eventType: ''
     },
     location: {
@@ -77,10 +92,20 @@ const Events: React.FC = () => {
       placeName: '',
       province: '',
       street: ''
+    },
+    dance: {
+      levels: {},
+      categories: []
+    },
+    images: {
+      smallImage: '',
+      bannerImage: '',
+      smallImagePreview: '',
+      bannerImagePreview: ''
     }
   });
 
-  const updateEventData = (section: 'general' | 'dates' | 'details' | 'location', data: any) => {
+  const updateEventData = (section: 'general' | 'dates' | 'details' | 'location' | 'dance' | 'images', data: any) => {
     setEventData(prev => ({
       ...prev,
       [section]: {
@@ -114,13 +139,30 @@ const Events: React.FC = () => {
     (event) => event.academyId === user?.academyId
   );
 
+  const handleCreateEvent = async () => {
+    if (!user) {
+      alert("Usuario no autenticado");
+      return;
+    }
+
+    const { success, message } = await createEvent(eventData, user);
+
+    if (success) {
+      alert("Evento creado exitosamente");
+      setIsCreateModalOpen(false);  // Cierra el modal
+    } else {
+      alert(`Error: ${message}`);
+    }
+  };
+
   const tabs = [
     { id: "general", label: "General" },
     { id: "dates", label: "Días" },
     { id: "details", label: "Detalles" },
     { id: "location", label: "Ubicación" },
     { id: "dance", label: "Categoría/Niveles" },
-  ]
+    { id: "images", label: "Imágenes" },
+  ];
 
   return (
     <div className="p-6">
@@ -253,13 +295,24 @@ const Events: React.FC = () => {
                   data={eventData.location}
                   updateData={(data) => updateEventData('location', data)}
                 />}
-              {activeTab === "dance" && <DanceInfo />}
+              {activeTab === "dance" &&
+                <DanceInfo
+                  data={eventData.dance}
+                  updateData={(data) => updateEventData('dance', data)}
+                />
+              }
+              {activeTab === "images" &&
+                <EventImages
+                  data={eventData.images}
+                  updateData={(data) => updateEventData('images', data)}
+                />
+              }
             </div>
 
             <div className="flex justify-end">
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="px-4 py-2 flex items-center justify-between  gap-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={handleCreateEvent}
+                className="px-4 py-2 flex items-center justify-between gap-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 <Save size={20} />
                 Guardar Evento
@@ -268,6 +321,8 @@ const Events: React.FC = () => {
           </div>
         </div>
       )}
+      {creatingEvent && <p className="text-gray-600">Creando evento...</p>}
+      {createError && <p className="text-red-600">Error: {createError}</p>}
     </div>
   );
 };

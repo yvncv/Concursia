@@ -1,6 +1,6 @@
 interface EventDetailsProps {
   data: {
-    capacity: number;
+    capacity: string;
     eventType: string;
   }
   updateData: (data: any) => void;

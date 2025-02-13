@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         hostname: "perusumaq.com",
         pathname: "/**",
       },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/v0/b/**'
+      }
     ],
   },
 };
