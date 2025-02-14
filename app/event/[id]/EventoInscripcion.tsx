@@ -11,7 +11,6 @@ import {Timestamp} from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
 import {Ticket} from "@/app/types/ticketType";
 import {Map as MapIcon} from "lucide-react";
-import {resolveHref} from "next/dist/client/resolve-href";
 import Link from "next/link";
 
 // Componente para los pasos del wizard
@@ -52,10 +51,10 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
 
 // Componente para el selector de academias con búsqueda
 const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string) => void }) => {
-  const { academias, loadingAcademias, errorAcademias } = useAcademies(); // Asegúrate de que saveAcademy esté disponible
-  const [selectedAcademy, setSelectedAcademy] = useState<string>(''); // Para almacenar el nombre de la academia seleccionada
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Para el texto de búsqueda
-  const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false); // Para saber si el usuario está creando una nueva academia
+  const { academies, loadingAcademies, errorAcademies } = useAcademies(); // Corrected property names
+  const [selectedAcademy, setSelectedAcademy] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value); // Actualiza el texto de búsqueda
@@ -79,7 +78,7 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
   };
 
   // Filtrar academias según el texto ingresado
-  const filteredAcademies = academias.filter(academy =>
+  const filteredAcademies = academies.filter(academy =>
     academy.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -88,10 +87,10 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
       <label htmlFor="academyId" className="block text-sm font-medium text-white">
         Academia
       </label>
-      {loadingAcademias ? (
+      {loadingAcademies ? (
         <div className="mt-1 px-4 py-4 text-gray-500">Cargando academias...</div>
-      ) : errorAcademias ? (
-        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademias}</div>
+      ) : errorAcademies ? (
+        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademies}</div>
       ) : (
         <div>
           <input
