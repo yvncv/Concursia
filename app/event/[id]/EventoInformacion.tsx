@@ -159,12 +159,13 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, op
 
                     {/* Sección del Mapa */}
                     <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-lg">
-                        <Map event={event} />
+                        <Map latitude={event.location.coordinates.latitude}
+                             longitude={event.location.coordinates.longitude}/>
                     </div>
                 </div>
 
             </div>
-        </div >
+        </div>
     );
 };
 
