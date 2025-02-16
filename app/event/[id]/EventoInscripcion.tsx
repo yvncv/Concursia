@@ -143,27 +143,57 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
 };
 
 // Componente para la selección de categoría
-const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCategorySelect: (category: string) => void }) => {
+const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: Event, onCategorySelect: (category: string) => void, user: User, tickets: Ticket[] }) => {
+
   if (!event?.settings?.categories) {
     return <p className="text-center text-gray-500">No hay categorías disponibles.</p>;
   }
 
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [lastLevelChoose, setLastLevelChoose] = useState<string>('');
+
+  const checkExistingTicket = (level: string) => {
+    const existingTicket = tickets.find(ticket =>
+        ticket.usersId[0] === user.id &&
+        ticket.eventId === event.id &&
+        ticket.level === level
+    );
+
+    if (existingTicket) {
+      setAlertMessage(`Ya tienes un ticket para ${level} en este evento.`);
+      setLastLevelChoose(level);
+      return false;
+    }
+    return true;
+  };
+
   return (
-    <div className="flex flex-wrap gap-4 p-4 justify-center">
-      {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
-        Object.entries(event.settings.levels).map(([level]) => (
-          <button
-            key={level}
-            onClick={() => onCategorySelect(level)}
-            className="w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-700 to-red-500 text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all"
-          >
-            {level.charAt(0).toUpperCase() + level.slice(1)}
-            {/* {level.charAt(0).toUpperCase() + level.slice(1)} {details.couple == true && (<span className='text-orange-200'>(Con Pareja)</span>)} */}
-          </button>
-        ))
-      ) : (
-        <p className="text-center text-gray-500">No hay niveles disponibles.</p>
-      )}
+      <div className="justify-center">
+        {alertMessage && (
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-4 rounded-lg mb-4 text-center">
+              <p>{alertMessage}</p>
+            </div>
+        )}
+      <div className="flex flex-wrap gap-4 p-4 justify-center">
+        {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+            Object.entries(event.settings.levels).map(([level]) => (
+                <button
+                    key={level}
+                    onClick={() => {
+                      if (checkExistingTicket(level)) {
+                        onCategorySelect(level);
+                      }
+                    }}
+                    className="w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-800 to-red-500 text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all"
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                  {/* {level.charAt(0).toUpperCase() + level.slice(1)} {details.couple == true && (<span className='text-orange-200'>(Con Pareja)</span>)} */}
+                </button>
+            ))
+        ) : (
+            <p className="text-center text-gray-500">No hay niveles disponibles.</p>
+        )}
+      </div>
     </div>
   );
 
@@ -181,6 +211,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   const { users, loadingUsers, error } = useUsers();
   const { saveTicket } = useTicket('');
   const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
+  const { tickets, loading: loadingTickets, error: errorTickets } = useTicket(event.id); // Obtener los tickets
   const iconClass = "w-6 h-6";
 
 
@@ -252,6 +283,8 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
               <CategorySelection
                   event={event}
                   onCategorySelect={handleCategorySelect}
+                  user={user}
+                  tickets={tickets}
               />
           )}
           {currentStep === 1 && (
