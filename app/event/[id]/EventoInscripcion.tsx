@@ -218,8 +218,14 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
     const parejaEncontrada = users.find((usuario) => usuario.dni === dniPareja);
+    const sameGender = users.find((usuario) => usuario.gender === "Masculino");
     if (parejaEncontrada) {
-      setPareja(parejaEncontrada);  // Establece los datos de la pareja si se encuentra
+      if(sameGender){
+        setPareja(null);  // Si son del mismo sexo, limpia el estado de la pareja
+        alert("El usuario con ese DNI es del mismo sexo que usted.");
+      }else{
+        setPareja(parejaEncontrada);  // Establece los datos de la pareja si se encuentra
+      }
     } else {
       setPareja(null);  // Si no se encuentra, limpia el estado de la pareja
       alert("No se encontró ningún usuario con ese DNI.");
