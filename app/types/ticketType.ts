@@ -5,6 +5,8 @@ export interface Ticket {
     id: string; // Autogenerado por Firebase
     status: string;
     usersId: string[];
+    academiesId: string[];
+    academiesName: string[];
     eventId: string;
     category: string;
     level: string;
