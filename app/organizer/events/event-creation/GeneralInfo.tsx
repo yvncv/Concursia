@@ -1,61 +1,43 @@
-export default function GeneralInfo() {
+import { useState } from 'react';
+
+interface GeneralInfoProps {
+  data: {
+    name: string;
+    description: string;
+  };
+  updateData: (data: any) => void;
+}
+
+export default function GeneralInfo({ data, updateData }: GeneralInfoProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-10">
       <div>
-        <label htmlFor="eventName" className="block text-sm font-medium text-gray-700">
-          Event Name
+        <label htmlFor="eventName" className="block text-sm font-medium text-gray-700 mb-4">
+          Nombre del evento
         </label>
         <input
           type="text"
           id="eventName"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-          placeholder="Enter event name"
+          value={data.name}
+          onChange={(e) => updateData({ ...data, name: e.target.value })}
+          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all"
+          placeholder="Ingresa el nombre del evento"
         />
       </div>
+
       <div>
-        <label htmlFor="smallImage" className="block text-sm font-medium text-gray-700">
-          Small Image
-        </label>
-        <input
-          type="file"
-          id="smallImage"
-          accept="image/*"
-          className="mt-1 block w-full text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            hover:file:bg-blue-100"
-        />
-      </div>
-      <div>
-        <label htmlFor="bannerImage" className="block text-sm font-medium text-gray-700">
-          Banner Image
-        </label>
-        <input
-          type="file"
-          id="bannerImage"
-          accept="image/*"
-          className="mt-1 block w-full text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            hover:file:bg-blue-100"
-        />
-      </div>
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-4">
+          Descripción
         </label>
         <textarea
           id="description"
           rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-          placeholder="Enter event description"
+          value={data.description}
+          onChange={(e) => updateData({ ...data, description: e.target.value })}
+          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          placeholder="Ingresa la descripción del evento"
         ></textarea>
       </div>
     </div>
-  )
+  );
 }
-
