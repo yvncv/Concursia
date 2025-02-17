@@ -9,9 +9,9 @@ interface EventDetailsProps {
 export default function EventDetails({ data, updateData }: EventDetailsProps) {
   const eventTypes = [
     { value: '', label: 'Selecciona el tipo de evento' },
-    { value: 'competition', label: 'Concurso' },
-    { value: 'exhibition', label: 'Ensayo con banda' },
-    { value: 'workshop', label: 'Celebración' }
+    { value: 'Concurso', label: 'Concurso' },
+    { value: 'Ensayo con banda', label: 'Ensayo con banda' },
+    { value: 'Celebración', label: 'Celebración' }
   ];
 
   return (

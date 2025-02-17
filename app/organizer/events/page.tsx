@@ -251,7 +251,7 @@ const Events: React.FC = () => {
       {/* Modal de Crear Evento */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[70vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[75vh] overflow-y-auto m-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Crear nuevo evento</h2>
               <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-500 hover:text-gray-700">
@@ -259,8 +259,8 @@ const Events: React.FC = () => {
               </button>
             </div>
 
-            <div className="mb-4">
-              <div className="flex border-b">
+            <div className="mb-4 overflow-x-auto">
+              <div className="flex border-b w-max">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
