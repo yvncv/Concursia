@@ -33,31 +33,26 @@ export default function DanceInfo({ data, updateData }: DanceInfoProps) {
     const isSelecting = !data.levels[levelName]?.selected;
 
     if (levelName === "Novel Abierto" && isSelecting) {
-      // Si se selecciona Novel Abierto, deseleccionar A y B
       updatedLevels = {
         ...updatedLevels,
         "Novel Abierto A": { ...updatedLevels["Novel Abierto A"], selected: false },
         "Novel Abierto B": { ...updatedLevels["Novel Abierto B"], selected: false }
       };
     } else if (levelName === "Novel Abierto A" || levelName === "Novel Abierto B") {
-      // Si se selecciona o deselecciona A o B:
-      // 1. Deseleccionar Novel Abierto
-      // 2. Aplicar la misma acción (seleccionar o deseleccionar) a ambos A y B
       updatedLevels = {
         ...updatedLevels,
         "Novel Abierto": { ...updatedLevels["Novel Abierto"], selected: false },
-        "Novel Abierto A": { 
-          ...updatedLevels["Novel Abierto A"], 
-          selected: isSelecting 
+        "Novel Abierto A": {
+          ...updatedLevels["Novel Abierto A"],
+          selected: isSelecting
         },
-        "Novel Abierto B": { 
-          ...updatedLevels["Novel Abierto B"], 
-          selected: isSelecting 
+        "Novel Abierto B": {
+          ...updatedLevels["Novel Abierto B"],
+          selected: isSelecting
         }
       };
     }
 
-    // Si el nivel que se está cambiando no es A o B, actualizar normalmente
     if (levelName !== "Novel Abierto A" && levelName !== "Novel Abierto B") {
       const level = levels.find(l => l.name === levelName);
       updatedLevels[levelName] = {
@@ -65,6 +60,12 @@ export default function DanceInfo({ data, updateData }: DanceInfoProps) {
         price: data.levels[levelName]?.price || '',
         couple: level?.couple || false
       };
+    }
+
+    // Verificar si no hay ningún nivel seleccionado
+    const noLevelsSelected = Object.values(updatedLevels).every(level => !level.selected);
+    if (noLevelsSelected) {
+      updatedLevels = {};
     }
 
     updateData({
