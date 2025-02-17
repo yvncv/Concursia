@@ -7,6 +7,7 @@ import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent } from "@/app/types/eventType";
+import {Timestamp} from "firebase/firestore";
 
 interface GeneralData {
   name: string;
@@ -14,8 +15,8 @@ interface GeneralData {
 }
 
 interface DatesData {
-  startDate: string;
-  endDate: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
 }
 
 interface DetailsData {
@@ -74,8 +75,8 @@ const Events: React.FC = () => {
       description: ''
     },
     dates: {
-      startDate: '',
-      endDate: ''
+      startDate: Timestamp.now(), // Inicializa con Timestamp
+      endDate: Timestamp.now() // Inicializa con Timestamp
     },
     details: {
       capacity: '',
@@ -136,9 +137,17 @@ const Events: React.FC = () => {
       return;
     }
 
+    const eventToSave = {
+      ...eventData,
+      dates: {
+        startDate: eventData.dates.startDate, // Mantén como Timestamp
+        endDate: eventData.dates.endDate, // Mantén como Timestamp
+      },
+    };
+
     const { success, message } = selectedEvent
-        ? await updateEvent(eventData, user, selectedEvent.id)
-        : await createEvent(eventData, user);
+        ? await updateEvent(eventToSave, user, selectedEvent.id)
+        : await createEvent(eventToSave, user);
 
     if (success) {
       alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
@@ -151,7 +160,7 @@ const Events: React.FC = () => {
 
   const handleEditEvent = (event: CustomEvent) => {
     const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { ...value, selected: true, price: value.price.toString() }; // Convert price to string
+      acc[key] = { ...value, selected: true, price: value.price.toString() };
       return acc;
     }, {} as { [key: string]: { selected: boolean; price: string; couple: boolean } });
 
@@ -162,8 +171,8 @@ const Events: React.FC = () => {
         description: event.description,
       },
       dates: {
-        startDate: event.startDate.toDate().toISOString().split('T')[0],
-        endDate: event.endDate.toDate().toISOString().split('T')[0],
+        startDate: event.startDate, // Mantén como Timestamp
+        endDate: event.endDate, // Mantén como Timestamp
       },
       details: {
         capacity: event.capacity,

@@ -7,6 +7,7 @@ import EventLocation from "../event-creation/EventLocation";
 import DanceInfo from "../event-creation/DanceInfo";
 import EventImages from "../event-creation/EventImages";
 import {EventFormData} from "@/app/types/eventType";
+import {Timestamp} from "firebase/firestore";
 
 interface EventModalProps {
     isOpen: boolean;
@@ -25,8 +26,8 @@ const initialEventData: EventFormData = {
         description: ''
     },
     dates: {
-        startDate: '',
-        endDate: ''
+        startDate: Timestamp.now(), // Inicializa con Timestamp
+        endDate: Timestamp.now() // Inicializa con Timestamp
     },
     details: {
         capacity: '',

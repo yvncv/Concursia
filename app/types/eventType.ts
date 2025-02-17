@@ -9,8 +9,8 @@ export interface GeneralData {
 
 // Interfaces para las fechas
 export interface DatesData {
-  startDate: string;
-  endDate: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
 }
 
 // Interfaces para los detalles
@@ -68,8 +68,8 @@ export interface CustomEvent {
   id: string;
   name: string;
   description: string;
-  startDate: any; // Timestamp de Firestore
-  endDate: any; // Timestamp de Firestore
+  startDate: Timestamp; // Timestamp de Firestore
+  endDate: Timestamp; // Timestamp de Firestore
   academyId: string | undefined;
   academyName: string;
   organizerId: string;
