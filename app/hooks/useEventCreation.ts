@@ -4,7 +4,7 @@ import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/firebase/functions";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EventFormData, Event } from '@/app/types/eventType';
+import { EventFormData, CustomEvent } from '@/app/types/eventType';
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 interface EventCreationHandler {
@@ -41,20 +41,27 @@ export const useEventCreation = (): EventCreationHandler => {
 
   // Obtener el nombre de la academia utilizando academyId
   useEffect(() => {
-    const fetchAcademyName = async () => {
+    const fetchAcademyNameAndUbigeo = async () => {
       if (user && user.academyId) {
         const academyRef = doc(db, "academias", user.academyId);
         const academySnap = await getDoc(academyRef);
         if (academySnap.exists()) {
-          setAcademyName(academySnap.data().name); 
+          setAcademyName(academySnap.data().name);
         } else {
           console.error("Academia no encontrada.");
           setAcademyName("");
         }
       }
+
+      try {
+        const ubigeoData = await fetchUbigeoINEI();
+        setUbigeoData(ubigeoData);
+      } catch (error) {
+        console.error("Error al obtener datos de Ubigeo:", error);
+      }
     };
 
-    fetchAcademyName();
+    fetchAcademyNameAndUbigeo();
   }, [user]);
 
 
@@ -109,7 +116,7 @@ export const useEventCreation = (): EventCreationHandler => {
         (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
       )?.nombre || eventData.location.district;
 
-      const event: Event = {
+      const event: CustomEvent = {
         id: eventId,
         name: eventData.general.name,
         description: eventData.general.description,
