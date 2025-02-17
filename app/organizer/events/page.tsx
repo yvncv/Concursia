@@ -104,7 +104,7 @@ const Events: React.FC = () => {
     }
   });
 
-  const updateEventData = (section: string, data: any) => {
+  const updateEventData = <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => {
     setEventData(prev => ({
       ...prev,
       [section]: { ...prev[section], ...data }
