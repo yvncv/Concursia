@@ -9,6 +9,7 @@ import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 interface EventCreationHandler {
   createEvent: (eventData: EventFormData, user: any) => Promise<{ success: boolean; message: string }>;
+  updateEvent: (eventData: EventFormData, user: any, eventId: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
   error: string | null;
 }
@@ -20,11 +21,10 @@ export const useEventCreation = (): EventCreationHandler => {
   const [error, setError] = useState<string | null>(null);
   const [academyName, setAcademyName] = useState<string>("");
 
-  // Función para subir una imagen al storage
   const uploadImage = async (image: File, eventId: string, type: 'banner' | 'small'): Promise<string> => {
     const folder = type === 'banner' ? 'bannerImages' : 'smallImages';
     const storageRef = ref(storage, `events/${folder}/${eventId}`);
-    
+
     try {
       await uploadBytes(storageRef, image);
       const downloadURL = await getDownloadURL(storageRef);
@@ -34,12 +34,11 @@ export const useEventCreation = (): EventCreationHandler => {
       if (error instanceof Error) {
         throw new Error(`Error al subir la imagen ${type}: ${error.message}`);
       } else {
-        throw new Error(`Error al subir la imagen ${type}: Error desconocido`);
+        throw new Error(`Error desconocido al subir la imagen ${type}`);
       }
     }
   };
 
-  // Obtener el nombre de la academia utilizando academyId
   useEffect(() => {
     const fetchAcademyNameAndUbigeo = async () => {
       if (user && user.academyId) {
@@ -48,8 +47,7 @@ export const useEventCreation = (): EventCreationHandler => {
         if (academySnap.exists()) {
           setAcademyName(academySnap.data().name);
         } else {
-          console.error("Academia no encontrada.");
-          setAcademyName("");
+          console.error("Academia no encontrada");
         }
       }
 
@@ -64,7 +62,6 @@ export const useEventCreation = (): EventCreationHandler => {
     fetchAcademyNameAndUbigeo();
   }, [user]);
 
-
   const createEvent = async (eventData: EventFormData, user: any): Promise<{ success: boolean; message: string }> => {
     setLoading(true);
     setError(null);
@@ -76,14 +73,13 @@ export const useEventCreation = (): EventCreationHandler => {
 
       const eventId = new Date().getTime().toString();
 
-      // Subir imágenes si están presentes
       let smallImageUrl = '';
       let bannerImageUrl = '';
 
       if (eventData.images.smallImage instanceof File) {
         smallImageUrl = await uploadImage(eventData.images.smallImage, eventId, 'small');
       } else if (typeof eventData.images.smallImage === 'string') {
-        smallImageUrl = eventData.images.smallImage; 
+        smallImageUrl = eventData.images.smallImage;
       }
 
       if (eventData.images.bannerImage instanceof File) {
@@ -92,28 +88,23 @@ export const useEventCreation = (): EventCreationHandler => {
         bannerImageUrl = eventData.images.bannerImage;
       }
 
-      // Procesar los niveles seleccionados
       const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
       Object.entries(eventData.dance.levels).forEach(([level, data]) => {
         if (data.selected) {
-          processedLevels[level] = {
-            price: parseFloat(data.price) || 0,
-            couple: data.couple
-          };
+          processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
         }
       });
 
-      // Buscar los nombres de departamento, provincia y distrito
       const departmentName = ubigeoData.find(
-        (item) => item.departamento === eventData.location.department && item.provincia === "00" && item.distrito === "00"
+          (item) => item.departamento === eventData.location.department && item.provincia === "00" && item.distrito === "00"
       )?.nombre || eventData.location.department;
 
       const provinceName = ubigeoData.find(
-        (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === "00"
+          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === "00"
       )?.nombre || eventData.location.province;
 
       const districtName = ubigeoData.find(
-        (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
+          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
       )?.nombre || eventData.location.district;
 
       const event: CustomEvent = {
@@ -128,25 +119,25 @@ export const useEventCreation = (): EventCreationHandler => {
         smallImage: smallImageUrl,
         bannerImage: bannerImageUrl,
         location: {
-          street: eventData.location.street,
-          district: districtName,
-          province: provinceName,
-          department: departmentName,
-          placeName: eventData.location.placeName,
           coordinates: {
             latitude: eventData.location.latitude,
             longitude: eventData.location.longitude,
           },
+          department: departmentName,
+          province: provinceName,
+          district: districtName,
+          placeName: eventData.location.placeName,
+          street: eventData.location.street,
         },
         eventType: eventData.details.eventType,
         capacity: eventData.details.capacity,
         status: "pendiente",
-        settings: {
-          categories: eventData.dance.categories,
+         settings: {
           levels: processedLevels,
-          registrationType: [],
+          categories: eventData.dance.categories,
+          registrationType: [], // Ensure registrationType is included
         },
-        createdBy:  `${user?.firstName} ${user?.lastName}`,
+        createdBy: `${user?.firstName} ${user?.lastName}`,
         lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -154,22 +145,116 @@ export const useEventCreation = (): EventCreationHandler => {
 
       await setDoc(doc(db, "eventos", eventId), event);
 
-      return { 
-        success: true, 
-        message: "Evento creado exitosamente" 
+      return {
+        success: true,
+        message: "Evento creado exitosamente"
       };
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error desconocido al crear el evento";
       setError(errorMessage);
-      return { 
-        success: false, 
-        message: errorMessage 
+      return {
+        success: false,
+        message: errorMessage
       };
     } finally {
       setLoading(false);
     }
   };
 
-  return { createEvent, loading, error };
+  const updateEvent = async (eventData: EventFormData, user: any, eventId: string): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
+
+      let smallImageUrl = eventData.images.smallImage as string;
+      let bannerImageUrl = eventData.images.bannerImage as string;
+
+      if (eventData.images.smallImage instanceof File) {
+        smallImageUrl = await uploadImage(eventData.images.smallImage, eventId, 'small');
+      }
+
+      if (eventData.images.bannerImage instanceof File) {
+        bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
+      }
+
+      const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
+      Object.entries(eventData.dance.levels).forEach(([level, data]) => {
+        if (data.selected) {
+          processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
+        }
+      });
+
+      const departmentName = ubigeoData.find(
+          (item) => item.departamento === eventData.location.department && item.provincia === "00" && item.distrito === "00"
+      )?.nombre || eventData.location.department;
+
+      const provinceName = ubigeoData.find(
+          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === "00"
+      )?.nombre || eventData.location.province;
+
+      const districtName = ubigeoData.find(
+          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
+      )?.nombre || eventData.location.district;
+
+      const event: CustomEvent = {
+        id: eventId,
+        name: eventData.general.name,
+        description: eventData.general.description,
+        startDate: Timestamp.fromDate(new Date(eventData.dates.startDate)),
+        endDate: Timestamp.fromDate(new Date(eventData.dates.endDate)),
+        academyId: user.academyId,
+        academyName: academyName,
+        organizerId: user.uid,
+        smallImage: smallImageUrl,
+        bannerImage: bannerImageUrl,
+        location: {
+          coordinates: {
+            latitude: eventData.location.latitude,
+            longitude: eventData.location.longitude,
+          },
+          department: departmentName,
+          province: provinceName,
+          district: districtName,
+          placeName: eventData.location.placeName,
+          street: eventData.location.street,
+        },
+        eventType: eventData.details.eventType,
+        capacity: eventData.details.capacity,
+        status: "pendiente",
+        settings: {
+          levels: processedLevels,
+          categories: eventData.dance.categories,
+          registrationType: [], // Ensure registrationType is included
+        },
+        createdBy: `${user?.firstName} ${user?.lastName}`,
+        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+
+      await setDoc(doc(db, "eventos", eventId), event, { merge: true });
+
+      return {
+        success: true,
+        message: "Evento actualizado exitosamente"
+      };
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error desconocido al actualizar el evento";
+      setError(errorMessage);
+      return {
+        success: false,
+        message: errorMessage
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createEvent, updateEvent, loading, error };
 };

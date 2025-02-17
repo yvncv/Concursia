@@ -1,15 +1,13 @@
 "use client";
-// `app/organizer/events/page.tsx`
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
-import { Eye, FilePenLine, Trash2, Plus} from "lucide-react";
+import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
 import useUser from "@/app/firebase/functions";
-import CreateEventModal from "@/app/organizer/events/modals/CreateEventModal";
+import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent } from "@/app/types/eventType";
 
-// Primero las interfaces
 interface GeneralData {
   name: string;
   description: string;
@@ -64,7 +62,7 @@ interface EventFormData {
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const { createEvent, loading: creatingEvent, error: createError } = useEventCreation();
+  const { createEvent, updateEvent, loading: creatingEvent, error: createError } = useEventCreation();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -111,9 +109,7 @@ const Events: React.FC = () => {
     }));
   };
 
-  // Loading states
-  const loadingMessage =
-      loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : null;
+  const loadingMessage = loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : null;
 
   if (loadingMessage) {
     return (
@@ -130,32 +126,78 @@ const Events: React.FC = () => {
     );
   }
 
-  // Filtrar eventos por academyId
   const filteredEvents = events.filter(
       (event) => event.academyId === user?.academyId
   );
 
-  const handleCreateEvent = async () => {
+  const handleSaveEvent = async () => {
     if (!user) {
       alert("Usuario no autenticado");
       return;
     }
 
-    const { success, message } = await createEvent(eventData, user);
+    const { success, message } = selectedEvent
+        ? await updateEvent(eventData, user, selectedEvent.id)
+        : await createEvent(eventData, user);
 
     if (success) {
-      alert("Evento creado exitosamente");
-      setIsCreateModalOpen(false);  // Cierra el modal
+      alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
+      setIsCreateModalOpen(false);
+      setSelectedEvent(null);
     } else {
       alert(`Error: ${message}`);
     }
   };
 
+  const handleEditEvent = (event: CustomEvent) => {
+    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
+      acc[key] = { ...value, selected: true, price: value.price.toString() }; // Convert price to string
+      return acc;
+    }, {} as { [key: string]: { selected: boolean; price: string; couple: boolean } });
+
+    setSelectedEvent(event);
+    setEventData({
+      general: {
+        name: event.name,
+        description: event.description,
+      },
+      dates: {
+        startDate: event.startDate.toDate().toISOString().split('T')[0],
+        endDate: event.endDate.toDate().toISOString().split('T')[0],
+      },
+      details: {
+        capacity: event.capacity,
+        eventType: event.eventType,
+      },
+      location: {
+        latitude: event.location.coordinates.latitude.toString(),
+        longitude: event.location.coordinates.longitude.toString(),
+        department: event.location.department,
+        district: event.location.district,
+        placeName: event.location.placeName,
+        province: event.location.province,
+        street: event.location.street,
+      },
+      dance: {
+        levels: levelsWithSelected,
+        categories: event.settings.categories,
+      },
+      images: {
+        smallImage: event.smallImage,
+        bannerImage: event.bannerImage,
+        smallImagePreview: event.smallImage,
+        bannerImagePreview: event.bannerImage,
+      }
+    });
+    setIsCreateModalOpen(true);
+  };
+
+
+
   const handleDeleteEvent = (event: CustomEvent) => {
     setSelectedEvent(event);
     setIsDeleteModalOpen(true);
   };
-
 
   return (
       <div className="p-6">
@@ -222,16 +264,16 @@ const Events: React.FC = () => {
                         <button
                             className="text-yellow-500 hover:text-yellow-700 mr-2"
                             title="Editar"
-                            onClick={() => console.log("Editar", event.id)}
+                            onClick={() => handleEditEvent(event)}
                         >
-                          <FilePenLine />
+                          <FilePenLine/>
                         </button>
                         <button
                             className="text-red-500 hover:text-red-700"
                             title="Eliminar"
                             onClick={() => handleDeleteEvent(event)}
                         >
-                          <Trash2/>
+                          <Trash2 />
                         </button>
                       </td>
                     </tr>
@@ -241,18 +283,20 @@ const Events: React.FC = () => {
             </div>
         )}
 
-        {/* Modal de Crear Evento */}
-        <CreateEventModal
+        <EventModal
             isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            onSave={handleCreateEvent}
+            onClose={() => {
+              setIsCreateModalOpen(false);
+              setSelectedEvent(null);
+            }}
+            onSave={handleSaveEvent}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             eventData={eventData}
             updateEventData={updateEventData}
+            isEdit={!!selectedEvent}
         />
 
-        {/* Modal de Eliminar Evento */}
         {selectedEvent && (
             <DeleteEventModal
                 isOpen={isDeleteModalOpen}
