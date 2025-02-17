@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { doc, deleteDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/app/firebase/config";
+import { db,storage } from "@/app/firebase/config";
 import { CustomEvent } from "@/app/types/eventType";
+import { deleteObject, ref } from "firebase/storage";
 
 interface DeleteEventModalProps {
   isOpen: boolean;
@@ -17,11 +18,19 @@ const DeleteEventModal: React.FC<DeleteEventModalProps> = ({ isOpen, onClose, ev
   const handleDelete = async () => {
     if (input === event.name) {
       try {
+        // Delete associated tickets
         const ticketsQuery = query(collection(db, "tickets"), where("eventId", "==", event.id));
         const ticketsSnapshot = await getDocs(ticketsQuery);
         const deletePromises = ticketsSnapshot.docs.map((ticketDoc) => deleteDoc(ticketDoc.ref));
         await Promise.all(deletePromises);
 
+        // Delete associated images
+        const bannerImageRef = ref(storage, event.bannerImage);
+        const smallImageRef = ref(storage, event.smallImage);
+        await deleteObject(bannerImageRef);
+        await deleteObject(smallImageRef);
+
+        // Delete event document
         await deleteDoc(doc(db, "eventos", event.id));
         onClose();
       } catch (error) {
