@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
 import { collection, query, onSnapshot } from "firebase/firestore";
-import { Event } from "../types/eventType";
+import { CustomEvent } from "../types/eventType";
 
 export default function useEvents() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<CustomEvent[]>([]);
   const [loadingEvents, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ export default function useEvents() {
         const eventsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Event[];
+        })) as CustomEvent[];
 
         setEvents(eventsData);
         setLoading(false);  // Datos cargados

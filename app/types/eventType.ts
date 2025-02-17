@@ -1,6 +1,5 @@
+// `app/types/eventType.ts`
 import { Timestamp } from "firebase/firestore";
-
-// types/eventTypes.ts
 
 // Interfaces para la información general
 export interface GeneralData {
@@ -65,7 +64,7 @@ export interface EventFormData {
 }
 
 // Interfaz para el evento en Firestore
-export interface Event {
+export interface CustomEvent {
   id: string;
   name: string;
   description: string;
