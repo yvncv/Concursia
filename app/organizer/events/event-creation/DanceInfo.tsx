@@ -1,22 +1,13 @@
 import React from 'react';
-
-interface DanceData {
-  levels: {
-    [key: string]: {
-      selected: boolean;
-      price: string;
-      couple: boolean;
-    };
-  };
-  categories: string[];
-}
+import { DanceData } from '@/app/types/eventType';
 
 interface DanceInfoProps {
   data: DanceData;
   updateData: (data: DanceData) => void;
+  isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
-export default function DanceInfo({ data, updateData }: DanceInfoProps) {
+export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoProps) {
   const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
   const levels: Array<{ name: string; couple: boolean }> = [
     { name: "Seriado", couple: false },
@@ -113,7 +104,9 @@ export default function DanceInfo({ data, updateData }: DanceInfoProps) {
                   id={`category-${category}`}
                   checked={data.categories.includes(category)}
                   onChange={() => handleCategoryChange(category)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
+                  className={`h-4 w-4 text-blue-600 border-gray-300 rounded 
+                    ${isOnlyRead ? 'cursor-not-allowed opacity-50' : 'focus:ring-blue-500'}`}
                 />
                 <label htmlFor={`category-${category}`} className="ml-2 text-sm text-gray-900">
                   {category}
@@ -134,14 +127,16 @@ export default function DanceInfo({ data, updateData }: DanceInfoProps) {
                     id={`level-${name}`}
                     checked={data.levels[name]?.selected || false}
                     onChange={() => handleLevelChange(name)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
+                    className={`h-4 w-4 text-blue-600 border-gray-300 rounded 
+                      ${isOnlyRead ? 'cursor-not-allowed opacity-50' : 'focus:ring-blue-500'}`}
                   />
                   <label htmlFor={`level-${name}`} className="ml-2 text-sm text-gray-900">
                     {name}
                     {couple && <span className="ml-2 text-xs text-gray-500">(Pareja)</span>}
                   </label>
                 </div>
-                
+
                 {data.levels[name]?.selected && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">S/.</span>
@@ -149,8 +144,10 @@ export default function DanceInfo({ data, updateData }: DanceInfoProps) {
                       type="number"
                       value={data.levels[name]?.price}
                       onChange={(e) => handlePriceChange(name, e.target.value)}
+                      disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
                       placeholder="Precio"
-                      className="px-2 py-1 w-24 rounded border border-gray-300 text-sm"
+                      className={`px-2 py-1 w-24 rounded border text-sm
+                        ${isOnlyRead ? 'bg-gray-200 cursor-not-allowed opacity-50' : 'border-gray-300'}`}
                     />
                   </div>
                 )}

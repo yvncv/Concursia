@@ -18,6 +18,7 @@ interface EventModalProps {
     eventData: EventFormData;
     updateEventData: <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => void;
     isEdit?: boolean;
+    isOnlyRead?: boolean;
 }
 
 const initialEventData: EventFormData = {
@@ -61,6 +62,7 @@ const EventModal: React.FC<EventModalProps> = ({
     eventData,
     updateEventData,
     isEdit = false,
+    isOnlyRead = false,
 }) => {
     if (!isOpen) return null;
 
@@ -130,7 +132,7 @@ const EventModal: React.FC<EventModalProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[70vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold">{isEdit ? "Editar evento" : "Crear nuevo evento"}</h2>
+                    <h2 className="text-2xl font-bold">{isEdit ? "Editar evento" : isOnlyRead ? "Evento" : "Crear nuevo evento"}</h2>
                     <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
                         <CircleX size={40} className="text-red-500 hover:text-red-600 transition-colors" />
                     </button>
@@ -150,21 +152,23 @@ const EventModal: React.FC<EventModalProps> = ({
                 </div>
 
                 <div className="mb-4">
-                    {activeTab === "general" && <GeneralInfo data={eventData.general} updateData={(data) => updateEventData('general', data)} />}
-                    {activeTab === "dates" && <EventDates data={eventData.dates} updateData={(data) => updateEventData('dates', data)} />}
-                    {activeTab === "details" && <EventDetails data={eventData.details} updateData={(data) => updateEventData('details', data)} />}
-                    {activeTab === "location" && <EventLocation data={eventData.location} updateData={(data) => updateEventData('location', data)} />}
-                    {activeTab === "dance" && <DanceInfo data={eventData.dance} updateData={(data) => updateEventData('dance', data)} />}
-                    {activeTab === "images" && <EventImages data={eventData.images} updateData={(data) => updateEventData('images', data)} />}
+                    {activeTab === "general" && <GeneralInfo data={eventData.general} updateData={(data) => updateEventData('general', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "dates" && <EventDates data={eventData.dates} updateData={(data) => updateEventData('dates', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "details" && <EventDetails data={eventData.details} updateData={(data) => updateEventData('details', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "location" && <EventLocation data={eventData.location} updateData={(data) => updateEventData('location', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "dance" && <DanceInfo data={eventData.dance} updateData={(data) => updateEventData('dance', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "images" && <EventImages data={eventData.images} updateData={(data) => updateEventData('images', data)} isOnlyRead={isOnlyRead} />}
                 </div>
                 <div className="flex justify-end">
-                    <button
-                        onClick={handleSave}
-                        className="px-4 py-2 flex items-center justify-between gap-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                        <Save size={20} />
-                        {isEdit ? "Guardar cambios" : "Guardar Evento"}
-                    </button>
+                    {isOnlyRead ? null : (
+                        <button
+                            onClick={handleSave}
+                            className="px-4 py-2 flex items-center justify-between gap-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                            <Save size={20} />
+                            {isEdit ? "Guardar cambios" : "Guardar Evento"}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
