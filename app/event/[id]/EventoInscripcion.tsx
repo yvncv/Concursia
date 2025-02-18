@@ -11,7 +11,6 @@ import {Timestamp} from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
 import {Ticket} from "@/app/types/ticketType";
 import {Map as MapIcon} from "lucide-react";
-import {resolveHref} from "next/dist/client/resolve-href";
 import Link from "next/link";
 
 // Componente para los pasos del wizard
@@ -51,11 +50,11 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
 };
 
 // Componente para el selector de academias con búsqueda
-const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string) => void }) => {
-  const { academias, loadingAcademias, errorAcademias } = useAcademies(); // Asegúrate de que saveAcademy esté disponible
-  const [selectedAcademy, setSelectedAcademy] = useState<string>(''); // Para almacenar el nombre de la academia seleccionada
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Para el texto de búsqueda
-  const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false); // Para saber si el usuario está creando una nueva academia
+const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string, academyName:string) => void }) => {
+  const { academies, loadingAcademies, errorAcademies } = useAcademies(); // Corrected property names
+  const [selectedAcademy, setSelectedAcademy] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value); // Actualiza el texto de búsqueda
@@ -65,10 +64,10 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
     setSelectedAcademy(academyName); // Actualiza el nombre de la academia seleccionada
     setSearchQuery(''); // Limpiamos el campo de búsqueda
     setIsNewAcademy(false); // Resetear la bandera de nueva academia
-    onAcademySelect(academyId); // Notificamos al componente padre con el ID de la academia seleccionada
+    onAcademySelect(academyId,academyName); // Notificamos al componente padre con el ID de la academia seleccionada
   };
 
-  const handleSaveNewAcademy = () => {
+  const handleSaveNewAcademy = (academyName: string) => {
     // Formatear el nombre de la academia (capitalizar palabras y eliminar espacios extra)
     const formattedAcademyName = searchQuery
       .replace(/\s+/g, ' ') // Eliminar espacios extra
@@ -76,10 +75,11 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
     setSelectedAcademy(formattedAcademyName); // Muestra el nombre formateado en el campo
     setSearchQuery(''); // Limpiar el campo de búsqueda
     setIsNewAcademy(false); // Resetear la bandera de nueva academia
+    onAcademySelect('',academyName);
   };
 
   // Filtrar academias según el texto ingresado
-  const filteredAcademies = academias.filter(academy =>
+  const filteredAcademies = academies.filter(academy =>
     academy.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -88,10 +88,10 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
       <label htmlFor="academyId" className="block text-sm font-medium text-white">
         Academia
       </label>
-      {loadingAcademias ? (
+      {loadingAcademies ? (
         <div className="mt-1 px-4 py-4 text-gray-500">Cargando academias...</div>
-      ) : errorAcademias ? (
-        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademias}</div>
+      ) : errorAcademies ? (
+        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademies}</div>
       ) : (
         <div>
           <input
@@ -130,7 +130,7 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
           {isNewAcademy && (
             <div className="mt-2">
               <button
-                onClick={handleSaveNewAcademy}
+                onClick={()=>handleSaveNewAcademy(searchQuery)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-2xl"
               >
                 Usar esta academia
@@ -144,30 +144,51 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
 };
 
 // Componente para la selección de categoría
-const CategorySelection = ({ event, onCategorySelect }: { event: Event, onCategorySelect: (category: string) => void }) => {
-  if (!event?.settings?.categories) {
-    return <p className="text-center text-gray-500">No hay categorías disponibles.</p>;
-  }
+const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: Event, onCategorySelect: (category: string) => void, user: User, tickets: Ticket[] }) => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  const checkExistingTicket = (level: string) => {
+    const existingTicket = tickets.find(ticket =>
+        ticket.usersId[0] === user.id &&
+        ticket.eventId === event.id &&
+        ticket.level === level
+    );
+
+    if (existingTicket) {
+      setAlertMessage(`Ya tienes un ticket para ${level} en este evento.`);
+      return false;
+    }
+    return true;
+  };
 
   return (
-    <div className="flex flex-wrap gap-4 p-4 justify-center">
-      {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
-        Object.entries(event.settings.levels).map(([level]) => (
-          <button
-            key={level}
-            onClick={() => onCategorySelect(level)}
-            className="w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-700 to-red-500 text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all"
-          >
-            {level.charAt(0).toUpperCase() + level.slice(1)}
-            {/* {level.charAt(0).toUpperCase() + level.slice(1)} {details.couple == true && (<span className='text-orange-200'>(Con Pareja)</span>)} */}
-          </button>
-        ))
-      ) : (
-        <p className="text-center text-gray-500">No hay niveles disponibles.</p>
-      )}
-    </div>
+      <div className="justify-center">
+        {alertMessage && (
+            <div className="bg-red-600 text-white p-4 rounded-lg mb-4 text-center">
+              <p>{alertMessage}</p>
+            </div>
+        )}
+        <div className="flex flex-wrap gap-4 p-4 justify-center">
+          {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+              Object.entries(event.settings.levels).map(([level]) => (
+                  <button
+                      key={level}
+                      onClick={() => {
+                        if (checkExistingTicket(level)) {
+                          onCategorySelect(level);
+                        }
+                      }}
+                      className="w-full md:w-1/4 h-fit text-center bg-gradient-to-r from-red-700 to-red-500 text-white py-4 px-6 rounded-lg hover:shadow-lg transition-all"
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </button>
+              ))
+          ) : (
+              <p className="text-center text-gray-500">No hay niveles disponibles.</p>
+          )}
+        </div>
+      </div>
   );
-
 };
 
 const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal: () => void; user: User }) => {
@@ -175,21 +196,30 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
   const [selectedPhone, setSelectedPhone] = useState(user.phoneNumber?.[0] || "");
-  const [selectedAcademy, setSelectedAcademy] = useState<string>("");
+  const [selectedAcademy, setSelectedAcademy] = useState<string>('');
+  const [selectedAcademyName, setSelectedAcademyName] = useState<string>('');
+  const [coupleSelectedAcademy, setCoupleSelectedAcademy] = useState<string>(''); // Define el estado para la academia de la pareja
+  const [coupleSelectedAcademyName, setCoupleSelectedAcademyName] = useState<string>('');
   const [dniPareja, setDniPareja] = useState('');
   const [pareja, setPareja] = useState<User | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
-  const { users, loadingUsers, error } = useUsers();
+  const { users } = useUsers();
   const { saveTicket } = useTicket('');
   const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
+  const { tickets } = useTicket(event.id); // Obtener los tickets
   const iconClass = "w-6 h-6";
-
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
     const parejaEncontrada = users.find((usuario) => usuario.dni === dniPareja);
+    const sameGender = users.find((usuario) => usuario.gender === pareja?.gender);
     if (parejaEncontrada) {
-      setPareja(parejaEncontrada);  // Establece los datos de la pareja si se encuentra
+      if(sameGender){
+        setPareja(null);  // Si son del mismo sexo, limpia el estado de la pareja
+        alert("El usuario con ese DNI es del mismo sexo que usted.");
+      }else{
+        setPareja(parejaEncontrada);  // Establece los datos de la pareja si se encuentra
+      }
     } else {
       setPareja(null);  // Si no se encuentra, limpia el estado de la pareja
       alert("No se encontró ningún usuario con ese DNI.");
@@ -201,8 +231,14 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
     setCurrentStep(1); // Avanza al siguiente paso
   };
 
-  const handleAcademySelect = (academyId: string) => {
+  const handleAcademySelect = (academyId: string, academyName:string) => {
     setSelectedAcademy(academyId); // Guardamos la academia seleccionada
+    setSelectedAcademyName(academyName); // Guardamos el nombre de la academia seleccionada
+  };
+
+  const handleCoupleAcademySelect = (academyId: string, academyName:string) => {
+    setCoupleSelectedAcademy(academyId); // Guardamos la academia seleccionada para la pareja
+    setCoupleSelectedAcademyName(academyName)
   };
 
   const handleNext = () => {
@@ -219,6 +255,8 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
     const ticketData: Omit<Ticket, 'id'> = {
       status: 'Pendiente',
       usersId: pareja ? [user.id, pareja.id] : [user.id],
+      academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
+      academiesName: pareja ? [selectedAcademyName, coupleSelectedAcademyName] : [selectedAcademyName],
       eventId: event.id,
       category: user.category,
       level: selectedCategory,
@@ -253,6 +291,8 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
               <CategorySelection
                   event={event}
                   onCategorySelect={handleCategorySelect}
+                  user={user}
+                  tickets={tickets}
               />
           )}
           {currentStep === 1 && (
@@ -413,7 +453,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
                             ))}
                           </select>
                         </div>
-                        <AcademySelector onAcademySelect={handleAcademySelect} />
+                        <AcademySelector onAcademySelect={handleCoupleAcademySelect} />
                       </form>
                     </>
                 )}

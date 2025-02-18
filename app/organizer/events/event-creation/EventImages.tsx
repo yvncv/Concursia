@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CircleX, Check } from 'lucide-react';
+import Image from 'next/image';
 
 interface EventImagesProps {
   data: {
@@ -9,9 +10,10 @@ interface EventImagesProps {
     bannerImagePreview?: string;
   };
   updateData: (data: any) => void;
+  isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
-export default function EventImages({ data, updateData }: EventImagesProps) {
+export default function EventImages({ data, updateData, isOnlyRead }: EventImagesProps) {
   const [previewModal, setPreviewModal] = useState<{
     show: boolean;
     image: string | null;
@@ -23,10 +25,10 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
   });
 
   const handleImageChange = (field: 'smallImage' | 'bannerImage', file: File | null) => {
-    if (!file) return;
-  
+    if (!file || isOnlyRead) return; // 🔹 No permitir cambios en solo lectura
+
     const previewUrl = URL.createObjectURL(file);
-  
+
     // Aquí almacenamos el archivo File y la URL Blob para la vista previa
     updateData({
       ...data,
@@ -36,8 +38,8 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
   };
 
   const handleAcceptImage = () => {
-    if (!previewModal.type || !previewModal.image) return;
-  
+    if (!previewModal.type || !previewModal.image || isOnlyRead) return; // 🔹 No permitir aceptar imagen en solo lectura
+
     updateData({
       ...data,
       [`${previewModal.type}Preview`]: previewModal.image // Solo actualiza la vista previa
@@ -55,7 +57,10 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
           {data.smallImagePreview ? (
             <div className="space-y-2">
               <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
-                <img
+                <Image
+                  width={1024}
+                  height={576}
+                  objectFit="cover"
                   src={data.smallImagePreview}
                   alt="Vista previa"
                   className="w-full h-full object-contain"
@@ -66,13 +71,15 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
                   <Check size={20} />
                   <span className="text-sm">Imagen seleccionada</span>
                 </div>
-                <button
-                  onClick={() => updateData({ ...data, smallImage: '', smallImagePreview: '' })}
-                  className="flex items-center gap-2 text-red-500 hover:text-red-600"
-                >
-                  <CircleX size={20} />
-                  <span className="text-sm">Eliminar imagen</span>
-                </button>
+                {!isOnlyRead && (
+                  <button
+                    onClick={() => updateData({ ...data, smallImage: '', smallImagePreview: '' })}
+                    className="flex items-center gap-2 text-red-500 hover:text-red-600"
+                  >
+                    <CircleX size={20} />
+                    <span className="text-sm">Eliminar imagen</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -82,6 +89,7 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
                 id="smallImage"
                 accept="image/*"
                 onChange={(e) => handleImageChange('smallImage', e.target.files?.[0] || null)}
+                disabled={isOnlyRead} // 🔹 Deshabilitar en modo solo lectura
                 className="mt-1 block w-full text-sm text-[var(--gris-oscuro)]
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
@@ -105,9 +113,12 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
           {data.bannerImagePreview ? (
             <div className="space-y-2">
               <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
-                <img
+                <Image
+                  width={1024}
+                  height={576}
+                  objectFit="cover"
                   src={data.bannerImagePreview}
-                  alt="Vista previa de portada"
+                  alt="Vista previa"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -116,13 +127,15 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
                   <Check size={20} />
                   <span className="text-sm">Imagen seleccionada</span>
                 </div>
-                <button
-                  onClick={() => updateData({ ...data, bannerImage: '', bannerImagePreview: '' })}
-                  className="flex items-center gap-2 text-red-500 hover:text-red-600"
-                >
-                  <CircleX size={20} />
-                  <span className="text-sm">Eliminar imagen</span>
-                </button>
+                {!isOnlyRead && (
+                  <button
+                    onClick={() => updateData({ ...data, bannerImage: '', bannerImagePreview: '' })}
+                    className="flex items-center gap-2 text-red-500 hover:text-red-600"
+                  >
+                    <CircleX size={20} />
+                    <span className="text-sm">Eliminar imagen</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -132,6 +145,7 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
                 id="bannerImage"
                 accept="image/*"
                 onChange={(e) => handleImageChange('bannerImage', e.target.files?.[0] || null)}
+                disabled={isOnlyRead} // 🔹 Deshabilitar en modo solo lectura
                 className="mt-1 block w-full text-sm text-[var(--gris-oscuro)]
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
@@ -161,7 +175,10 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
               </button>
             </div>
             <div className="relative w-full h-96 mb-4">
-              <img
+              <Image
+                width={1024}
+                height={576}
+                objectFit="cover"
                 src={previewModal.image}
                 alt="Vista previa"
                 className="w-full h-full object-contain"
@@ -176,6 +193,7 @@ export default function EventImages({ data, updateData }: EventImagesProps) {
               </button>
               <button
                 onClick={handleAcceptImage}
+                disabled={isOnlyRead} // 🔹 Deshabilitar en modo solo lectura
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >
                 Aceptar

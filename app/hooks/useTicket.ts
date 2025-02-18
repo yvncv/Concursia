@@ -3,38 +3,36 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
-import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { Ticket } from '../types/ticketType';
 
-const useTicket = (ticketId: string) => {
-    const [ticket, setTicket] = useState<Ticket | null>(null);
-    const [loadingTicket, setLoading] = useState(true);
+const useTicket = (eventId: string) => {
+    const [tickets, setTickets] = useState<Ticket[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!ticketId) {
+        if (!eventId) {
             setLoading(false);
             return;
         }
 
-        const fetchTicket = async () => {
+        const fetchTickets = async () => {
             try {
-                const ticketDoc = await getDoc(doc(db, "tickets", ticketId));
-                if (ticketDoc.exists()) {
-                    setTicket(ticketDoc.data() as Ticket);
-                } else {
-                    setTicket(null);
-                }
+                const q = query(collection(db, "tickets"), where("eventId", "==", eventId));
+                const querySnapshot = await getDocs(q);
+                const ticketsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
+                setTickets(ticketsData);
             } catch (err) {
-                console.error("Error fetching ticket:", err);
-                setError("Failed to fetch ticket");
+                console.error("Error fetching tickets:", err);
+                setError("Failed to fetch tickets");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchTicket();
-    }, [ticketId]);
+        fetchTickets();
+    }, [eventId]);
 
     const saveTicket = async (ticketData: Omit<Ticket, 'id'>) => {
         try {
@@ -46,7 +44,7 @@ const useTicket = (ticketId: string) => {
         }
     };
 
-    return { ticket, loadingTicket, error, saveTicket };
+    return { tickets, loading, error, saveTicket };
 };
 
 export default useTicket;

@@ -1,25 +1,23 @@
 "use client";
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
-import { Eye, FilePenLine, Trash2, Plus, CircleX, Save } from "lucide-react";
+import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
 import useUser from "@/app/firebase/functions";
-import GeneralInfo from "./event-creation/GeneralInfo"
-import EventDates from "./event-creation/EventDates"
-import EventDetails from "./event-creation/EventDetails"
-import EventLocation from "./event-creation/EventLocation"
-import DanceInfo from "./event-creation/DanceInfo"
-import EventModal from "./modals/ReadEventModal";
-import EditEventModal from "./modals/EditEventModal";
-import DeleteEventModal from "./modals/DeleteEventModal";
-import { Event } from "@/app/types/eventType";
-import useAcademy from "@/app/hooks/useAcademy";
+import EventModal from "@/app/organizer/events/modals/EventModal";
+import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
+import { useEventCreation } from "@/app/hooks/useEventCreation";
+import { CustomEvent } from "@/app/types/eventType";
+import { Timestamp } from "firebase/firestore";
+import { EventFormData } from "@/app/types/eventType";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const { createEvent, loading: creatingEvent, error: createError } = useEventCreation();
+  const { createEvent, updateEvent, loading: creatingEvent, error: createError } = useEventCreation();
   const { user, loadingUser } = useUser();
-  const { academy, loadingAcademy } = useAcademy(user?.academyId);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CustomEvent | null>(null);
   const [activeTab, setActiveTab] = useState("general");
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
@@ -27,8 +25,8 @@ const Events: React.FC = () => {
       description: ''
     },
     dates: {
-      startDate: '',
-      endDate: ''
+      startDate: Timestamp.now(), // Inicializa con Timestamp
+      endDate: Timestamp.now() // Inicializa con Timestamp
     },
     details: {
       capacity: '',
@@ -55,23 +53,14 @@ const Events: React.FC = () => {
     }
   });
 
-  const updateEventData = (section: 'general' | 'dates' | 'details' | 'location' | 'dance' | 'images', data: any) => {
+  const updateEventData = <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => {
     setEventData(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        ...data
-      }
+      [section]: { ...prev[section], ...data }
     }));
   };
 
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedEventToEdit, setSelectedEventToEdit] = useState<Event | null>(null);
-  const [selectedEventToDelete, setSelectedEventToDelete] = useState<Event | null>(null);
-
-  // Loading states
-  const loadingMessage =
-    loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : loadingAcademy ? "Cargando eventos..." : null;
+  const loadingMessage = loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : null;
 
   if (loadingMessage) {
     return (
@@ -88,57 +77,117 @@ const Events: React.FC = () => {
     );
   }
 
-  // Filtrar eventos por academyId
-  const filteredEvents = events?.filter(
+  const filteredEvents = events.filter(
     (event) => event.academyId === user?.academyId
-  ) || [];
+  );
 
-  const handleCreateEvent = async () => {
+  const handleSaveEvent = async () => {
     if (!user) {
       alert("Usuario no autenticado");
       return;
     }
 
-    const { success, message } = await createEvent(eventData, user);
+    const eventToSave = {
+      ...eventData,
+      dates: {
+        startDate: eventData.dates.startDate, // Mantén como Timestamp
+        endDate: eventData.dates.endDate, // Mantén como Timestamp
+      },
+    };
+
+    const { success, message } = selectedEvent
+      ? await updateEvent(eventToSave, user, selectedEvent.id)
+      : await createEvent(eventToSave, user);
 
     if (success) {
-      alert("Evento creado exitosamente");
-      setIsCreateModalOpen(false);  // Cierra el modal
+      alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
+      setIsCreateModalOpen(false);
+      setSelectedEvent(null);
     } else {
       alert(`Error: ${message}`);
     }
   };
 
-  const tabs = [
-    { id: "general", label: "General" },
-    { id: "dates", label: "Días" },
-    { id: "details", label: "Detalles" },
-    { id: "location", label: "Ubicación" },
-    { id: "dance", label: "Categoría/Niveles" },
-    { id: "images", label: "Imágenes" },
-  ];
+  const handleEvent = (event: CustomEvent, cmd: string) => {
+    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
+      acc[key] = { ...value, selected: true, price: value.price.toString() };
+      return acc;
+    }, {} as { [key: string]: { selected: boolean; price: string; couple: boolean } });
+
+    setSelectedEvent(event);
+    setEventData({
+      general: {
+        name: event.name,
+        description: event.description,
+      },
+      dates: {
+        startDate: event.startDate, // Mantén como Timestamp
+        endDate: event.endDate, // Mantén como Timestamp
+      },
+      details: {
+        capacity: event.capacity,
+        eventType: event.eventType,
+      },
+      location: {
+        latitude: event.location.coordinates.latitude.toString(),
+        longitude: event.location.coordinates.longitude.toString(),
+        department: event.location.department,
+        district: event.location.district,
+        placeName: event.location.placeName,
+        province: event.location.province,
+        street: event.location.street,
+      },
+      dance: {
+        levels: levelsWithSelected,
+        categories: event.settings.categories,
+      },
+      images: {
+        smallImage: event.smallImage,
+        bannerImage: event.bannerImage,
+        smallImagePreview: event.smallImage,
+        bannerImagePreview: event.bannerImage,
+      }
+    });
+    if (cmd == "edit") {
+      setIsCreateModalOpen(true)
+      setIsViewModalOpen(false)
+    } else if (cmd == "view") {
+      setIsCreateModalOpen(false)
+      setIsViewModalOpen(true)
+    } else {
+      setIsCreateModalOpen(false)
+      setIsViewModalOpen(false)
+    }
+  };
+
+  const handleDeleteEvent = (event: CustomEvent) => {
+    setSelectedEvent(event);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
-    <>
+    <div className="p-6">
       <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Gestión de Eventos de la Academia {academy?.name}</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
+          Gestión de Eventos
+        </h1>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors mb-6"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
           Crear Evento
         </button>
-        {error ? (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg text-center">
-              <p className="text-red-600 text-lg font-medium">Error: {error}</p>
-            </div>
+        {loadingEvents ? (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-600 dark:text-gray-300">Cargando eventos...</p>
           </div>
+        ) : error ? (
+          <p className="text-red-500 dark:text-red-400">Error: {error}</p>
         ) : filteredEvents.length === 0 ? (
           <p className="text-gray-500">No hay eventos disponibles para esta academia.</p>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden m-4">
             <table className="w-full border-collapse">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
@@ -187,21 +236,21 @@ const Events: React.FC = () => {
                         <button
                           className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                           title="Visualizar"
-                          onClick={() => setSelectedEvent(event)}
+                          onClick={() => handleEvent(event, "view")}  // Make sure this calls the handler correctly
                         >
                           <Eye className="w-5 h-5" />
                         </button>
                         <button
                           className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
                           title="Editar"
-                          onClick={() => setSelectedEventToEdit(event)}
+                          onClick={() => handleEvent(event, "edit")}
                         >
                           <FilePenLine className="w-5 h-5" />
                         </button>
                         <button
                           className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                           title="Eliminar"
-                          onClick={() => setSelectedEventToDelete(event)}
+                          onClick={() => handleDeleteEvent(event)}
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -216,90 +265,34 @@ const Events: React.FC = () => {
       </div>
 
 
+      <EventModal
+        isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setIsViewModalOpen(false);  // Asegúrate de cerrar ambos modales
+          setSelectedEvent(null);
+        }}
+        onSave={handleSaveEvent}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        eventData={eventData}
+        updateEventData={updateEventData}
+        isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
+        isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
+      />
+
+
       {selectedEvent && (
-        <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-      )}
-      {selectedEventToEdit && (
-        <EditEventModal event={selectedEventToEdit} onClose={() => setSelectedEventToEdit(null)} />
-      )}
-      {selectedEventToDelete && (
-        <DeleteEventModal event={selectedEventToDelete} onClose={() => setSelectedEventToDelete(null)} />
+        <DeleteEventModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          event={selectedEvent}
+        />
       )}
 
-      {/* Modal de Crear Evento */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[75vh] overflow-y-auto m-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Crear nuevo evento</h2>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <CircleX size={40} className="text-red-500 hover:text-red-600 transition-colors" />
-              </button>
-            </div>
-
-            <div className="mb-4 overflow-x-auto">
-              <div className="flex border-b w-max">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 ${activeTab === tab.id ? "border-b-2 border-green-600 text-green-600" : "text-gray-500"
-                      }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              {activeTab === "general" &&
-                <GeneralInfo
-                  data={eventData.general}
-                  updateData={(data) => updateEventData('general', data)}
-                />}
-              {activeTab === "dates" &&
-                <EventDates
-                  data={eventData.dates}
-                  updateData={(data) => updateEventData('dates', data)}
-                />}
-              {activeTab === "details" &&
-                <EventDetails
-                  data={eventData.details}
-                  updateData={(data) => updateEventData('details', data)}
-                />}
-              {activeTab === "location" &&
-                <EventLocation
-                  data={eventData.location}
-                  updateData={(data) => updateEventData('location', data)}
-                />}
-              {activeTab === "dance" &&
-                <DanceInfo
-                  data={eventData.dance}
-                  updateData={(data) => updateEventData('dance', data)}
-                />
-              }
-              {activeTab === "images" &&
-                <EventImages
-                  data={eventData.images}
-                  updateData={(data) => updateEventData('images', data)}
-                />
-              }
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={handleCreateEvent}
-                className="px-4 py-2 flex items-center justify-between gap-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                <Save size={20} />
-                Guardar Evento
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      {creatingEvent && <p className="text-gray-600">Creando evento...</p>}
+      {createError && <p className="text-red-600">Error: {createError}</p>}
+    </div>
   );
 };
 

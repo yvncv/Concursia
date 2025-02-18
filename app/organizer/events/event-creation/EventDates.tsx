@@ -1,12 +1,15 @@
+import { Timestamp } from "firebase/firestore";
+
 interface EventDatesProps {
   data: {
-    startDate: string;
-    endDate: string;
+    startDate: Timestamp;
+    endDate: Timestamp;
   };
   updateData: (data: any) => void;
+  isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
-export default function EventDates({ data, updateData }: EventDatesProps) {
+export default function EventDates({ data, updateData, isOnlyRead }: EventDatesProps) {
   return (
     <div className="space-y-4">
       <div>
@@ -16,24 +19,34 @@ export default function EventDates({ data, updateData }: EventDatesProps) {
         <input
           type="datetime-local"
           id="startDate"
-          value={data.startDate}
-          onChange={(e) => updateData({ ...data, startDate: e.target.value })}
-          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          value={data.startDate.toDate().toISOString().slice(0, 16)} // Convertir Timestamp a string
+          onChange={(e) =>
+            updateData({ ...data, startDate: Timestamp.fromDate(new Date(e.target.value)) })
+          } // Convertir string a Timestamp
+          disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
+          className={`w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] 
+            focus:ring-0 focus:border-transparent focus:outline-none transition-all resize-none 
+            ${isOnlyRead ? 'bg-gray-200 cursor-not-allowed opacity-50' : 'focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)]'}`}
         />
       </div>
+
       <div>
         <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-4">
-        Fecha y Hora de Finalización
+          Fecha y Hora de Finalización
         </label>
         <input
           type="datetime-local"
           id="endDate"
-          value={data.endDate}
-          onChange={(e) => updateData({ ...data, endDate: e.target.value })}
-          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          value={data.endDate.toDate().toISOString().slice(0, 16)} // Convertir Timestamp a string
+          onChange={(e) =>
+            updateData({ ...data, endDate: Timestamp.fromDate(new Date(e.target.value)) })
+          } // Convertir string a Timestamp
+          disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
+          className={`w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] 
+            focus:ring-0 focus:border-transparent focus:outline-none transition-all resize-none 
+            ${isOnlyRead ? 'bg-gray-200 cursor-not-allowed opacity-50' : 'focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)]'}`}
         />
       </div>
     </div>
-  )
+  );
 }
-

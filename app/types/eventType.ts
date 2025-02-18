@@ -1,6 +1,5 @@
+// `app/types/eventType.ts`
 import { Timestamp } from "firebase/firestore";
-
-// types/eventTypes.ts
 
 // Interfaces para la información general
 export interface GeneralData {
@@ -10,8 +9,8 @@ export interface GeneralData {
 
 // Interfaces para las fechas
 export interface DatesData {
-  startDate: string;
-  endDate: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
 }
 
 // Interfaces para los detalles
@@ -41,7 +40,11 @@ export interface LevelData {
 // Interfaces para la información de baile
 export interface DanceData {
   levels: {
-    [key: string]: LevelData;
+    [key: string]: {
+      selected: boolean;
+      price: string;
+      couple: boolean;
+    };
   };
   categories: string[];
 }
@@ -65,12 +68,12 @@ export interface EventFormData {
 }
 
 // Interfaz para el evento en Firestore
-export interface Event {
+export interface CustomEvent {
   id: string;
   name: string;
   description: string;
-  startDate: any; // Timestamp de Firestore
-  endDate: any; // Timestamp de Firestore
+  startDate: Timestamp; // Timestamp de Firestore
+  endDate: Timestamp; // Timestamp de Firestore
   academyId: string | undefined;
   academyName: string;
   organizerId: string;

@@ -12,6 +12,7 @@ interface EventLocationProps {
     street: string;
   };
   updateData: (data: any) => void;
+  isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
 declare global {
@@ -20,7 +21,7 @@ declare global {
   }
 }
 
-export default function EventLocation({ data, updateData }: EventLocationProps) {
+export default function EventLocation({ data, updateData, isOnlyRead }: EventLocationProps) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
@@ -69,9 +70,9 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
     if (data.province) {
       setFilteredDistricts(
         ubigeoData.filter(
-          (item) => 
-            item.departamento === data.department && 
-            item.provincia === data.province && 
+          (item) =>
+            item.departamento === data.department &&
+            item.provincia === data.province &&
             item.distrito !== "00"
         )
       );
@@ -111,10 +112,10 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
 
     // Establecer la posición inicial
     const initialPosition = data.latitude && data.longitude
-      ? { 
-          lat: parseFloat(data.latitude), 
-          lng: parseFloat(data.longitude) 
-        }
+      ? {
+        lat: parseFloat(data.latitude),
+        lng: parseFloat(data.longitude)
+      }
       : { lat: -12.046374, lng: -77.042793 }; // Default position
 
     const newMap = new window.google.maps.Map(mapRef.current, {
@@ -175,44 +176,31 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
 
   return (
     <div className="space-y-4">
-      <input
-        type="text"
-        ref={searchInputRef}
-        placeholder="Buscar ubicación"
-        className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-      />
-      <div 
-        ref={mapRef}
-        id="map" 
-        style={{ width: "100%", height: "300px" }}
-      ></div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Nombre del lugar</label>
+      {!isOnlyRead && (
         <input
           type="text"
-          value={data.placeName}
-          readOnly
+          ref={searchInputRef}
+          placeholder="Buscar ubicación"
           className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
         />
-      </div>
+      )}
+      <div
+        ref={mapRef}
+        id="map"
+        style={{ width: "100%", height: "300px" }}
+      ></div>
 
       <div className="flex gap-x-2 w-full">
-        <div className="flex-1">
-          <label className="text-sm font-medium text-gray-700">Dirección</label>
-          <input
-            type="text"
-            value={data.street}
-            readOnly
-            className="w-full px-4 py-[4.9px] border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-          />
-        </div>
         <div className="flex-1">
           <label className="text-sm font-medium text-gray-700">Departamento</label>
           <select
             value={data.department}
-            onChange={(e) => updateData({ ...data, department: e.target.value, province: "", district: "" })}
+            onChange={(e) => {
+              console.log("Departamento seleccionado:", e.target.value);
+              updateData({ ...data, department: e.target.value, province: "", district: "" });
+            }}
             className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+            disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
           >
             <option value="">Selecciona departamento</option>
             {ubigeoData
@@ -224,15 +212,13 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
               ))}
           </select>
         </div>
-      </div>
-
-      <div className="flex gap-x-2 w-full">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700">Provincia</label>
           <select
             value={data.province}
             onChange={(e) => updateData({ ...data, province: e.target.value, district: "" })}
             className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+            disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
           >
             <option value="">Selecciona provincia</option>
             {filteredProvinces.map((prov) => (
@@ -242,12 +228,16 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="flex gap-x-2 w-full">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700">Distrito</label>
           <select
             value={data.district}
             onChange={(e) => updateData({ ...data, district: e.target.value })}
             className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+            disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
           >
             <option value="">Selecciona distrito</option>
             {filteredDistricts.map((dist) => (
@@ -257,6 +247,25 @@ export default function EventLocation({ data, updateData }: EventLocationProps) 
             ))}
           </select>
         </div>
+        <div className="flex-1">
+          <label className="text-sm font-medium text-gray-700">Dirección</label>
+          <input
+            type="text"
+            value={data.street}
+            readOnly={isOnlyRead} // 🔹 Solo lectura si es solo lectura
+            className="w-full px-4 py-[4.9px] border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Nombre del lugar</label>
+        <input
+          type="text"
+          value={data.placeName}
+          readOnly={isOnlyRead} // 🔹 Solo lectura si es solo lectura
+          className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+        />
       </div>
     </div>
   );
