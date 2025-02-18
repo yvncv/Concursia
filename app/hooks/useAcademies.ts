@@ -3,10 +3,10 @@ import { db } from "@/app/firebase/config";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import { Academy } from "../types/academyType";
 
-export default function useAcademias() {
-  const [academias, setAcademias] = useState<Academy[]>([]);
-  const [loadingAcademias, setLoading] = useState<boolean>(true);
-  const [errorAcademias, setError] = useState<string | null>(null);
+export default function useAcademies() {
+  const [academies, setAcademies] = useState<Academy[]>([]);
+  const [loadingAcademies, setLoading] = useState<boolean>(true);
+  const [errorAcademies, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAcademias = () => {
@@ -19,7 +19,7 @@ export default function useAcademias() {
           ...doc.data(),
         })) as Academy[];
 
-        setAcademias(eventsData);
+        setAcademies(eventsData);
         setLoading(false);  // Datos cargados
       }, (err) => {
         console.error("Error fetching academias", err);
@@ -34,5 +34,5 @@ export default function useAcademias() {
     fetchAcademias();
   }, []); // Solo se ejecuta al montar el componente
 
-  return { academias, loadingAcademias, errorAcademias };
+  return { academies, loadingAcademies, errorAcademies };
 }

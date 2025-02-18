@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useUser from "../firebase/functions";
 import useEvents from "../hooks/useEvents";
-import useAcademia from "../hooks/useAcademia";
+import useAcademy from "../hooks/useAcademy";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
 import Pagination from "../ui/pagination/Pagination";
@@ -14,7 +14,7 @@ import Link from "next/link";
 export default function MisEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvents } = useEvents();
-  const { academia, loadingAcademia, errorAcademia } = useAcademia();
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(user?.academyId);
 
   const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
   const [eventToDelete, setEventToDelete] = useState<string | null>(null); // Evento que se va a eliminar
@@ -26,7 +26,7 @@ export default function MisEventos() {
 
   // Loading states
   const loadingMessage =
-    loadingUser || loadingAcademia
+    loadingUser || loadingAcademy
       ? "Cargando datos..."
       : loadingEvents
         ? "Cargando eventos..."
@@ -47,11 +47,11 @@ export default function MisEventos() {
     );
   }
 
-  if (errorAcademia) {
+  if (errorAcademy) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg text-center">
-          <p className="text-red-600 text-lg font-medium">{errorAcademia}</p>
+          <p className="text-red-600 text-lg font-medium">{errorAcademy}</p>
         </div>
       </div>
     );
@@ -93,7 +93,7 @@ export default function MisEventos() {
         {/* Welcome Message */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">
           <h1 className="text-2xl text-red-600">
-            Saludos, {user?.firstName}. Estos son los eventos de {academia?.name || "Cargando academia"}.
+            Saludos, {user?.firstName}. Estos son los eventos de {academy?.name || "Cargando academia"}.
           </h1>
         </div>
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 md:p-8 shadow-lg text-center">

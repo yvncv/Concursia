@@ -165,7 +165,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                             {foundUser.firstName[0]}
                         </div>
                         <div className="ml-6">
-                            <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{foundUser.fullName}</h1>
+                            <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{`${user?.firstName} ${user?.lastName}`}</h1>
                             <strong className="text-lg text-rojo">{capitalizeFirstLetter(foundUser.roleId)}</strong> {foundUser.academyId && (<span> from <strong className="text-lg text-rojo">{foundUser.academyName}</strong></span>)}
                         </div>
                     </div>

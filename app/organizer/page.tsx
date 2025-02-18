@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import useUsers from "@/app/hooks/useUsers";
-import useAcademias from "@/app/hooks/useAcademias";
+import useAcademies from "@/app/hooks/useAcademies";
 import useEvents from "@/app/hooks/useEvents";
 import { Bar, Pie, Line, Radar, Doughnut, PolarArea, Bubble } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, Filler, RadialLinearScale } from "chart.js";
@@ -22,7 +22,7 @@ ChartJS.register(
 
 const Dashboard: React.FC = () => {
   const { users, loadingUsers } = useUsers();
-  const { academias, loadingAcademias, errorAcademias } = useAcademias();
+  const { academias, loadingAcademias, errorAcademias } = useAcademies();
   const { events, loadingEvents } = useEvents();
 
   const eventosActivos = events.filter((evento) => evento.status === "en curso");

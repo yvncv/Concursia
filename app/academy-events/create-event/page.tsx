@@ -149,7 +149,7 @@ const CreateEvent = () => {
         startDate: Timestamp.fromDate(new Date(startDate)),
         endDate: Timestamp.fromDate(new Date(endDate)),
         academyId: user.academyId,
-        academyName,
+        academyName: user.academyName,
         organizerId: user.uid,
         smallImage,
         bannerImage,
@@ -178,8 +178,8 @@ const CreateEvent = () => {
           ),
           registrationType: [], // Esto permanece vacío o lo que corresponda según tu lógica
         },
-        createdBy: user?.fullName,
-        lastUpdatedBy: user?.fullName,
+        createdBy: `${user?.firstName} ${user?.lastName}`,
+        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
