@@ -1,10 +1,10 @@
 'use client';
 
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
 
-const EventoInformacion = ({ event, openModal, onInscribir }: { event: Event, openModal: () => void, onInscribir: () => void }) => {
+const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEvent, openModal: () => void, onInscribir: () => void }) => {
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);

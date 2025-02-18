@@ -95,18 +95,6 @@ export const useEventCreation = (): EventCreationHandler => {
         }
       });
 
-      const departmentName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === "00" && item.distrito === "00"
-      )?.nombre || eventData.location.department;
-
-      const provinceName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === "00"
-      )?.nombre || eventData.location.province;
-
-      const districtName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
-      )?.nombre || eventData.location.district;
-
       const event: CustomEvent = {
         id: eventId,
         name: eventData.general.name,
@@ -123,9 +111,9 @@ export const useEventCreation = (): EventCreationHandler => {
             latitude: eventData.location.latitude,
             longitude: eventData.location.longitude,
           },
-          department: departmentName,
-          province: provinceName,
-          district: districtName,
+          department: eventData.location.department,
+          province: eventData.location.province,
+          district: eventData.location.district,
           placeName: eventData.location.placeName,
           street: eventData.location.street,
         },
@@ -189,18 +177,6 @@ export const useEventCreation = (): EventCreationHandler => {
         }
       });
 
-      const departmentName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === "00" && item.distrito === "00"
-      )?.nombre || eventData.location.department;
-
-      const provinceName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === "00"
-      )?.nombre || eventData.location.province;
-
-      const districtName = ubigeoData.find(
-          (item) => item.departamento === eventData.location.department && item.provincia === eventData.location.province && item.distrito === eventData.location.district
-      )?.nombre || eventData.location.district;
-
       const event: CustomEvent = {
         id: eventId,
         name: eventData.general.name,
@@ -217,9 +193,9 @@ export const useEventCreation = (): EventCreationHandler => {
             latitude: eventData.location.latitude,
             longitude: eventData.location.longitude,
           },
-          department: departmentName,
-          province: provinceName,
-          district: districtName,
+          department: eventData.location.department,
+          province: eventData.location.province,
+          district: eventData.location.district,
           placeName: eventData.location.placeName,
           street: eventData.location.street,
         },
