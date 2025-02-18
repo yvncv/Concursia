@@ -108,57 +108,7 @@ const Events: React.FC = () => {
     }
   };
 
-  const handleViewEvent = (event: CustomEvent) => {
-    console.log("Viewing event:", event);
-
-    // Preparar los datos para el modal
-    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { ...value, selected: true, price: value.price.toString() };
-      return acc;
-    }, {} as { [key: string]: { selected: boolean; price: string; couple: boolean } });
-
-    // Establecer los datos del evento
-    setSelectedEvent(event);
-    setEventData({
-      general: {
-        name: event.name,
-        description: event.description,
-      },
-      dates: {
-        startDate: event.startDate,
-        endDate: event.endDate,
-      },
-      details: {
-        capacity: event.capacity,
-        eventType: event.eventType,
-      },
-      location: {
-        latitude: event.location.coordinates.latitude.toString(),
-        longitude: event.location.coordinates.longitude.toString(),
-        department: event.location.department,
-        district: event.location.district,
-        placeName: event.location.placeName,
-        province: event.location.province,
-        street: event.location.street,
-      },
-      dance: {
-        levels: levelsWithSelected,
-        categories: event.settings.categories,
-      },
-      images: {
-        smallImage: event.smallImage,
-        bannerImage: event.bannerImage,
-      },
-    });
-
-    // Abrir el modal en modo solo lectura
-    setIsViewModalOpen(true);  // Esto debería abrir el modal
-  };
-
-
-
-
-  const handleEditEvent = (event: CustomEvent) => {
+  const handleEvent = (event: CustomEvent, cmd: string) => {
     const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
       acc[key] = { ...value, selected: true, price: value.price.toString() };
       return acc;
@@ -198,7 +148,16 @@ const Events: React.FC = () => {
         bannerImagePreview: event.bannerImage,
       }
     });
-    setIsCreateModalOpen(true);
+    if (cmd == "edit") {
+      setIsCreateModalOpen(true)
+      setIsViewModalOpen(false)
+    } else if (cmd == "view") {
+      setIsCreateModalOpen(false)
+      setIsViewModalOpen(true)
+    } else {
+      setIsCreateModalOpen(false)
+      setIsViewModalOpen(false)
+    }
   };
 
   const handleDeleteEvent = (event: CustomEvent) => {
@@ -277,14 +236,14 @@ const Events: React.FC = () => {
                         <button
                           className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                           title="Visualizar"
-                          onClick={() => handleViewEvent(event)}  // Make sure this calls the handler correctly
+                          onClick={() => handleEvent(event, "view")}  // Make sure this calls the handler correctly
                         >
                           <Eye className="w-5 h-5" />
                         </button>
                         <button
                           className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
                           title="Editar"
-                          onClick={() => handleEditEvent(event)}
+                          onClick={() => handleEvent(event, "edit")}
                         >
                           <FilePenLine className="w-5 h-5" />
                         </button>
