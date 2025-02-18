@@ -6,8 +6,8 @@ import EventDetails from "../event-creation/EventDetails";
 import EventLocation from "../event-creation/EventLocation";
 import DanceInfo from "../event-creation/DanceInfo";
 import EventImages from "../event-creation/EventImages";
-import {EventFormData} from "@/app/types/eventType";
-import {Timestamp} from "firebase/firestore";
+import { EventFormData } from "@/app/types/eventType";
+import { Timestamp } from "firebase/firestore";
 
 interface EventModalProps {
     isOpen: boolean;
@@ -53,75 +53,75 @@ const initialEventData: EventFormData = {
 };
 
 const EventModal: React.FC<EventModalProps> = ({
-                                                   isOpen,
-                                                   onClose,
-                                                   onSave,
-                                                   activeTab,
-                                                   setActiveTab,
-                                                   eventData,
-                                                   updateEventData,
-                                                   isEdit = false,
-                                               }) => {
+    isOpen,
+    onClose,
+    onSave,
+    activeTab,
+    setActiveTab,
+    eventData,
+    updateEventData,
+    isEdit = false,
+}) => {
     if (!isOpen) return null;
 
-        const getIncompleteFields = () => {
-            const { general, dates, details, location, dance, images } = eventData;
-            const incompleteFields = [];
+    const getIncompleteFields = () => {
+        const { general, dates, details, location, dance, images } = eventData;
+        const incompleteFields = [];
 
-            if (!general.name) incompleteFields.push('Nombre');
-            if (!general.description) incompleteFields.push('Descripción');
-            if (!dates.startDate) incompleteFields.push('Fecha de inicio');
-            if (!dates.endDate) incompleteFields.push('Fecha de fin');
-            if (!details.capacity) incompleteFields.push('Capacidad');
-            if (!details.eventType) incompleteFields.push('Tipo de evento');
-            if (!location.latitude) incompleteFields.push('Latitud');
-            if (!location.longitude) incompleteFields.push('Longitud');
-            if (!location.department) incompleteFields.push('Departamento');
-            if (!location.district) incompleteFields.push('Distrito');
-            if (!location.placeName) incompleteFields.push('Nombre del lugar');
-            if (!location.province) incompleteFields.push('Provincia');
-            if (!location.street) incompleteFields.push('Calle');
-            if (Object.keys(dance.levels).length === 0) incompleteFields.push('Niveles de baile');
-            if (dance.categories.length === 0) incompleteFields.push('Categorías de baile');
-            if (!images.smallImage) incompleteFields.push('Imagen pequeña');
-            if (!images.bannerImage) incompleteFields.push('Imagen de portada');
+        if (!general.name) incompleteFields.push('Nombre');
+        if (!general.description) incompleteFields.push('Descripción');
+        if (!dates.startDate) incompleteFields.push('Fecha de inicio');
+        if (!dates.endDate) incompleteFields.push('Fecha de fin');
+        if (!details.capacity) incompleteFields.push('Capacidad');
+        if (!details.eventType) incompleteFields.push('Tipo de evento');
+        if (!location.latitude) incompleteFields.push('Latitud');
+        if (!location.longitude) incompleteFields.push('Longitud');
+        if (!location.department) incompleteFields.push('Departamento');
+        if (!location.district) incompleteFields.push('Distrito');
+        if (!location.placeName) incompleteFields.push('Nombre del lugar');
+        if (!location.province) incompleteFields.push('Provincia');
+        if (!location.street) incompleteFields.push('Calle');
+        if (Object.keys(dance.levels).length === 0) incompleteFields.push('Niveles de baile');
+        if (dance.categories.length === 0) incompleteFields.push('Categorías de baile');
+        if (!images.smallImage) incompleteFields.push('Imagen pequeña');
+        if (!images.bannerImage) incompleteFields.push('Imagen de portada');
 
-            return incompleteFields;
-        };
+        return incompleteFields;
+    };
 
-        const resetEventDataValues = () => {
-            updateEventData('general', initialEventData.general);
-            updateEventData('dates', initialEventData.dates);
-            updateEventData('details', initialEventData.details);
-            updateEventData('location', initialEventData.location);
-            updateEventData('dance', initialEventData.dance);
-            updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '' });
-        };
+    const resetEventDataValues = () => {
+        updateEventData('general', initialEventData.general);
+        updateEventData('dates', initialEventData.dates);
+        updateEventData('details', initialEventData.details);
+        updateEventData('location', initialEventData.location);
+        updateEventData('dance', initialEventData.dance);
+        updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '' });
+    };
 
-        const handleSave = () => {
-            const incompleteFields = getIncompleteFields();
-            if (incompleteFields.length > 0) {
-                alert(`Por favor, completa los siguientes campos: ${incompleteFields.join(', ')}`);
-                return;
-            }
-            onSave();
-            resetEventDataValues();
-        };
+    const handleSave = () => {
+        const incompleteFields = getIncompleteFields();
+        if (incompleteFields.length > 0) {
+            alert(`Por favor, completa los siguientes campos: ${incompleteFields.join(', ')}`);
+            return;
+        }
+        onSave();
+        resetEventDataValues();
+    };
 
-        const handleClose = () => {
-            resetEventDataValues();
-            onClose();
-        };
+    const handleClose = () => {
+        resetEventDataValues();
+        onClose();
+    };
 
 
-        const tabs = [
-            { id: "general", label: "General" },
-            { id: "dates", label: "Días" },
-            { id: "details", label: "Detalles" },
-            { id: "location", label: "Ubicación" },
-            { id: "dance", label: "Categoría/Niveles" },
-            { id: "images", label: "Imágenes" },
-        ];
+    const tabs = [
+        { id: "general", label: "General" },
+        { id: "dates", label: "Días" },
+        { id: "details", label: "Detalles" },
+        { id: "location", label: "Ubicación" },
+        { id: "dance", label: "Categoría/Niveles" },
+        { id: "images", label: "Imágenes" },
+    ];
 
 
 

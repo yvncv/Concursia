@@ -40,7 +40,11 @@ export interface LevelData {
 // Interfaces para la información de baile
 export interface DanceData {
   levels: {
-    [key: string]: LevelData;
+    [key: string]: {
+      selected: boolean;
+      price: string;
+      couple: boolean;
+    };
   };
   categories: string[];
 }

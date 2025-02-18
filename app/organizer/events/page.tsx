@@ -8,58 +8,7 @@ import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent } from "@/app/types/eventType";
 import {Timestamp} from "firebase/firestore";
-
-interface GeneralData {
-  name: string;
-  description: string;
-}
-
-interface DatesData {
-  startDate: Timestamp;
-  endDate: Timestamp;
-}
-
-interface DetailsData {
-  capacity: string;
-  eventType: string;
-}
-
-interface LocationData {
-  latitude: string;
-  longitude: string;
-  department: string;
-  district: string;
-  placeName: string;
-  province: string;
-  street: string;
-}
-
-interface DanceData {
-  levels: {
-    [key: string]: {
-      selected: boolean;
-      price: string;
-      couple: boolean;
-    };
-  };
-  categories: string[];
-}
-
-interface ImagesData {
-  smallImage: string | File;
-  bannerImage: string | File;
-  smallImagePreview?: string;
-  bannerImagePreview?: string;
-}
-
-interface EventFormData {
-  general: GeneralData;
-  dates: DatesData;
-  details: DetailsData;
-  location: LocationData;
-  dance: DanceData;
-  images: ImagesData;
-}
+import { EventFormData } from "@/app/types/eventType";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
@@ -266,7 +215,7 @@ const Events: React.FC = () => {
                         <button
                             className="text-blue-500 hover:text-blue-700 mr-2"
                             title="Visualizar"
-                            onClick={() => console.log("Visualizar", event.id)}
+                            onClick={() => handleEditEvent(event)}
                         >
                           <Eye />
                         </button>
