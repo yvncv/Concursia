@@ -130,14 +130,14 @@ const EventModal: React.FC<EventModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[70vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[80vh] m-4 overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold">{isEdit ? "Editar evento" : isOnlyRead ? "Evento" : "Crear nuevo evento"}</h2>
                     <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
                         <CircleX size={40} className="text-red-500 hover:text-red-600 transition-colors" />
                     </button>
                 </div>
-                <div className="mb-4">
+                <div className="mb-4 overflow-y-auto">
                     <div className="flex border-b">
                         {tabs.map((tab) => (
                             <button
