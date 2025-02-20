@@ -20,7 +20,7 @@ const EventSideBar: React.FC<EventSideBarProps> = ({
 }) => {
   const menuItems = [
     { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
-    { id: 'participants', label: 'Tickets', icon: Users },
+    { id: 'tickets', label: 'Tickets', icon: Users },
     { id: 'participants', label: 'Participantes', icon: Users },
     { id: 'schedule', label: 'Horarios', icon: Calendar },
     { id: 'statistics', label: 'Estadísticas', icon: ChartBar },
