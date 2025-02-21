@@ -261,6 +261,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
       category: user.category,
       level: selectedCategory,
       registrationDate: Timestamp.fromDate(new Date()), // Usa la fecha actual para la inscripción
+      paymentDate: undefined // or provide a default value if necessary
     };
 
     try {
