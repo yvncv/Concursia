@@ -4,21 +4,22 @@ import useTicket from '@/app/hooks/useTicket';
 import useUsers from '@/app/hooks/useUsers';
 import { Ticket } from '@/app/types/ticketType';
 import { User } from '@/app/types/userType';
-import {CircleX} from "lucide-react";
+import { CircleX } from "lucide-react";
+import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
 
 interface TicketsProps {
     event: CustomEvent;
 }
 
 const Tickets: React.FC<TicketsProps> = ({ event }) => {
-    const { tickets, loading, error } = useTicket(event.id);
+    const { tickets, loading, error,fetchTickets} = useTicket(event.id);
     const { getUserById } = useUsers();
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
-
     const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
     const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         setFilteredTickets(tickets);
@@ -28,7 +29,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         setSelectedTicket(ticket);
         setIsModalOpen(true);
 
-        if(ticket.level === 'Individual' || ticket.level === 'Seriado'){
+        if (ticket.level === 'Individual' || ticket.level === 'Seriado') {
             const user1 = await getUserById(ticket.usersId[0]);
             setUsers([user1].filter(Boolean) as User[]);
         } else {
@@ -48,24 +49,35 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         setIsFilterMenuOpen(!isFilterMenuOpen);
     };
 
-    const filterTickets = (filter:string ,criteria: string) => {
+    const filterTickets = (filter: string, criteria: string) => {
         if (criteria === 'Todos') {
             setFilteredTickets(tickets);
         } else {
-            if(filter === 'levels'){
+            if (filter === 'levels') {
                 const filtered = tickets.filter(ticket => ticket.level === criteria);
                 setFilteredTickets(filtered);
             }
-            if(filter === 'categories'){
+            if (filter === 'categories') {
                 const filtered = tickets.filter(ticket => ticket.category === criteria);
                 setFilteredTickets(filtered);
             }
-            if(filter === 'status'){
+            if (filter === 'status') {
                 const filtered = tickets.filter(ticket => ticket.status === criteria);
                 setFilteredTickets(filtered);
             }
         }
         setIsFilterMenuOpen(false);
+    };
+
+    const handleDeleteTicket = async (ticket: Ticket) => {
+        setSelectedTicket(ticket);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteModalClose = () => {
+        setIsDeleteModalOpen(false);
+        closeModal();
+        fetchTickets();
     };
 
     if (loading) { return <div className="p-6">Loading...</div>; }
@@ -156,7 +168,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                         <table className="w-full border-collapse">
                             <tbody>
                             <tr>
-                            <td className="px-4 py-2 font-semibold">ID:</td>
+                                <td className="px-4 py-2 font-semibold">ID:</td>
                                 <td className="px-4 py-2">{selectedTicket.id}</td>
                             </tr>
                             <tr>
@@ -201,12 +213,20 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                             <button className="text-blue-500 hover:underline"> </button>
                             <div>
                                 <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2">Confirmar</button>
-                                <button className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2">Eliminar</button>
+                                <button className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2"
+                                        onClick={() => handleDeleteTicket(selectedTicket)}
+                                >Eliminar</button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
+            <DeleteTicket
+                isOpen={isDeleteModalOpen}
+                onClose={() => { handleDeleteModalClose(); }}
+                ticket={selectedTicket!} // Use non-null assertion operator
+            />
         </div>
     );
 };
