@@ -189,12 +189,12 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                             </tr>
                             <tr>
                                 <td className="px-4 py-2 font-semibold">Fecha de Registro:</td>
-                                <td className="px-4 py-2">{selectedTicket.registrationDate.toDate().toLocaleDateString()}</td>
+                                <td className="px-4 py-2">{selectedTicket.registrationDate.toDate().toLocaleString()}</td>
                             </tr>
                             <tr>
                                 <td className="px-4 py-2 font-semibold">Fecha de Pago:</td>
                                 <td className="px-4 py-2">
-                                    {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleDateString() : 'No disponible'}
+                                    {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleString() : 'No disponible'}
                                 </td>
                             </tr>
                             <tr>
@@ -226,9 +226,10 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                         <div className="flex justify-between mt-4">
                             <button className="text-blue-500 hover:underline"></button>
                             <div>
-                                <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2"
-                                        onClick={() => handleConfirmTicket(selectedTicket)}
-                                >Confirmar</button>
+                                {selectedTicket.status === 'Pendiente' && (
+                                    <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2"
+                                            onClick={() => handleConfirmTicket(selectedTicket)}
+                                    >Confirmar</button>)}
                                 <button className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2"
                                         onClick={() => handleDeleteTicket(selectedTicket)}
                                 >Eliminar</button>
