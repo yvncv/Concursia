@@ -6,6 +6,7 @@ import { Ticket } from '@/app/types/ticketType';
 import { User } from '@/app/types/userType';
 import { CircleX } from "lucide-react";
 import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
+import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
 
 interface TicketsProps {
     event: CustomEvent;
@@ -20,6 +21,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
     const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     useEffect(() => {
         setFilteredTickets(tickets);
@@ -74,8 +76,14 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleDeleteModalClose = () => {
+    const handleConfirmTicket = async (ticket: Ticket) => {
+        setSelectedTicket(ticket);
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleModalClose = () => {
         setIsDeleteModalOpen(false);
+        setIsConfirmModalOpen(false);
         closeModal();
         fetchTickets();
     };
@@ -184,6 +192,12 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                                 <td className="px-4 py-2">{selectedTicket.registrationDate.toDate().toLocaleDateString()}</td>
                             </tr>
                             <tr>
+                                <td className="px-4 py-2 font-semibold">Fecha de Pago:</td>
+                                <td className="px-4 py-2">
+                                    {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleDateString() : 'No disponible'}
+                                </td>
+                            </tr>
+                            <tr>
                                 <td className="px-4 py-2 font-semibold">Estado:</td>
                                 <td className="px-4 py-2">{selectedTicket.status}</td>
                             </tr>
@@ -210,9 +224,11 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                             </tbody>
                         </table>
                         <div className="flex justify-between mt-4">
-                            <button className="text-blue-500 hover:underline"> </button>
+                            <button className="text-blue-500 hover:underline"></button>
                             <div>
-                                <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2">Confirmar</button>
+                                <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2"
+                                        onClick={() => handleConfirmTicket(selectedTicket)}
+                                >Confirmar</button>
                                 <button className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2"
                                         onClick={() => handleDeleteTicket(selectedTicket)}
                                 >Eliminar</button>
@@ -224,7 +240,12 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
             <DeleteTicket
                 isOpen={isDeleteModalOpen}
-                onClose={() => { handleDeleteModalClose(); }}
+                onClose={() => { handleModalClose(); }}
+                ticket={selectedTicket!} // Use non-null assertion operator
+            />
+            <ConfirmTicket
+                isOpen={isConfirmModalOpen}
+                onClose={() => { handleModalClose(); }}
                 ticket={selectedTicket!} // Use non-null assertion operator
             />
         </div>
