@@ -11,4 +11,5 @@ export interface Ticket {
     category: string;
     level: string;
     registrationDate: Timestamp;
+    paymentDate?: Timestamp;
 }
