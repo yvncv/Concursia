@@ -1,12 +1,12 @@
 // app/events/[id]/eventSidebar/EventSidebar.tsx
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
+import {
+  LayoutDashboard,
+  Users,
   Calendar,
   Settings,
   ChartBar,
-  MessageSquare
+  MessageSquare, TicketIcon
 } from 'lucide-react';
 
 interface EventSideBarProps {
@@ -20,7 +20,7 @@ const EventSideBar: React.FC<EventSideBarProps> = ({
 }) => {
   const menuItems = [
     { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
-    { id: 'tickets', label: 'Tickets', icon: Users },
+    { id: 'tickets', label: 'Tickets', icon: TicketIcon },
     { id: 'participants', label: 'Participantes', icon: Users },
     { id: 'schedule', label: 'Horarios', icon: Calendar },
     { id: 'statistics', label: 'Estadísticas', icon: ChartBar },
