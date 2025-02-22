@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import useAcademies from "@/app/hooks/useAcademies";
 import useAcademy from "@/app/hooks/useAcademy";
 import { User } from '@/app/types/userType';
@@ -144,7 +144,7 @@ const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: str
 };
 
 // Componente para la selección de categoría
-const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: Event, onCategorySelect: (category: string) => void, user: User, tickets: Ticket[] }) => {
+const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: CustomEvent, onCategorySelect: (category: string) => void, user: User, tickets: Ticket[] }) => {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const checkExistingTicket = (level: string) => {
@@ -191,7 +191,7 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: 
   );
 };
 
-const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal: () => void; user: User }) => {
+const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; openModal: () => void; user: User }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
@@ -252,7 +252,7 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: Event; openModal
   const isCoupleRequired = event.settings.levels[selectedCategory]?.couple;
 
   const handleSave = async () => {
-    const ticketData: Omit<Ticket, 'id'> = {
+    const ticketData: Omit<Ticket, 'id'|'paymentDate'> = {
       status: 'Pendiente',
       usersId: pareja ? [user.id, pareja.id] : [user.id],
       academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],

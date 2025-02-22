@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import {collection, query, where, getDocs, addDoc, onSnapshot} from 'firebase/firestore';
 import { Ticket } from '../types/ticketType';
 
 const useTicket = (eventId: string) => {
@@ -34,6 +34,26 @@ const useTicket = (eventId: string) => {
         fetchTickets();
     }, [eventId]);
 
+    const fetchTickets = () => {
+        setLoading(true);
+        const q = query(collection(db, 'tickets'), where('eventId', '==', eventId));
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const ticketsData = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Ticket[];
+
+            setTickets(ticketsData);
+            setLoading(false);
+        }, (err) => {
+            console.error('Error fetching tickets', err);
+            setError('Failed to fetch tickets');
+            setLoading(false);
+        });
+        return unsubscribe;
+    };
+
     const saveTicket = async (ticketData: Omit<Ticket, 'id'>) => {
         try {
             const docRef = await addDoc(collection(db, "tickets"), ticketData);
@@ -44,7 +64,7 @@ const useTicket = (eventId: string) => {
         }
     };
 
-    return { tickets, loading, error, saveTicket };
+    return { tickets, loading, error, saveTicket, fetchTickets };
 };
 
 export default useTicket;
