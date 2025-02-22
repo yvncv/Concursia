@@ -11,7 +11,7 @@ interface EventHeaderProps {
 const EventHeader: React.FC<EventHeaderProps> = ({ event }) => {
   return (
     <header className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link 
