@@ -38,7 +38,7 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
       case "categories":
         return <Categories event={event}/>
       case "participants":
-        return <Participants event={event}/>
+        return <Participants eventId={event.id}/>
       case "evaluations":
         return <Evaluations event={event}/>
       case "awards":
