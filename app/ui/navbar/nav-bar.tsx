@@ -4,14 +4,14 @@ import { usePathname } from "next/navigation";
 import { Home, LogIn, User, Menu, X, Shield, Calendar } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import useEvents from "@/app/hooks/useEvents";
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from '@/app/types/eventType';
 
 export default function Navbar({ brandName }: { brandName: string }) {
   const { user, loadingUser } = useUser();
   const { events } = useEvents();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<CustomEvent[]>([]);
   const pathname = usePathname();
 
   const enlaces = [

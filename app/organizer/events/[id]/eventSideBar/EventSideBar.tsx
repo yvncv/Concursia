@@ -1,4 +1,3 @@
-// app/events/[id]/eventSidebar/EventSidebar.tsx
 import React from 'react';
 import {
   LayoutDashboard,
@@ -6,7 +5,8 @@ import {
   Calendar,
   Settings,
   ChartBar,
-  MessageSquare, TicketIcon
+  MessageSquare,
+  TicketIcon
 } from 'lucide-react';
 
 interface EventSideBarProps {

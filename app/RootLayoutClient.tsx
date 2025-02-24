@@ -24,10 +24,14 @@ export default function RootLayoutClient({ children }: { children: React.ReactNo
           <div className="wave"></div>
           <div className="wave"></div>
           <NavbarControl brandName={brandName} />
-          <StairTransition />
         </>
       )}
+      
+      {/* ¡Aquí lo movemos fuera para que siempre se muestre! */}
+      <StairTransition />
+      
       <PageTransition>{children}</PageTransition>
+  
       {showNavbar && <Footer brandName={brandName} />}
     </>
   );
