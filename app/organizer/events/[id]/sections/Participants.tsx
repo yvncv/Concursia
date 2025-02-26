@@ -72,10 +72,11 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                         </thead>
                         <tbody>
                         {participants.map(participant => (
-                            <tr key={participant.id} className="hover:bg-gray-50" onClick={() => openModal(participant)}>
+                            <tr key={participant.id} className="hover:bg-gray-50" >
                                 <td
                                     className="border px-4 py-2 hover:text-red-600 transition-colors cursor-pointer"
                                     title="Ver más detalles"
+                                    onClick={() => openModal(participant)}
                                 >{participant.code}</td>
                                 <td className="border px-4 py-2">{participant.category}</td>
                                 <td className="border px-4 py-2">{participant.level}</td>
