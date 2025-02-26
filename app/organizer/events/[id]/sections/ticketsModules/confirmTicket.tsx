@@ -69,7 +69,7 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
                 <input
                     type="text"
                     className="w-full p-3 placeholder:text-green-400 mt-2 border border-gray-300 rounded-full shadow-sm"
-                    placeholder="Cancelado"
+                    placeholder="Escribe 'Cancelado' para confirmar"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                 />

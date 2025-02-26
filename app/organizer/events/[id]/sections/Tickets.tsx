@@ -225,15 +225,17 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                         </table>
                         <div className="flex justify-between mt-4">
                             <button className="text-blue-500 hover:underline"></button>
+                            {selectedTicket.status === 'Pendiente' && (
                             <div>
-                                {selectedTicket.status === 'Pendiente' && (
+
                                     <button className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2"
                                             onClick={() => handleConfirmTicket(selectedTicket)}
-                                    >Confirmar</button>)}
+                                    >Confirmar</button>
                                 <button className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2"
                                         onClick={() => handleDeleteTicket(selectedTicket)}
                                 >Eliminar</button>
                             </div>
+                            )}
                         </div>
                     </div>
                 </div>
