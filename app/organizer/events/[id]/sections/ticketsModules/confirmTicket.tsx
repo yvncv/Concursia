@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-
-import {Ticket, TicketData} from "@/app/types/ticketType";
-import {doc, setDoc, Timestamp} from "firebase/firestore";
-import {db} from "@/app/firebase/config";
+import { Ticket, TicketData } from "@/app/types/ticketType";
+import { doc, setDoc, Timestamp, addDoc, collection } from "firebase/firestore";
+import { db } from "@/app/firebase/config";
+import { Participant } from "@/app/types/participantType";
 
 interface ConfirmTicketProps {
     isOpen: boolean;
@@ -12,6 +12,7 @@ interface ConfirmTicketProps {
 
 const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }) => {
     const [input, setInput] = useState("");
+    const [participantNumber, setParticipantNumber] = useState("");
 
     if (!ticket) {
         return null; // Return null if ticket is null or undefined
@@ -29,7 +30,25 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
 
             try {
                 await setDoc(doc(db, "tickets", ticket.id), ticketData, { merge: true });
-                alert("Pago confirmado exitosamente.");
+
+                // Crear un nuevo participante
+                const participantData: Omit<Participant, 'id'> = {
+                    code: participantNumber,
+                    usersId: ticket.usersId,
+                    eventId: ticket.eventId,
+                    category: ticket.category,
+                    level: ticket.level,
+                    scoreIds: [],
+                    ticketId: ticket.id,
+                    phase: "initial",
+                    status: "active",
+                    createdAt: Timestamp.fromDate(new Date()),
+                    updatedAt: Timestamp.fromDate(new Date())
+                };
+
+                await addDoc(collection(db, "participants"), participantData);
+
+                alert("Pago confirmado y participante creado exitosamente.");
                 onClose();
             } catch (error) {
                 console.error("Error confirmando el pago del ticket:", error);
@@ -53,6 +72,13 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
                     placeholder="Cancelado"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
+                />
+                <input
+                    type="text"
+                    className="w-full p-3 placeholder:text-green-400 mt-2 border border-gray-300 rounded-full shadow-sm"
+                    placeholder="Número que llevará en la espalda"
+                    value={participantNumber}
+                    onChange={(e) => setParticipantNumber(e.target.value)}
                 />
                 <div className="flex justify-between mt-4">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 text-gray-800 hover:bg-gray-400 rounded-full">

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
-import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 import { Participant } from '../types/participantType';
 
 const useParticipant = (participantId: string) => {

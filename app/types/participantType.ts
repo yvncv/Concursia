@@ -8,7 +8,6 @@ export interface Participant {
   eventId: string;
   category: string;
   level: string;
-  registrationDate: Timestamp;
   scoreIds: string[]; // Referencia a los IDs de los puntajes
   ticketId: string;
   phase: string;
