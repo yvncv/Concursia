@@ -25,6 +25,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         fetchParticipants();
     }, [event.id]);
 
+    const headers: string[] = ["Número","Categoría", "Modalidad", "Estado", "Fase"];
+
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-4">Participantes del Evento</h1>
@@ -34,9 +36,14 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                     <table className="min-w-full bg-white border border-gray-300 ">
                         <thead className="bg-gray-100 dark:bg-gray-700">
                         <tr className="bg-gray-100">
-                            <th className="py-2 px-4 border">Código</th>
-                            <th className="py-2 px-4 border">Categoría</th>
-                            <th className="py-2 px-4 border">Nivel</th>
+                            {headers.map((header) => (
+                                <th
+                                    key={header}
+                                    className="py-2 px-4 border"
+                                >
+                                    {header}
+                                </th>
+                            ))}
                         </tr>
                         </thead>
                         <tbody>
@@ -45,6 +52,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                 <td className="border px-4 py-2">{participant.code}</td>
                                 <td className="border px-4 py-2">{participant.category}</td>
                                 <td className="border px-4 py-2">{participant.level}</td>
+                                <td className="border px-4 py-2">{participant.status}</td>
+                                <td className="border px-4 py-2">{participant.phase}</td>
                             </tr>
                         ))}
                         </tbody>
