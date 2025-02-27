@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, User, Menu, X, Shield, Calendar } from "lucide-react";
+import { Home, LogIn, User, Menu, X, Shield } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import useEvents from "@/app/hooks/useEvents";
 import { CustomEvent } from '@/app/types/eventType';
