@@ -7,7 +7,7 @@ export interface FieldDefinition {
   key: string;
   label: string;
   span?: number;
-  formatter?: (value: any) => string | JSX.Element;
+  formatter?: (value: string | number | boolean | Date | string[] | undefined) => string | JSX.Element;
 }
 
 const formatDate = (timestamp: Timestamp) =>
