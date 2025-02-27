@@ -1,9 +1,11 @@
+interface EventData {
+  capacity: string;
+  eventType: string;
+}
+
 interface EventDetailsProps {
-  data: {
-    capacity: string;
-    eventType: string;
-  };
-  updateData: (data: any) => void;
+  data: EventData;
+  updateData: (data: EventData) => void;
   isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
