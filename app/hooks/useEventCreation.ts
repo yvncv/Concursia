@@ -54,7 +54,13 @@ export const useEventCreation = (): EventCreationHandler => {
       await fetchAcademyName();
     };
 
-    fetchData();
+    const fetchDataAsync = async () => {
+      await fetchData();
+    };
+
+    fetchDataAsync().catch(error => {
+      console.error("Error fetching data:", error);
+    });
   }, [user]);
 
   const processEventData = async (eventData: EventFormData, user: User, eventId: string, academyName: string, uploadImage: (image: File, eventId: string, type: 'banner' | 'small') => Promise<string>): Promise<CustomEvent> => {
@@ -117,11 +123,16 @@ export const useEventCreation = (): EventCreationHandler => {
     setLoading(true);
     setError(null);
 
-    try {
-      if (!user) {
-        throw new Error("Usuario no autenticado");
-      }
+    if (!user) {
+      const errorMessage = "Usuario no autenticado";
+      setError(errorMessage);
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
 
+    try {
       const eventId = new Date().getTime().toString();
       const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
 
@@ -148,11 +159,16 @@ export const useEventCreation = (): EventCreationHandler => {
     setLoading(true);
     setError(null);
 
-    try {
-      if (!user) {
-        throw new Error("Usuario no autenticado");
-      }
+    if (!user) {
+      const errorMessage = "Usuario no autenticado";
+      setError(errorMessage);
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
 
+    try {
       const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
 
       await setDoc(doc(db, "eventos", eventId), event, { merge: true });
