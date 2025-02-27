@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 
 interface DeleteEventModalProps {
-  event: Event;
+  event: CustomEvent;
   onClose: () => void;
 }
 
