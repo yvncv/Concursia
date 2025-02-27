@@ -10,6 +10,7 @@ const Awards: React.FC<AwardsProps> = ({ event }) => {
         <div>
             {/* Aquí irían los componentes para manejar categorías */}
             <p>Componentes para definir premios y reconocimientos.</p>
+            <h1>{event.id}</h1>
         </div>
     )
 }
