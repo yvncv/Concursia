@@ -1,23 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
+interface EventLocationData {
+  latitude: string;
+  longitude: string;
+  department: string;
+  district: string;
+  placeName: string;
+  province: string;
+  street: string;
+}
+
 interface EventLocationProps {
-  data: {
-    latitude: string;
-    longitude: string;
-    department: string;
-    district: string;
-    placeName: string;
-    province: string;
-    street: string;
-  };
-  updateData: (data: any) => void;
+  data: EventLocationData;
+  updateData: (data: EventLocationData) => void;
   isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 
 declare global {
   interface Window {
-    google: any;
+    google: typeof google;
   }
 }
 
@@ -30,6 +32,68 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
 
+  const initMap = useCallback(() => {
+    if (!mapRef.current) return;
+
+    const initialPosition = data.latitude && data.longitude
+        ? { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) }
+        : { lat: -12.046374, lng: -77.042793 }; // Default position
+
+    const newMap = new window.google.maps.Map(mapRef.current, {
+      center: initialPosition,
+      zoom: data.latitude && data.longitude ? 15 : 10,
+    });
+    setMap(newMap);
+
+    if (data.latitude && data.longitude) {
+      const newMarker = new window.google.maps.Marker({
+        position: initialPosition,
+        map: newMap,
+        title: data.placeName,
+      });
+      setMarker(newMarker);
+    }
+
+    const input = searchInputRef.current;
+    if (input) {
+      const autocomplete = new window.google.maps.places.Autocomplete(input);
+      autocomplete.bindTo("bounds", newMap);
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        if (marker) {
+          marker.setMap(null);
+        }
+
+        const newMarker = new window.google.maps.Marker({
+          position: { lat, lng },
+          map: newMap,
+          title: place.name,
+        });
+        setMarker(newMarker);
+
+        newMap.setCenter({ lat, lng });
+        newMap.setZoom(15);
+
+        updateData({
+          ...data,
+          placeName: place.name || "",
+          street: place.formatted_address || "",
+          latitude: lat.toString(),
+          longitude: lng.toString(),
+          department: "",
+          province: "",
+          district: "",
+        });
+      });
+    }
+  }, [data, marker, updateData]);
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBsEk80W9glHRTOpG8QSneexy8Zwrvkcrs&libraries=places`;
@@ -40,7 +104,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [initMap]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -105,74 +169,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
       map.setCenter(position);
       map.setZoom(15);
     }
-  }, [map, data.latitude, data.longitude]);
-
-  function initMap() {
-    if (!mapRef.current) return;
-
-    // Establecer la posición inicial
-    const initialPosition = data.latitude && data.longitude
-        ? {
-          lat: parseFloat(data.latitude),
-          lng: parseFloat(data.longitude)
-        }
-        : { lat: -12.046374, lng: -77.042793 }; // Default position
-
-    const newMap = new window.google.maps.Map(mapRef.current, {
-      center: initialPosition,
-      zoom: data.latitude && data.longitude ? 15 : 10,
-    });
-    setMap(newMap);
-
-    // Si hay coordenadas guardadas, crear el marcador inicial
-    if (data.latitude && data.longitude) {
-      const newMarker = new window.google.maps.Marker({
-        position: initialPosition,
-        map: newMap,
-        title: data.placeName
-      });
-      setMarker(newMarker);
-    }
-
-    const input = searchInputRef.current;
-    if (input) {
-      const autocomplete = new window.google.maps.places.Autocomplete(input);
-      autocomplete.bindTo("bounds", newMap);
-
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (!place.geometry || !place.geometry.location) return;
-
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-
-        if (marker) {
-          marker.setMap(null);
-        }
-
-        const newMarker = new window.google.maps.Marker({
-          position: { lat, lng },
-          map: newMap,
-          title: place.name,
-        });
-        setMarker(newMarker);
-
-        newMap.setCenter({ lat, lng });
-        newMap.setZoom(15);
-
-        updateData({
-          ...data,
-          placeName: place.name || "",
-          street: place.formatted_address || "",
-          latitude: lat.toString(),
-          longitude: lng.toString(),
-          department: "",
-          province: "",
-          district: ""
-        });
-      });
-    }
-  }
+  }, [map, data.latitude, data.longitude, data.placeName, marker]);
 
   return (
       <div className="space-y-4">
