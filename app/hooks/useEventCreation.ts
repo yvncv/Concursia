@@ -5,11 +5,11 @@ import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/firebase/functions";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { EventFormData, CustomEvent } from '@/app/types/eventType';
-import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
+import { User } from "@/app/types/userType"; // Assuming you have a User type defined
 
 interface EventCreationHandler {
-  createEvent: (eventData: EventFormData, user: any) => Promise<{ success: boolean; message: string }>;
-  updateEvent: (eventData: EventFormData, user: any, eventId: string) => Promise<{ success: boolean; message: string }>;
+  createEvent: (eventData: EventFormData, user: User) => Promise<{ success: boolean; message: string }>;
+  updateEvent: (eventData: EventFormData, user: User, eventId: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
   error: string | null;
 }
@@ -17,7 +17,6 @@ interface EventCreationHandler {
 export const useEventCreation = (): EventCreationHandler => {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
-  const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [academyName, setAcademyName] = useState<string>("");
 
@@ -27,8 +26,7 @@ export const useEventCreation = (): EventCreationHandler => {
 
     try {
       await uploadBytes(storageRef, image);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
+      return await getDownloadURL(storageRef);
     } catch (error) {
       console.error(`Error al subir ${type} imagen:`, error);
       if (error instanceof Error) {
@@ -40,7 +38,7 @@ export const useEventCreation = (): EventCreationHandler => {
   };
 
   useEffect(() => {
-    const fetchAcademyNameAndUbigeo = async () => {
+    const fetchAcademyName = async () => {
       if (user && user.academyId) {
         const academyRef = doc(db, "academias", user.academyId);
         const academySnap = await getDoc(academyRef);
@@ -50,19 +48,72 @@ export const useEventCreation = (): EventCreationHandler => {
           console.error("Academia no encontrada");
         }
       }
-
-      try {
-        const ubigeoData = await fetchUbigeoINEI();
-        setUbigeoData(ubigeoData);
-      } catch (error) {
-        console.error("Error al obtener datos de Ubigeo:", error);
-      }
     };
 
-    fetchAcademyNameAndUbigeo();
+    const fetchData = async () => {
+      await fetchAcademyName();
+    };
+
+    fetchData();
   }, [user]);
 
-  const createEvent = async (eventData: EventFormData, user: any): Promise<{ success: boolean; message: string }> => {
+  const processEventData = async (eventData: EventFormData, user: User, eventId: string, academyName: string, uploadImage: (image: File, eventId: string, type: 'banner' | 'small') => Promise<string>): Promise<CustomEvent> => {
+    let smallImageUrl = eventData.images.smallImage as string;
+    let bannerImageUrl = eventData.images.bannerImage as string;
+
+    if (eventData.images.smallImage instanceof File) {
+      smallImageUrl = await uploadImage(eventData.images.smallImage, eventId, 'small');
+    }
+
+    if (eventData.images.bannerImage instanceof File) {
+      bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
+    }
+
+    const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
+    Object.entries(eventData.dance.levels).forEach(([level, data]) => {
+      if (data.selected) {
+        processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
+      }
+    });
+
+    return {
+      id: eventId,
+      name: eventData.general.name,
+      description: eventData.general.description,
+      startDate: eventData.dates.startDate,
+      endDate: eventData.dates.endDate,
+      academyId: user.academyId,
+      academyName: academyName,
+      organizerId: user.uid,
+      smallImage: smallImageUrl,
+      bannerImage: bannerImageUrl,
+      location: {
+        coordinates: {
+          latitude: eventData.location.latitude,
+          longitude: eventData.location.longitude,
+        },
+        department: eventData.location.department,
+        province: eventData.location.province,
+        district: eventData.location.district,
+        placeName: eventData.location.placeName,
+        street: eventData.location.street,
+      },
+      eventType: eventData.details.eventType,
+      capacity: eventData.details.capacity,
+      status: "pendiente",
+      settings: {
+        levels: processedLevels,
+        categories: eventData.dance.categories,
+        registrationType: [], // Ensure registrationType is included
+      },
+      createdBy: `${user?.firstName} ${user?.lastName}`,
+      lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+  };
+
+  const createEvent = async (eventData: EventFormData, user: User): Promise<{ success: boolean; message: string }> => {
     setLoading(true);
     setError(null);
 
@@ -72,64 +123,7 @@ export const useEventCreation = (): EventCreationHandler => {
       }
 
       const eventId = new Date().getTime().toString();
-
-      let smallImageUrl = '';
-      let bannerImageUrl = '';
-
-      if (eventData.images.smallImage instanceof File) {
-        smallImageUrl = await uploadImage(eventData.images.smallImage, eventId, 'small');
-      } else if (typeof eventData.images.smallImage === 'string') {
-        smallImageUrl = eventData.images.smallImage;
-      }
-
-      if (eventData.images.bannerImage instanceof File) {
-        bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
-      } else if (typeof eventData.images.bannerImage === 'string') {
-        bannerImageUrl = eventData.images.bannerImage;
-      }
-
-      const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
-      Object.entries(eventData.dance.levels).forEach(([level, data]) => {
-        if (data.selected) {
-          processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
-        }
-      });
-
-      const event: CustomEvent = {
-        id: eventId,
-        name: eventData.general.name,
-        description: eventData.general.description,
-        startDate: eventData.dates.startDate,
-        endDate: eventData.dates.endDate,
-        academyId: user.academyId,
-        academyName: academyName,
-        organizerId: user.uid,
-        smallImage: smallImageUrl,
-        bannerImage: bannerImageUrl,
-        location: {
-          coordinates: {
-            latitude: eventData.location.latitude,
-            longitude: eventData.location.longitude,
-          },
-          department: eventData.location.department,
-          province: eventData.location.province,
-          district: eventData.location.district,
-          placeName: eventData.location.placeName,
-          street: eventData.location.street,
-        },
-        eventType: eventData.details.eventType,
-        capacity: eventData.details.capacity,
-        status: "pendiente",
-         settings: {
-          levels: processedLevels,
-          categories: eventData.dance.categories,
-          registrationType: [], // Ensure registrationType is included
-        },
-        createdBy: `${user?.firstName} ${user?.lastName}`,
-        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      };
+      const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
 
       await setDoc(doc(db, "eventos", eventId), event);
 
@@ -150,7 +144,7 @@ export const useEventCreation = (): EventCreationHandler => {
     }
   };
 
-  const updateEvent = async (eventData: EventFormData, user: any, eventId: string): Promise<{ success: boolean; message: string }> => {
+  const updateEvent = async (eventData: EventFormData, user: User, eventId: string): Promise<{ success: boolean; message: string }> => {
     setLoading(true);
     setError(null);
 
@@ -159,59 +153,7 @@ export const useEventCreation = (): EventCreationHandler => {
         throw new Error("Usuario no autenticado");
       }
 
-      let smallImageUrl = eventData.images.smallImage as string;
-      let bannerImageUrl = eventData.images.bannerImage as string;
-
-      if (eventData.images.smallImage instanceof File) {
-        smallImageUrl = await uploadImage(eventData.images.smallImage, eventId, 'small');
-      }
-
-      if (eventData.images.bannerImage instanceof File) {
-        bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
-      }
-
-      const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
-      Object.entries(eventData.dance.levels).forEach(([level, data]) => {
-        if (data.selected) {
-          processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
-        }
-      });
-
-      const event: CustomEvent = {
-        id: eventId,
-        name: eventData.general.name,
-        description: eventData.general.description,
-        startDate: eventData.dates.startDate,
-        endDate: eventData.dates.endDate,
-        academyId: user.academyId,
-        academyName: academyName,
-        organizerId: user.uid,
-        smallImage: smallImageUrl,
-        bannerImage: bannerImageUrl,
-        location: {
-          coordinates: {
-            latitude: eventData.location.latitude,
-            longitude: eventData.location.longitude,
-          },
-          department: eventData.location.department,
-          province: eventData.location.province,
-          district: eventData.location.district,
-          placeName: eventData.location.placeName,
-          street: eventData.location.street,
-        },
-        eventType: eventData.details.eventType,
-        capacity: eventData.details.capacity,
-        status: "pendiente",
-        settings: {
-          levels: processedLevels,
-          categories: eventData.dance.categories,
-          registrationType: [], // Ensure registrationType is included
-        },
-        createdBy: `${user?.firstName} ${user?.lastName}`,
-        lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      };
+      const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
 
       await setDoc(doc(db, "eventos", eventId), event, { merge: true });
 
