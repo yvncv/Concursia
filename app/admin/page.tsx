@@ -22,7 +22,7 @@ ChartJS.register(
 
 const Dashboard: React.FC = () => {
   const { users, loadingUsers } = useUsers();
-  const { academias, loadingAcademias, errorAcademias } = useAcademies();
+  const { academies, loadingAcademies, errorAcademies } = useAcademies();
   const { events, loadingEvents } = useEvents();
 
   const eventosActivos = events.filter((evento) => evento.status === "en curso");
@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: "Datos",
-        data: [users.length, academias.length, eventosActivos.length, totalEventos],
+        data: [users.length, academies.length, eventosActivos.length, totalEventos],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academias.length, eventosActivos.length, totalEventos],
+        data: [users.length, academies.length, eventosActivos.length, totalEventos],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: "Datos",
-        data: [users.length, academias.length, eventosActivos.length, totalEventos],
+        data: [users.length, academies.length, eventosActivos.length, totalEventos],
         backgroundColor: "rgba(255, 99, 132, 0.2)",
         borderColor: "#FF6384",
         borderWidth: 1,
@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academias.length, eventosActivos.length, totalEventos],
+        data: [users.length, academies.length, eventosActivos.length, totalEventos],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academias.length, eventosActivos.length, totalEventos],
+        data: [users.length, academies.length, eventosActivos.length, totalEventos],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -105,7 +105,7 @@ const Dashboard: React.FC = () => {
         label: "Usuarios vs Eventos Activos",
         data: [
           { x: users.length, y: eventosActivos.length, r: 10 },
-          { x: academias.length, y: totalEventos, r: 15 },
+          { x: academies.length, y: totalEventos, r: 15 },
         ],
         backgroundColor: "#FF6384",
       },
@@ -130,12 +130,12 @@ const Dashboard: React.FC = () => {
         {/* Tarjeta de Academias */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h2 className="text-lg font-semibold">Academias</h2>
-          {loadingAcademias ? (
+          {loadingAcademies ? (
             <p>Cargando...</p>
-          ) : errorAcademias ? (
-            <p className="text-red-500">Error: {errorAcademias}</p>
+          ) : errorAcademies ? (
+            <p className="text-red-500">Error: {errorAcademies}</p>
           ) : (
-            <p className="text-2xl font-bold">{academias.length}</p>
+            <p className="text-2xl font-bold">{academies.length}</p>
           )}
         </div>
 

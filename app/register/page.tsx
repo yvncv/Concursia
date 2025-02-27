@@ -138,32 +138,6 @@ export default function RegisterForm() {
           {step === 1 ? (
             <form onSubmit={handleSubmitStep1} className="space-y-4">
               {error1 && <p className="text-red-500">{error1}</p>}
-              <div className="flex gap-x-2">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Juan"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Perez Prado"
-                    required
-                  />
-                </div>
-              </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
                 <input
@@ -204,7 +178,7 @@ export default function RegisterForm() {
               <button
                 type="submit"
                 className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
-                disabled={!firstName || !lastName || !email || !password || !confirmPassword} // Habilitar solo si los campos están llenos
+                disabled={!email || !password || !confirmPassword} // Habilitar solo si los campos están llenos
               >
                 {loading ? "Cargando..." : "Siguiente"}
               </button>
@@ -231,16 +205,31 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input
-                  type="tel"
-                  id="contactoTelefono"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                  placeholder="Tu número de contacto"
-                />
+              <div className="flex gap-x-2">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    placeholder="Juan"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    placeholder="Perez Prado"
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
@@ -267,6 +256,17 @@ export default function RegisterForm() {
                   <option value="Masculino">Masculino</option>
                   <option value="Femenino">Femenino</option>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input
+                  type="tel"
+                  id="contactoTelefono"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  placeholder="Tu número de contacto"
+                />
               </div>
               <button
                 type="submit"
