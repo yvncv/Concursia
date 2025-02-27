@@ -21,7 +21,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
 
   const event = events.find((event) => event.id === id);
-  const { academy, loadingAcademy, errorAcademy } = useAcademy(event?.academyId);
+  const { academy} = useAcademy(event?.academyId);
 
   const handleInscribirClick = () => {
     setInscripcionEnabled(true);
