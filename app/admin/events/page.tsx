@@ -2,16 +2,16 @@
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2 } from "lucide-react";
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import EventModal from "./modals/ReadEventModal";
 import EditEventModal from "./modals/EditEventModal";
 import DeleteEventModal from "./modals/DeleteEventModal";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedEventToEdit, setSelectedEventToEdit] = useState<Event | null>(null);
-  const [selectedEventToDelete, setSelectedEventToDelete] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CustomEvent | null>(null);
+  const [selectedEventToEdit, setSelectedEventToEdit] = useState<CustomEvent | null>(null);
+  const [selectedEventToDelete, setSelectedEventToDelete] = useState<CustomEvent | null>(null);
 
   return (
     <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
