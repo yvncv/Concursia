@@ -1,8 +1,8 @@
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import { useState } from "react";
 
 export interface FiltersProps {
-    events: Event[];
+    events: CustomEvent[];
     onFilterChange: (filters: FilterState) => void;
 }
 
