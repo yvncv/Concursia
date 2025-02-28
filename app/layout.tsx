@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import RootLayoutClient from './RootLayoutClient';
-import { brandName } from "./page";
+
 
 const poppins = localFont({
   src: "./fonts/Poppins-Regular.ttf",

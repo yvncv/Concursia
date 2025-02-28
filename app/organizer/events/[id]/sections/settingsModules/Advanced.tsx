@@ -10,6 +10,7 @@ const Advanced: React.FC<AdvancedProps> = ({ event }) => {
         <div>
             {/* Aquí irían los componentes para manejar categorías */}
             <p>Componentes para ajustar configuraciones avanzadas del evento.</p>
+            <h1>{event.id}</h1>
         </div>
     )
 }

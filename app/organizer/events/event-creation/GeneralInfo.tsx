@@ -1,9 +1,11 @@
+interface GeneralInfoData {
+  name: string;
+  description: string;
+}
+
 interface GeneralInfoProps {
-  data: {
-    name: string;
-    description: string;
-  };
-  updateData: (data: any) => void;
+  data: GeneralInfoData;
+  updateData: (data: GeneralInfoData) => void;
   isOnlyRead: boolean; // 🔹 Agregar la prop isOnlyRead
 }
 

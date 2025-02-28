@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Event } from "@/app/types/eventType"
+import { CustomEvent } from "@/app/types/eventType"
 
-const CarruselEvento = ({ events }: { events: Event[] }) => {
+const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import useUser from "@/app/firebase/functions"; // Asegúrate de que esta ruta sea correcta
 import { db } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
-import { Event } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
+import { CustomEvent } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService"; // Asegúrate de que esta ruta sea correcta
 
 const levelsList = ["Seriado", "Individual", "Novel Novel", "Novel Abierto","Novel Abierto A", "Novel Abierto B", "Nacional"];
@@ -124,7 +124,9 @@ const CreateEvent = () => {
 
     try {
       if (!user) {
-        throw new Error("Usuario no autenticado");
+        setError("Usuario no autenticado");
+        setLoading(false);
+        return;
       }
 
       // Buscar los nombres de departamento, provincia y distrito
@@ -142,14 +144,14 @@ const CreateEvent = () => {
 
       const eventId = new Date().getTime().toString();
 
-      const event: Event = {
+      const event: CustomEvent = {
         id: eventId,
         name,
         description,
         startDate: Timestamp.fromDate(new Date(startDate)),
         endDate: Timestamp.fromDate(new Date(endDate)),
         academyId: user.academyId,
-        academyName: user.academyName,
+        academyName: academyName,
         organizerId: user.uid,
         smallImage,
         bannerImage,

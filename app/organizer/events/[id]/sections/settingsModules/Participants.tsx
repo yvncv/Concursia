@@ -46,7 +46,7 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     };
 
     // Maneja la actualización de configuración de jalar pareja
-    const handlePullCoupleChange = (field: keyof EventSettings["pullCouple"], value: any) => {
+    const handlePullCoupleChange = (field: keyof EventSettings["pullCouple"], value: boolean | string | number) => {
         if (!settings) return;
         saveSettings({
             ...settings,

@@ -1,20 +1,20 @@
 "use client";
 import Image from "next/image";
 import { Timestamp } from "firebase/firestore";
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import { JSX } from "react";
 
 export interface FieldDefinition {
   key: string;
   label: string;
   span?: number;
-  formatter?: (value: any) => string | JSX.Element;
+  formatter?: (value: string | number | Timestamp | { [key: string]: string | number | boolean }) => string | JSX.Element;
 }
  
 const formatDate = (timestamp: Timestamp) =>
   timestamp?.toDate().toLocaleString() || "Fecha no disponible";
 
-export const getFieldDefinitions = (event: Event): FieldDefinition[] => {
+export const getFieldDefinitions = (event: CustomEvent): FieldDefinition[] => {
   return [
     { key: "id", label: "ID", formatter: () => event.id || "N/A" },
     { key: "name", label: "Nombre", formatter: () => event.name || "Sin nombre" },
@@ -47,21 +47,30 @@ export const getFieldDefinitions = (event: Event): FieldDefinition[] => {
       span: 2,
       formatter: () =>
         event.settings?.levels && Object.keys(event.settings.levels).length ? (
-          <ul className="list-disc list-inside">
-            {Object.entries(event.settings.levels).map(([level, info]: any) => (
-              <li key={level}>
-                <span className="font-bold">{level}</span>: {info.couple ? "Pareja" : "Individual"}, Precio: S/{info.price}
-              </li>
-            ))}
-          </ul>
+            <ul className="list-disc list-inside">
+              {Object.entries(event.settings.levels).map(([level, info]: [string, {
+                price: number;
+                couple: boolean
+              }]) => (
+                  <li key={level}>
+                    <span className="font-bold">{level}</span>: {info.couple ? "Pareja" : "Individual"}, Precio:
+                    S/{info.price}
+                  </li>
+              ))}
+            </ul>
         ) : (
-          "No definidos"
+            "No definidos"
         ),
     },
 
-    { key: "registrationType", label: "Tipos de Inscripción", span: 2, formatter: () => event.settings?.registrationType?.join(", ") || "No disponibles" },
+    {
+      key: "registrationType",
+      label: "Tipos de Inscripción",
+      span: 2,
+      formatter: () => event.settings?.registrationType?.join(", ") || "No disponibles"
+    },
 
-    { key: "createdBy", label: "Creado por", formatter: () => event.createdBy || "Desconocido" },
+    {key: "createdBy", label: "Creado por", formatter: () => event.createdBy || "Desconocido" },
     { key: "createdAt", label: "Fecha de creación", formatter: () => formatDate(event.createdAt) },
     { key: "updatedAt", label: "Última actualización", formatter: () => formatDate(event.updatedAt) },
 

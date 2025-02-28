@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { CircleX, Check } from 'lucide-react';
 import Image from 'next/image';
 
+interface EventImageData {
+  smallImage: string | File;
+  bannerImage: string | File;
+  smallImagePreview?: string;
+  bannerImagePreview?: string;
+}
+
 interface EventImagesProps {
-  data: {
-    smallImage: string | File;
-    bannerImage: string | File;
-    smallImagePreview?: string;
-    bannerImagePreview?: string;
-  };
-  updateData: (data: any) => void;
+  data: EventImageData;
+  updateData: (data: EventImageData) => void;
   isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 

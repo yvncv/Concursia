@@ -11,13 +11,21 @@ interface EventLocationProps {
     province: string;
     street: string;
   };
-  updateData: (data: any) => void;
-  isOnlyRead: boolean; // 🔹 Agregado para solo lectura
+  updateData: (data: {
+    latitude: string;
+    longitude: string;
+    department: string;
+    district: string;
+    placeName: string;
+    province: string;
+    street: string;
+  }) => void;
+  isOnlyRead: boolean;
 }
 
 declare global {
   interface Window {
-    google: any;
+    google: typeof google;
   }
 }
 

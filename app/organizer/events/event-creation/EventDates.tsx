@@ -1,11 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 
+interface EventData {
+  startDate: Timestamp;
+  endDate: Timestamp;
+}
+
 interface EventDatesProps {
-  data: {
-    startDate: Timestamp;
-    endDate: Timestamp;
-  };
-  updateData: (data: any) => void;
+  data: EventData;
+  updateData: (data: EventData) => void;
   isOnlyRead: boolean; // 🔹 Agregado para solo lectura
 }
 

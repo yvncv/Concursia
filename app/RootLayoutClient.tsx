@@ -5,11 +5,11 @@ import NavbarControl from "./ui/navbar/navbar-control";
 import PageTransition from "./ui/page-transition/PageTransition";
 import StairTransition from "./ui/page-transition/StairTransition";
 import Footer from "./ui/footer/footer";
-import { brandName } from "./page";
 
 export default function RootLayoutClient({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [showNavbar, setShowNavbar] = useState(true);
+    const brandName = "SWGEMN";
+    const pathname = usePathname();
+    const [showNavbar, setShowNavbar] = useState(true);
 
   // Actualizar el estado cuando cambie la ruta
   useEffect(() => {
@@ -26,12 +26,12 @@ export default function RootLayoutClient({ children }: { children: React.ReactNo
           <NavbarControl brandName={brandName} />
         </>
       )}
-      
+
       {/* ¡Aquí lo movemos fuera para que siempre se muestre! */}
       <StairTransition />
-      
+
       <PageTransition>{children}</PageTransition>
-  
+
       {showNavbar && <Footer brandName={brandName} />}
     </>
   );

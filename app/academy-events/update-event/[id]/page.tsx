@@ -5,7 +5,7 @@ import { db } from "@/app/firebase/config";
 import useUser from "@/app/firebase/functions";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { Event } from "@/app/types/eventType";
+import { CustomEvent } from "@/app/types/eventType";
 import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 const categoriesList = ["Seriado", "Individual", "Novel Novel", "Novel Abierto A", "Novel Abierto B", "Nacional"];
@@ -123,7 +123,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
       try {
         const eventDoc = await getDoc(doc(db, "eventos", id));
         if (eventDoc.exists()) {
-          const eventData = eventDoc.data() as Event;
+          const eventData = eventDoc.data() as CustomEvent;
           setName(eventData.name || "");
           setSmallImage(eventData.smallImage || "");
           setBannerImage(eventData.bannerImage || "");

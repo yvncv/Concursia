@@ -88,25 +88,28 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
             setCurrentPassword('');
 
             alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error cambiando email:', error);
 
             // Manejo de errores específicos
-            switch (error.code.toString()) {
-                case 'auth/invalid-email':
-                    alert('Correo electrónico inválido');
-                    break;
-                case 'auth/email-already-in-use':
-                    alert('Este correo electrónico ya está en uso');
-                    break;
-                case 'auth/requires-recent-login':
-                    alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
-                    break;
-                default:
-                    alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
+            if (error instanceof Error) {
+                switch (error.message) {
+                    case 'auth/invalid-email':
+                        alert('Correo electrónico inválido');
+                        break;
+                    case 'auth/email-already-in-use':
+                        alert('Este correo electrónico ya está en uso');
+                        break;
+                    case 'auth/requires-recent-login':
+                        alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
+                        break;
+                    default:
+                        alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
+                }
             }
         }
     };
+
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
 

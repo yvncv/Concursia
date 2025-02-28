@@ -10,6 +10,7 @@ const Categories: React.FC<CategoriesProps> = ({ event }) => {
         <div>
             {/* Aquí irían los componentes para manejar categorías */}
             <p>Componentes para gestionar categorías del evento.</p>
+            <h1>{event.id}</h1>
         </div>
     )
 }
