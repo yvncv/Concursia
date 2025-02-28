@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BadgeCheck, Calendar, Clock, MapPin } from "lucide-react"
-import { Event } from "../../types/eventType";
+import { CustomEvent } from "../../types/eventType";
 
-export default function EventComponent({ event }: { event: Event }) {
+export default function EventComponent({ event }: { event: CustomEvent }) {
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement | null>(null);
 
