@@ -72,6 +72,7 @@ export default function LandingPage() {
                             width={300}
                             height={300}
                             className="w-full h-64 object-cover rounded-lg"
+                            loader={({ src }) => src}
                         />
                     ))}
                   </div>

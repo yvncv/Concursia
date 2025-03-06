@@ -64,6 +64,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
                 width={900}
                 height={200}
                 priority={false}
+                loader={({ src }) => src}
               />
             </div>
             <Image
@@ -73,6 +74,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
               width={900}
               height={200}
               priority={false}
+              loader={({ src }) => src}
             />
           </>
         )}

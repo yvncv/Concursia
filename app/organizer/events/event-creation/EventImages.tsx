@@ -66,6 +66,7 @@ export default function EventImages({ data, updateData, isOnlyRead }: EventImage
                   src={data.smallImagePreview}
                   alt="Vista previa"
                   className="w-full h-full object-contain"
+                  loader={({ src }) => src}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -122,6 +123,7 @@ export default function EventImages({ data, updateData, isOnlyRead }: EventImage
                   src={data.bannerImagePreview}
                   alt="Vista previa"
                   className="w-full h-full object-contain"
+                  loader={({ src }) => src}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -184,6 +186,7 @@ export default function EventImages({ data, updateData, isOnlyRead }: EventImage
                 src={previewModal.image}
                 alt="Vista previa"
                 className="w-full h-full object-contain"
+                loader={({ src }) => src}
               />
             </div>
             <div className="flex justify-end gap-4">
