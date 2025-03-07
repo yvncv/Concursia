@@ -39,6 +39,68 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
   const mapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    function initMap() {
+      if (!mapRef.current) return;
+
+      const initialPosition = data.latitude && data.longitude
+          ? { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) }
+          : { lat: -12.046374, lng: -77.042793 };
+
+      const newMap = new window.google.maps.Map(mapRef.current, {
+        center: initialPosition,
+        zoom: data.latitude && data.longitude ? 15 : 10,
+      });
+      setMap(newMap);
+
+      if (data.latitude && data.longitude) {
+        const newMarker = new window.google.maps.Marker({
+          position: initialPosition,
+          map: newMap,
+          title: data.placeName,
+        });
+        setMarker(newMarker);
+      }
+
+      const input = searchInputRef.current;
+      if (input) {
+        const autocomplete = new window.google.maps.places.Autocomplete(input);
+        autocomplete.bindTo("bounds", newMap);
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (!place.geometry || !place.geometry.location) return;
+
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+
+          if (marker) {
+            marker.setMap(null);
+          }
+
+          const newMarker = new window.google.maps.Marker({
+            position: { lat, lng },
+            map: newMap,
+            title: place.name,
+          });
+          setMarker(newMarker);
+
+          newMap.setCenter({ lat, lng });
+          newMap.setZoom(15);
+
+          updateData({
+            ...data,
+            placeName: place.name || "",
+            street: place.formatted_address || "",
+            latitude: lat.toString(),
+            longitude: lng.toString(),
+            department: "",
+            province: "",
+            district: "",
+          });
+        });
+      }
+    }
+
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBsEk80W9glHRTOpG8QSneexy8Zwrvkcrs&libraries=places`;
     script.async = true;
@@ -49,6 +111,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
       document.body.removeChild(script);
     };
   }, []);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,72 +178,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
     }
   }, [map, data.latitude, data.longitude]);
 
-  function initMap() {
-    if (!mapRef.current) return;
 
-    // Establecer la posición inicial
-    const initialPosition = data.latitude && data.longitude
-        ? {
-          lat: parseFloat(data.latitude),
-          lng: parseFloat(data.longitude)
-        }
-        : { lat: -12.046374, lng: -77.042793 }; // Default position
-
-    const newMap = new window.google.maps.Map(mapRef.current, {
-      center: initialPosition,
-      zoom: data.latitude && data.longitude ? 15 : 10,
-    });
-    setMap(newMap);
-
-    // Si hay coordenadas guardadas, crear el marcador inicial
-    if (data.latitude && data.longitude) {
-      const newMarker = new window.google.maps.Marker({
-        position: initialPosition,
-        map: newMap,
-        title: data.placeName
-      });
-      setMarker(newMarker);
-    }
-
-    const input = searchInputRef.current;
-    if (input) {
-      const autocomplete = new window.google.maps.places.Autocomplete(input);
-      autocomplete.bindTo("bounds", newMap);
-
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (!place.geometry || !place.geometry.location) return;
-
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-
-        if (marker) {
-          marker.setMap(null);
-        }
-
-        const newMarker = new window.google.maps.Marker({
-          position: { lat, lng },
-          map: newMap,
-          title: place.name,
-        });
-        setMarker(newMarker);
-
-        newMap.setCenter({ lat, lng });
-        newMap.setZoom(15);
-
-        updateData({
-          ...data,
-          placeName: place.name || "",
-          street: place.formatted_address || "",
-          latitude: lat.toString(),
-          longitude: lng.toString(),
-          department: "",
-          province: "",
-          district: ""
-        });
-      });
-    }
-  }
 
   return (
       <div className="space-y-4">
