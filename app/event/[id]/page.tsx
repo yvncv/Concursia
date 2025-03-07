@@ -19,7 +19,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState(false);
   const [inscripcionEnabled, setInscripcionEnabled] = useState(false);
   const { id } = use(params);
-
+ 
   const event = events.find((event) => event.id === id);
   const { academy} = useAcademy(event?.academyId);
 

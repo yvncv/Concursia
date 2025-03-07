@@ -82,7 +82,7 @@ export const getFieldDefinitions = (event: CustomEvent): FieldDefinition[] => {
             label: "Imagen Pequeña",
             span: 2,
             formatter: () => (
-              <Image src={event.smallImage} alt="Imagen Pequeña" width={150} height={150} className="rounded" />
+              <Image src={event.smallImage} alt="Imagen Pequeña" width={150} height={150} className="rounded" loader={({ src }) => src} />
             ),
           },
         ]
@@ -95,7 +95,7 @@ export const getFieldDefinitions = (event: CustomEvent): FieldDefinition[] => {
             label: "Banner",
             span: 2,
             formatter: () => (
-              <Image src={event.bannerImage} alt="Banner" width={600} height={200} className="rounded" />
+              <Image src={event.bannerImage} alt="Banner" width={600} height={200} className="rounded" loader={({ src }) => src} />
             ),
           },
         ]

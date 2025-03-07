@@ -68,6 +68,7 @@ const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
                                         className="w-full h-full object-fill blur-xl scale-200 brightness-75"
                                         alt={`Background ${index + 1}`}
                                         priority={index === currentIndex}
+                                        loader={({ src }) => src}
                                     />
                                 </div>
 
@@ -79,6 +80,7 @@ const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
                                         className="w-full h-full object-contain object-center"
                                         alt={`Slide ${index + 1}`}
                                         priority={index === currentIndex}
+                                        loader={({ src }) => src}
                                     />
                                 </div>
                             </div>

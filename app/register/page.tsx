@@ -278,7 +278,7 @@ export default function RegisterForm() {
           ) : null}
         </div>
         <div className="hidden md:block md:w-1/2">
-          <Image src={TusuyImage} alt="Tusuy Perú" className="w-full h-full object-cover" />
+          <Image src={TusuyImage} alt="Tusuy Perú" className="w-full h-full object-cover" loader={({ src }) => src} />
         </div>
       </div>
     </div>
