@@ -285,6 +285,89 @@ const Events: React.FC = () => {
         isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
       />
 
+      {loadingEvents ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-600 dark:text-gray-300">Cargando eventos...</p>
+        </div>
+      ) : error ? (
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-100 dark:bg-gray-700">
+              <tr>
+                {["Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Tipo", "Estado", "Acciones"].map((header) => (
+                  <th
+                    key={header}
+                    className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600 text-center"
+                  >
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y dark:divide-gray-700">
+              {events.map((event) => (
+                <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
+                  <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-left">
+                    {event.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300 text-left">
+                    {event.description.length > 50
+                      ? `${event.description.substring(0, 50)}...`
+                      : event.description}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                    {new Date(event.startDate.toDate()).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                    {new Date(event.endDate.toDate()).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                    {event.eventType}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        event.status === "active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                      }`}
+                    >
+                      {event.status === "active" ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                        title="Visualizar"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
+                        title="Editar"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <FilePenLine className="w-5 h-5" />
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                        title="Eliminar"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {selectedEvent && (
         <DeleteEventModal
