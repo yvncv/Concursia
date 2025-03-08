@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
-import { useRouter } from 'next/navigation';
 import { auth, db } from '../../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
 import { updateEmail, sendEmailVerification, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
