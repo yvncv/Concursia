@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { CustomEvent } from "@/app/types/eventType";
 import useAcademies from "@/app/hooks/useAcademies";
 import useAcademy from "@/app/hooks/useAcademy";
@@ -50,96 +50,117 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
 };
 
 // Componente para el selector de academias con búsqueda
-const AcademySelector = ({ onAcademySelect }: { onAcademySelect: (academyId: string, academyName:string) => void }) => {
-  const { academies, loadingAcademies, errorAcademies } = useAcademies(); // Corrected property names
-  const [selectedAcademy, setSelectedAcademy] = useState<string>('');
+const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName }: { onAcademySelect: (academyId: string, academyName: string) => void, initialAcademyId: string, initialAcademyName: string }) => {
+  const { academies, loadingAcademies, errorAcademies } = useAcademies();
+  const [selectedAcademyName, setSelectedAcademyName] = useState<string>(initialAcademyName || 'Libre');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
 
+  useEffect(() => {
+    onAcademySelect(initialAcademyId, initialAcademyName);
+  }, [initialAcademyId, initialAcademyName, onAcademySelect]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value); // Actualiza el texto de búsqueda
+    setSearchQuery(e.target.value);
   };
 
   const handleAcademySelect = (academyId: string, academyName: string) => {
-    setSelectedAcademy(academyName); // Actualiza el nombre de la academia seleccionada
-    setSearchQuery(''); // Limpiamos el campo de búsqueda
-    setIsNewAcademy(false); // Resetear la bandera de nueva academia
-    onAcademySelect(academyId,academyName); // Notificamos al componente padre con el ID de la academia seleccionada
+    setSelectedAcademyName(academyName);
+    setSearchQuery('');
+    setIsNewAcademy(false);
+    onAcademySelect(academyId, academyName);
   };
 
   const handleSaveNewAcademy = (academyName: string) => {
-    // Formatear el nombre de la academia (capitalizar palabras y eliminar espacios extra)
     const formattedAcademyName = searchQuery
-      .replace(/\s+/g, ' ') // Eliminar espacios extra
-      .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase()); // Capitalizar la primera letra de cada palabra
-    setSelectedAcademy(formattedAcademyName); // Muestra el nombre formateado en el campo
-    setSearchQuery(''); // Limpiar el campo de búsqueda
-    setIsNewAcademy(false); // Resetear la bandera de nueva academia
-    onAcademySelect('',academyName);
+        .replace(/\s+/g, ' ')
+        .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
+    setSelectedAcademyName(formattedAcademyName);
+    setSearchQuery('');
+    setIsNewAcademy(false);
+    onAcademySelect('', academyName);
   };
 
-  // Filtrar academias según el texto ingresado
+  const handleResetAcademy = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setSelectedAcademyName('Libre');
+    setSearchQuery('');
+    setIsNewAcademy(false);
+    onAcademySelect('', 'Libre');
+  };
+
   const filteredAcademies = academies.filter(academy =>
-    academy.name.toLowerCase().includes(searchQuery.toLowerCase())
+      academy.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="w-full">
-      <label htmlFor="academyId" className="block text-sm font-medium text-white">
-        Academia
-      </label>
-      {loadingAcademies ? (
-        <div className="mt-1 px-4 py-4 text-gray-500">Cargando academias...</div>
-      ) : errorAcademies ? (
-        <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademies}</div>
-      ) : (
-        <div>
-          <input
-            id="academyId"
-            type="text"
-            value={searchQuery || selectedAcademy} // Muestra el texto de búsqueda si está activo, de lo contrario muestra el nombre de la academia seleccionada
-            onChange={handleSearchChange}
-            className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-            placeholder="Buscar academia"
-          />
-          {searchQuery && (
-            <div className="w-full bg-white border mt-1 rounded-2xl shadow-lg overflow-y-auto">
-              {filteredAcademies.length > 0 ? (
-                filteredAcademies.map(academy => (
-                  <div
-                    key={academy.id}
-                    className="px-4 py-3 hover:bg-gray-200 cursor-pointer"
-                    onClick={() => handleAcademySelect(academy.id, academy.name)}
-                  >
-                    {academy.name}
+      <div className="w-full">
+        <label htmlFor="academyId" className="block text-sm font-medium text-white">
+          Academia
+        </label>
+        {loadingAcademies ? (
+            <div className="mt-1 px-4 py-4 text-gray-500">Cargando academias...</div>
+        ) : errorAcademies ? (
+            <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademies}</div>
+        ) : (
+            <div>
+              <input
+                  id="academyId"
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                  placeholder="Buscar academia"
+              />
+              {searchQuery && (
+                  <div className="w-full bg-white border mt-1 rounded-2xl shadow-lg overflow-y-auto">
+                    {filteredAcademies.length > 0 ? (
+                        filteredAcademies.map(academy => (
+                            <div
+                                key={academy.id}
+                                className="px-4 py-3 hover:bg-gray-200 cursor-pointer"
+                                onClick={() => handleAcademySelect(academy.id, academy.name)}
+                            >
+                              {academy.name}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-4 py-3 text-gray-500">
+                          No se encontró la academia en nuestros registros.
+                          <div
+                              className="mt-2 text-blue-500 cursor-pointer"
+                              onClick={() => setIsNewAcademy(true)}
+                          >
+                            ¿Quiere usar {`"${searchQuery}"`} como academia de todos modos?
+                          </div>
+                        </div>
+                    )}
                   </div>
-                ))
-              ) : (
-                <div className="px-4 py-3 text-gray-500">
-                  No se encontró la academia en nuestros registros.
-                  <div
-                    className="mt-2 text-blue-500 cursor-pointer"
-                    onClick={() => setIsNewAcademy(true)}
-                  >
-                    ¿Quiere usar {`"${searchQuery}"`}como academia de todos modos?
-                  </div>
-                </div>
               )}
+              {isNewAcademy && (
+                  <div className="mt-2">
+                    <button
+                        onClick={() => handleSaveNewAcademy(searchQuery)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-2xl"
+                    >
+                      Usar esta academia
+                    </button>
+                  </div>
+              )}
+              <div className="mt-2">
+                <button
+                    onClick={handleResetAcademy}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-2xl"
+                >
+                  Reinciar a Libre
+                </button>
+              </div>
+              <div className="mt-2 text-white">
+                Academia seleccionada: {selectedAcademyName}
+              </div>
             </div>
-          )}
-          {isNewAcademy && (
-            <div className="mt-2">
-              <button
-                onClick={()=>handleSaveNewAcademy(searchQuery)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-2xl"
-              >
-                Usar esta academia
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 };
 
@@ -358,7 +379,11 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; ope
                       ))}
                     </select>
                   </div>
-                  <AcademySelector onAcademySelect={handleAcademySelect} />
+                  <AcademySelector
+                      onAcademySelect={handleAcademySelect}
+                      initialAcademyId={user.academyId || ''}
+                      initialAcademyName={user.academyName || 'Libre'}
+                  />
                 </form>
 
                 {isCoupleRequired && (
@@ -453,7 +478,11 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; ope
                             ))}
                           </select>
                         </div>
-                        <AcademySelector onAcademySelect={handleCoupleAcademySelect} />
+                        <AcademySelector
+                            onAcademySelect={handleCoupleAcademySelect}
+                            initialAcademyId={pareja.academyId || ''}
+                            initialAcademyName={pareja.academyName || 'Libre'}
+                        />
                       </form>
                     </>
                 )}
