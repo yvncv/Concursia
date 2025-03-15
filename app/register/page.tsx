@@ -10,6 +10,13 @@ import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
 import { Search } from "lucide-react"; // Importamos el ícono de búsqueda
 
+// Interfaz para los datos de ubicación
+interface LocationData {
+  department?: string;
+  province?: string;
+  district?: string;
+}
+
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -27,6 +34,13 @@ export default function RegisterForm() {
   const [birthDate, setBirthDate] = useState("");
   const [step, setStep] = useState(1);
   const router = useRouter();
+
+  // Estado para almacenar datos de ubicación (invisible para el usuario)
+  const [locationData, setLocationData] = useState<LocationData>({
+    department: "",
+    province: "",
+    district: ""
+  });
 
   const [loadingDni, setLoadingDni] = useState(false);
   const [dniError, setDniError] = useState("");
@@ -94,6 +108,12 @@ export default function RegisterForm() {
         category: category,
         email: [email],
         phoneNumber: [phoneNumber],
+        // Añadimos los datos de ubicación al documento del usuario
+        location: {
+          department: locationData.department,
+          province: locationData.province,
+          district: locationData.district
+        },
         createdAt: new Date(),
       });
       alert("Registro exitoso");
@@ -148,6 +168,20 @@ export default function RegisterForm() {
         setFirstName(response.data.data.name);
         setLastName(response.data.data.surname);
         setBirthDate(response.data.data.date_of_birth);
+        
+        // Guardamos los datos de ubicación que vienen de la API
+        // Estos datos NO se mostrarán en la interfaz
+        setLocationData({
+          department: response.data.data.department || "",
+          province: response.data.data.province || "",
+          district: response.data.data.district || ""
+        });
+        
+        console.log("Datos de ubicación obtenidos (solo para desarrollo):", {
+          department: response.data.data.department,
+          province: response.data.data.province,
+          district: response.data.data.district
+        });
       } else {
         setDniError("No se encontró el DNI.");
       }
