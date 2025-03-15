@@ -1,12 +1,85 @@
 import { ArrowLeft, Undo, Redo, Cloud, BarChart2, Printer, Plus } from "lucide-react";
 import Link from "next/link";
 import { CustomEvent } from '@/app/types/eventType';
+import { useState, useRef, useEffect } from "react";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/app/firebase/config"; // Adjust this import based on your Firebase config path
 
 interface EventHeaderProps {
   event: CustomEvent;
+  onEventNameChange?: (newName: string) => void;
 }
 
-const EventHeader: React.FC<EventHeaderProps> = ({ event }) => {
+const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [eventName, setEventName] = useState(event.name);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const [inputWidth, setInputWidth] = useState('auto');
+
+  useEffect(() => {
+    // Calculate width based on content
+    if (spanRef.current) {
+      const width = spanRef.current.offsetWidth + 20;
+      setInputWidth(`${Math.max(width, 100)}px`);
+    }
+  }, [eventName, isEditing]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      
+      // Don't select text when entering edit mode - place cursor at end instead
+      const length = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(length, length);
+    }
+  }, [isEditing]);
+
+  const updateEventNameInFirebase = async (newName: string) => {
+    if (!event.id || newName === event.name) return;
+    
+    setIsSaving(true);
+    try {
+      const eventRef = doc(db, "eventos", event.id);
+      await updateDoc(eventRef, {
+        name: newName
+      });
+      
+      // Call the optional callback if provided
+      if (onEventNameChange) {
+        onEventNameChange(newName);
+      }
+    } catch (error) {
+      console.error("Error updating event name:", error);
+      // Revert to original name on error
+      setEventName(event.name);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    setIsHovering(false);
+    if (eventName !== event.name) {
+      updateEventNameInFirebase(eventName);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      setIsEditing(false);
+      if (eventName !== event.name) {
+        updateEventNameInFirebase(eventName);
+      }
+    } else if (e.key === 'Escape') {
+      setEventName(event.name);
+      setIsEditing(false);
+    }
+  };
+
   return (
     <header className="bg-gradient-to-r from-red-500 via-rose-500 to-rose-400 shadow-md">
       <div className="px-4 py-2">
@@ -36,7 +109,46 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event }) => {
 
           {/* Right section */}
           <div className="flex items-center space-x-3">
-            <span className="text-white text-sm">{event.name}</span>
+            {/* Hidden span to measure text width */}
+            <span 
+              ref={spanRef} 
+              className="absolute opacity-0 text-sm whitespace-nowrap"
+              aria-hidden="true"
+            >
+              {eventName}
+            </span>
+            
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => !isEditing && setIsHovering(false)}
+            >
+              {isEditing ? (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  onBlur={handleBlur}
+                  onKeyDown={handleKeyDown}
+                  style={{ width: inputWidth }}
+                  className="bg-transparent text-white text-sm focus:outline-none px-0 py-0"
+                  disabled={isSaving}
+                />
+              ) : (
+                <span 
+                  className={`text-white text-sm inline-block cursor-text whitespace-nowrap ${isHovering ? 'border-b border-dashed border-white/50' : ''}`}
+                  onClick={() => setIsEditing(true)}
+                >
+                  {isSaving ? (
+                    <span className="opacity-70">Guardando...</span>
+                  ) : (
+                    eventName
+                  )}
+                </span>
+              )}
+            </div>
+            
             <div className="flex items-center space-x-2">
               <button className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
                 <BarChart2 className="h-4 w-4" />
@@ -74,4 +186,3 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event }) => {
 }
 
 export default EventHeader;
-

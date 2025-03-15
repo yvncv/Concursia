@@ -1,21 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/app/firebase/config";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
+import { Search } from "lucide-react"; // Importamos el ícono de búsqueda
+
+// Interfaz para los datos de ubicación
+interface LocationData {
+  department?: string;
+  province?: string;
+  district?: string;
+}
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");  // Nuevo estado para confirmar la contraseña
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error1, setError1] = useState("");
   const [error2, setError2] = useState("");
-  const [passwordError, setPasswordError] = useState("");  // Estado para mostrar el error de contraseñas no coincidentes
+  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dni, setDni] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -25,6 +34,16 @@ export default function RegisterForm() {
   const [birthDate, setBirthDate] = useState("");
   const [step, setStep] = useState(1);
   const router = useRouter();
+
+  // Estado para almacenar datos de ubicación (invisible para el usuario)
+  const [locationData, setLocationData] = useState<LocationData>({
+    department: "",
+    province: "",
+    district: ""
+  });
+
+  const [loadingDni, setLoadingDni] = useState(false);
+  const [dniError, setDniError] = useState("");
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
@@ -55,7 +74,7 @@ export default function RegisterForm() {
       setError1("Por favor ingresa un correo válido.");
       return;
     }
-    if (password !== confirmPassword) {  // Validación de contraseñas
+    if (password !== confirmPassword) {
       setPasswordError("Las contraseñas no coinciden.");
       setLoading(false);
       return;
@@ -71,8 +90,7 @@ export default function RegisterForm() {
       return;
     }
 
-    e.preventDefault();
-    setPasswordError("");  // Limpiar el error de contraseña en este paso
+    setPasswordError("");
     setLoading(true);
 
     try {
@@ -90,12 +108,12 @@ export default function RegisterForm() {
         category: category,
         email: [email],
         phoneNumber: [phoneNumber],
-        // email: [email, ""],
-        // phoneNumber: [phoneNumber, ""],
-        // attendedEvents: [""],
-        // participatedEvents: [""],
-        // level: "",
-        // academyId: "",
+        // Añadimos los datos de ubicación al documento del usuario
+        location: {
+          department: locationData.department,
+          province: locationData.province,
+          district: locationData.district
+        },
         createdAt: new Date(),
       });
       alert("Registro exitoso");
@@ -106,6 +124,74 @@ export default function RegisterForm() {
       setLoading(false);
     }
   };
+
+  // Esta función ahora solo se activará cuando se haga clic en el ícono
+  // o cuando el usuario presione Enter en el campo DNI
+  const handleDniSearch = () => {
+    if (dni.length === 8) {
+      fetchReniecData(dni);
+    } else {
+      setDniError("El DNI debe tener 8 dígitos.");
+    }
+  };
+
+  // Función para manejar la pulsación de Enter en el campo DNI
+  const handleDniKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevenir el envío del formulario
+      handleDniSearch();
+    }
+  };
+
+  // Mantenemos el efecto pero ahora solo para la carga inicial
+  useEffect(() => {
+    if (dni.length === 8) {
+      fetchReniecData(dni);
+    }
+  }, [dni]);
+
+  const fetchReniecData = async (dni: string) => {
+    setLoadingDni(true);
+    setDniError("");
+
+    try {
+      const response = await axios.post(
+        "https://api.consultasperu.com/api/v1/query",
+        {
+          token: "24068bb2bf38ddc53748557196cf438c54f6d7b227623c99dbad83599d70b505",
+          type_document: "dni",
+          document_number: dni
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        setFirstName(response.data.data.name);
+        setLastName(response.data.data.surname);
+        setBirthDate(response.data.data.date_of_birth);
+        
+        // Guardamos los datos de ubicación que vienen de la API
+        // Estos datos NO se mostrarán en la interfaz
+        setLocationData({
+          department: response.data.data.department || "",
+          province: response.data.data.province || "",
+          district: response.data.data.district || ""
+        });
+        
+        console.log("Datos de ubicación obtenidos (solo para desarrollo):", {
+          department: response.data.data.department,
+          province: response.data.data.province,
+          district: response.data.data.district
+        });
+      } else {
+        setDniError("No se encontró el DNI.");
+      }
+    } catch (error) {
+      setDniError("Error al consultar el DNI.");
+    } finally {
+      setLoadingDni(false);
+    }
+  };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-8">
@@ -174,11 +260,11 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-              {passwordError && <p className="text-red-500">{passwordError}</p>}  {/* Mostrar el error si las contraseñas no coinciden */}
+              {passwordError && <p className="text-red-500">{passwordError}</p>}
               <button
                 type="submit"
                 className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
-                disabled={!email || !password || !confirmPassword} // Habilitar solo si los campos están llenos
+                disabled={!email || !password || !confirmPassword}
               >
                 {loading ? "Cargando..." : "Siguiente"}
               </button>
@@ -195,15 +281,29 @@ export default function RegisterForm() {
               {error2 && <p className="text-red-500">{error2}</p>}
               <div>
                 <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
-                <input
-                  type="text"
-                  id="dni"
-                  value={dni}
-                  onChange={(e) => setDni(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                  placeholder="Número de DNI"
-                  required
-                />
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    id="dni"
+                    value={dni}
+                    onChange={(e) => setDni(e.target.value)}
+                    onKeyPress={handleDniKeyPress}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    placeholder="Número de DNI"
+                    maxLength={8}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDniSearch}
+                    className="mt-1 flex items-center justify-center w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-colors"
+                    aria-label="Buscar DNI"
+                  >
+                    <Search size={20} />
+                  </button>
+                </div>
+                {loadingDni && <p className="text-blue-500">Buscando datos...</p>}
+                {dniError && <p className="text-red-500">{dniError}</p>}
               </div>
               <div className="flex gap-x-2">
                 <div>
@@ -215,6 +315,7 @@ export default function RegisterForm() {
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Juan"
+                    readOnly
                     required
                   />
                 </div>
@@ -227,6 +328,7 @@ export default function RegisterForm() {
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Perez Prado"
+                    readOnly
                     required
                   />
                 </div>
@@ -239,7 +341,8 @@ export default function RegisterForm() {
                   min={`${new Date().getFullYear() - 120}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
                   max={`${new Date().getFullYear() - 1}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
                   value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)} // Método actualizado
+                  readOnly
+                  onChange={(e) => setBirthDate(e.target.value)}
                   className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 />
               </div>
