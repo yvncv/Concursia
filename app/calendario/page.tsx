@@ -27,6 +27,9 @@ export default function TodosEventos() {
     );
   }
 
+  const capitalizeName = (name : any) => 
+    name.toLowerCase().replace(/\b\w/g, (char : any) => char.toUpperCase());
+
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
@@ -49,7 +52,7 @@ export default function TodosEventos() {
       <div className="w-full max-w-[1400px] px-4 md:px-8 mt-12">
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
           <h1 className="text-2xl font-bold text-red-600">
-            {user?.firstName ? `¡Bienvenido, ${user.firstName}` : "¡Bienvenido a Tusuy Perú"}, estos son los eventos de la fecha!
+            {user?.firstName ? `¡${user.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user.firstName)}` : "¡Bienvenido a Tusuy Perú"}, estos son los eventos de la fecha!
           </h1>
         </div>
 

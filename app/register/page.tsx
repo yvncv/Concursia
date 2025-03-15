@@ -8,9 +8,9 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
-import { Search } from "lucide-react"; // Importamos el ícono de búsqueda
+import { Search } from "lucide-react";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
-// Interfaz para los datos de ubicación
 interface LocationData {
   department?: string;
   province?: string;
@@ -33,9 +33,11 @@ export default function RegisterForm() {
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [step, setStep] = useState(1);
+  const [emailExistsError, setEmailExistsError] = useState("");
+  const [dniExistsError, setDniExistsError] = useState("");
   const router = useRouter();
 
-  // Estado para almacenar datos de ubicación (invisible para el usuario)
+
   const [locationData, setLocationData] = useState<LocationData>({
     department: "",
     province: "",
@@ -54,6 +56,44 @@ export default function RegisterForm() {
       determineCategory(birthYear);
     }
   }, [birthDate]);
+
+  const checkEmailExistsInFirestore = async (emailToCheck: any) => {
+    try {
+      const usersRef = collection(db, "users");
+      // Usamos 'array-contains' porque los emails están guardados como array
+      const q = query(usersRef, where("email", "array-contains", emailToCheck));
+      const querySnapshot = await getDocs(q);
+
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Error al verificar email:", error);
+      return false;
+    }
+  };
+
+  const checkDniExistsInFirestore = async (dniToCheck: any) => {
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("dni", "==", dniToCheck));
+      const querySnapshot = await getDocs(q);
+
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Error al verificar DNI:", error);
+      return false;
+    }
+  };
+
+  const handleEmailBlur = async () => {
+    if (email && validateEmail(email)) {
+      const exists = await checkEmailExistsInFirestore(email);
+      if (exists) {
+        setEmailExistsError("Este correo electrónico ya está registrado. Por favor, utiliza otro.");
+      } else {
+        setEmailExistsError("");
+      }
+    }
+  };
 
   const determineCategory = (birthYear: number) => {
     if (birthYear >= 2021) setCategory('Baby');
@@ -90,6 +130,12 @@ export default function RegisterForm() {
       return;
     }
 
+    const dniExists = await checkDniExistsInFirestore(dni);
+    if (dniExists) {
+      setDniExistsError("Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión.");
+      return;
+    }
+
     setPasswordError("");
     setLoading(true);
 
@@ -108,7 +154,6 @@ export default function RegisterForm() {
         category: category,
         email: [email],
         phoneNumber: [phoneNumber],
-        // Añadimos los datos de ubicación al documento del usuario
         location: {
           department: locationData.department,
           province: locationData.province,
@@ -125,8 +170,6 @@ export default function RegisterForm() {
     }
   };
 
-  // Esta función ahora solo se activará cuando se haga clic en el ícono
-  // o cuando el usuario presione Enter en el campo DNI
   const handleDniSearch = () => {
     if (dni.length === 8) {
       fetchReniecData(dni);
@@ -138,12 +181,11 @@ export default function RegisterForm() {
   // Función para manejar la pulsación de Enter en el campo DNI
   const handleDniKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); // Prevenir el envío del formulario
+      e.preventDefault();
       handleDniSearch();
     }
   };
 
-  // Mantenemos el efecto pero ahora solo para la carga inicial
   useEffect(() => {
     if (dni.length === 8) {
       fetchReniecData(dni);
@@ -153,8 +195,15 @@ export default function RegisterForm() {
   const fetchReniecData = async (dni: string) => {
     setLoadingDni(true);
     setDniError("");
+    setDniExistsError("");
 
     try {
+      const dniExists = await checkDniExistsInFirestore(dni);
+      if (dniExists) {
+        setDniExistsError("Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión.");
+        setLoadingDni(false);
+        return;
+      }
       const response = await axios.post(
         "https://api.consultasperu.com/api/v1/query",
         {
@@ -168,19 +217,11 @@ export default function RegisterForm() {
         setFirstName(response.data.data.name);
         setLastName(response.data.data.surname);
         setBirthDate(response.data.data.date_of_birth);
-        
-        // Guardamos los datos de ubicación que vienen de la API
-        // Estos datos NO se mostrarán en la interfaz
+
         setLocationData({
           department: response.data.data.department || "",
           province: response.data.data.province || "",
           district: response.data.data.district || ""
-        });
-        
-        console.log("Datos de ubicación obtenidos (solo para desarrollo):", {
-          department: response.data.data.department,
-          province: response.data.data.province,
-          district: response.data.data.district
         });
       } else {
         setDniError("No se encontró el DNI.");
@@ -231,10 +272,12 @@ export default function RegisterForm() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={handleEmailBlur}
                   className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Correo electrónico"
                   required
                 />
+                {emailExistsError && <p className="text-red-500 text-sm mt-1">{emailExistsError}</p>}
               </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
@@ -304,6 +347,7 @@ export default function RegisterForm() {
                 </div>
                 {loadingDni && <p className="text-blue-500">Buscando datos...</p>}
                 {dniError && <p className="text-red-500">{dniError}</p>}
+                {dniExistsError && <p className="text-red-500">{dniExistsError}</p>}
               </div>
               <div className="flex gap-x-2">
                 <div>
