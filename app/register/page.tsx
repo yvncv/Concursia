@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "@/app/firebase/config";
+import { auth, db, storage } from "@/app/firebase/config";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
-import { Search } from "lucide-react";
+import Hombre from "@/public/hombre.png";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Search, User, Image as LucideImage, X, Check, Lightbulb } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import ImageCropModal from "./modals/ImageCropModal";
 
 interface LocationData {
   department?: string;
@@ -46,6 +49,11 @@ export default function RegisterForm() {
 
   const [loadingDni, setLoadingDni] = useState(false);
   const [dniError, setDniError] = useState("");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
@@ -143,6 +151,11 @@ export default function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      let profileImageUrl = null;
+      if (croppedImage) {
+        profileImageUrl = await uploadProfileImage(croppedImage, user.uid);
+      }
+
       await setDoc(doc(db, "users", user.uid), {
         id: user.uid,
         roleId: "user",
@@ -159,6 +172,7 @@ export default function RegisterForm() {
           province: locationData.province,
           district: locationData.district
         },
+        profileImage: profileImageUrl,
         createdAt: new Date(),
       });
       alert("Registro exitoso");
@@ -233,6 +247,62 @@ export default function RegisterForm() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Añade esta línea
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+      setSelectedImage(imageUrl);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleConfirmCrop = (croppedImageUrl: any) => {
+    setCroppedImage(croppedImageUrl);
+    setIsModalOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Opcionalmente limpiar la selección si se cancela
+    if (!croppedImage) {
+      setSelectedImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const uploadProfileImage = async (imageFile: any, userId: any) => {
+    try {
+      // Convert base64 to blob if needed
+      let imageToUpload = imageFile;
+
+      if (typeof imageFile === 'string' && imageFile.startsWith('data:')) {
+        // Convert base64 to blob
+        const response = await fetch(imageFile);
+        imageToUpload = await response.blob();
+      }
+
+      // Create reference to the user's profile image in storage
+      const imageRef = storageRef(storage, `users/${userId}`);
+
+      // Upload the image
+      await uploadBytes(imageRef, imageToUpload);
+
+      // Get and return the download URL
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      
+      if (error instanceof Error) {
+        throw new Error(`Error uploading profile image: ${error.message}`);
+      } else {
+        throw new Error("Error uploading profile image: An unknown error occurred");
+      }
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-8">
@@ -247,7 +317,7 @@ export default function RegisterForm() {
           </button>
           <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Regístrate aquí</h1>
           <div className="flex justify-center space-x-4 mb-6">
-            {[1, 2].map((num) => (
+            {[1, 2, 3].map((num) => (
               <button
                 key={num}
                 onClick={() => step >= num && setStep(num)}
@@ -416,11 +486,112 @@ export default function RegisterForm() {
                 />
               </div>
               <button
-                type="submit"
+                type="button"
+                onClick={() => setStep(3)}
                 className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
               >
-                {loading ? "Cargando..." : "Registrarse"}
+                Siguiente
               </button>
+            </form>
+          ) : step === 3 ? (
+            <form onSubmit={handleSubmitStep2} className="space-y-4">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Foto de Perfil</h2>
+                <p className="text-gray-600 text-sm">Sube una foto clara para tu perfil</p>
+              </div>
+
+              <div className="flex flex-col items-center">
+                {/* Visualización de imagen */}
+                <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
+                  {croppedImage ? (
+                    <img
+                      src={croppedImage}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <User size={44} className="text-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Input para subir imagen */}
+                <label
+                  htmlFor="profile-photo"
+                  className="cursor-pointer bg-rose-100 hover:bg-rose-200 text-rose-600 py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <LucideImage size={20} className="text-rose-600" />
+                  Seleccionar foto
+                </label>
+                <input
+                  type="file"
+                  id="profile-photo"
+                  className="hidden"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {selectedImage && (
+                <ImageCropModal
+                  image={selectedImage}
+                  isOpen={isModalOpen}
+                  onClose={handleCloseModal}
+                  onConfirm={handleConfirmCrop}
+                />
+              )}
+
+              {/* Guía de foto */}
+              <div className="mt-8 bg-gray-50 rounded-xl p-6">
+                <h3 className="text-lg font-medium text-gray-700 mb-3">Guía para foto de perfil</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {/* Imagen de guía */}
+                  <div className="bg-rose-100 rounded-lg p-3 shadow-sm">
+                    <div className="aspect-square bg-rose-50 rounded-lg overflow-hidden flex items-center justify-center">
+                      <div className="w-full h-full bg-white flex items-center justify-center">
+                        <Image src={Hombre} alt="Tusuy Perú" className="pt-4" />
+                      </div>
+                    </div>
+                    <p className="text-center text-sm mt-2 font-medium text-rose-600">Ejemplo ideal</p>
+                  </div>
+
+                  {/* Instrucciones */}
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <ul className="text-sm text-gray-700 space-y-2">
+                      <li className="flex items-start gap-2">
+                        <Check size={20} className="text-green-500" />
+                        Foto frontal
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={20} className="text-green-500" />
+                        Espacio luminoso
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <X size={20} className="text-red-500" />
+                        No lentes ni gorras
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Lightbulb size={20} className="text-yellow-500" />
+                        Fondo blanco
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de navegación */}
+              <div className="flex justify-between mt-8">
+                <button
+                  type="submit"
+                  className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
+                  disabled={loading}
+                >
+                  {loading ? "Cargando..." : "Registrarse"}
+                </button>
+              </div>
             </form>
           ) : null}
         </div>
