@@ -5,6 +5,7 @@ import { Timestamp } from "firebase/firestore";
 export interface GeneralData {
   name: string;
   description: string;
+  status: string;
 }
 
 // Interfaces para las fechas

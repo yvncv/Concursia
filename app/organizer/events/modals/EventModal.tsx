@@ -24,7 +24,8 @@ interface EventModalProps {
 const initialEventData: EventFormData = {
     general: {
         name: '',
-        description: ''
+        description: '',
+        status: ''
     },
     dates: {
         startDate: Timestamp.now(), // Inicializa con Timestamp
@@ -72,6 +73,7 @@ const EventModal: React.FC<EventModalProps> = ({
 
         if (!general.name) incompleteFields.push('Nombre');
         if (!general.description) incompleteFields.push('Descripción');
+        if (!general.status) incompleteFields.push('Inactivo');
         if (!dates.startDate) incompleteFields.push('Fecha de inicio');
         if (!dates.endDate) incompleteFields.push('Fecha de fin');
         if (!details.capacity) incompleteFields.push('Capacidad');

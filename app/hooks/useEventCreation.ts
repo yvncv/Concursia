@@ -86,6 +86,7 @@ export const useEventCreation = (): EventCreationHandler => {
       id: eventId,
       name: eventData.general.name,
       description: eventData.general.description,
+      status: eventData.general.status,
       startDate: eventData.dates.startDate,
       endDate: eventData.dates.endDate,
       academyId: user.academyId,
@@ -106,7 +107,6 @@ export const useEventCreation = (): EventCreationHandler => {
       },
       eventType: eventData.details.eventType,
       capacity: eventData.details.capacity,
-      status: "pendiente",
       settings: {
         levels: processedLevels,
         categories: eventData.dance.categories,
