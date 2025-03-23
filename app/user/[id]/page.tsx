@@ -216,24 +216,24 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleDeleteProfilePicture = async () => {
     if (!user?.uid) return;
     try {
-        // Crear referencia a la imagen por defecto en Firebase Storage
-        const defaultImageRef = user.gender == 'Masculino' ? ref(storage, 'users/dafault-male.JPG') : ref(storage, 'users/dafault-female.JPG');
+      // Crear referencia a la imagen por defecto en Firebase Storage
+      const defaultImageRef = user.gender == 'Masculino' ? ref(storage, 'users/dafault-male.JPG') : ref(storage, 'users/dafault-female.JPG');
 
-        // Obtener la URL pública de la imagen por defecto
-        const defaultImageUrl = await getDownloadURL(defaultImageRef);
-        // Referencia al documento del usuario en Firestore
-        const userRef = doc(db, "users", user.uid);
+      // Obtener la URL pública de la imagen por defecto
+      const defaultImageUrl = await getDownloadURL(defaultImageRef);
+      // Referencia al documento del usuario en Firestore
+      const userRef = doc(db, "users", user.uid);
 
-        // Actualizar la URL de la imagen en Firestore
-        await updateDoc(userRef, { profileImage: defaultImageUrl });
+      // Actualizar la URL de la imagen en Firestore
+      await updateDoc(userRef, { profileImage: defaultImageUrl });
 
-        console.log('Perfil actualizado exitosamente');
-        setHasChanges(false);
+      console.log('Perfil actualizado exitosamente');
+      setHasChanges(false);
     } catch (error) {
-        console.error("Error al actualizar el perfil:", error);
+      console.error("Error al actualizar el perfil:", error);
     }
     setIsChangeImageModalOpen(false);
-};
+  };
 
   const handleConfirmCrop = (croppedImageUrl: string) => {
     setCroppedImage(croppedImageUrl);
@@ -344,7 +344,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className='flex space-x-5 items-center'>
             <div className="flex flex-col items-center">
               {/* Contenedor de la imagen con overlay en hover */}
-              <div onClick={() => setIsChangeImageModalOpen(true)} className="relative group w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
+              <div className="relative group w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
                 {croppedImage ? (
                   <Image
                     src={croppedImage}
@@ -370,16 +370,18 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 )}
 
                 {/* Overlay visible al hover */}
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:cursor-pointer">
-                  {/* Label para seleccionar foto */}
-                  <label
-                    htmlFor="profile-photo"
-                    className="cursor-pointer text-white flex flex-col items-center gap-2 mb-2 text-xs text-center"
-                  >
-                    <LucideImage size={20} className="text-white" />
-                    Seleccionar nueva imagen
-                  </label>
-                </div>
+                {canEdit &&
+                  <div onClick={() => setIsChangeImageModalOpen(true)} className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:cursor-pointer">
+                    {/* Label para seleccionar foto */}
+                    <label
+                      htmlFor="profile-photo"
+                      className="cursor-pointer text-white flex flex-col items-center gap-2 mb-2 text-xs text-center"
+                    >
+                      <LucideImage size={20} className="text-white" />
+                      Seleccionar nueva imagen
+                    </label>
+                  </div>
+                }
               </div>
 
               {/* Input oculto para seleccionar imagen
