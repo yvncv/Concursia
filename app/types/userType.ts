@@ -17,5 +17,6 @@ export type User = FirebaseUser & {
   level?: string;
   academyId?: string;
   academyName?: string;
+  profileImage: string | File;
   createdAt: Timestamp;
 };

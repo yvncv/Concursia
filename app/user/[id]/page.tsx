@@ -2,10 +2,15 @@
 
 import { useState, useEffect, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
-import { auth, db } from '../../firebase/config';
+import { auth, db, storage } from '../../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
 import { updateEmail, sendEmailVerification, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import useUser from '@/app/firebase/functions';
+import Image from 'next/image';
+import { useRef } from 'react';
+import { LucideImage, User } from 'lucide-react';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import ImageCropModal from '@/app/register/modals/ImageCropModal';
 
 const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -14,6 +19,12 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { users, loadingUsers } = useUsers();
   const { user } = useUser();
   const { id } = use(params);
+
+  // Estado para la imagen del usuario
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const foundUser = users.find((user) => user.id === id);
 
@@ -56,6 +67,14 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     });
   };
 
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { id, value } = e.target;
+  //   setContactInfo(prev => ({
+  //     ...prev,
+  //     [id]: value
+  //   }));
+  // };
+
   const handleChangeEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -67,18 +86,79 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     if (!user?.uid) return;
 
     try {
+      // Validar el formato del correo
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(newEmail)) {
         alert('Por favor ingrese un correo electrónico válido');
         return;
       }
 
+      // Re-autenticación
       const currentEmail = auth.currentUser.email ?? '';
       const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
 
+      // Cambiar el correo en Authentication
       await updateEmail(auth.currentUser, newEmail);
+
+      // Enviar un correo de verificación
       await sendEmailVerification(auth.currentUser);
+
+      // Actualizar el correo en Firestore
+      const userRef = doc(db, 'users', user.uid); // Suponiendo que el ID del documento es el UID del usuario autenticado
+      const updateData = {
+        email: [newEmail, user.email[1]]
+      }
+
+      await updateDoc(userRef, updateData);
+      console.log('Perfil actualizado exitosamente');
+
+      // Restablecer los estados del modal
+      setIsEmailModalOpen(false);
+      setNewEmail('');
+      setCurrentPassword('');
+
+      alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
+    } catch (error: unknown) {
+      console.error('Error cambiando email:', error);
+
+      // Manejo de errores específicos
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'auth/invalid-email':
+            alert('Correo electrónico inválido');
+            break;
+          case 'auth/email-already-in-use':
+            alert('Este correo electrónico ya está en uso');
+            break;
+          case 'auth/requires-recent-login':
+            alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
+            break;
+          default:
+            alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
+        }
+      }
+    }
+
+    if (loadingUsers) {
+      return <div className="text-center text-gray-600">Cargando perfil...</div>;
+    }
+
+    if (!user?.uid) return;
+
+    try {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        alert('Por favor ingrese un correo electrónico válido');
+        return;
+      }
+
+      const currentEmail = user.email ?? '';
+      const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      await updateEmail(user, newEmail);
+      await sendEmailVerification(user);
 
       const userRef = doc(db, 'users', user.uid);
       const updateData = {
@@ -112,21 +192,94 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Añade esta línea
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+      setSelectedImage(imageUrl);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleConfirmCrop = (croppedImageUrl: string) => {
+    setCroppedImage(croppedImageUrl);
+    setIsModalOpen(false);
+  };
+
+  // Función para guardar la imagen en Firebase Storage y actualizar Firestore.
+  const handleSaveProfileImage = async () => {
+    if (!user?.uid || !croppedImage) return;
+    try {
+      // Sube la imagen y obtiene la URL
+      const imageUrl = await uploadProfileImage(croppedImage, user.uid);
+      // Actualiza el documento del usuario en Firestore
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, { profileImage: imageUrl });
+      console.log("Imagen de perfil guardada exitosamente en Firebase Storage");
+      // Limpia croppedImage para que desaparezca el botón
+      setCroppedImage(null);
+    } catch (error) {
+      console.error("Error al guardar imagen de perfil:", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Opcionalmente limpiar la selección si se cancela
+    if (!croppedImage) {
+      setSelectedImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const uploadProfileImage = async (imageFile: any, userId: any) => {
+    try {
+      // Convert base64 to blob if needed
+      let imageToUpload = imageFile;
+
+      if (typeof imageFile === 'string' && imageFile.startsWith('data:')) {
+        // Convert base64 to blob
+        const response = await fetch(imageFile);
+        imageToUpload = await response.blob();
+      }
+
+      // Create reference to the user's profile image in storage
+      const imageRef = storageRef(storage, `users/${userId}`);
+
+      // Upload the image
+      await uploadBytes(imageRef, imageToUpload);
+
+      // Get and return the download URL
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+
+      if (error instanceof Error) {
+        throw new Error(`Error uploading profile image: ${error.message}`);
+      } else {
+        throw new Error("Error uploading profile image: An unknown error occurred");
+      }
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user?.uid) return;
-
     try {
       const userRef = doc(db, "users", user.uid);
-
       const updateData = {
         email: [user.email[0], contactInfo.emailSecondary],
         phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
-        academyId: contactInfo.academyId
+        academyId: contactInfo.academyId,
       };
 
       await updateDoc(userRef, updateData);
+
       console.log('Perfil actualizado exitosamente');
       setHasChanges(false);
     } catch (error) {
@@ -147,23 +300,91 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   const canEdit = foundUser?.id === user?.id;
+  const capitalizeName = (name: any) => name.toLowerCase().replace(/\b\w/g, (char: any) => char.toUpperCase());
 
   return (
     <main className="min-h-screen">
       <form onSubmit={handleUpdateProfile}>
         <div className="w-4/5 mx-auto my-4 bg-white/80 rounded-lg shadow-xl p-8">
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">
-            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
-              {foundUser.firstName[0]}
-            </div>
-            <div className="ml-6">
-              <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{`${user?.firstName} ${user?.lastName}`}</h1>
-              <strong className="text-lg text-rojo">{capitalizeFirstLetter(foundUser.roleId)}</strong>
-              {foundUser.academyId && (
-                <span> from <strong className="text-lg text-rojo">{foundUser.academyName}</strong></span>
+
+
+          <div className='flex space-x-5 items-center'>
+            <div className="flex flex-col items-center">
+              {/* Contenedor de la imagen con overlay en hover */}
+              <div className="relative group w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
+                {croppedImage ? (
+                  <Image
+                    src={croppedImage}
+                    alt="Foto de perfil"
+                    className="w-full h-full object-cover"
+                    width={1000}
+                    height={1000}
+                  />
+                ) : foundUser.profileImage ? (
+                  <Image
+                    src={typeof foundUser.profileImage === "string"
+                      ? foundUser.profileImage
+                      : URL.createObjectURL(foundUser.profileImage as File)}
+                    alt="Foto de perfil"
+                    className="w-full h-full object-cover"
+                    width={1000}
+                    height={1000}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <User size={44} className="text-gray-400" />
+                  </div>
+                )}
+
+                {/* Overlay visible al hover */}
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:cursor-pointer">
+                  {/* Label para seleccionar foto */}
+                  <label
+                    htmlFor="profile-photo"
+                    className="cursor-pointer text-white flex flex-col items-center gap-2 mb-2 text-xs text-center"
+                  >
+                    <LucideImage size={20} className="text-white" />
+                    Seleccionar nueva imagen
+                  </label>
+                </div>
+              </div>
+
+              {/* Input oculto para seleccionar imagen */}
+              <input
+                type="file"
+                id="profile-photo"
+                className="hidden"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+
+              {/* Modal de recorte */}
+              {selectedImage && (
+                <ImageCropModal
+                  image={selectedImage}
+                  isOpen={isModalOpen}
+                  onClose={handleCloseModal}
+                  onConfirm={handleConfirmCrop}
+                />
               )}
             </div>
+            <div className="ml-6">
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{capitalizeName(`${user?.firstName} ${user?.lastName}`)}</h1>
+              <strong className="text-lg text-rojo">{capitalizeFirstLetter(foundUser.roleId)}</strong> {foundUser.academyId && (<span> from <strong className="text-lg text-rojo">{foundUser.academyName}</strong></span>)}
+            </div>
+            <div className="flex flex-col items-center">
+            </div>
           </div>
+          {/* Botón para guardar imagen, si hay croppedImage */}
+          {croppedImage && (
+            <button
+              type="button"
+              onClick={handleSaveProfileImage}
+              className="ml-3 block text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
+              Guardar
+            </button>
+          )}
 
           <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="bg-gray-50 p-6 rounded-lg shadow-md">
