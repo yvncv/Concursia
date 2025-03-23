@@ -9,8 +9,9 @@ import useUser from '@/app/firebase/functions';
 import Image from 'next/image';
 import { useRef } from 'react';
 import { LucideImage, User } from 'lucide-react';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL, ref } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
+import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
 
 const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -23,8 +24,10 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   // Estado para la imagen del usuario
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
 
   const foundUser = users.find((user) => user.id === id);
 
@@ -192,19 +195,49 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // Añade esta línea
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(imageUrl);
-      setIsModalOpen(true);
-    }
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   e.preventDefault(); // Añade esta línea
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     const imageUrl = URL.createObjectURL(file);
+  //     setSelectedImage(imageUrl);
+  //     setIsCropModalOpen(true);
+  //     setIsChangeImageModalOpen(false); // Cierra el modal de selección
+  //   }
+  // };
+
+  const handleFileSelect = (file: File) => {
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage(imageUrl);
+    setIsCropModalOpen(true); // Abre el modal de recorte
+    setIsChangeImageModalOpen(false); // Cierra el modal de selección
   };
+
+  const handleDeleteProfilePicture = async () => {
+    if (!user?.uid) return;
+    try {
+        // Crear referencia a la imagen por defecto en Firebase Storage
+        const defaultImageRef = user.gender == 'Masculino' ? ref(storage, 'users/dafault-male.JPG') : ref(storage, 'users/dafault-female.JPG');
+
+        // Obtener la URL pública de la imagen por defecto
+        const defaultImageUrl = await getDownloadURL(defaultImageRef);
+        // Referencia al documento del usuario en Firestore
+        const userRef = doc(db, "users", user.uid);
+
+        // Actualizar la URL de la imagen en Firestore
+        await updateDoc(userRef, { profileImage: defaultImageUrl });
+
+        console.log('Perfil actualizado exitosamente');
+        setHasChanges(false);
+    } catch (error) {
+        console.error("Error al actualizar el perfil:", error);
+    }
+    setIsChangeImageModalOpen(false);
+};
 
   const handleConfirmCrop = (croppedImageUrl: string) => {
     setCroppedImage(croppedImageUrl);
-    setIsModalOpen(false);
+    setIsCropModalOpen(false);
   };
 
   // Función para guardar la imagen en Firebase Storage y actualizar Firestore.
@@ -225,7 +258,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsCropModalOpen(false);
     // Opcionalmente limpiar la selección si se cancela
     if (!croppedImage) {
       setSelectedImage(null);
@@ -311,7 +344,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className='flex space-x-5 items-center'>
             <div className="flex flex-col items-center">
               {/* Contenedor de la imagen con overlay en hover */}
-              <div className="relative group w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
+              <div onClick={() => setIsChangeImageModalOpen(true)} className="relative group w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
                 {croppedImage ? (
                   <Image
                     src={croppedImage}
@@ -349,7 +382,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
               </div>
 
-              {/* Input oculto para seleccionar imagen */}
+              {/* Input oculto para seleccionar imagen
               <input
                 type="file"
                 id="profile-photo"
@@ -357,13 +390,21 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={handleFileChange}
+              /> */}
+
+              {/* Modal para cambiar la imagen */}
+              <ChangeProfileImageModal
+                isOpen={isChangeImageModalOpen}
+                onClose={() => setIsChangeImageModalOpen(false)}
+                onFileSelect={handleFileSelect}
+                onDelete={handleDeleteProfilePicture}
               />
 
               {/* Modal de recorte */}
               {selectedImage && (
                 <ImageCropModal
                   image={selectedImage}
-                  isOpen={isModalOpen}
+                  isOpen={isCropModalOpen}
                   onClose={handleCloseModal}
                   onConfirm={handleConfirmCrop}
                 />
@@ -599,3 +640,5 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
 };
 
 export default ProfilePage;
+
+
