@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/firebase/functions";
 import EventoInformacion from "./EventoInformacion";
@@ -23,8 +23,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const event = events.find((event) => event.id === id);
   const { academy} = useAcademy(event?.academyId);
 
+  useEffect(() => {
+        if (event) {
+            setInscripcionEnabled(event.status === 'active');
+        }}, [event]);
+
   const handleInscribirClick = () => {
-    setInscripcionEnabled(true);
     setActiveTab("inscripcion");
   };
 
@@ -83,68 +87,75 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="bg-white/80 rounded-xl shadow-sm mb-8">
-            <div className="flex border-b">
-              <button
-                  className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+            <div className="bg-white/80 rounded-xl shadow-sm mb-8">
+                <div className="flex border-b">
+                    <button
+                        className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                 ${activeTab === "informacion"
-                      ? "text-red-600 border-b-2 border-red-600"
-                      : "text-gray-500 hover:text-gray-700"}`}
-                  onClick={() => setActiveTab("informacion")}
-              >
-                Información
-              </button>
-              <button
-                  className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+                            ? "text-red-600 border-b-2 border-red-600"
+                            : "text-gray-500 hover:text-gray-700"}`}
+                        onClick={() => setActiveTab("informacion")}
+                    >
+                        Información
+                    </button>
+                    <button
+                        className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                 ${activeTab === "inscripcion"
-                      ? "text-red-600 border-b-2 border-red-600"
-                      : "text-gray-500 hover:text-gray-700"}
+                            ? "text-red-600 border-b-2 border-red-600"
+                            : "text-gray-500 hover:text-gray-700"}
                 ${!inscripcionEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={() => inscripcionEnabled && setActiveTab("inscripcion")}
-                  disabled={!inscripcionEnabled}
-              >
-                Inscripción
-              </button>
-            </div>
+                        onClick={() => inscripcionEnabled && setActiveTab("inscripcion")}
+                        disabled={!inscripcionEnabled}
+                    >
+                        Inscripción
+                    </button>
+                </div>
 
-            <div className="p-6">
-              {activeTab === "informacion" ? (
-                  <EventoInformacion
-                      event={event}
-                      openModal={() => setIsModalOpen(true)}
-                      onInscribir={handleInscribirClick}
-                  />
-              ) : (
-                  user ? (
-                      <EventoInscripcion
-                          event={event}
-                          openModal={() => setIsAcademyModalOpen(true)}
-                          user={user} />
-                  ) : (
-                      <div className="flex flex-col items-center py-12 text-gray-500">
-                        <User className="w-12 h-12 mb-4" />
-                        <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
-                      </div>
-                  )
-              )}
+                <div className="p-6">
+                    {activeTab === "informacion" ? (
+                        <EventoInformacion
+                            event={event}
+                            openModal={() => setIsModalOpen(true)}
+                            onInscribir={handleInscribirClick}
+                        />
+                    ) : (
+                        inscripcionEnabled ? (
+                            user ? (
+                                <EventoInscripcion
+                                    event={event}
+                                    openModal={() => setIsAcademyModalOpen(true)}
+                                    user={user}
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center py-12 text-gray-500">
+                                    <User className="w-12 h-12 mb-4"/>
+                                    <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
+                                </div>
+                            )
+                        ) : (
+                            <div className="flex flex-col items-center py-12 text-gray-500">
+                                <p className="text-lg">Lo siento, pero aun no está disponible la inscripción.</p>
+                            </div>
+                        )
+                    )}
+                </div>
             </div>
-          </div>
         </div>
 
-        {isModalOpen && (
-            <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                onClick={() => setIsModalOpen(false)}
-            >
+          {isModalOpen && (
               <div
-                  className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                  onClick={() => setIsModalOpen(false)}
               >
-                {/* Encabezado del modal */}
-                <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-                    Ubicación de{" "}
-                    <span className="text-red-600">
+                  <div
+                      className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
+                      onClick={(e) => e.stopPropagation()}
+                  >
+                      {/* Encabezado del modal */}
+                      <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                          <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                              Ubicación de{" "}
+                              <span className="text-red-600">
                   {event.eventType}: {event.name}
                 </span>
                   </h2>
