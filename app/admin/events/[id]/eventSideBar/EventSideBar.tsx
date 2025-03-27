@@ -53,16 +53,16 @@ const EventSideBar: React.FC<EventSideBarProps> = ({
 
   return (
     <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md min-h-screen transition-all duration-300 relative`}>
-      <button
+      <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-gray-600 hover:text-red-600 transition-colors z-10"
       >
-        {isCollapsed ?
-          <ChevronRight size={16} /> :
+        {isCollapsed ? 
+          <ChevronRight size={16} /> : 
           <ChevronLeft size={16} />
         }
       </button>
-
+      
       <nav className="p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => (

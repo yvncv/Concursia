@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, User, Menu, X, Shield } from "lucide-react";
+import { Home, LogIn, User, Menu, X, Shield, LogOutIcon } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import useEvents from "@/app/hooks/useEvents";
 import { CustomEvent } from '@/app/types/eventType';
+import { useRouter } from "next/navigation"; // Importa el router para la redirección
+import { auth } from "@/app/firebase/config";
 
 export default function Navbar({ brandName }: { brandName: string }) {
   const { user, loadingUser } = useUser();
@@ -13,6 +15,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEvents, setFilteredEvents] = useState<CustomEvent[]>([]);
   const pathname = usePathname();
+  const router = useRouter(); // Inicializa el router
 
   const enlaces = [
     { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
@@ -20,6 +23,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
     { href: "/organizer", label: "Panel Organizador", icon: Shield, requiresAuth: true, requiresRole: "organizer" },
     { href: "/admin", label: "Panel Admin", icon: Shield, requiresAuth: true, requiresRole: "admin" },
     { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
+    { href: "/login", label: "Logout", icon: LogOutIcon, requiresAuth: true },
   ];
 
   useEffect(() => {
@@ -45,7 +49,17 @@ export default function Navbar({ brandName }: { brandName: string }) {
     setFilteredEvents([]); // Limpia los resultados
   };
 
+  const handleSignOut = async () => {
+    try {
+      router.push("/calendario"); // Redirige al calendario después de cerrar sesión
+      await auth.signOut();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
   const filteredLinks = enlaces.filter((link) => {
+    if (link.label === "Logout" && user) return true; // Always show logout if user exists
     if (link.href === "/login" && user) return false;
     if (link.requiresAuth) {
       if (!user) return false;
@@ -152,26 +166,43 @@ export default function Navbar({ brandName }: { brandName: string }) {
                 ))}
               </ul>
             )}
+            {filteredEvents.length === 0 && searchTerm && (
+              <p className="text-center text-gray-500 py-2">No events found</p>
+            )}
           </div>
 
           {/* Desktop Menu */}
-          <div className="">
+          <div className="hidden md:flex items-center space-x-8">
             <nav>
               <ul className="flex space-x-8">
                 {filteredLinks.map((link) => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
-                        ${pathname.includes(link.href)
-                          ? "bg-red-100 text-red-700 font-bold"
-                          : "hover:bg-gray-100 hover:text-black text-red-700"
-                        }`}
-                      onClick={handleLinkClick}
-                    >
-                      <link.icon className="w-5 h-5" />
-                      <span className="hidden md:block">{link.label}</span>
-                    </Link>
+                    {link.label === "Logout" ? (
+                      <button
+                        onClick={handleSignOut}
+                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                          ${pathname.includes(link.href)
+                            ? "bg-red-100 text-red-700 font-bold"
+                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          }`}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span className="hidden md:block">{link.label}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                          ${pathname.includes(link.href)
+                            ? "bg-red-100 text-red-700 font-bold"
+                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          }`}
+                        onClick={handleLinkClick}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span className="hidden md:block">{link.label}</span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -194,30 +225,49 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden">
             <ul className="space-y-4 px-2 pb-4 pt-2">
-              {filteredLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
-                          ${pathname.includes(link.href)
-                        ? "bg-red-100 text-red-700 font-bold"
-                        : "hover:bg-gray-100 hover:text-black text-red-700"
-                      }`}
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      handleLinkClick();
-                    }}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              ))}
+              {filteredLinks.map((link) => {
+                const isActive = pathname.includes(link.href);
+
+                // This function combines closing the menu and clearing search results
+                const handleClick = async () => {
+                  setIsMenuOpen(false); // Close the menu
+                  handleLinkClick(); // Clear the search term and filtered events
+                  if (link.label === "Logout") {
+                    await handleSignOut(); // Handle sign-out if the link is "Logout"
+                  }
+                };
+
+                return (
+                  <li key={link.href}>
+                    {link.label === "Logout" ? (
+                      <button
+                        onClick={handleClick} // Use the combined handler for logout and menu close
+                        className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
+                      ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span>{link.label}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
+                      ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        onClick={handleClick} // Use the same click handler for other links
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span>{link.label}</span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+
+
             </ul>
           </div>
         )}
       </div>
     </nav>
   );
-
 }

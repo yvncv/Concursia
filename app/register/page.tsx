@@ -295,7 +295,7 @@ export default function RegisterForm() {
       return downloadURL;
     } catch (error) {
       console.error("Error uploading profile image:", error);
-      
+
       if (error instanceof Error) {
         throw new Error(`Error uploading profile image: ${error.message}`);
       } else {
@@ -504,10 +504,12 @@ export default function RegisterForm() {
                 {/* Visualización de imagen */}
                 <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-rose-300 shadow-lg">
                   {croppedImage ? (
-                    <img
+                    <Image
                       src={croppedImage}
                       alt="Foto de perfil"
                       className="w-full h-full object-cover"
+                      width={1000}
+                      height={1000}
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">

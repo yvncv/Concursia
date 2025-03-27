@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
-import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
+import { Eye, FilePenLine, Trash2, Plus, CheckCircle } from "lucide-react";
 import useUser from "@/app/firebase/functions";
 import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
@@ -169,14 +169,13 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
       <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
           Gestión de Eventos
         </h1>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center ml-4 gap-2 transition-colors"
         >
           <Plus size={20} />
           Crear Evento
@@ -198,7 +197,7 @@ const Events: React.FC = () => {
                     {["Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Tipo", "Estado", "Acciones"].map((header) => (
                       <th
                         key={header}
-                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600"
+                        className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600 text-center"
                       >
                         {header}
                       </th>
@@ -207,16 +206,16 @@ const Events: React.FC = () => {
                 </thead>
                 <tbody className="divide-y dark:divide-gray-700">
                   {filteredEvents.map((event) => (
-                    <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-left">
                         <Link
                           href={`/organizer/events/${event.id}`}
                           className="hover:text-red-600 transition-colors"
-                        >
+                        > 
                           {event.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300 text-left">
                         {event.description.length > 50
                           ? `${event.description.substring(0, 50)}...`
                           : event.description}
@@ -240,8 +239,15 @@ const Events: React.FC = () => {
                           {event.status === "active" ? "Activo" : "Inactivo"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3 mx-auto">
                         <div className="flex justify-center space-x-2">
+                          <Link
+                            className="text-pink-500 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors"
+                            title="Verificar"
+                            href={`/organizer/events/${event.id}`}
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                          </Link>
                           <button
                             className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                             title="Visualizar"
@@ -272,37 +278,34 @@ const Events: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
-
-
-      <EventModal
-        isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          setIsViewModalOpen(false);  // Asegúrate de cerrar ambos modales
-          setSelectedEvent(null);
-        }}
-        onSave={handleSaveEvent}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        eventData={eventData}
-        updateEventData={updateEventData}
-        isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
-        isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
-      />
-
-
-      {selectedEvent && (
-        <DeleteEventModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          event={selectedEvent}
+        <EventModal
+          isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setIsViewModalOpen(false);  // Asegúrate de cerrar ambos modales
+            setSelectedEvent(null);
+          }}
+          onSave={handleSaveEvent}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          eventData={eventData}
+          updateEventData={updateEventData}
+          isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
+          isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
         />
-      )}
-
-      {creatingEvent && <p className="text-gray-600">Creando evento...</p>}
-      {createError && <p className="text-red-600">Error: {createError}</p>}
-    </div>
+  
+  
+        {selectedEvent && (
+          <DeleteEventModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            event={selectedEvent}
+          />
+        )}
+  
+        {creatingEvent && <p className="text-gray-600">Creando evento...</p>}
+        {createError && <p className="text-red-600">Error: {createError}</p>}
+      </div>
   );
 };
 

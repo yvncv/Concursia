@@ -1,392 +1,500 @@
 "use client"
+
 import { useState, useEffect, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
-import { useRouter } from 'next/navigation';
-import { auth, db } from '../../firebase/config';
+import { auth, db, storage } from '../../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
 import { updateEmail, sendEmailVerification, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import useUser from '@/app/firebase/functions';
+import Image from 'next/image';
+import { useRef } from 'react';
+import { LucideImage, User } from 'lucide-react';
+import { ref as storageRef, uploadBytes, getDownloadURL, ref } from 'firebase/storage';
+import ImageCropModal from '@/app/register/modals/ImageCropModal';
+import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
 
 const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
-    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-    const [newEmail, setNewEmail] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
-    const { users, loadingUsers } = useUsers();
-    const { user } = useUser();
-    const router = useRouter();
-    const { id } = use(params);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const { users, loadingUsers } = useUsers();
+  const { user } = useUser();
+  const { id } = use(params);
 
-    const foundUser = users.find((user) => user.id === id);
+  // Estado para la imagen del usuario
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [contactInfo, setContactInfo] = useState({
-        emailSecondary: '',
-        phonePrimary: '',
-        phoneSecondary: '',
-        academyId: ''
+  const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
+
+  const foundUser = users.find((user) => user.id === id);
+
+  // Estado para la información de contacto
+  const [contactInfo, setContactInfo] = useState({
+    emailSecondary: '',
+    phonePrimary: '',
+    phoneSecondary: '',
+    academyId: ''
+  });
+
+  // Estados para mostrar los campos de añadir
+  const [showEmailSecondary, setShowEmailSecondary] = useState(false);
+  const [showPhonePrimary, setShowPhonePrimary] = useState(false);
+  const [showPhoneSecondary, setShowPhoneSecondary] = useState(false);
+
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setContactInfo({
+        emailSecondary: user.email[1] || '',
+        phonePrimary: user.phoneNumber[0] || '',
+        phoneSecondary: user.phoneNumber[1] || '',
+        academyId: user.academyId || ''
+      });
+    }
+  }, [user]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setContactInfo(prev => {
+      const updatedContactInfo = { ...prev, [id]: value };
+      setHasChanges(
+        updatedContactInfo.emailSecondary !== user?.email[1] ||
+        updatedContactInfo.phonePrimary !== user?.phoneNumber[0] ||
+        updatedContactInfo.phoneSecondary !== user?.phoneNumber[1]
+      );
+      return updatedContactInfo;
     });
+  };
 
-    useEffect(() => {
-        if (user) {
-            setContactInfo({
-                emailSecondary: user.email[1] || '',
-                phonePrimary: user.phoneNumber[0] || '',
-                phoneSecondary: user.phoneNumber[1] || '',
-                academyId: user.academyId || ''
-            });
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { id, value } = e.target;
+  //   setContactInfo(prev => ({
+  //     ...prev,
+  //     [id]: value
+  //   }));
+  // };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!auth.currentUser) {
+      alert('No hay usuario autenticado');
+      return;
+    }
+
+    if (!user?.uid) return;
+
+    try {
+      // Validar el formato del correo
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        alert('Por favor ingrese un correo electrónico válido');
+        return;
+      }
+
+      // Re-autenticación
+      const currentEmail = auth.currentUser.email ?? '';
+      const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+
+      // Cambiar el correo en Authentication
+      await updateEmail(auth.currentUser, newEmail);
+
+      // Enviar un correo de verificación
+      await sendEmailVerification(auth.currentUser);
+
+      // Actualizar el correo en Firestore
+      const userRef = doc(db, 'users', user.uid); // Suponiendo que el ID del documento es el UID del usuario autenticado
+      const updateData = {
+        email: [newEmail, user.email[1]]
+      }
+
+      await updateDoc(userRef, updateData);
+      console.log('Perfil actualizado exitosamente');
+
+      // Restablecer los estados del modal
+      setIsEmailModalOpen(false);
+      setNewEmail('');
+      setCurrentPassword('');
+
+      alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
+    } catch (error: unknown) {
+      console.error('Error cambiando email:', error);
+
+      // Manejo de errores específicos
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'auth/invalid-email':
+            alert('Correo electrónico inválido');
+            break;
+          case 'auth/email-already-in-use':
+            alert('Este correo electrónico ya está en uso');
+            break;
+          case 'auth/requires-recent-login':
+            alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
+            break;
+          default:
+            alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
         }
-    }, [user]);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setContactInfo(prev => ({
-            ...prev,
-            [id]: value
-        }));
-    };
-
-    const handleChangeEmail = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!auth.currentUser) {
-            alert('No hay usuario autenticado');
-            return;
-        }
-
-        if (!user?.uid) return;
-
-        try {
-            // Validar el formato del correo
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(newEmail)) {
-                alert('Por favor ingrese un correo electrónico válido');
-                return;
-            }
-
-            // Re-autenticación
-            const currentEmail = auth.currentUser.email ?? '';
-            const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
-            await reauthenticateWithCredential(auth.currentUser, credential);
-
-            // Cambiar el correo en Authentication
-            await updateEmail(auth.currentUser, newEmail);
-
-            // Enviar un correo de verificación
-            await sendEmailVerification(auth.currentUser);
-
-            // Actualizar el correo en Firestore
-            const userRef = doc(db, 'users', user.uid); // Suponiendo que el ID del documento es el UID del usuario autenticado
-            const updateData = {
-                email: [newEmail, user.email[1]]
-            }
-
-            await updateDoc(userRef, updateData);
-            console.log('Perfil actualizado exitosamente');
-
-            // Restablecer los estados del modal
-            setIsEmailModalOpen(false);
-            setNewEmail('');
-            setCurrentPassword('');
-
-            alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
-        } catch (error: unknown) {
-            console.error('Error cambiando email:', error);
-
-            // Manejo de errores específicos
-            if (error instanceof Error) {
-                switch (error.message) {
-                    case 'auth/invalid-email':
-                        alert('Correo electrónico inválido');
-                        break;
-                    case 'auth/email-already-in-use':
-                        alert('Este correo electrónico ya está en uso');
-                        break;
-                    case 'auth/requires-recent-login':
-                        alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
-                        break;
-                    default:
-                        alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
-                }
-            }
-        }
-    };
-
-    const handleUpdateProfile = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!user?.uid) return;
-
-        try {
-            const userRef = doc(db, "users", user.uid);
-
-            // Preparar los datos para actualizar
-            const updateData = {
-                email: [user.email[0], contactInfo.emailSecondary],
-                phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
-                academyId: contactInfo.academyId
-            };
-
-            await updateDoc(userRef, updateData);
-            console.log('Perfil actualizado exitosamente');
-        } catch (error) {
-            console.error("Error al actualizar el perfil:", error);
-            console.log('Error al actualizar el perfil');
-        }
-
-    };
+      }
+    }
 
     if (loadingUsers) {
-        return <div className="text-center text-gray-600">Cargando perfil...</div>;
+      return <div className="text-center text-gray-600">Cargando perfil...</div>;
     }
 
-    if (!foundUser) {
-        return <div className="text-center text-gray-600">No se ha encontrado el usuario.</div>;
-    }
+    if (!user?.uid) return;
 
-    function capitalizeFirstLetter(text: string): string {
-        return text.charAt(0).toUpperCase() + text.slice(1);
-    }
+    try {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        alert('Por favor ingrese un correo electrónico válido');
+        return;
+      }
 
-    const handleSignOut = async () => {
-        try {
-            await auth.signOut();
-            router.push("/calendario");
-        } catch (error) {
-            console.error("Error al cerrar sesión:", error);
+      const currentEmail = user.email ?? '';
+      const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      await updateEmail(user, newEmail);
+      await sendEmailVerification(user);
+
+      const userRef = doc(db, 'users', user.uid);
+      const updateData = {
+        email: [newEmail, user.email[1]]
+      };
+
+      await updateDoc(userRef, updateData);
+      console.log('Perfil actualizado exitosamente');
+
+      setIsEmailModalOpen(false);
+      setNewEmail('');
+      setCurrentPassword('');
+      alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
+    } catch (error) {
+      console.error('Error cambiando email:', error);
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'auth/invalid-email':
+            alert('Correo electrónico inválido');
+            break;
+          case 'auth/email-already-in-use':
+            alert('Este correo electrónico ya está en uso');
+            break;
+          case 'auth/requires-recent-login':
+            alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
+            break;
+          default:
+            alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
         }
-    };
+      }
+    }
+  };
 
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   e.preventDefault(); // Añade esta línea
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     const imageUrl = URL.createObjectURL(file);
+  //     setSelectedImage(imageUrl);
+  //     setIsCropModalOpen(true);
+  //     setIsChangeImageModalOpen(false); // Cierra el modal de selección
+  //   }
+  // };
 
-    // Comprobar si el usuario logueado es el mismo que el encontrado
-    const canEdit = foundUser?.id === user?.id;
+  const handleFileSelect = (file: File) => {
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage(imageUrl);
+    setIsCropModalOpen(true); // Abre el modal de recorte
+    setIsChangeImageModalOpen(false); // Cierra el modal de selección
+  };
 
-    const capitalizeName = (name: any) =>
-        name.toLowerCase().replace(/\b\w/g, (char: any) => char.toUpperCase());
+  const handleDeleteProfilePicture = async () => {
+    if (!user?.uid) return;
+    try {
+      // Crear referencia a la imagen por defecto en Firebase Storage
+      const defaultImageRef = user.gender == 'Masculino' ? ref(storage, 'users/dafault-male.JPG') : ref(storage, 'users/dafault-female.JPG');
 
-    return (
-        <main className="min-h-screen">
-            <form onSubmit={handleUpdateProfile}>
-                <div className="w-4/5 mx-auto my-4 bg-white/80 rounded-lg shadow-xl p-8">
-                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 items-center mb-8">
-                        {foundUser.profileImage ? (
-                            <img
-                                src={typeof foundUser.profileImage === "string" ? foundUser.profileImage : URL.createObjectURL(foundUser.profileImage)}
-                                alt="User Profile"
-                                className="w-20 h-20 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
-                                {foundUser.firstName[0]}
-                            </div>
-                        )}
-                        <div className="ml-6">
-                            <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">{capitalizeName(`${user?.firstName} ${user?.lastName}`)}</h1>
-                            <strong className="text-lg text-rojo">{capitalizeFirstLetter(foundUser.roleId)}</strong> {foundUser.academyId && (<span> from <strong className="text-lg text-rojo">{foundUser.academyName}</strong></span>)}
-                        </div>
-                    </div>
+      // Obtener la URL pública de la imagen por defecto
+      const defaultImageUrl = await getDownloadURL(defaultImageRef);
+      // Referencia al documento del usuario en Firestore
+      const userRef = doc(db, "users", user.uid);
 
-                    <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-md">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Información Personal</h2>
-                            <div className="mt-4 mb-4">
-                                <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
-                                <input
-                                    type="text"
-                                    value={foundUser.dni}
-                                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                    readOnly
-                                />
-                            </div>
-                            <div className="flex gap-x-2">
-                                <div className="w-full">
-                                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
-                                    <input
-                                        type="text"
-                                        value={foundUser.firstName}
-                                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                        readOnly
-                                    />
-                                </div>
-                                <div className="w-full">
-                                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
-                                    <input
-                                        type="text"
-                                        value={foundUser.lastName}
-                                        className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
-                                <input
-                                    type="date"
-                                    value={foundUser.birthDate.toDate().toISOString().split('T')[0]}
-                                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                    readOnly
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Género</label>
-                                <input
-                                    type="text"
-                                    value={foundUser.gender}
-                                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                    readOnly
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoría</label>
-                                <input
-                                    type="text"
-                                    value={foundUser.category}
-                                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                    readOnly
-                                />
-                            </div>
-                        </div>
+      // Actualizar la URL de la imagen en Firestore
+      await updateDoc(userRef, { profileImage: defaultImageUrl });
 
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-md">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Información de Contacto</h2>
-                            <div className="mt-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Correo Principal
-                                </label>
-                                <div className="flex items-center mt-1">
-                                    <input
-                                        type="email"
-                                        id="emailPrimary"
-                                        value={foundUser?.email[0]}
-                                        onChange={handleInputChange}
-                                        className="flex-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
-                                        readOnly
-                                    />
-                                    {canEdit && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEmailModalOpen(true)}
-                                            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-                                        >
-                                            Actualizar
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+      console.log('Perfil actualizado exitosamente');
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+    }
+    setIsChangeImageModalOpen(false);
+  };
 
-                            {isEmailModalOpen && (
-                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                    <div className="bg-white p-8 rounded-lg w-96">
-                                        <h2 className="text-xl font-semibold mb-4">Actualizar Correo Electrónico</h2>
-                                        <div>
-                                            <div className="mb-4">
-                                                <label htmlFor="currentPassword" className="block mb-2">Contraseña Actual</label>
-                                                <input
-                                                    type="password"
-                                                    value={currentPassword}
-                                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                                    className="w-full px-3 py-2 border rounded-lg"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="mb-4">
-                                                <label htmlFor="newEmail" className="block mb-2">Nuevo Correo Electrónico</label>
-                                                <input
-                                                    type="email"
-                                                    value={newEmail}
-                                                    onChange={(e) => setNewEmail(e.target.value)}
-                                                    className="w-full px-3 py-2 border rounded-lg"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <button
-                                                    onClick={() => setIsEmailModalOpen(false)}
-                                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                                <button
-                                                    onClick={handleChangeEmail}
-                                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-                                                >
-                                                    Actualizar Correo
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="mt-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo Secundario</label>
-                                <input
-                                    type="email"
-                                    id="emailSecondary"
-                                    value={contactInfo.emailSecondary || ""}
-                                    onChange={handleInputChange}
-                                    className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
-                                    readOnly={!canEdit}
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Telefono Principal</label>
-                                <input
-                                    type="tel"
-                                    id="phonePrimary"
-                                    value={contactInfo.phonePrimary || ""}
-                                    onChange={handleInputChange}
-                                    className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
-                                    required
-                                    readOnly={!canEdit}
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Telefono Secundario</label>
-                                <input
-                                    type="tel"
-                                    id="phoneSecondary"
-                                    value={contactInfo.phoneSecondary || ""}
-                                    onChange={handleInputChange}
-                                    className={`w-full mt-1 px-4 py-4 rounded-2xl placeholder:text-gray-500 focus:ring-0 focus:shadow-[0_0_10px var(--rosado-claro)] transition-all outline-none ${canEdit ? "bg-white" : "bg-gray-200"}`}
-                                    readOnly={!canEdit}
-                                />
-                            </div>
-                        </div>
+  const handleConfirmCrop = (croppedImageUrl: string) => {
+    setCroppedImage(croppedImageUrl);
+    setIsCropModalOpen(false);
+  };
 
-                    </div>
+  // Función para guardar la imagen en Firebase Storage y actualizar Firestore.
+  const handleSaveProfileImage = async () => {
+    if (!user?.uid || !croppedImage) return;
+    try {
+      // Sube la imagen y obtiene la URL
+      const imageUrl = await uploadProfileImage(croppedImage, user.uid);
+      // Actualiza el documento del usuario en Firestore
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, { profileImage: imageUrl });
+      console.log("Imagen de perfil guardada exitosamente en Firebase Storage");
+      // Limpia croppedImage para que desaparezca el botón
+      setCroppedImage(null);
+    } catch (error) {
+      console.error("Error al guardar imagen de perfil:", error);
+    }
+  };
 
-                    <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Fecha de Registro</h2>
-                        <p className="text-gray-600">{capitalizeFirstLetter(foundUser.createdAt.toDate().toLocaleDateString("es-PE", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric"
-                        }))}</p>
-                    </div>
+  const handleCloseModal = () => {
+    setIsCropModalOpen(false);
+    // Opcionalmente limpiar la selección si se cancela
+    if (!croppedImage) {
+      setSelectedImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
-                    {canEdit && (
-                        <>
-                            <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
-                                <button
-                                    type="submit"
-                                    className="bg-green-600 w-full text-white px-6 py-3 rounded-lg hover:bg-green-500 transition duration-300"
-                                >
-                                    Guardar Cambios
-                                </button>
-                            </div>
-                            <div className="mt-8 w-full flex flex-col md:flex-row items-center space-y-4 md:space-x-4 md:space-y-0 justify-around">
-                                <button
-                                    onClick={handleSignOut}
-                                    className="bg-red-600 w-full text-white px-6 py-3 rounded-lg hover:bg-red-500 transition duration-300"
-                                >
-                                    Cerrar Sesión
-                                </button>
-                            </div>
-                        </>
+  const uploadProfileImage = async (imageFile: any, userId: any) => {
+    try {
+      // Convert base64 to blob if needed
+      let imageToUpload = imageFile;
+
+      if (typeof imageFile === 'string' && imageFile.startsWith('data:')) {
+        // Convert base64 to blob
+        const response = await fetch(imageFile);
+        imageToUpload = await response.blob();
+      }
+
+      // Create reference to the user's profile image in storage
+      const imageRef = storageRef(storage, `users/${userId}`);
+
+      // Upload the image
+      await uploadBytes(imageRef, imageToUpload);
+
+      // Get and return the download URL
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+
+      if (error instanceof Error) {
+        throw new Error(`Error uploading profile image: ${error.message}`);
+      } else {
+        throw new Error("Error uploading profile image: An unknown error occurred");
+      }
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.uid) return;
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const updateData = {
+        email: [user.email[0], contactInfo.emailSecondary],
+        phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
+        academyId: contactInfo.academyId,
+      };
+
+      await updateDoc(userRef, updateData);
+
+      console.log('Perfil actualizado exitosamente');
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+    }
+  };
+
+  if (loadingUsers) {
+    return <div className="text-center text-gray-600">Cargando perfil...</div>;
+  }
+
+  if (!foundUser) {
+    return <div className="text-center text-gray-600">No se ha encontrado el usuario.</div>;
+  }
+
+  function capitalizeFirstLetter(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  const canEdit = foundUser?.id === user?.id;
+  const capitalizeName = (name: any) => name.toLowerCase().replace(/\b\w/g, (char: any) => char.toUpperCase());
+
+  return (
+    <main className="min-h-screen">
+      <form onSubmit={handleUpdateProfile}>
+        <div className="min-h-screen bg-gradient-to-br from-white/25 to-white/50 py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden">
+            {/* Profile Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8">
+              <div className="flex items-center space-x-8">
+                {/* Profile Image */}
+                <div className="relative group">
+                  <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                    {croppedImage ? (
+                      <Image
+                        src={croppedImage}
+                        alt="Foto de perfil"
+                        className="w-full h-full object-cover"
+                        width={1000}
+                        height={1000}
+                      />
+                    ) : foundUser.profileImage ? (
+                      <Image
+                        src={typeof foundUser.profileImage === "string"
+                          ? foundUser.profileImage
+                          : URL.createObjectURL(foundUser.profileImage as File)}
+                        alt="Foto de perfil"
+                        className="w-full h-full object-cover"
+                        width={1000}
+                        height={1000}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <User size={44} className="text-gray-400" />
+                      </div>
                     )}
+                  </div>
                 </div>
-            </form>
-        </main>
-    );
+
+                {/* User Name and Role */}
+                <div>
+                  <h1 className="text-4xl font-bold text-white">
+                    {capitalizeName(`${foundUser.firstName} ${foundUser.lastName}`)}
+                  </h1>
+                  <p className="text-xl text-white/80 mt-2">
+                    {foundUser.roleId.toUpperCase()}
+                    {foundUser.academyId && ` • ${foundUser.academyName}`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Content */}
+            <div className="grid md:grid-cols-2 gap-8 p-8">
+              {/* Personal Information */}
+              <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
+                <h2 className="text-2xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-4 mb-6">
+                  Personal Information
+                </h2>
+
+                {[
+                  { label: 'DNI', value: foundUser.dni },
+                  { label: 'Birth Date', value: foundUser.birthDate.toDate().toISOString().split('T')[0] },
+                  { label: 'Gender', value: foundUser.gender },
+                  { label: 'Category', value: foundUser.category }
+                ].map(({ label, value }) => (
+                  <div key={label} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      {label}
+                    </label>
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-gray-800 font-medium">{value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Información de Contacto */}
+              <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
+                <h2 className="text-2xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-4 mb-6">
+                  Información de Contacto
+                </h2>
+
+                {[
+                  { label: 'Correo Principal', id: 'emailPrimary', value: foundUser?.email[0], readOnly: true },
+                  { label: 'Correo Secundario', id: 'emailSecondary', value: contactInfo.emailSecondary, showButton: !showEmailSecondary && contactInfo.emailSecondary === '', onClick: () => setShowEmailSecondary(true) },
+                  { label: 'Teléfono Principal', id: 'phonePrimary', value: contactInfo.phonePrimary, showButton: !showPhonePrimary && contactInfo.phonePrimary === '', onClick: () => setShowPhonePrimary(true) },
+                  { label: 'Teléfono Secundario', id: 'phoneSecondary', value: contactInfo.phoneSecondary, showButton: !showPhoneSecondary && contactInfo.phoneSecondary === '', onClick: () => setShowPhoneSecondary(true) }
+                ].map(({ label, id, value, readOnly, showButton, onClick }) => (
+                  <div key={id} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
+                    {showButton ? (
+                      <button
+                        type="button"
+                        onClick={onClick}
+                        className="mt-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md"
+                      >
+                        Añadir {label}
+                      </button>
+                    ) : (
+                      <div className="bg-white rounded-xl p-3 shadow-sm flex items-center">
+                        <input
+                          type={id.includes('email') ? 'email' : 'text'}
+                          id={id}
+                          value={value}
+                          onChange={handleInputChange}
+                          className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-400 focus:bg-white focus:outline-none transition-all"
+                          readOnly={readOnly}
+                        />
+                        {canEdit && !readOnly && (
+                          <button
+                            type="button"
+                            onClick={() => alert(`Editar ${label}`)}
+                            className="ml-2 text-blue-500 hover:text-blue-700 transition"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div className="mt-8 text-center">
+                  <button
+                    type="submit"
+                    className={`px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 shadow-md ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    disabled={!hasChanges}
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Modals for Image Change and Crop */}
+          {isChangeImageModalOpen && (
+            <ChangeProfileImageModal
+              isOpen={isChangeImageModalOpen}
+              onClose={() => setIsChangeImageModalOpen(false)}
+              onFileSelect={handleFileSelect}
+              onDelete={handleDeleteProfilePicture}
+            />
+          )}
+
+          {selectedImage && (
+            <ImageCropModal
+              image={selectedImage}
+              isOpen={isCropModalOpen}
+              onClose={handleCloseModal}
+              onConfirm={handleConfirmCrop}
+            />
+          )}
+        </div>
+      </form>
+    </main>
+  );
 };
 
 export default ProfilePage;
+
+
