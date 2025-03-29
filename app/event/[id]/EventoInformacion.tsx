@@ -1,10 +1,13 @@
 'use client';
 
 import { CustomEvent } from "@/app/types/eventType";
-import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins } from "lucide-react";
+import useSettings from "@/app/hooks/useSettings";
+import {Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircleIcon} from "lucide-react";
 import Map from "@/app/ui/map/mapa";
 
 const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEvent, openModal: () => void, onInscribir: () => void }) => {
+    const { settings, loading, error } = useSettings(event.id);
+
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);
@@ -53,15 +56,16 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                         {event.description}
                     </section>
 
-                    <section className="flex flex-col md:flex-row md:items-center md:space-x-6 text-gray-600 space-y-3 md:space-y-0">
+                    <section
+                        className="flex flex-col md:flex-row md:items-center md:space-x-6 text-gray-600 space-y-3 md:space-y-0">
                         <div className="flex items-center space-x-3">
-                            <Calendar className="text-green-600 w-6 h-6 shrink-0" />
+                            <Calendar className="text-green-600 w-6 h-6 shrink-0"/>
                             <span className="text-sm md:text-base leading-tight">
                                 <strong>Inicio:</strong> {formattedStartDate} - {formattedStartTime}
                             </span>
                         </div>
                         <div className="flex items-center space-x-3">
-                            <Calendar className="text-rojo w-6 h-6 shrink-0" />
+                            <Calendar className="text-rojo w-6 h-6 shrink-0"/>
                             <span className="text-sm md:text-base leading-tight">
                                 <strong>Fin:</strong> {formattedEndDate} - {formattedEndTime}
                             </span>
@@ -69,12 +73,12 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                     </section>
 
                     <section className="flex items-center space-x-3 text-gray-600">
-                        <MapPin className={`${iconClass} text-blue-600`} />
+                        <MapPin className={`${iconClass} text-blue-600`}/>
                         <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
                     </section>
 
                     <section className="flex items-center space-x-3 text-gray-600">
-                        <MapIcon className={`${iconClass} text-orange-600`} />
+                        <MapIcon className={`${iconClass} text-orange-600`}/>
                         {event.location.coordinates ? (
                             <button
                                 onClick={openModal}
@@ -92,9 +96,9 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                     </section>
 
                     <section className="w-full bg-[#fef6ff] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        {/* Niveles */}
+                        {/* Categorías */}
                         <div className="flex items-center space-x-3">
-                            <ChartBarStacked className="text-purple-600 w-6 h-6" />
+                            <ChartBarStacked className="text-purple-600 w-6 h-6"/>
                             <span className="text-sm md:text-base">Categorías:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -111,11 +115,54 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                                 <span className="text-sm md:text-base text-gray-500">Sin categorías establecidas.</span>
                             )}
                         </div>
-
                     </section>
 
-                    <section className="flex items-center space-x-3 text-gray-600 p-2 bg-gradient-to-tr from-red-500 to-yellow-600 rounded-full w-auto justify-center">
-                        <BadgeCheck className={`${iconClass} text-white`} />
+                    <section className="w-full bg-[#fef6f2] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
+                        <div className="flex items-center space-x-3">
+                            <AlertCircleIcon className="text-yellow-600 w-6 h-6"/>
+                            <span className="text-sm md:text-base">Información adicional:</span>
+                        </div>
+                        {loading ? (
+                            <span className="text-sm md:text-base text-gray-500">Cargando Información adicional...</span>
+                        ) : error ? (
+                            <span
+                                className="text-sm md:text-base text-red-500">Error al cargar Información adicional: {error}</span>
+                        ) : settings ? (
+                            <div className="flex flex-wrap gap-2">
+
+                                {settings.registration.grupalCSV && (
+                                    <span
+                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                    Inscripción Grupal CSV</span>
+                                )}
+
+                                {settings.registration.individualWeb && (
+                                    <span
+                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                    Inscripción Individual Web</span>
+                                )}
+
+                                {settings.registration.sameDay && (
+                                    <span
+                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                    Inscripción el Mismo Día</span>
+                                )}
+
+                                {settings.pullCouple.enabled && (
+                                    <span
+                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                        Se puede jalar pareja con diferencia máxima de {settings.pullCouple.difference} {settings.pullCouple.criteria=== "Age"? "años." : "categorías."}</span>
+                                )}
+                            </div>
+                        ) : (
+                            <span
+                                className="text-sm md:text-base text-gray-500">No se encontraron configuraciones.</span>
+                        )}
+                    </section>
+
+                    <section
+                        className="flex items-center space-x-3 text-gray-600 p-2 bg-gradient-to-tr from-red-500 to-yellow-600 rounded-full w-auto justify-center">
+                        <BadgeCheck className={`${iconClass} text-white`}/>
                         <span className="text-sm md:text-base text-white">Academia: {event.academyName}.</span>
                     </section>
                 </article>
@@ -125,7 +172,7 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                     <div className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
                         {/* Título */}
                         <div className="flex items-center space-x-3">
-                            <Coins className="text-yellow-600 w-6 h-6" />
+                            <Coins className="text-yellow-600 w-6 h-6"/>
                             <span className="text-md md:text-base font-medium text-gray-800">Precios por nivel:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
