@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react";
+import useSettings from "@/app/hooks/useSettings";
 import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/firebase/functions";
 import EventoInformacion from "./EventoInformacion";
@@ -19,6 +20,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
     const [isAcademyModalOpen, setIsAcademyModalOpen] = useState(false);
     const [inscripcionEnabled, setInscripcionEnabled] = useState(false);
     const { id } = use(params);
+    const { settings, loading, error: error_settings} = useSettings(id);
 
     const event = events.find((event) => event.id === id);
     const { academy} = useAcademy(event?.academyId);
@@ -113,13 +115,18 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                                 event={event}
                                 openModal={() => setIsModalOpen(true)}
                                 onInscribir={handleInscribirClick}
+                                settings={settings}
+                                loading={loading}
+                                error={error_settings}
                             />
                         ) : (
                             user ? (
                                 <EventoInscripcion
                                     event={event}
                                     openModal={() => setIsAcademyModalOpen(true)}
-                                    user={user} />
+                                    user={user}
+                                    settings={settings}
+                                />
                             ) : (
                                 <div className="flex flex-col items-center py-12 text-gray-500">
                                     <User className="w-12 h-12 mb-4" />

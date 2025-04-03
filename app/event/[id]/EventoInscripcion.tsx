@@ -12,6 +12,7 @@ import useTicket from '@/app/hooks/useTicket';
 import {Ticket} from "@/app/types/ticketType";
 import {Map as MapIcon} from "lucide-react";
 import Link from "next/link";
+import {EventSettings} from "@/app/types/settingsType";
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -212,7 +213,15 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: 
   );
 };
 
-const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; openModal: () => void; user: User }) => {
+const EventoInscripcion = ({ event, openModal, user, settings }:
+                               {
+                                 event: CustomEvent,
+                                 openModal: () => void,
+                                 user: User,
+                                 settings: EventSettings| null
+                                 }) =>
+{
+
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEmail, setSelectedEmail] = useState(user.email[0] || "");
@@ -233,16 +242,20 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; ope
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
     const parejaEncontrada = users.find((usuario) => usuario.dni === dniPareja);
-    const sameGender = users.find((usuario) => usuario.gender === pareja?.gender);
+
     if (parejaEncontrada) {
-      if(sameGender){
-        setPareja(null);  // Si son del mismo sexo, limpia el estado de la pareja
+      if (parejaEncontrada.id === user.id) {
+        setPareja(null);
+        alert("No puedes inscribirte como tu propia pareja.");
+      } else if (parejaEncontrada.gender === user.gender) {
+        setPareja(null);
         alert("El usuario con ese DNI es del mismo sexo que usted.");
-      }else{
-        setPareja(parejaEncontrada);  // Establece los datos de la pareja si se encuentra
+      } else {
+        setPareja(parejaEncontrada);
+        alert("Pareja encontrada satisfactoriamente.");
       }
     } else {
-      setPareja(null);  // Si no se encuentra, limpia el estado de la pareja
+      setPareja(null);
       alert("No se encontró ningún usuario con ese DNI.");
     }
   };
@@ -298,9 +311,58 @@ const EventoInscripcion = ({ event, openModal ,user }: { event: CustomEvent; ope
     }
   };
 
+  const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
+
   const handleNextAndSave = () => {
-    handleNext();
-    handleSave();
+    if (settings != null && settings.pullCouple.enabled && pareja != null) {
+      alert("Settings ON: Jalar Pareja ON - Pareja encontrada");
+
+      const checkAgeDifference = () => {
+        const ageDifference = user.birthDate.toDate().getFullYear() - pareja.birthDate.toDate().getFullYear();
+        return ageDifference <= settings.pullCouple.difference;
+      };
+
+      const checkCategoryDifference = () => {
+        const userCategoryIndex = categories.indexOf(user.category);
+        const parejaCategoryIndex = categories.indexOf(pareja.category);
+        const categoryDifference = Math.abs(userCategoryIndex - parejaCategoryIndex);
+        return categoryDifference <= settings.pullCouple.difference;
+      };
+
+      if (user.category === pareja.category) {
+        alert("Las categorías coinciden");
+        handleNext();
+        handleSave();
+      } else {
+        if (settings.pullCouple.criteria === "Age") {
+          if (checkAgeDifference()) {
+            {/*
+            handleNext();
+            handleSave();
+            */}
+            alert("SETTINGS ON: Diferencia de edad ACEPTADA");
+          } else {
+            alert("La diferencia de edad no es la correcta");
+          }
+        } else {
+          if (checkCategoryDifference()) {
+            {/*
+            handleNext();
+            handleSave();
+            */}
+            alert("SETTINGS ON : Categoría ACEPTADA");
+          } else {
+            alert("La diferencia de categoría no es la correcta");
+          }
+        }
+      }
+    } else {
+      {/*
+      handleNext();
+      handleSave();
+      */}
+      alert("SETTINGS OFF : Guardado Satisfactoriamente");
+    }
   };
 
 
