@@ -1,4 +1,6 @@
 "use client";
+//Customizacion de email
+//https://support.google.com/firebase/answer/7000714?hl=en&ref_topic=6386702&sjid=12877986704270570936-SA
 
 import { useState } from "react";
 import {
