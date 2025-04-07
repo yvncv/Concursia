@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -35,6 +38,16 @@ export default function LoginForm() {
     }
   };
 
+  const handleSubmitSendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await sendPasswordResetEmail(auth, email);
+      console.log("Correo de recuperación enviado a:", email);
+    } catch (error) {
+      console.error("Error al enviar el correo de recuperación:", error);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-8">
       <div className="flex flex-col md:flex-row bg-white rounded-3xl shadow-lg overflow-hidden max-w-3xl w-full">
@@ -47,9 +60,9 @@ export default function LoginForm() {
             ← Inicio
           </button>
           <h1 className="text-3xl font-bold mb-12 mt-10 text-center text-gray-800">
-            Inicia sesión aquí
+            Recupera tu contraseña
           </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-red-500">{error}</p>}
             <div>
               <input
@@ -63,7 +76,6 @@ export default function LoginForm() {
               />
             </div>
             <div>
-              {/* <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label> */}
               <input
                 type="password"
                 id="password"
@@ -75,13 +87,12 @@ export default function LoginForm() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => router.push("/recover-password")}
+              <a
+                href="#"
                 className="mb-8 text-sm text-rose-500 hover:underline"
               >
                 ¿Olvidaste la contraseña?
-              </button>
+              </a>
             </div>
             <button
               type="submit"
@@ -97,6 +108,17 @@ export default function LoginForm() {
             >
               ¿No tienes cuenta? Regístrate.
             </button>
+          </form> */}
+          <form onSubmit={handleSubmitSendEmail} className="space-y-4">
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-5 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+              placeholder="Correo electrónico"
+              required
+            />
           </form>
         </div>
 
