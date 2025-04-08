@@ -4,6 +4,7 @@ import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/firebase/functions";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
+import EventoInscripcionAlumnos from "./EventoInscripcionAlumnos";
 import dynamic from "next/dynamic";
 import { use } from "react";
 import { MapPin, Calendar, User } from "lucide-react";
@@ -17,7 +18,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion" | "inscripcionAlumnos">("informacion");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState(false);
-  const [inscripcionEnabled, setInscripcionEnabled] = useState(false);
   const { id } = use(params);
 
   const event = events.find((event) => event.id === id);
@@ -30,7 +30,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const isOrganizer = user?.roleId === "organizer";
 
   const handleInscribirClick = () => {
-    setInscripcionEnabled(true);
     setActiveTab("inscripcion");
   };
 
@@ -111,10 +110,8 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                 ${activeTab === "inscripcion"
                   ? "text-red-600 border-b-2 border-red-600"
-                  : "text-gray-500 hover:text-gray-700"}
-                ${!inscripcionEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
-              onClick={() => inscripcionEnabled && setActiveTab("inscripcion")}
-              disabled={!inscripcionEnabled}
+                  : "text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("inscripcion")}
             >
               Inscripción
             </button>
@@ -155,16 +152,16 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                   <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
                 </div>
               )
-            ) : (
-              // Contenido para inscripcionAlumnos
-              <div className="flex flex-col items-center py-12">
-                <h2 className="text-2xl font-bold text-blue-600 mb-4">Inscripción de Alumnos</h2>
-                <p className="text-lg text-gray-700">
-                  Aquí podrás inscribir alumnos de tu academia al evento.
-                </p>
-                {/* Aquí iría el componente para inscribir alumnos */}
-              </div>
-            )}
+            ) : activeTab === "inscripcionAlumnos" ? (
+              user ? (
+                <EventoInscripcionAlumnos event={event} user={user} />
+              ) : (
+                <div className="flex flex-col items-center py-12 text-gray-500">
+                  <User className="w-12 h-12 mb-4" />
+                  <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
+                </div>
+              )
+            ) : null}
           </div>
         </div>
       </div>
