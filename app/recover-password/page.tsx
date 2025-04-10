@@ -2,7 +2,7 @@
 //Customizacion de email
 //https://support.google.com/firebase/answer/7000714?hl=en&ref_topic=6386702&sjid=12877986704270570936-SA
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -12,12 +12,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import MarineraImage from "@/public/marinera.jpg";
 
-export default function LoginForm() {
+export default function RecoverPassword() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const {url} = usePage();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -138,4 +139,21 @@ export default function LoginForm() {
       </div>
     </div>
   );
+}
+
+// Hook para conseguir url
+// Por si es http://localhost:PORT
+
+export const usePage = () => {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUrl(window.location.origin)
+    }
+  }, []);
+
+  return {
+    url
+  }
 }
