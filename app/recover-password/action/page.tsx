@@ -4,8 +4,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
   confirmPasswordReset
 } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
@@ -15,7 +13,7 @@ import MarineraImage from "@/public/marinera.jpg";
 
 export default function RecoverPassword() {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,9 +22,12 @@ export default function RecoverPassword() {
   const handleSubmitSendPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-        if (!oobCode) throw Error('oobCode requerido');
-        if (!mode) throw Error('mode requerido');
-        await confirmPasswordReset(auth, oobCode, password);
+      if (!oobCode) throw Error('oobCode requerido');
+      if (!mode) throw Error('mode requerido');
+
+      if (password !== confirmPassword) throw Error('Las contraseñas deben ser iguales')
+
+      await confirmPasswordReset(auth, oobCode, password);
     } catch (error) {
       console.error("Error al realizar el cambio de contraseña:", error);
     }
@@ -56,6 +57,24 @@ export default function RecoverPassword() {
               placeholder="Contraseña"
               required
             />
+
+            <input
+              type="password"
+              id="confirm-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-5 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+              placeholder="Confirmar contraseña"
+              required
+            />
+
+            <button
+              type="submit"
+              className="w-4/5 mx-auto block text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? 'Cargando' : "Actualizar contraseña"}
+            </button>
           </form>
         </div>
 
