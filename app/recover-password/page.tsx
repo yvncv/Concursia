@@ -3,10 +3,7 @@
 //https://support.google.com/firebase/answer/7000714?hl=en&ref_topic=6386702&sjid=12877986704270570936-SA
 
 import { useState, useEffect, useRef } from "react";
-import {
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -21,36 +18,38 @@ export default function RecoverPassword() {
 
   const router = useRouter();
 
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmitSendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      // await sendPasswordResetEmail(auth, email);
-      setIsRunning(true)
+      await sendPasswordResetEmail(auth, email);
+      startTimer();
     } catch (error) {
       console.error("Error al enviar el correo de recuperación:", error);
     }
   };
 
-  useEffect(() => {
-    if(!isRunning) return; 
-    setLoading(true)
+  // Inicia el temporizador al enviar el correo electrónico y no enviarlo de nuevo en 60 segundos
+  const startTimer = () => {
+    setLoading(true);
     setIsRunning(true);
     intervalRef.current = setInterval(() => {
-      setTimer(prev => {
+      setTimer((prev) => {
         if (prev === 0) {
           setLoading(false);
-          setIsRunning(false)
+          setIsRunning(false);
           return 60;
         }
         return prev - 1;
       });
     }, 1000);
+  };
 
-    return () => clearInterval(intervalRef.current); // limpieza al desmontar
+  // Elimina el event listener al desmontar el componente
+  useEffect(() => {
+    if (!isRunning) return;
+    return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
   return (
@@ -82,10 +81,13 @@ export default function RecoverPassword() {
               className="w-4/5 mx-auto block text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? <span>Revisa tu correo electrónico. {timer}</span> : "Enviar confirmación"}
+              {loading ? (
+                <span>Revisa tu correo electrónico. {timer}</span>
+              ) : (
+                "Enviar confirmación"
+              )}
             </button>
           </form>
-
         </div>
 
         {/* Contenedor de la imagen */}

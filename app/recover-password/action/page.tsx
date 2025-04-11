@@ -2,34 +2,48 @@
 //Customizacion de email
 //https://support.google.com/firebase/answer/7000714?hl=en&ref_topic=6386702&sjid=12877986704270570936-SA
 
-import { useState, useEffect } from "react";
-import {
-  confirmPasswordReset
-} from "firebase/auth";
+import { useState } from "react";
+import { confirmPasswordReset } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import MarineraImage from "@/public/marinera.jpg";
 
 export default function RecoverPassword() {
+  const [error, setError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode');
-  const oobCode = searchParams.get('oobCode');
-  const handleSubmitSendPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+  const mode = searchParams.get("mode");
+  const oobCode = searchParams.get("oobCode");
+  const [succeedMessage, setSucceedMessage] = useState("");
+  const handleSubmitSendPassword = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     try {
-      if (!oobCode) throw Error('oobCode requerido');
-      if (!mode) throw Error('mode requerido');
+      if (!oobCode) throw Error("oobCode requerido");
+      if (!mode) throw Error("mode requerido");
 
-      if (password !== confirmPassword) throw Error('Las contraseñas deben ser iguales')
+      if (password != confirmPassword) {
+        setError("Las contraseñas deben ser iguales");
+        throw Error("Las contraseñas deben ser iguales");
+      }
 
-      await confirmPasswordReset(auth, oobCode, password);
+      await confirmPasswordReset(auth, oobCode as string, password);
+      setSucceedMessage("¡Contraseña actualizada correctamente!");
+      setTimeout(() => {
+        setSucceedMessage("");
+        router.push("/login");
+      }, 2000);
     } catch (error) {
       console.error("Error al realizar el cambio de contraseña:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,6 +62,7 @@ export default function RecoverPassword() {
             Ingresa tu nueva contraseña
           </h1>
           <form onSubmit={handleSubmitSendPassword} className="space-y-4">
+            {error && <p className="text-red-500">{error}</p>}
             <input
               type="password"
               id="password"
@@ -68,12 +83,16 @@ export default function RecoverPassword() {
               required
             />
 
+            {succeedMessage !== "" && (
+              <p className="text-center text-green-500">{succeedMessage}</p>
+            )}
+
             <button
               type="submit"
               className="w-4/5 mx-auto block text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? 'Cargando' : "Actualizar contraseña"}
+              {loading ? "Cargando" : "Actualizar contraseña"}
             </button>
           </form>
         </div>
