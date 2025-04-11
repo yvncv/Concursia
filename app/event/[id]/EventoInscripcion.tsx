@@ -336,32 +336,32 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
       } else {
         if (settings.pullCouple.criteria === "Age") {
           if (checkAgeDifference()) {
-            {/*
+
             handleNext();
             handleSave();
-            */}
-            alert("SETTINGS ON: Diferencia de edad ACEPTADA");
+
+            //alert("SETTINGS ON: Diferencia de edad ACEPTADA");
           } else {
             alert("La diferencia de edad no es la correcta");
           }
         } else {
           if (checkCategoryDifference()) {
-            {/*
+
             handleNext();
             handleSave();
-            */}
-            alert("SETTINGS ON : Categoría ACEPTADA");
+
+            //alert("SETTINGS ON : Categoría ACEPTADA");
           } else {
             alert("La diferencia de categoría no es la correcta");
           }
         }
       }
     } else {
-      {/*
+
       handleNext();
       handleSave();
-      */}
-      alert("SETTINGS OFF : Guardado Satisfactoriamente");
+
+      //alert("SETTINGS OFF : Guardado Satisfactoriamente");
     }
   };
 
