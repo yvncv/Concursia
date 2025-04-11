@@ -246,17 +246,17 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
     if (parejaEncontrada) {
       if (parejaEncontrada.id === user.id) {
         setPareja(null);
-        alert("No puedes inscribirte como tu propia pareja.");
+        //alert("No puedes inscribirte como tu propia pareja.");
       } else if (parejaEncontrada.gender === user.gender) {
         setPareja(null);
-        alert("El usuario con ese DNI es del mismo sexo que usted.");
+        //alert("El usuario con ese DNI es del mismo sexo que usted.");
       } else {
         setPareja(parejaEncontrada);
-        alert("Pareja encontrada satisfactoriamente.");
+        //alert("Pareja encontrada satisfactoriamente.");
       }
     } else {
       setPareja(null);
-      alert("No se encontró ningún usuario con ese DNI.");
+      //alert("No se encontró ningún usuario con ese DNI.");
     }
   };
 
