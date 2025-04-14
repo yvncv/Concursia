@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { CustomEvent } from "@/app/types/eventType";
 import useTicket from "@/app/hooks/useTicket";
 import useUsers from "@/app/hooks/useUsers";
 import { Ticket } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
-import { ChevronRight, CircleX } from "lucide-react";
+import { ChevronRight, CircleX, Eye, Search, Trash2 } from "lucide-react";
 import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
 import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
 
@@ -39,6 +40,48 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
       const user2 = await getUserById(ticket.usersId[1]);
       setUsers([user1, user2].filter(Boolean) as User[]);
     }
+  };
+
+  const [dniInput, setDniInput] = useState<string>("");
+  const [tableLoading, setTableLoading] = useState(false);
+
+  const handleSearchEventByDNI = async (dni: string) => {
+    const dniRegex = /^[0-9]{8}$/;
+    const dniClean = dni.trim();
+
+    if (dniClean && !dniRegex.test(dni)) {
+      console.error("Ingrese un DNI válido de 8 dígitos");
+      return;
+    }
+
+    const results = [];
+    setTableLoading(true);
+    for (const ticket of tickets) {
+      try {
+        const user1 = await getUserById(ticket.usersId[0]);
+        if (
+          ticket.level !== "Individual" &&
+          ticket.level !== "Seriado" &&
+          ticket.usersId.length > 1
+        ) {
+          const user2 = await getUserById(ticket.usersId[1]);
+          if (
+            (user1 && user1.dni.includes(dniClean)) ||
+            (user2 && user2.dni.includes(dniClean))
+          ) {
+            results.push(ticket);
+          }
+        } else {
+          if (user1 && user1.dni.includes(dniClean)) {
+            results.push(ticket);
+          }
+        }
+      } catch (error) {
+        console.error("Error al buscar ticket:", error);
+      }
+    }
+    setTableLoading(false);
+    setFilteredTickets(results);
   };
 
   const closeModal = () => {
@@ -132,18 +175,36 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-extrabold mb-4">Tickets del Evento</h1>
-      <button
-        onClick={toggleFilterMenu}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded flex items-center gap-x-2"
-      >
-        <span>Filtrar Tickets</span>
-        <ChevronRight
-          size={16}
-          className={`${
-            isFilterMenuOpen && "rotate-90"
-          } transition-transform duration-150 ease-in-out`}
-        />
-      </button>
+      <section className="w-full flex justify-between items-center h-10 mb-4 gap-x-2">
+        <form
+          className="h-full w-3/4 relative"
+          action=""
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await handleSearchEventByDNI(dniInput);
+          }}
+        >
+          <input
+            className="h-full px-4 w-full rounded-lg border-2 border-gray-700 focus:outline-none "
+            placeholder="Buscar por dni..."
+            onChange={(e) => setDniInput((e.target as HTMLInputElement).value)}
+            type="text"
+          />
+          <Search className="absolute top-1/2 -translate-y-1/2 right-4" />
+        </form>
+        <button
+          onClick={toggleFilterMenu}
+          className="px-4 h-full bg-white w-1/4 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
+        >
+          <span>Filtrar Tickets</span>
+          <ChevronRight
+            size={16}
+            className={`${
+              isFilterMenuOpen && "rotate-90"
+            } transition-transform duration-150 ease-in-out`}
+          />
+        </button>
+      </section>
       {isFilterMenuOpen && (
         <div className="mb-4 p-4 bg-gray-100 rounded shadow flex">
           <div className="flex-1">
@@ -181,14 +242,14 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
           </div>
         </div>
       )}
-      <div className="overflow-x-auto rounded-xl">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-100 dark:bg-gray-700">
+      <div className="overflow-x-auto rounded-lg p-4 bg-white shadow-md">
+        <table className="w-full border-collapse shadow-md rounded-lg">
+          <thead className="bg-gray-100">
             <tr>
               {headers.map((header) => (
                 <th
                   key={header}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600"
+                  className="px-4 py-3 text-left text-sm font-medium text-black uppercase tracking-wider border-b"
                 >
                   {header}
                 </th>
@@ -196,33 +257,45 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredTickets.map((ticket) => (
-              <tr key={ticket.id}>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  {ticket.id}
-                </td>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  {ticket.level}
-                </td>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  {ticket.category}
-                </td>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  {ticket.registrationDate.toDate().toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  {ticket.status}
-                </td>
-                <td className="px-4 py-3 border-b dark:border-gray-600">
-                  <button
-                    className="text-blue-500 hover:underline"
-                    onClick={() => openModal(ticket)}
-                  >
-                    Detalles
-                  </button>
+            {!tableLoading ? (
+              <>
+                {filteredTickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td className="px-4 py-3 border-b">{ticket.id}</td>
+                    <td className="px-4 py-3 border-b">{ticket.level}</td>
+                    <td className="px-4 py-3 border-b">{ticket.category}</td>
+                    <td className="px-4 py-3 border-b">
+                      {ticket.registrationDate.toDate().toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 border-b">{ticket.status}</td>
+                    <td className="px-4 py-3 border-b">
+                      <div className="flex justify-around">
+                        <Eye
+                          size={20}
+                          className="text-blue-500 hover:underline hover:cursor-pointer"
+                          onClick={() => openModal(ticket)}
+                        >
+                          Detalles
+                        </Eye>
+                        <Trash2
+                          size={20}
+                          className="text-red-500 hover:underline hover:cursor-pointer"
+                          onClick={() => handleDeleteTicket(ticket)}
+                        >
+                          Detalles
+                        </Trash2>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : (
+              <tr>
+                <td colSpan={headers.length} className="text-center py-4">
+                  Cargando tickets...
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -230,6 +303,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
       {isModalOpen && selectedTicket && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
+            {/* Modal de detalles */}
             <div className="flex justify-between mt-4">
               <h2 className="text-xl font-bold mb-4">Detalles del Ticket</h2>
               <div>
@@ -305,6 +379,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                 </tr>
               </tbody>
             </table>
+
             <div className="flex justify-between mt-4">
               <button className="text-blue-500 hover:underline"></button>
               {selectedTicket.status === "Pendiente" && (
