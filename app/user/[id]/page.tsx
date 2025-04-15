@@ -57,6 +57,16 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   }, [user]);
 
+  const getValidImageUrl = (url: string) => {
+    try {
+      const decodedOnce = decodeURIComponent(url);
+      const doubleEncoded = url !== encodeURIComponent(decodedOnce);
+      return doubleEncoded ? decodedOnce : url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setContactInfo(prev => {
@@ -295,16 +305,20 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                       className="w-full h-full object-cover"
                       width={1000}
                       height={1000}
+                      unoptimized
                     />
                   ) : foundUser.profileImage ? (
                     <Image
-                      src={typeof foundUser.profileImage === "string"
-                        ? foundUser.profileImage
-                        : URL.createObjectURL(foundUser.profileImage as File)}
+                    src={
+                      typeof foundUser.profileImage === "string"
+                        ? getValidImageUrl(foundUser.profileImage)
+                        : URL.createObjectURL(foundUser.profileImage as File)
+                    }                    
                       alt="Foto de perfil"
                       className="w-full h-full object-cover"
                       width={1000}
                       height={1000}
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
