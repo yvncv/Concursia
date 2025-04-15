@@ -309,11 +309,9 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     />
                   ) : foundUser.profileImage ? (
                     <Image
-                    src={
-                      typeof foundUser.profileImage === "string"
-                        ? getValidImageUrl(foundUser.profileImage)
-                        : URL.createObjectURL(foundUser.profileImage as File)
-                    }                    
+                      src={typeof foundUser.profileImage === "string"
+                        ? foundUser.profileImage
+                        : URL.createObjectURL(foundUser.profileImage as File)}
                       alt="Foto de perfil"
                       className="w-full h-full object-cover"
                       width={1000}
