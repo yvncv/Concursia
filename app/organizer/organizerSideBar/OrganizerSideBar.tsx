@@ -11,7 +11,7 @@ const OrganizerSideBar: React.FC = () => {
 
   const enlaces = [
     { label: "Dashboard", href: "/organizer" },
-    { label: "Users", href: "/organizer/users" },
+    // { label: "Users", href: "/organizer/users" },
     { label: "Events", href: "/organizer/events" },
   ];
 
