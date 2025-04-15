@@ -101,7 +101,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             <button
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                 ${activeTab === "informacion"
-                  ? "text-red-600 border-b-2 border-red-600"
+                  ? "text-yellow-600 border-b-2 border-yellow-600"
                   : "text-gray-500 hover:text-gray-700"}`}
               onClick={() => setActiveTab("informacion")}
             >
@@ -119,138 +119,138 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               Inscripción
             </button>
 
-  {/* Tab de Inscripción de Alumnos - solo visible para organizadores */ }
-  {
-    isOrganizer && (
-      <button
-        className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+            {/* Tab de Inscripción de Alumnos - solo visible para organizadores */}
+            {
+              isOrganizer && (
+                <button
+                  className={`flex-1 px-6 py-4 text-center font-medium transition-colors
                   ${activeTab === "inscripcionAlumnos"
-            ? "text-blue-600 border-b-2 border-blue-600"
-            : "text-gray-500 hover:text-gray-700"}`}
-        onClick={() => setActiveTab("inscripcionAlumnos")}
-      >
-        Inscripción de Alumnos
-      </button>
-    )
-  }
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500 hover:text-gray-700"}`}
+                  onClick={() => setActiveTab("inscripcionAlumnos")}
+                >
+                  Inscripción de Alumnos
+                </button>
+              )
+            }
           </div >
 
-  <div className="p-6">
-    {activeTab === "informacion" ? (
-      <EventoInformacion
-        event={event}
-        openModal={() => setIsModalOpen(true)}
-        onInscribir={handleInscribirClick}
-        onInscribirAlumnos={handleInscribirAlumnosClick}
-        user={user}
-        isEventOrganizer={isEventOrganizer}
-      />
-    ) : activeTab === "inscripcion" ? (
-      user ? (
-        <EventoInscripcion
-          event={event}
-          openModal={() => setIsAcademyModalOpen(true)}
-          user={user} />
-      ) : (
-        <div className="flex flex-col items-center py-12 text-gray-500">
-          <User className="w-12 h-12 mb-4" />
-          <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
-        </div>
-      )
-    ) : activeTab === "inscripcionAlumnos" ? (
-      user ? (
-        <EventoInscripcionAlumnos event={event} user={user} />
-      ) : (
-        <div className="flex flex-col items-center py-12 text-gray-500">
-          <User className="w-12 h-12 mb-4" />
-          <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
-        </div>
-      )
-    ) : null}
-  </div>
+          <div className="p-6">
+            {activeTab === "informacion" ? (
+              <EventoInformacion
+                event={event}
+                openModal={() => setIsModalOpen(true)}
+                onInscribir={handleInscribirClick}
+                onInscribirAlumnos={handleInscribirAlumnosClick}
+                user={user}
+                isEventOrganizer={isEventOrganizer}
+              />
+            ) : activeTab === "inscripcion" ? (
+              user ? (
+                <EventoInscripcion
+                  event={event}
+                  openModal={() => setIsAcademyModalOpen(true)}
+                  user={user} />
+              ) : (
+                <div className="flex flex-col items-center py-12 text-gray-500">
+                  <User className="w-12 h-12 mb-4" />
+                  <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
+                </div>
+              )
+            ) : activeTab === "inscripcionAlumnos" ? (
+              user ? (
+                <EventoInscripcionAlumnos event={event} user={user} />
+              ) : (
+                <div className="flex flex-col items-center py-12 text-gray-500">
+                  <User className="w-12 h-12 mb-4" />
+                  <p className="text-lg">Debes iniciar sesión para inscribir alumnos.</p>
+                </div>
+              )
+            ) : null}
+          </div>
         </div >
       </div >
 
-  { isModalOpen && (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={() => setIsModalOpen(false)}
-    >
-      <div
-        className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Encabezado del modal */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-            Ubicación de{" "}
-            <span className="text-red-600">
-              {event.eventType}: {event.name}
-            </span>
-          </h2>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
-            aria-label="Cerrar modal"
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            ✕
-          </button>
-        </div>
+            {/* Encabezado del modal */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                Ubicación de{" "}
+                <span className="text-red-600">
+                  {event.eventType}: {event.name}
+                </span>
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
+                aria-label="Cerrar modal"
+              >
+                ✕
+              </button>
+            </div>
 
-        {/* Contenido principal */}
-        <div className="p-4 h-[400px] sm:h-[500px]">
-          <div className="rounded-lg overflow-hidden h-full">
-            <Map
-              latitude={event.location.coordinates.latitude}
-              longitude={event.location.coordinates.longitude}
-            />
+            {/* Contenido principal */}
+            <div className="p-4 h-[400px] sm:h-[500px]">
+              <div className="rounded-lg overflow-hidden h-full">
+                <Map
+                  latitude={event.location.coordinates.latitude}
+                  longitude={event.location.coordinates.longitude}
+                />
+              </div>
+            </div>
+
           </div>
         </div>
+      )}
 
-      </div>
-    </div>
-  )}
-
-{
-  isAcademyModalOpen && academy && (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={() => setIsAcademyModalOpen(false)}
-    >
-      <div
-        className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Encabezado del modal */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-            Ubicación de{" "}
-            <span className="text-red-600">
-              {academy.name}
-            </span>
-          </h2>
-          <button
+      {
+        isAcademyModalOpen && academy && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setIsAcademyModalOpen(false)}
-            className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
-            aria-label="Cerrar modal"
           >
-            ✕
-          </button>
-        </div>
+            <div
+              className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Encabezado del modal */}
+              <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                  Ubicación de{" "}
+                  <span className="text-red-600">
+                    {academy.name}
+                  </span>
+                </h2>
+                <button
+                  onClick={() => setIsAcademyModalOpen(false)}
+                  className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
+                  aria-label="Cerrar modal"
+                >
+                  ✕
+                </button>
+              </div>
 
-        {/* Contenido principal */}
-        <div className="p-4 h-[400px] sm:h-[500px]">
-          <div className="rounded-lg overflow-hidden h-full">
-            <Map
-              latitude={academy.location.coordinates.latitude}
-              longitude={academy.location.coordinates.longitude}
-            />
+              {/* Contenido principal */}
+              <div className="p-4 h-[400px] sm:h-[500px]">
+                <div className="rounded-lg overflow-hidden h-full">
+                  <Map
+                    latitude={academy.location.coordinates.latitude}
+                    longitude={academy.location.coordinates.longitude}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+        )
+      }
 
     </div >
   );
