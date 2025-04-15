@@ -150,6 +150,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
   const headers: string[] = [
     "ID",
     "Participante(s)",
+    "Academia",
     "Modalidad",
     "Categoría",
     "Fecha de Registro",
@@ -288,14 +289,22 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                     <td className="px-4 py-3 border-b">{ticket.id}</td>
                     <td className="px-4 py-3 border-b">
                       {ticket.usersId.length === 1 ? (
-                        <UserDNIDisplay userId={ticket.usersId[0]} />
+                        <UserInfoDisplay userId={ticket.usersId[0]} field="dni" />
                       ) : (
                         <div>
-                          <UserDNIDisplay userId={ticket.usersId[0]} />
-                          <UserDNIDisplay userId={ticket.usersId[1]} />
+                          <UserInfoDisplay userId={ticket.usersId[0]} field="dni" />
+                          <UserInfoDisplay userId={ticket.usersId[1]} field="dni" />
                         </div>
                       )}
                     </td>
+                    <td className="px-4 py-3 border-b">{ticket.usersId.length === 1 ? (
+                        <UserInfoDisplay userId={ticket.usersId[0]} field="academyName" />
+                      ) : (
+                        <div>
+                          <UserInfoDisplay userId={ticket.usersId[0]} field="academyName" />
+                          <UserInfoDisplay userId={ticket.usersId[1]} field="academyName" />
+                        </div>
+                      )}</td>
                     <td className="px-4 py-3 border-b">{ticket.level}</td>
                     <td className="px-4 py-3 border-b">{ticket.category}</td>
                     <td className="px-4 py-3 border-b">
@@ -456,7 +465,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 };
 
 // Primero, añade este componente al inicio del archivo (después de las importaciones)
-const UserDNIDisplay = ({ userId }: { userId: string }) => {
+const UserInfoDisplay = ({ userId, field }: { userId: string, field: keyof User }) => {
   const [user, setUser] = useState<User | null>(null);
   const { getUserById } = useUsers();
 
@@ -476,9 +485,8 @@ const UserDNIDisplay = ({ userId }: { userId: string }) => {
   return (
     <span
       className="truncate overflow-hidden whitespace-nowrap block max-w-[150px]"
-      title={`${user?.firstName} - ${user?.lastName}` || ""}
     >
-      {user?.dni || "-"}
+      { (user && user[field]?.toString()) || "-"}
     </span>
   );
 };
