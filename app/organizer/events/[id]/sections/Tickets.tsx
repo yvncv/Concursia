@@ -5,7 +5,14 @@ import useTicket from "@/app/hooks/useTicket";
 import useUsers from "@/app/hooks/useUsers";
 import { Ticket } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
-import { ChevronRight, CircleX, Eye, Search, Trash2 } from "lucide-react";
+import {
+  ChevronRight,
+  CircleX,
+  Eye,
+  ListRestart,
+  Search,
+  Trash2,
+} from "lucide-react";
 import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
 import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
 
@@ -142,6 +149,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
   const headers: string[] = [
     "ID",
+    "Participante(s)",
     "Modalidad",
     "Categoría",
     "Fecha de Registro",
@@ -187,11 +195,27 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
           <input
             className="h-full px-4 w-full rounded-lg border-2 border-gray-700 focus:outline-none "
             placeholder="Buscar por dni..."
+            value={dniInput}
             onChange={(e) => setDniInput((e.target as HTMLInputElement).value)}
             type="text"
           />
           <Search className="absolute top-1/2 -translate-y-1/2 right-4" />
         </form>
+        <button
+          title="Limpiar filtro de dni"
+          onClick={async () => {
+            setDniInput("");
+            await handleSearchEventByDNI("");
+          }}
+          className="px-4 h-full bg-white w-20 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
+        >
+          <ListRestart
+            size={16}
+            className={`${
+              isFilterMenuOpen && "rotate-90"
+            } transition-transform duration-150 ease-in-out`}
+          />
+        </button>
         <button
           onClick={toggleFilterMenu}
           className="px-4 h-full bg-white w-1/4 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
@@ -262,6 +286,16 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                 {filteredTickets.map((ticket) => (
                   <tr key={ticket.id}>
                     <td className="px-4 py-3 border-b">{ticket.id}</td>
+                    <td className="px-4 py-3 border-b">
+                      {ticket.usersId.length === 1 ? (
+                        <UserDNIDisplay userId={ticket.usersId[0]} />
+                      ) : (
+                        <div>
+                          <UserDNIDisplay userId={ticket.usersId[0]} />
+                          <UserDNIDisplay userId={ticket.usersId[1]} />
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 border-b">{ticket.level}</td>
                     <td className="px-4 py-3 border-b">{ticket.category}</td>
                     <td className="px-4 py-3 border-b">
@@ -418,6 +452,34 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         ticket={selectedTicket!} // Use non-null assertion operator
       />
     </div>
+  );
+};
+
+// Primero, añade este componente al inicio del archivo (después de las importaciones)
+const UserDNIDisplay = ({ userId }: { userId: string }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const { getUserById } = useUsers();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getUserById(userId);
+        setUser(user);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, [userId, getUserById]);
+
+  return (
+    <span
+      className="truncate overflow-hidden whitespace-nowrap block max-w-[150px]"
+      title={`${user?.firstName} - ${user?.lastName}` || ""}
+    >
+      {user?.dni || "-"}
+    </span>
   );
 };
 
