@@ -4,7 +4,21 @@ import { CustomEvent } from "@/app/types/eventType";
 import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
 
-const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEvent, openModal: () => void, onInscribir: () => void }) => {
+const EventoInformacion = ({
+    event,
+    openModal,
+    onInscribir,
+    onInscribirAlumnos,
+    user,
+    isEventOrganizer
+}: {
+    event: CustomEvent,
+    openModal: () => void,
+    onInscribir: () => void,
+    onInscribirAlumnos: () => void,
+    user: any,  // Usando 'any' para coincidir con tu implementación de useUser
+    isEventOrganizer?: boolean
+}) => {
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);
@@ -40,6 +54,15 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
 
     const iconClass = "w-6 h-6";
 
+    // Determinar si el usuario es el organizador del evento
+    // Si isEventOrganizer no se proporciona, lo calculamos comparando IDs
+    const isOrganizer = isEventOrganizer !== undefined ?
+        isEventOrganizer :
+        (user?.id && event.organizerId === user.id);
+
+    // Check if user can register themselves or others
+    const canRegister = !isOrganizer;
+    const canRegisterStudents = user?.roleId === "organizer" && !isOrganizer;
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
@@ -143,24 +166,36 @@ const EventoInformacion = ({ event, openModal, onInscribir }: { event: CustomEve
                             )}
                         </div>
 
-
                         {/* Lista de precios */}
                         <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
                         </ul>
 
-                        {/* Botón Inscribir */}
-                        <button
-                            onClick={onInscribir}
-                            className="mt-4 w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-95"
-                        >
-                            Inscribir
-                        </button>
+                        {/* Botones de acción - condicionalmente renderizados */}
+                        <div className="mt-4 flex flex-col gap-3">
+                            {canRegister && (
+                                <button
+                                    onClick={onInscribir}
+                                    className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-95"
+                                >
+                                    Inscribir
+                                </button>
+                            )}
+
+                            {canRegisterStudents && (
+                                <button
+                                    onClick={onInscribirAlumnos}
+                                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-blue-600 hover:to-blue-700 active:scale-95"
+                                >
+                                    Inscribir alumnos
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Sección del Mapa */}
                     <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-lg">
                         <Map latitude={event.location.coordinates.latitude}
-                             longitude={event.location.coordinates.longitude}/>
+                            longitude={event.location.coordinates.longitude} />
                     </div>
                 </div>
 
