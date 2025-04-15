@@ -85,95 +85,38 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
       alert('No hay usuario autenticado');
       return;
     }
-
+  
     if (!user?.uid) return;
-
+  
     try {
-      // Validar el formato del correo
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(newEmail)) {
         alert('Por favor ingrese un correo electrónico válido');
         return;
       }
-
+  
       // Re-autenticación
       const currentEmail = auth.currentUser.email ?? '';
       const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
-
-      // Cambiar el correo en Authentication
+  
+      // Cambiar el correo en Firebase Authentication
       await updateEmail(auth.currentUser, newEmail);
-
-      // Enviar un correo de verificación
+  
+      // Enviar correo de verificación
       await sendEmailVerification(auth.currentUser);
-
-      // Actualizar el correo en Firestore
-      const userRef = doc(db, 'users', user.uid); // Suponiendo que el ID del documento es el UID del usuario autenticado
-      const updateData = {
-        email: [newEmail, user.email[1]]
-      }
-
-      await updateDoc(userRef, updateData);
-      console.log('Perfil actualizado exitosamente');
-
-      // Restablecer los estados del modal
-      setIsEmailModalOpen(false);
-      setNewEmail('');
-      setCurrentPassword('');
-
-      alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
-    } catch (error: unknown) {
-      console.error('Error cambiando email:', error);
-
-      // Manejo de errores específicos
-      if (error instanceof Error) {
-        switch (error.message) {
-          case 'auth/invalid-email':
-            alert('Correo electrónico inválido');
-            break;
-          case 'auth/email-already-in-use':
-            alert('Este correo electrónico ya está en uso');
-            break;
-          case 'auth/requires-recent-login':
-            alert('Por favor, vuelve a iniciar sesión e intenta nuevamente');
-            break;
-          default:
-            alert('Hubo un error al cambiar el correo. Intenta nuevamente.');
-        }
-      }
-    }
-
-    if (loadingUsers) {
-      return <div className="text-center text-gray-600">Cargando perfil...</div>;
-    }
-
-    if (!user?.uid) return;
-
-    try {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) {
-        alert('Por favor ingrese un correo electrónico válido');
-        return;
-      }
-
-      const currentEmail = user.email ?? '';
-      const credential = EmailAuthProvider.credential(currentEmail, currentPassword);
-      await reauthenticateWithCredential(user, credential);
-
-      await updateEmail(user, newEmail);
-      await sendEmailVerification(user);
-
+  
+      // Actualizar Firestore solo en email[0]
       const userRef = doc(db, 'users', user.uid);
-      const updateData = {
-        email: [newEmail, user.email[1]]
-      };
-
+      const updateData = { email: [newEmail, user.email[1]] };
+  
       await updateDoc(userRef, updateData);
-      console.log('Perfil actualizado exitosamente');
-
+      console.log('Correo principal actualizado exitosamente');
+  
       setIsEmailModalOpen(false);
       setNewEmail('');
       setCurrentPassword('');
+  
       alert('Correo actualizado y sincronizado. Se ha enviado un correo de verificación.');
     } catch (error) {
       console.error('Error cambiando email:', error);
@@ -306,7 +249,7 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
     try {
       const userRef = doc(db, "users", user.uid);
       const updateData = {
-        email: [user.email[0], contactInfo.emailSecondary],
+        email: [foundUser?.email[0], contactInfo.emailSecondary],
         phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary],
         academyId: contactInfo.academyId,
       };
@@ -344,36 +287,68 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8">
               <div className="flex items-center space-x-8">
                 {/* Profile Image */}
-                <div className="relative group">
-                  <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
-                    {croppedImage ? (
-                      <Image
-                        src={croppedImage}
-                        alt="Foto de perfil"
-                        className="w-full h-full object-cover"
-                        width={1000}
-                        height={1000}
-                      />
-                    ) : foundUser.profileImage ? (
-                      <Image
-                        src={typeof foundUser.profileImage === "string"
-                          ? foundUser.profileImage
-                          : URL.createObjectURL(foundUser.profileImage as File)}
-                        alt="Foto de perfil"
-                        className="w-full h-full object-cover"
-                        width={1000}
-                        height={1000}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <User size={44} className="text-gray-400" />
-                      </div>
-                    )}
-                  </div>
+                <div className="relative group w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                  {croppedImage ? (
+                    <Image
+                      src={croppedImage}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover"
+                      width={1000}
+                      height={1000}
+                    />
+                  ) : foundUser.profileImage ? (
+                    <Image
+                      src={typeof foundUser.profileImage === "string"
+                        ? foundUser.profileImage
+                        : URL.createObjectURL(foundUser.profileImage as File)}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover"
+                      width={1000}
+                      height={1000}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <User size={44} className="text-gray-400" />
+                    </div>
+                  )}
+
+                  {/* Overlay visible solo dentro de la imagen */}
+                  {canEdit && (
+                    <div
+                      onClick={() => setIsChangeImageModalOpen(true)}
+                      className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <label
+                        htmlFor="profile-photo"
+                        className="cursor-pointer text-white flex flex-col items-center gap-2 mb-2 text-xs text-center"
+                      >
+                        <LucideImage size={20} className="text-white" />
+                        Seleccionar nueva imagen
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Modal para cambiar la imagen */}
+                  <ChangeProfileImageModal
+                    isOpen={isChangeImageModalOpen}
+                    onClose={() => setIsChangeImageModalOpen(false)}
+                    onFileSelect={handleFileSelect}
+                    onDelete={handleDeleteProfilePicture}
+                  />
+
+                  {/* Modal de recorte */}
+                  {selectedImage && (
+                    <ImageCropModal
+                      image={selectedImage}
+                      isOpen={isCropModalOpen}
+                      onClose={handleCloseModal}
+                      onConfirm={handleConfirmCrop}
+                    />
+                  )}
                 </div>
 
                 {/* User Name and Role */}
-                <div>
+                <div className="text-center mt-4">
                   <h1 className="text-4xl font-bold text-white">
                     {capitalizeName(`${foundUser.firstName} ${foundUser.lastName}`)}
                   </h1>
@@ -382,113 +357,207 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     {foundUser.academyId && ` • ${foundUser.academyName}`}
                   </p>
                 </div>
-              </div>
-            </div>
 
-            {/* Profile Content */}
-            <div className="grid md:grid-cols-2 gap-8 p-8">
-              {/* Personal Information */}
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
-                <h2 className="text-2xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-4 mb-6">
-                  Personal Information
-                </h2>
 
-                {[
-                  { label: 'DNI', value: foundUser.dni },
-                  { label: 'Birth Date', value: foundUser.birthDate.toDate().toISOString().split('T')[0] },
-                  { label: 'Gender', value: foundUser.gender },
-                  { label: 'Category', value: foundUser.category }
-                ].map(({ label, value }) => (
-                  <div key={label} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                      {label}
-                    </label>
-                    <div className="bg-white rounded-xl p-3 shadow-sm">
-                      <p className="text-gray-800 font-medium">{value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Información de Contacto */}
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
-                <h2 className="text-2xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-4 mb-6">
-                  Información de Contacto
-                </h2>
-
-                {[
-                  { label: 'Correo Principal', id: 'emailPrimary', value: foundUser?.email[0], readOnly: true },
-                  { label: 'Correo Secundario', id: 'emailSecondary', value: contactInfo.emailSecondary, showButton: !showEmailSecondary && contactInfo.emailSecondary === '', onClick: () => setShowEmailSecondary(true) },
-                  { label: 'Teléfono Principal', id: 'phonePrimary', value: contactInfo.phonePrimary, showButton: !showPhonePrimary && contactInfo.phonePrimary === '', onClick: () => setShowPhonePrimary(true) },
-                  { label: 'Teléfono Secundario', id: 'phoneSecondary', value: contactInfo.phoneSecondary, showButton: !showPhoneSecondary && contactInfo.phoneSecondary === '', onClick: () => setShowPhoneSecondary(true) }
-                ].map(({ label, id, value, readOnly, showButton, onClick }) => (
-                  <div key={id} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
-                    {showButton ? (
-                      <button
-                        type="button"
-                        onClick={onClick}
-                        className="mt-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md"
-                      >
-                        Añadir {label}
-                      </button>
-                    ) : (
-                      <div className="bg-white rounded-xl p-3 shadow-sm flex items-center">
-                        <input
-                          type={id.includes('email') ? 'email' : 'text'}
-                          id={id}
-                          value={value}
-                          onChange={handleInputChange}
-                          className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-400 focus:bg-white focus:outline-none transition-all"
-                          readOnly={readOnly}
-                        />
-                        {canEdit && !readOnly && (
-                          <button
-                            type="button"
-                            onClick={() => alert(`Editar ${label}`)}
-                            className="ml-2 text-blue-500 hover:text-blue-700 transition"
-                          >
-                            ✏️
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <div className="mt-8 text-center">
+                {/* Botón para guardar imagen, si hay croppedImage */}
+                {croppedImage && (
                   <button
-                    type="submit"
-                    className={`px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 shadow-md ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    disabled={!hasChanges}
-                  >
-                    Guardar Cambios
+                    type="button"
+                    onClick={handleSaveProfileImage}
+                    className="ml-3 block text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
+                    Guardar
                   </button>
+                )}
+              </div>
+
+              {/* Profile Content */}
+              <div className="grid md:grid-cols-2 gap-8 p-8">
+                {/* Personal Information */}
+                <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
+                  <h2 className="text-2xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-4 mb-6">
+                    Personal Information
+                  </h2>
+
+                  {[
+                    { label: 'DNI', value: foundUser.dni },
+                    { label: 'Birth Date', value: foundUser.birthDate.toDate().toISOString().split('T')[0] },
+                    { label: 'Gender', value: foundUser.gender },
+                    { label: 'Category', value: foundUser.category }
+                  ].map(({ label, value }) => (
+                    <div key={label} className="mb-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">
+                        {label}
+                      </label>
+                      <div className="bg-white rounded-xl p-3 shadow-sm">
+                        <p className="text-gray-800 font-medium">{value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Información de Contacto */}
+                <div className="bg-gray-50 rounded-2xl p-6 shadow-md">
+                <div className="mt-4">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Correo Principal
+                </label>
+                <div className="flex items-center mt-1">
+                  <input
+                    type="email"
+                    id="emailPrimary"
+                    value={foundUser?.email[0]}
+                    className="flex-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-500 focus:ring-0 focus:shadow-none transition-all outline-none"
+                    readOnly
+                  />
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEmailModalOpen(true)}
+                      className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+                    >
+                      Actualizar
+                    </button>
+                  )}
                 </div>
               </div>
 
+              {isEmailModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white p-8 rounded-lg w-96">
+                    <h2 className="text-xl font-semibold mb-4">Actualizar Correo Electrónico</h2>
+                    <div>
+                      <div className="mb-4">
+                        <label htmlFor="currentPassword" className="block mb-2">Contraseña Actual</label>
+                        <input
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label htmlFor="newEmail" className="block mb-2">Nuevo Correo Electrónico</label>
+                        <input
+                          type="email"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div className="flex justify-between">
+                        <button
+                          onClick={() => setIsEmailModalOpen(false)}
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleChangeEmail}
+                          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                        >
+                          Actualizar Correo
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+                  {[
+                    // Otros campos de contacto...
+                    {
+                      label: 'Correo Secundario',
+                      id: 'emailSecondary',
+                      value: contactInfo.emailSecondary,
+                      showButton: !showEmailSecondary && contactInfo.emailSecondary === '',
+                      onClick: () => setShowEmailSecondary(true),
+                    },
+                    {
+                      label: 'Teléfono Principal',
+                      id: 'phonePrimary',
+                      value: contactInfo.phonePrimary,
+                      showButton: !showPhonePrimary && contactInfo.phonePrimary === '',
+                      onClick: () => setShowPhonePrimary(true),
+                    },
+                    {
+                      label: 'Teléfono Secundario',
+                      id: 'phoneSecondary',
+                      value: contactInfo.phoneSecondary,
+                      showButton: !showPhoneSecondary && contactInfo.phoneSecondary === '',
+                      onClick: () => setShowPhoneSecondary(true),
+                    },
+                  ].map(({ label, id, value, showButton, onClick }) => (
+                    <div key={id} className="mb-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">
+                        {label}
+                      </label>
+                      {showButton ? (
+                        <button
+                          type="button"
+                          onClick={onClick}
+                          className="mt-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md"
+                        >
+                          Añadir {label}
+                        </button>
+                      ) : (
+                        <div className="bg-white rounded-xl p-3 shadow-sm flex items-center">
+                          <input
+                            type={id.includes('email') ? 'email' : 'text'}
+                            id={id}
+                            value={value}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-400 focus:bg-white focus:outline-none transition-all"
+                          />
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => alert(`Editar ${label}`)}
+                              className="ml-2 text-blue-500 hover:text-blue-700 transition"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  <div className="mt-8 text-center">
+                    <button
+                      type="submit"
+                      className={`px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 shadow-md ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      disabled={!hasChanges}
+                    >
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </div>
+
+
+              </div>
             </div>
+
+            {/* Modals for Image Change and Crop */}
+            {isChangeImageModalOpen && (
+              <ChangeProfileImageModal
+                isOpen={isChangeImageModalOpen}
+                onClose={() => setIsChangeImageModalOpen(false)}
+                onFileSelect={handleFileSelect}
+                onDelete={handleDeleteProfilePicture}
+              />
+            )}
+
+            {selectedImage && (
+              <ImageCropModal
+                image={selectedImage}
+                isOpen={isCropModalOpen}
+                onClose={handleCloseModal}
+                onConfirm={handleConfirmCrop}
+              />
+            )}
           </div>
-
-          {/* Modals for Image Change and Crop */}
-          {isChangeImageModalOpen && (
-            <ChangeProfileImageModal
-              isOpen={isChangeImageModalOpen}
-              onClose={() => setIsChangeImageModalOpen(false)}
-              onFileSelect={handleFileSelect}
-              onDelete={handleDeleteProfilePicture}
-            />
-          )}
-
-          {selectedImage && (
-            <ImageCropModal
-              image={selectedImage}
-              isOpen={isCropModalOpen}
-              onClose={handleCloseModal}
-              onConfirm={handleConfirmCrop}
-            />
-          )}
         </div>
       </form>
     </main>
