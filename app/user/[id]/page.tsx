@@ -392,9 +392,9 @@ const ProfilePage = ({ params }: { params: Promise<{ id: string }> }) => {
 
                   {[
                     { label: 'DNI', value: foundUser.dni },
-                    { label: 'Birth Date', value: foundUser.birthDate.toDate().toISOString().split('T')[0] },
-                    { label: 'Gender', value: foundUser.gender },
-                    { label: 'Category', value: foundUser.category }
+                    { label: 'Fecha de Nacimiento', value: foundUser.birthDate.toDate().toISOString().split('T')[0] },
+                    { label: 'Género', value: foundUser.gender },
+                    { label: 'Categoría', value: foundUser.category }
                   ].map(({ label, value }) => (
                     <div key={label} className="mb-4">
                       <label className="block text-sm font-medium text-gray-600 mb-2">
