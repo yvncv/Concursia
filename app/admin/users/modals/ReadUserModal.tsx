@@ -103,8 +103,15 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
   };
   
   const renderFieldGroup = (title: string, fields: string[]) => {
-    const fieldsToRender = fields.filter(key => user.hasOwnProperty(key) && user[key] != null && user[key] !== "" && 
-      (Array.isArray(user[key]) ? user[key].length > 0 : true));  // Filtramos si es un arreglo vacío
+    const fieldsToRender = fields.filter(
+      (key) =>
+        key in user &&
+        (user as Record<string, any>)[key] != null &&
+        (user as Record<string, any>)[key] !== "" &&
+        (Array.isArray((user as Record<string, any>)[key]) ? (user as Record<string, any>)[key].length > 0 : true)
+    );
+    
+      // Filtramos si es un arreglo vacío
     
     if (fieldsToRender.length === 0) return null;
     
