@@ -23,7 +23,8 @@ const Events: React.FC = () => {
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
       name: '',
-      description: ''
+      description: '',
+      status: ''
     },
     dates: {
       startDate: Timestamp.now(), // Inicializa con Timestamp
@@ -116,6 +117,7 @@ const Events: React.FC = () => {
       general: {
         name: event.name,
         description: event.description,
+        status: ''
       },
       dates: {
         startDate: event.startDate, // Mantén como Timestamp

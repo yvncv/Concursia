@@ -273,7 +273,7 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
     setFileData([]);
     setValidationErrors([]);
     setIsSuccess(false);
-    setValidationResults({ validUsers: [], invalidUsers: [] });
+    setValidationResults({ validUsers: [], invalidUsers: [], userDetails: {} });
     setStep("upload");
   };
 

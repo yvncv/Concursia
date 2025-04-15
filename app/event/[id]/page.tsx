@@ -144,12 +144,16 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 onInscribirAlumnos={handleInscribirAlumnosClick}
                 user={user}
                 isEventOrganizer={isEventOrganizer}
+                settings={settings}   // Asegúrate de pasar `settings`
+                loading={loading}     // Asegúrate de pasar `loading`
+                error={error}
               />
             ) : activeTab === "inscripcion" ? (
               user ? (
                 <EventoInscripcion
                   event={event}
                   openModal={() => setIsAcademyModalOpen(true)}
+                  settings={settings}
                   user={user} />
               ) : (
                 <div className="flex flex-col items-center py-12 text-gray-500">

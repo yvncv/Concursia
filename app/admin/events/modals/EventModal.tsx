@@ -24,7 +24,8 @@ interface EventModalProps {
 const initialEventData: EventFormData = {
     general: {
         name: '',
-        description: ''
+        description: '',
+        status: ''
     },
     dates: {
         startDate: Timestamp.now(), // Inicializa con Timestamp
