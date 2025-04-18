@@ -32,10 +32,10 @@ export default function LandingPage() {
                 Descubre los mejores eventos y competencias en Perú
               </p>
               <Link
-                  href={"/calendario"}
-                  className="text-sm bg-rojo p-2 rounded-lg text-white hover:bg-red-800"
+                  href={"/login"}
+                  className="text-2xl bg-rojo p-2 rounded-lg text-white hover:bg-red-800"
               >
-                Ver Eventos
+                INICIA SESION
               </Link>
             </div>
           </section>
