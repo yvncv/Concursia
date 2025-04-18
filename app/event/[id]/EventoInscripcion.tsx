@@ -104,61 +104,67 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
         ) : errorAcademies ? (
             <div className="mt-1 px-4 py-4 text-red-500">Error: {errorAcademies}</div>
         ) : (
-            <div>
-              <input
-                  id="academyId"
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                  placeholder="Buscar academia"
-              />
-              {searchQuery && (
-                  <div className="w-full bg-white border mt-1 rounded-2xl shadow-lg overflow-y-auto">
-                    {filteredAcademies.length > 0 ? (
-                        filteredAcademies.map(academy => (
+            <div className="flex items-center gap-2">
+
+              <div className={"w-full"}>
+                <input
+                    id="academyId"
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
+                    placeholder="Buscar academia"
+                />
+                {searchQuery && (
+                    <div className="w-full bg-white border mt-1 rounded-2xl shadow-lg overflow-y-auto">
+                      {filteredAcademies.length > 0 ? (
+                          filteredAcademies.map(academy => (
+                              <div
+                                  key={academy.id}
+                                  className="px-4 py-3 hover:bg-gray-200 cursor-pointer"
+                                  onClick={() => handleAcademySelect(academy.id, academy.name)}
+                              >
+                                {academy.name}
+                              </div>
+                          ))
+                      ) : (
+                          <div className="px-4 py-3 text-gray-500">
+                            No se encontró la academia en nuestros registros.
                             <div
-                                key={academy.id}
-                                className="px-4 py-3 hover:bg-gray-200 cursor-pointer"
-                                onClick={() => handleAcademySelect(academy.id, academy.name)}
+                                className="mt-2 text-blue-500 cursor-pointer"
+                                onClick={() => setIsNewAcademy(true)}
                             >
-                              {academy.name}
+                              ¿Quiere usar {`"${searchQuery}"`} como academia de todos modos?
                             </div>
-                        ))
-                    ) : (
-                        <div className="px-4 py-3 text-gray-500">
-                          No se encontró la academia en nuestros registros.
-                          <div
-                              className="mt-2 text-blue-500 cursor-pointer"
-                              onClick={() => setIsNewAcademy(true)}
-                          >
-                            ¿Quiere usar {`"${searchQuery}"`} como academia de todos modos?
                           </div>
-                        </div>
-                    )}
-                  </div>
-              )}
-              {isNewAcademy && (
-                  <div className="mt-2">
-                    <button
-                        onClick={() => handleSaveNewAcademy(searchQuery)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-2xl"
-                    >
-                      Usar esta academia
-                    </button>
-                  </div>
-              )}
+                      )}
+                    </div>
+                )}
+                {isNewAcademy && (
+                    <div className="mt-2">
+                      <button
+                          onClick={() => handleSaveNewAcademy(searchQuery)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-2xl"
+                      >
+                        Usar esta academia
+                      </button>
+                    </div>
+                )}
+              </div>
+
               <div className="mt-2">
                 <button
                     onClick={handleResetAcademy}
                     className="px-4 py-2 bg-gray-600 text-white rounded-2xl"
                 >
-                  Reinciar a Libre
+                  &#x2715;
                 </button>
               </div>
+
               <div className="mt-2 text-white">
                 Academia seleccionada: {selectedAcademyName}
               </div>
+
             </div>
         )}
       </div>
@@ -166,7 +172,12 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
 };
 
 // Componente para la selección de categoría
-const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: CustomEvent, onCategorySelect: (category: string) => void, user: User, tickets: Ticket[] }) => {
+const CategorySelection = ({event, onCategorySelect, user, tickets}: {
+  event: CustomEvent,
+  onCategorySelect: (category: string) => void,
+  user: User,
+  tickets: Ticket[]
+}) => {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const checkExistingTicket = (level: string) => {
@@ -238,6 +249,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
   const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
   const { tickets } = useTicket(event.id); // Obtener los tickets
   const iconClass = "w-6 h-6";
+  const [isCoupleRequired, setIsCoupleRequired] = useState(false);
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
@@ -262,6 +274,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
+    setIsCoupleRequired(event.settings.levels[category]?.couple || false); // Actualiza el estado de isCoupleRequired
     setCurrentStep(1); // Avanza al siguiente paso
   };
 
@@ -283,7 +296,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
     setCurrentStep((prev) => Math.max(prev - 1));
   };
 
-  const isCoupleRequired = event.settings.levels[selectedCategory]?.couple;
+
 
   const handleSave = async () => {
     const ticketData: Omit<Ticket, 'id'|'paymentDate'> = {
@@ -478,7 +491,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
                 )}
 
                 {/* Mostrar datos de la pareja si se encuentra */}
-                {pareja && (
+                {isCoupleRequired && pareja && (
                     <>
                       <h3 className="text-xl font-semibold mb-4 text-white border-b">Datos de la Pareja</h3>
                       <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
