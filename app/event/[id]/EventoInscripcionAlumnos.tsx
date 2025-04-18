@@ -28,6 +28,21 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
     "Academia Pareja"
   ];
 
+  // Función para normalizar DNIs (asegurar formato de 8 dígitos con ceros iniciales)
+  const normalizeDNI = (dni) => {
+    if (!dni) return "";
+    
+    // Convertir a string y eliminar espacios
+    let dniStr = String(dni).trim();
+    
+    // Si tiene menos de 8 dígitos, añadir ceros al inicio
+    while (dniStr.length < 8) {
+      dniStr = "0" + dniStr;
+    }
+    
+    return dniStr;
+  };
+
   // Validar la estructura del archivo y los datos
   const validateExcelData = (data) => {
     const errors = [];
@@ -47,8 +62,11 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
 
     // Validar datos por fila
     data.forEach((row, index) => {
+      // Normalizar DNI participante
+      const dniParticipante = normalizeDNI(row["DNI Participante"]);
+      
       // Validar DNI (debe tener 8 dígitos)
-      if (!row["DNI Participante"] || !/^\d{8}$/.test(row["DNI Participante"].toString())) {
+      if (!dniParticipante || !/^\d{8}$/.test(dniParticipante)) {
         errors.push(`Fila ${index + 1}: DNI inválido. Debe tener 8 dígitos.`);
       }
 
@@ -73,8 +91,11 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
       }
 
       // Si hay DNI de pareja, validar formato
-      if (row["DNI Pareja"] && !/^\d{6,8}$/.test(row["DNI Pareja"].toString())) {
-        errors.push(`Fila ${index + 1}: DNI de pareja inválido. Debe tener 8 dígitos.`);
+      if (row["DNI Pareja"]) {
+        const dniPareja = normalizeDNI(row["DNI Pareja"]);
+        if (!/^\d{8}$/.test(dniPareja)) {
+          errors.push(`Fila ${index + 1}: DNI de pareja inválido. Debe tener 8 dígitos.`);
+        }
       }
     });
 
@@ -115,8 +136,15 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
         const data = e.target.result;
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
+        
+        // Configurar opciones para mantener el formato de texto
         const worksheet = workbook.Sheets[sheetName];
-        const parsedData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Forzar a que XLSX trate todo como texto para preservar ceros iniciales
+        const parsedData = XLSX.utils.sheet_to_json(worksheet, { 
+          raw: false, // Esto ayuda a preservar el formato
+          defval: "" // Valor por defecto para celdas vacías
+        });
 
         if (parsedData.length === 0) {
           setValidationErrors(["El archivo está vacío."]);
@@ -125,10 +153,17 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
           return;
         }
 
+        // Normalizar DNIs en los datos
+        const normalizedData = (parsedData as any[]).map(row => ({
+          ...row,
+          "DNI Participante": normalizeDNI(row["DNI Participante"]),
+          "DNI Pareja": row["DNI Pareja"] ? normalizeDNI(row["DNI Pareja"]) : ""
+        }));
+
         // Validar datos
-        const errors = validateExcelData(parsedData);
+        const errors = validateExcelData(normalizedData);
         setValidationErrors(errors);
-        setFileData(parsedData);
+        setFileData(normalizedData);
 
         // Si no hay errores, pasar a revisión
         if (errors.length === 0) {
@@ -183,14 +218,12 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
 
           if (!snapshot.empty) {
             const userData = snapshot.docs[0].data();
-            console.log(userData)
+            console.log(userData);
             results.validUsers.push(dniStr);
             // Asegúrate de que userData tenga las propiedades necesarias
             results.userDetails[dniStr] = {
               nombre: userData.firstName || "Nombre no disponible",
-              apellido: userData.
-                lastName
-                || "Apellido no disponible"
+              apellido: userData.lastName || "Apellido no disponible"
               // otros datos relevantes
             };
           } else {
@@ -254,13 +287,33 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
 
   // Descargar plantilla de Excel
   const downloadTemplate = () => {
-    const worksheet = XLSX.utils.json_to_sheet([{
-      "DNI Participante": "",
-      "Academia Participante": "",
-      "Modalidad Participante": "",
-      "DNI Pareja": "",
-      "Academia Pareja": ""
-    }]);
+    // Crear la hoja de cálculo
+    const wsData = [
+      {
+        "DNI Participante": "",
+        "Academia Participante": "",
+        "Modalidad Participante": "",
+        "DNI Pareja": "",
+        "Academia Pareja": ""
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(wsData);
+    
+    // Modificar el formato de las celdas para DNIs
+    // Esto indica a Excel que trate estas columnas como texto
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for(let C = range.s.c; C <= range.e.c; C++) {
+      const address = XLSX.utils.encode_cell({r: 0, c: C});
+      const cell = worksheet[address];
+      if (cell && (cell.v === "DNI Participante" || cell.v === "DNI Pareja")) {
+        for(let R = range.s.r + 1; R <= range.e.r; R++) {
+          const dataAddress = XLSX.utils.encode_cell({r: R, c: C});
+          if(!worksheet[dataAddress]) worksheet[dataAddress] = { t: 's', v: '' };
+          worksheet[dataAddress].z = '@'; // Formato de texto
+        }
+      }
+    }
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla");
@@ -462,20 +515,6 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
                   DNIs encontrados ({validationResults.validUsers.length})
                 </h3>
               </div>
-              <div className="max-h-40 overflow-y-auto">
-                {validationResults.validUsers.length > 0 ? (
-                  <ul className="text-sm space-y-1 pl-2">
-                    {validationResults.validUsers.map((dni, index) => (
-                      <li key={index} className="text-green-600 flex items-center">
-                        <CheckCircle className="w-4 h-4 mr-1 inline" />
-                        {dni}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500">No se encontraron DNIs registrados.</p>
-                )}
-              </div>
             </div>
 
             {/* DNIs inválidos */}
@@ -485,20 +524,6 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
                 <h3 className="font-semibold text-red-700">
                   DNIs no encontrados ({validationResults.invalidUsers.length})
                 </h3>
-              </div>
-              <div className="max-h-40 overflow-y-auto">
-                {validationResults.invalidUsers.length > 0 ? (
-                  <ul className="text-sm space-y-1 pl-2">
-                    {validationResults.invalidUsers.map((dni, index) => (
-                      <li key={index} className="text-red-600 flex items-center">
-                        <XCircle className="w-4 h-4 mr-1 inline" />
-                        {dni}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500">Todos los DNIs están registrados correctamente.</p>
-                )}
               </div>
             </div>
           </div>

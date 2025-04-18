@@ -9,7 +9,7 @@ import useUsers from '@/app/hooks/useUsers';
 
 import {Timestamp} from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
-import {Ticket} from "@/app/types/ticketType";
+import { Ticket, TicketEntry } from "@/app/types/ticketType";
 import {Map as MapIcon} from "lucide-react";
 import Link from "next/link";
 import {EventSettings} from "@/app/types/settingsType";
@@ -171,17 +171,21 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: { event: 
 
   const checkExistingTicket = (level: string) => {
     const existingTicket = tickets.find(ticket =>
-        ticket.usersId[0] === user.id &&
-        ticket.eventId === event.id &&
-        ticket.level === level
+      ticket.eventId === event.id &&
+      Array.isArray(ticket.entries) &&
+      ticket.entries.some(entry =>
+        entry.level === level &&
+        entry.usersId.includes(user.id)
+      )
     );
-
+  
     if (existingTicket) {
       setAlertMessage(`Ya tienes un ticket para ${level} en este evento.`);
       return false;
     }
     return true;
   };
+  
 
   return (
       <div className="justify-center">
@@ -285,31 +289,46 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
 
   const isCoupleRequired = event.settings.levels[selectedCategory]?.couple;
 
-  const handleSave = async () => {
-    const ticketData: Omit<Ticket, 'id'|'paymentDate'> = {
-      status: 'Pendiente',
-      usersId: pareja ? [user.id, pareja.id] : [user.id],
-      academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
-      academiesName: pareja ? [selectedAcademyName, coupleSelectedAcademyName] : [selectedAcademyName],
-      eventId: event.id,
-      category: user.category,
-      level: selectedCategory,
-      registrationDate: Timestamp.fromDate(new Date()), // Usa la fecha actual para la inscripción
-    };
+  // Modificar la función handleSave para usar la nueva estructura de Ticket
+const handleSave = async () => {
+  // Crear la entrada para el ticket
+  const entry: TicketEntry = {
+    usersId: pareja ? [user.id, pareja.id] : [user.id],
+    academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
+    academiesName: pareja ? [selectedAcademyName, coupleSelectedAcademyName] : [selectedAcademyName],
+    category: user.category,
+    level: selectedCategory,
+    amount: event.settings.levels[selectedCategory]?.price || 0, // Asume que tienes precio en settings
+  };
 
-    try {
-      const docRef = await saveTicket(ticketData);
-      if (docRef) {
-        setTicketId(docRef.id);
-      } else {
-        console.error('Error: docRef is undefined');
-        alert('Failed to save ticket.');
-      }
-    } catch (error) {
-      console.error('Error saving ticket:', error);
+  // Crear fecha de expiración (por ejemplo, 48 horas después)
+  const expirationDate = new Date();
+  expirationDate.setHours(expirationDate.getHours() + 48);
+
+  const ticketData: Omit<Ticket, 'id' | 'paymentDate'> = {
+    status: 'Pendiente',
+    eventId: event.id,
+    registrationDate: Timestamp.fromDate(new Date()),
+    expirationDate: Timestamp.fromDate(expirationDate),
+    inscriptionType: 'IndividualWeb',
+    totalAmount: entry.amount,
+    entries: [entry],
+    createdBy: user.id,
+  };
+
+  try {
+    const docRef = await saveTicket(ticketData);
+    if (docRef) {
+      setTicketId(docRef.id);
+    } else {
+      console.error('Error: docRef is undefined');
       alert('Failed to save ticket.');
     }
-  };
+  } catch (error) {
+    console.error('Error saving ticket:', error);
+    alert('Failed to save ticket.');
+  }
+};
 
   const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
 
