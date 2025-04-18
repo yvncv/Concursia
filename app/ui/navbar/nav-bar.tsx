@@ -119,7 +119,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
             <ul className="space-y-4 px-4 pb-4 pt-2">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario</Link></li>
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario de Eventos</Link></li>
               <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
               <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
               <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
