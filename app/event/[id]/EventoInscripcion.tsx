@@ -113,7 +113,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
                     value={searchQuery}
                     onChange={handleSearchChange}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-gray-200 placeholder:text-gray-600 focus:ring-0 focus:shadow-none transition-all outline-none"
-                    placeholder="Buscar academia"
+                    placeholder={selectedAcademyName}
                 />
                 {searchQuery && (
                     <div className="w-full bg-white border mt-1 rounded-2xl shadow-lg overflow-y-auto">
@@ -159,10 +159,6 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
                 >
                   &#x2715;
                 </button>
-              </div>
-
-              <div className="mt-2 text-white">
-                Academia seleccionada: {selectedAcademyName}
               </div>
 
             </div>
