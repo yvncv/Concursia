@@ -28,8 +28,8 @@ const initialEventData: EventFormData = {
         status: ''
     },
     dates: {
-        startDate: Timestamp.now(), // Inicializa con Timestamp
-        endDate: Timestamp.now() // Inicializa con Timestamp
+        startDate: Timestamp.now(),
+        endDate: Timestamp.now()
     },
     details: {
         capacity: '',
@@ -45,8 +45,7 @@ const initialEventData: EventFormData = {
         street: ''
     },
     dance: {
-        levels: {},
-        categories: []
+        levels: {}  // Updated to match the new structure
     },
     images: {
         smallImage: '',
@@ -86,7 +85,7 @@ const EventModal: React.FC<EventModalProps> = ({
         if (!location.province) incompleteFields.push('Provincia');
         if (!location.street) incompleteFields.push('Calle');
         if (Object.keys(dance.levels).length === 0) incompleteFields.push('Niveles de baile');
-        if (dance.categories.length === 0) incompleteFields.push('Categorías de baile');
+        // Removed the check for dance.categories as it's no longer a top-level property
         if (!images.smallImage) incompleteFields.push('Imagen pequeña');
         if (!images.bannerImage) incompleteFields.push('Imagen de portada');
 
@@ -117,7 +116,6 @@ const EventModal: React.FC<EventModalProps> = ({
         onClose();
     };
 
-
     const tabs = [
         { id: "general", label: "General" },
         { id: "dates", label: "Días" },
@@ -126,9 +124,6 @@ const EventModal: React.FC<EventModalProps> = ({
         { id: "dance", label: "Categoría/Niveles" },
         { id: "images", label: "Imágenes" },
     ];
-
-
-
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

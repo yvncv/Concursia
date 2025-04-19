@@ -44,8 +44,7 @@ const Events: React.FC = () => {
       street: ''
     },
     dance: {
-      levels: {},
-      categories: []
+      levels: {}
     },
     images: {
       smallImage: '',
@@ -111,10 +110,24 @@ const Events: React.FC = () => {
   };
 
   const handleEvent = (event: CustomEvent, cmd: string) => {
+    // Convertir la estructura de niveles de Firebase a la estructura de la aplicación
     const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { ...value, selected: true, price: value.price.toString() };
+      // Convertir cada nivel a la estructura que espera la app
+      acc[key] = { 
+        selected: true, 
+        price: value.price.toString(),
+        couple: value.couple,
+        categories: value.categories || [] // Asegurarnos de que categories existe
+      };
       return acc;
-    }, {} as { [key: string]: { selected: boolean; price: string; couple: boolean } });
+    }, {} as { 
+      [key: string]: { 
+        selected: boolean; 
+        price: string; 
+        couple: boolean;
+        categories: string[];
+      } 
+    });
 
     setSelectedEvent(event);
     setEventData({
@@ -141,8 +154,7 @@ const Events: React.FC = () => {
         street: event.location.street,
       },
       dance: {
-        levels: levelsWithSelected,
-        categories: event.settings.categories,
+        levels: levelsWithSelected
       },
       images: {
         smallImage: event.smallImage,
@@ -251,7 +263,7 @@ const Events: React.FC = () => {
                           <button
                             className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                             title="Visualizar"
-                            onClick={() => handleEvent(event, "view")}  // Make sure this calls the handler correctly
+                            onClick={() => handleEvent(event, "view")}
                           >
                             <Eye className="w-5 h-5" />
                           </button>

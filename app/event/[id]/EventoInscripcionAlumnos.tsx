@@ -1,8 +1,41 @@
 "use client"
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { 
+  getFirestore, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  addDoc, 
+  serverTimestamp, 
+  Timestamp 
+} from "firebase/firestore";
 import { CheckCircle, AlertCircle, Upload, FileText, XCircle, Download, RefreshCw } from "lucide-react";
+
+// Ticket types
+interface TicketEntry {
+  usersId: string[];             // IDs de los usuarios inscritos
+  academiesId: string[];         // IDs de sus academias
+  academiesName: string[];       // Nombres de las academias
+  category: string;              // Categoría de la inscripción
+  level: string;                 // Nivel (ej. Pre-infante, Infantil, etc.)
+  amount: number;                // Precio correspondiente a esta entrada
+}
+
+interface Ticket {
+  id?: string;                               // Autogenerado por Firebase
+  status: 'Pendiente' | 'Pagado' | 'Anulado';
+  eventId: string;
+  registrationDate: Timestamp;
+  paymentDate?: Timestamp;
+  expirationDate: Timestamp;
+  inscriptionType: 'IndividualWeb' | 'MasivaExcel' | 'Presencial';
+  totalAmount: number;
+  entries: TicketEntry[];
+  createdBy: string;                         // ID del usuario que lo generó
+}
 
 const EventoInscripcionAlumnos = ({ event, user }) => {
   const [file, setFile] = useState(null);
@@ -15,9 +48,12 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
   const [validationResults, setValidationResults] = useState({
     validUsers: [],
     invalidUsers: [],
-    userDetails: {}
+    userDetails: {},
+    userIds: {}, // Para guardar los IDs de Firebase de los usuarios
+    academyIds: {} // Para guardar los IDs de las academias
   });
   const [isCheckingFirebase, setIsCheckingFirebase] = useState(false);
+  const [ticketId, setTicketId] = useState(""); // Para almacenar el ID del ticket creado
 
   // Estructura esperada del Excel
   const expectedColumns = [
@@ -154,7 +190,7 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
         }
 
         // Normalizar DNIs en los datos
-        const normalizedData = (parsedData as any[]).map(row => ({
+        const normalizedData = parsedData.map(row => ({
           ...row,
           "DNI Participante": normalizeDNI(row["DNI Participante"]),
           "DNI Pareja": row["DNI Pareja"] ? normalizeDNI(row["DNI Pareja"]) : ""
@@ -202,14 +238,17 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
 
       const db = getFirestore();
       const usersCollection = collection(db, "users");
+      const academiesCollection = collection(db, "academies");
 
       const results = {
         validUsers: [],
         invalidUsers: [],
-        userDetails: {} // Inicializa este objeto en los resultados
+        userDetails: {},
+        userIds: {},
+        academyIds: {}
       };
 
-      // Verifica cada DNI en Firestore
+      // Verificar cada DNI en Firestore
       const checkPromises = uniqueDNIs.map(async (dni) => {
         try {
           const dniStr = dni.toString(); // Asegúrate de que sea string
@@ -218,14 +257,28 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
 
           if (!snapshot.empty) {
             const userData = snapshot.docs[0].data();
-            console.log(userData);
+            const userId = snapshot.docs[0].id;
             results.validUsers.push(dniStr);
-            // Asegúrate de que userData tenga las propiedades necesarias
+            results.userIds[dniStr] = userId;
             results.userDetails[dniStr] = {
               nombre: userData.firstName || "Nombre no disponible",
-              apellido: userData.lastName || "Apellido no disponible"
-              // otros datos relevantes
+              apellido: userData.lastName || "Apellido no disponible",
+              academyId: userData.academyId || null
             };
+            
+            // Si el usuario tiene academia, obtener su información
+            if (userData.academyId) {
+              const academyDoc = await doc(db, "academies", userData.academyId);
+              const academySnap = await getDocs(query(academiesCollection, where("id", "==", userData.academyId)));
+              
+              if (!academySnap.empty) {
+                const academyData = academySnap.docs[0].data();
+                results.academyIds[userData.academyId] = {
+                  id: userData.academyId,
+                  name: academyData.name || "Academia sin nombre"
+                };
+              }
+            }
           } else {
             results.invalidUsers.push(dniStr);
           }
@@ -236,6 +289,37 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
       });
 
       await Promise.all(checkPromises);
+
+      // También necesitamos verificar las academias mencionadas en el Excel
+      const allAcademies = fileData.flatMap(row => {
+        const academies = [row["Academia Participante"]];
+        if (row["Academia Pareja"]) {
+          academies.push(row["Academia Pareja"]);
+        }
+        return academies;
+      }).filter(academy => academy); // Filtra nulos o vacíos
+
+      const uniqueAcademies = [...new Set(allAcademies)];
+
+      // Verificar cada academia en Firestore
+      for (const academyName of uniqueAcademies) {
+        try {
+          const q = query(academiesCollection, where("name", "==", academyName));
+          const snapshot = await getDocs(q);
+
+          if (!snapshot.empty) {
+            const academyData = snapshot.docs[0].data();
+            const academyId = snapshot.docs[0].id;
+            
+            results.academyIds[academyId] = {
+              id: academyId,
+              name: academyName
+            };
+          }
+        } catch (err) {
+          console.error(`Error al verificar academia ${academyName}:`, err);
+        }
+      }
 
       // Guarda los resultados en el estado
       setValidationResults(results);
@@ -251,6 +335,72 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
     }
   };
 
+  // Función para crear entradas de ticket a partir de los datos del Excel
+  const createTicketEntries = (): TicketEntry[] => {
+    return fileData.map(row => {
+      const participantDNI = row["DNI Participante"];
+      const parejaDNI = row["DNI Pareja"] || null;
+      
+      // Preparar los arreglos para la entrada del ticket
+      const usersId = parejaDNI 
+        ? [validationResults.userIds[participantDNI], validationResults.userIds[parejaDNI]] 
+        : [validationResults.userIds[participantDNI]];
+      
+      // Para academias, primero intentamos usar el ID recuperado de la base de datos
+      // Si no está disponible, lo dejamos como string (nombre de la academia)
+      const academiesId = [];
+      const academiesName = [];
+      
+      // Buscar la academia del participante por nombre
+      const academiaParticipante = row["Academia Participante"];
+      let academiaParticipanteId = null;
+      
+      // Buscar por nombre en academyIds
+      Object.entries(validationResults.academyIds).forEach(([id, data]) => {
+        if (data.name === academiaParticipante) {
+          academiaParticipanteId = id;
+        }
+      });
+      
+      academiesId.push(academiaParticipanteId || "unknown");
+      academiesName.push(academiaParticipante);
+      
+      // Si hay pareja, añadir su academia
+      if (parejaDNI) {
+        const academiaPareja = row["Academia Pareja"];
+        let academiaParejaid = null;
+        
+        // Buscar por nombre en academyIds
+        Object.entries(validationResults.academyIds).forEach(([id, data]) => {
+          if (data.name === academiaPareja) {
+            academiaParejaid = id;
+          }
+        });
+        
+        academiesId.push(academiaParejaid || "unknown");
+        academiesName.push(academiaPareja);
+      }
+      
+      // Obtener categoría y nivel de la modalidad
+      // Asumimos que la modalidad viene en formato "Categoría - Nivel"
+      const modalidadParts = row["Modalidad Participante"].split('-').map(part => part.trim());
+      const category = modalidadParts[0] || "Desconocida";
+      const level = modalidadParts.length > 1 ? modalidadParts[1] : "General";
+      
+      // Asumimos un precio fijo por entrada, esto debería obtenerse de la configuración del evento
+      const amount = event.prices?.[category]?.[level] || 50; // Precio por defecto
+      
+      return {
+        usersId,
+        academiesId,
+        academiesName,
+        category,
+        level,
+        amount
+      };
+    });
+  };
+
   // Enviar los datos para inscripción
   const handleSubmit = async () => {
     if (validationErrors.length > 0 || fileData.length === 0) return;
@@ -258,23 +408,39 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
     setIsSubmitting(true);
 
     try {
-      // Aquí iría la lógica para enviar los datos al servidor
-      // Por ejemplo:
-      // const response = await fetch('/api/inscripcion-alumnos', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     eventId: event.id,
-      //     organizerId: user.id,
-      //     participants: fileData,
-      //     validationResults: validationResults
-      //   })
-      // });
-
-      // Simulamos un delay para mostrar el proceso
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Si todo va bien, mostrar éxito
+      const db = getFirestore();
+      const ticketsCollection = collection(db, "tickets");
+      
+      // Crear las entradas del ticket
+      const entries = createTicketEntries();
+      
+      // Calcular el monto total
+      const totalAmount = entries.reduce((total, entry) => total + entry.amount, 0);
+      
+      // Crear el objeto del ticket
+      const now = Timestamp.now();
+      // Fecha de expiración: 3 días desde ahora
+      const expirationDate = new Timestamp(
+        now.seconds + (3 * 24 * 60 * 60), // 3 días en segundos
+        now.nanoseconds
+      );
+      
+      const newTicket: Ticket = {
+        status: 'Pendiente',
+        eventId: event.id,
+        registrationDate: now,
+        expirationDate: expirationDate,
+        inscriptionType: 'MasivaExcel',
+        totalAmount,
+        entries,
+        createdBy: user.id
+      };
+      
+      // Guardar el ticket en Firestore
+      const docRef = await addDoc(ticketsCollection, newTicket);
+      
+      // Guardar el ID del ticket creado
+      setTicketId(docRef.id);
       setIsSuccess(true);
       setStep("success");
     } catch (error) {
@@ -326,9 +492,17 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
     setFileData([]);
     setValidationErrors([]);
     setIsSuccess(false);
-    setValidationResults({ validUsers: [], invalidUsers: [], userDetails: {} });
+    setValidationResults({ 
+      validUsers: [], 
+      invalidUsers: [], 
+      userDetails: {},
+      userIds: {},
+      academyIds: {}
+    });
+    setTicketId("");
     setStep("upload");
   };
+
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-white/90 rounded-lg shadow-sm p-6">
