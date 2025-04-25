@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { CustomEvent } from "@/app/types/eventType";
 import useTicket from "@/app/hooks/useTicket";
 import useUsers from "@/app/hooks/useUsers";
-import { Ticket } from "@/app/types/ticketType";
+import { Ticket, TicketEntry } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
+import { Academy } from "@/app/types/academyType";
 import {
   ChevronRight,
   CircleX,
@@ -12,9 +12,15 @@ import {
   ListRestart,
   Search,
   Trash2,
+  Filter,
 } from "lucide-react";
 import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
 import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
+import FilterModal, { FilterOptions } from "@/app/organizer/events/[id]/sections/ticketsModules/modals/FilterModal";
+import { collection, getDoc, getDocs, doc } from "firebase/firestore";
+import { db } from '@/app/firebase/config';
+import useAcademies from "@/app/hooks/useAcademies";
+
 
 interface TicketsProps {
   event: CustomEvent;
@@ -23,104 +29,148 @@ interface TicketsProps {
 const Tickets: React.FC<TicketsProps> = ({ event }) => {
   const { tickets, loading, error, fetchTickets } = useTicket(event.id);
   const { getUserById } = useUsers();
+  const { academies, loadingAcademies, errorAcademies } = useAcademies();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [academyNames, setAcademyNames] = useState<Record<string, string>>({});
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [dniInput, setDniInput] = useState<string>("");
+  const [tableLoading, setTableLoading] = useState(false);
+  const [ticketUsers, setTicketUsers] = useState<Record<string, Record<string, User>>>({});
+  
+  // Estado para los filtros disponibles
+  const [availableFilters, setAvailableFilters] = useState({
+    modalities: [] as string[],
+    categories: [] as string[],
+    academies: [] as string[]
+  });
 
   useEffect(() => {
-    setFilteredTickets(tickets);
-  }, [tickets]);
+    if (tickets.length && academies.length) {
+      setFilteredTickets(tickets);
+  
+      const academyNameMap: Record<string, string> = {};
+      academies.forEach((academy) => {
+        academyNameMap[academy.id] = academy.name;
+      });
+  
+      setAcademyNames(academyNameMap);
+      loadAllUsers();
+    }
+  }, [tickets, academies]);
+
+  // Load all users and academies for tickets
+  const loadAllUsers = async () => {
+    const usersMap: Record<string, Record<string, User>> = {};
+  
+    for (const ticket of tickets) {
+      usersMap[ticket.id] = {};
+  
+      for (const entry of ticket.entries) {
+        for (const userId of entry.usersId) {
+          const user = await getUserById(userId);
+          if (user) {
+            usersMap[ticket.id][userId] = user;
+          }
+        }
+      }
+    }
+  
+    setTicketUsers(usersMap);
+    extractFilterValues(tickets, academyNames, usersMap);
+  };
+
+  // Extract unique filter values from tickets
+  const extractFilterValues = (
+    ticketsList: Ticket[], 
+    academyNamesMap: Record<string, string>,
+    usersMap: Record<string, Record<string, User>>
+  ) => {
+    const modalities = new Set<string>();
+    const categories = new Set<string>();
+    const academies = new Set<string>();
+    
+    ticketsList.forEach(ticket => {
+      ticket.entries.forEach(entry => {
+        // Add modality (level)
+        if (entry.level) modalities.add(entry.level);
+        
+        // Add category
+        if (entry.category) categories.add(entry.category);
+        
+        // Add academy names
+        if (entry.academiesId && entry.academiesId.length > 0) {
+          entry.academiesId.forEach(id => {
+            if (academyNamesMap[id]) academies.add(academyNamesMap[id]);
+          });
+        }
+      });
+    });
+    
+    setAvailableFilters({
+      modalities: Array.from(modalities),
+      categories: Array.from(categories),
+      academies: Array.from(academies)
+    });
+  };
 
   const openModal = async (ticket: Ticket) => {
     setSelectedTicket(ticket);
     setIsModalOpen(true);
 
-    if (ticket.level === "Individual" || ticket.level === "Seriado") {
-      const user1 = await getUserById(ticket.usersId[0]);
-      setUsers([user1].filter(Boolean) as User[]);
-    } else {
-      const user1 = await getUserById(ticket.usersId[0]);
-      const user2 = await getUserById(ticket.usersId[1]);
-      setUsers([user1, user2].filter(Boolean) as User[]);
+    const usersToFetch: User[] = [];
+    for (const entry of ticket.entries) {
+      for (const userId of entry.usersId) {
+        if (ticketUsers[ticket.id]?.[userId]) {
+          usersToFetch.push(ticketUsers[ticket.id][userId]);
+        } else {
+          const user = await getUserById(userId);
+          if (user) usersToFetch.push(user);
+        }
+      }
     }
+    setUsers(usersToFetch);
   };
-
-  const [dniInput, setDniInput] = useState<string>("");
-  const [tableLoading, setTableLoading] = useState(false);
 
   const handleSearchEventByDNI = async (dni: string) => {
     const dniRegex = /^[0-9]{8}$/;
     const dniClean = dni.trim();
 
-    if (dniClean && !dniRegex.test(dni)) {
+    if (dniClean && !dniRegex.test(dniClean)) {
       console.error("Ingrese un DNI válido de 8 dígitos");
       return;
     }
 
-    const results = [];
     setTableLoading(true);
-    for (const ticket of tickets) {
-      try {
-        const user1 = await getUserById(ticket.usersId[0]);
-        if (
-          ticket.level !== "Individual" &&
-          ticket.level !== "Seriado" &&
-          ticket.usersId.length > 1
-        ) {
-          const user2 = await getUserById(ticket.usersId[1]);
-          if (
-            (user1 && user1.dni.includes(dniClean)) ||
-            (user2 && user2.dni.includes(dniClean))
-          ) {
-            results.push(ticket);
-          }
-        } else {
-          if (user1 && user1.dni.includes(dniClean)) {
-            results.push(ticket);
-          }
-        }
-      } catch (error) {
-        console.error("Error al buscar ticket:", error);
-      }
+    
+    if (!dniClean) {
+      // If DNI search is empty, show all tickets
+      setFilteredTickets(tickets);
+      setTableLoading(false);
+      return;
     }
-    setTableLoading(false);
+
+    const results = tickets.filter(ticket => {
+      const ticketUserMap = ticketUsers[ticket.id] || {};
+      
+      // Check if any user in this ticket has a matching DNI
+      return Object.values(ticketUserMap).some(user => 
+        user.dni.includes(dniClean)
+      );
+    });
+
     setFilteredTickets(results);
+    setTableLoading(false);
   };
 
   const closeModal = () => {
     setSelectedTicket(null);
     setIsModalOpen(false);
     setUsers([]);
-  };
-
-  const toggleFilterMenu = () => {
-    setIsFilterMenuOpen(!isFilterMenuOpen);
-  };
-
-  const filterTickets = (filter: string, criteria: string) => {
-    if (criteria === "Todos") {
-      setFilteredTickets(tickets);
-    } else {
-      if (filter === "levels") {
-        const filtered = tickets.filter((ticket) => ticket.level === criteria);
-        setFilteredTickets(filtered);
-      }
-      if (filter === "categories") {
-        const filtered = tickets.filter(
-          (ticket) => ticket.category === criteria
-        );
-        setFilteredTickets(filtered);
-      }
-      if (filter === "status") {
-        const filtered = tickets.filter((ticket) => ticket.status === criteria);
-        setFilteredTickets(filtered);
-      }
-    }
-    setIsFilterMenuOpen(false);
   };
 
   const handleDeleteTicket = async (ticket: Ticket) => {
@@ -140,46 +190,94 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     fetchTickets();
   };
 
-  if (loading) {
-    return <div className="p-6">Loading...</div>;
-  }
-  if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
-  }
+  // Función para aplicar los filtros seleccionados
+  const applyFilters = (filterOptions: FilterOptions) => {
+    const { modalities, categories, academies } = filterOptions;
+    
+    if (!modalities.length && !categories.length && !academies.length) {
+      // Si no hay filtros seleccionados, mostrar todos los tickets
+      setFilteredTickets(tickets);
+      return;
+    }
+    
+    const filtered = tickets.filter(ticket => {
+      return ticket.entries.some(entry => {
+        const modalityMatch = modalities.length === 0 || modalities.includes(entry.level);
+        const categoryMatch = categories.length === 0 || categories.includes(entry.category);
+        
+        // Check if any of the academies match the selected filter academy names
+        const academyMatch = academies.length === 0 || (entry.academiesId && entry.academiesId.some(academyId => {
+          const academyName = academyNames[academyId];
+          return academyName && academies.includes(academyName);
+        }));
+        
+        return modalityMatch && categoryMatch && academyMatch;
+      });
+    });
+    
+    setFilteredTickets(filtered);
+  };
 
-  const headers: string[] = [
+  const renderParticipantsByGender = (entry: TicketEntry, ticketId: string) => {
+    const maleUsers: User[] = [];
+    const femaleUsers: User[] = [];
+    
+    // Group users by gender
+    entry.usersId.forEach(userId => {
+      const user = ticketUsers[ticketId]?.[userId];
+      if (user) {
+        if (user.gender === 'Masculino') {
+          maleUsers.push(user);
+        } else if (user.gender === 'Femenino') {
+          femaleUsers.push(user);
+        }
+      }
+    });
+    
+    return (
+      <div className="flex flex-col gap-1">
+        {maleUsers.length > 0 && (
+          <div>
+            <span className="font-semibold">Varón: </span>
+            {maleUsers.map((user, idx) => (
+              <span key={user.id}>
+                {user.dni} - {user.firstName} {user.lastName}
+                {idx < maleUsers.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {femaleUsers.length > 0 && (
+          <div>
+            <span className="font-semibold">Mujer: </span>
+            {femaleUsers.map((user, idx) => (
+              <span key={user.id}>
+                {user.dni} - {user.firstName} {user.lastName}
+                {idx < femaleUsers.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {maleUsers.length === 0 && femaleUsers.length === 0 && (
+          <div>No hay información disponible</div>
+        )}
+      </div>
+    );
+  };
+
+  const headers = [
     "ID",
     "Participante(s)",
-    "Academia",
     "Modalidad",
     "Categoría",
+    "Academia",
     "Fecha de Registro",
+    "Precio",
     "Estado",
     "Acciones",
   ];
-  const levels: string[] = [
-    "Todos",
-    "Seriado",
-    "Individual",
-    "Novel Novel",
-    "Novel Abierto",
-    "Novel Abierto A",
-    "Novel Abierto B",
-    "Nacional",
-  ];
-  const categories: string[] = [
-    "Baby",
-    "Pre-Infante",
-    "Infante",
-    "Infantil",
-    "Junior",
-    "Juvenil",
-    "Adulto",
-    "Senior",
-    "Master",
-    "Oro",
-  ];
-  const status: string[] = ["Pendiente", "Cancelado"];
 
   return (
     <div className="p-6">
@@ -187,17 +285,16 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
       <section className="w-full flex justify-between items-center h-10 mb-4 gap-x-2">
         <form
           className="h-full w-3/4 relative"
-          action=""
           onSubmit={async (e) => {
             e.preventDefault();
             await handleSearchEventByDNI(dniInput);
           }}
         >
           <input
-            className="h-full px-4 w-full rounded-lg border-2 border-gray-700 focus:outline-none "
+            className="h-full px-4 w-full rounded-lg border-2 border-gray-700 focus:outline-none"
             placeholder="Buscar por dni..."
             value={dniInput}
-            onChange={(e) => setDniInput((e.target as HTMLInputElement).value)}
+            onChange={(e) => setDniInput(e.target.value)}
             type="text"
           />
           <Search className="absolute top-1/2 -translate-y-1/2 right-4" />
@@ -210,63 +307,18 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
           }}
           className="px-4 h-full bg-white w-20 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
         >
-          <ListRestart
-            size={16}
-            className={`${
-              isFilterMenuOpen && "rotate-90"
-            } transition-transform duration-150 ease-in-out`}
-          />
+          <ListRestart size={16} />
         </button>
+        
         <button
-          onClick={toggleFilterMenu}
-          className="px-4 h-full bg-white w-1/4 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
+          onClick={() => setIsFilterMenuOpen(true)}
+          className="px-4 h-full bg-blue-600 hover:bg-blue-700 transition-colors w-1/4 border-0 rounded-lg text-white flex justify-center items-center gap-x-2"
         >
+          <Filter size={16} />
           <span>Filtrar Tickets</span>
-          <ChevronRight
-            size={16}
-            className={`${
-              isFilterMenuOpen && "rotate-90"
-            } transition-transform duration-150 ease-in-out`}
-          />
         </button>
       </section>
-      {isFilterMenuOpen && (
-        <div className="mb-4 p-4 bg-gray-100 rounded shadow flex">
-          <div className="flex-1">
-            {levels.map((level) => (
-              <button
-                onClick={() => filterTickets("levels", level)}
-                className="block w-full text-left px-4 py-2 hover:underline"
-                key={level}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-          <div className="flex-1">
-            {categories.map((category) => (
-              <button
-                onClick={() => filterTickets("categories", category)}
-                className="block w-full text-left px-4 py-2 hover:underline"
-                key={category}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-          <div className="flex-1">
-            {status.map((state) => (
-              <button
-                onClick={() => filterTickets("status", state)}
-                className="block w-full text-left px-4 py-2 hover:underline"
-                key={state}
-              >
-                {state}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
       <div className="overflow-x-auto rounded-lg p-4 bg-white shadow-md">
         <table className="w-full border-collapse shadow-md rounded-lg">
           <thead className="bg-gray-100">
@@ -283,55 +335,64 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
           </thead>
           <tbody>
             {!tableLoading ? (
-              <>
-                {filteredTickets.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td className="px-4 py-3 border-b">{ticket.id}</td>
-                    <td className="px-4 py-3 border-b">
-                      {ticket.usersId.length === 1 ? (
-                        <UserInfoDisplay userId={ticket.usersId[0]} field="dni" />
-                      ) : (
-                        <div>
-                          <UserInfoDisplay userId={ticket.usersId[0]} field="dni" />
-                          <UserInfoDisplay userId={ticket.usersId[1]} field="dni" />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 border-b">{ticket.usersId.length === 1 ? (
-                        <UserInfoDisplay userId={ticket.usersId[0]} field="academyName" />
-                      ) : (
-                        <div>
-                          <UserInfoDisplay userId={ticket.usersId[0]} field="academyName" />
-                          <UserInfoDisplay userId={ticket.usersId[1]} field="academyName" />
-                        </div>
-                      )}</td>
-                    <td className="px-4 py-3 border-b">{ticket.level}</td>
-                    <td className="px-4 py-3 border-b">{ticket.category}</td>
-                    <td className="px-4 py-3 border-b">
-                      {ticket.registrationDate.toDate().toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 border-b">{ticket.status}</td>
-                    <td className="px-4 py-3 border-b">
-                      <div className="flex justify-around">
-                        <Eye
-                          size={20}
-                          className="text-blue-500 hover:underline hover:cursor-pointer"
-                          onClick={() => openModal(ticket)}
-                        >
-                          Detalles
-                        </Eye>
-                        <Trash2
-                          size={20}
-                          className="text-red-500 hover:underline hover:cursor-pointer"
-                          onClick={() => handleDeleteTicket(ticket)}
-                        >
-                          Detalles
-                        </Trash2>
+              filteredTickets.map((ticket) => (
+                <tr key={ticket.id}>
+                  <td className="px-4 py-3 border-b">{ticket.id}</td>
+                  <td className="px-4 py-3 border-b">
+                    {ticket.entries.map((entry, i) => (
+                      <div key={i} className="mb-1">
+                        {renderParticipantsByGender(entry, ticket.id)}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </>
+                    ))}
+                  </td>
+                  <td className="px-4 py-3 border-b">
+                    {ticket.entries.map((entry, i) => (
+                      <div key={i}>{entry.level}</div>
+                    ))}
+                  </td>
+                  <td className="px-4 py-3 border-b">
+                    {ticket.entries.map((entry, i) => (
+                      <div key={i}>{entry.category}</div>
+                    ))}
+                  </td>
+                  <td className="px-4 py-3 border-b">
+                    {ticket.entries.map((entry, i) => (
+                      <div key={i}>
+                        {entry.academiesId && entry.academiesId.length > 0 
+                          ? entry.academiesId.map((academyId, idx) => (
+                              <span key={idx}>
+                                {academyNames[academyId] || "Academia no encontrada"}
+                                {idx < entry.academiesId.length - 1 ? ", " : ""}
+                              </span>
+                            ))
+                          : "Sin academia"
+                        }
+                      </div>
+                    ))}
+                  </td>
+                  <td className="px-4 py-3 border-b">
+                    {ticket.registrationDate.toDate().toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 border-b">
+                    S/ {ticket.totalAmount.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 border-b">{ticket.status}</td>
+                  <td className="px-4 py-3 border-b">
+                    <div className="flex justify-around">
+                      <Eye
+                        size={20}
+                        className="text-blue-500 hover:cursor-pointer"
+                        onClick={() => openModal(ticket)}
+                      />
+                      <Trash2
+                        size={20}
+                        className="text-red-500 hover:cursor-pointer"
+                        onClick={() => handleDeleteTicket(ticket)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan={headers.length} className="text-center py-4">
@@ -345,96 +406,43 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
       {isModalOpen && selectedTicket && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            {/* Modal de detalles */}
-            <div className="flex justify-between mt-4">
-              <h2 className="text-xl font-bold mb-4">Detalles del Ticket</h2>
-              <div>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <CircleX
-                    size={40}
-                    className="text-blue-500 hover:text-red-600 transition-colors"
-                  />
-                </button>
-              </div>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Detalles del Ticket</h2>
+              <button onClick={closeModal} className="text-gray-500 hover:text-red-600">
+                <CircleX size={32} />
+              </button>
             </div>
-
-            <table className="w-full border-collapse">
-              <tbody>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">ID:</td>
-                  <td className="px-4 py-2">{selectedTicket.id}</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Modalidad:</td>
-                  <td className="px-4 py-2">{selectedTicket.level}</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Categoría:</td>
-                  <td className="px-4 py-2">{selectedTicket.category}</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">
-                    Fecha de Registro:
-                  </td>
-                  <td className="px-4 py-2">
-                    {selectedTicket.registrationDate.toDate().toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Fecha de Pago:</td>
-                  <td className="px-4 py-2">
-                    {selectedTicket.paymentDate
-                      ? selectedTicket.paymentDate.toDate().toLocaleString()
-                      : "No disponible"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Estado:</td>
-                  <td className="px-4 py-2">{selectedTicket.status}</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Participantes:</td>
-                  <td className="px-4 py-2">
-                    <div className="space-y-2">
-                      {users.map((user) => (
-                        <div key={user.id}>
-                          {user.dni} {user.firstName} {user.lastName}
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 font-semibold">Academias:</td>
-                  <td className="px-4 py-2">
-                    <div className="space-y-2">
-                      <div>
-                        {selectedTicket.academiesName.map((academy, index) => (
-                          <div key={index}>{academy}</div>
-                        ))}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div className="flex justify-between mt-4">
-              <button className="text-blue-500 hover:underline"></button>
+            <div className="space-y-4">
+              {selectedTicket.entries.map((entry, i) => (
+                <div key={i} className="border-t pt-4">
+                  <p><strong>Modalidad:</strong> {entry.level}</p>
+                  <p><strong>Categoría:</strong> {entry.category}</p>
+                  <p><strong>Academia(s):</strong> {
+                    entry.academiesId && entry.academiesId.length > 0
+                      ? entry.academiesId.map(id => academyNames[id] || "Academia no encontrada").join(", ")
+                      : "Sin academia"
+                  }</p>
+                  <p><strong>Participantes:</strong></p>
+                  <div className="ml-6 mt-2">
+                    {renderParticipantsByGender(entry, selectedTicket.id)}
+                  </div>
+                </div>
+              ))}
+              <p><strong>Fecha de Registro:</strong> {selectedTicket.registrationDate.toDate().toLocaleString()}</p>
+              <p><strong>Fecha de Pago:</strong> {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleString() : 'No disponible'}</p>
+              <p><strong>Estado:</strong> {selectedTicket.status}</p>
+              <p><strong>Total a pagar:</strong> S/ {selectedTicket.totalAmount.toFixed(2)}</p>
               {selectedTicket.status === "Pendiente" && (
-                <div>
+                <div className="flex gap-2 mt-4">
                   <button
-                    className="bg-green-500 rounded-xl p-4 text-white hover:underline ml-2"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
                     onClick={() => handleConfirmTicket(selectedTicket)}
                   >
                     Confirmar
                   </button>
                   <button
-                    className="bg-red-500 rounded-xl p-4 text-white hover:underline ml-2"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg"
                     onClick={() => handleDeleteTicket(selectedTicket)}
                   >
                     Eliminar
@@ -446,48 +454,24 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         </div>
       )}
 
+      <FilterModal
+        isOpen={isFilterMenuOpen}
+        onClose={() => setIsFilterMenuOpen(false)}
+        onApplyFilters={applyFilters}
+        availableFilters={availableFilters}
+      />
+
       <DeleteTicket
         isOpen={isDeleteModalOpen}
-        onClose={() => {
-          handleModalClose();
-        }}
-        ticket={selectedTicket!} // Use non-null assertion operator
+        onClose={handleModalClose}
+        ticket={selectedTicket!}
       />
       <ConfirmTicket
         isOpen={isConfirmModalOpen}
-        onClose={() => {
-          handleModalClose();
-        }}
-        ticket={selectedTicket!} // Use non-null assertion operator
+        onClose={handleModalClose}
+        ticket={selectedTicket!}
       />
     </div>
-  );
-};
-
-// Primero, añade este componente al inicio del archivo (después de las importaciones)
-const UserInfoDisplay = ({ userId, field }: { userId: string, field: keyof User }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const { getUserById } = useUsers();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await getUserById(userId);
-        setUser(user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
-  }, [userId, getUserById]);
-
-  return (
-    <span
-      className="truncate overflow-hidden whitespace-nowrap block max-w-[150px]"
-    >
-      { (user && user[field]?.toString()) || "-"}
-    </span>
   );
 };
 
