@@ -60,7 +60,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {event.smallImage && (
           <>
-            <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 w-full -z-10">
               <Image
                 src={event.smallImage}
                 className="h-full w-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
@@ -73,7 +73,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
             </div>
             <Image
               src={event.smallImage}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-110"
               alt={event.name}
               width={900}
               height={200}
@@ -121,7 +121,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
 
         <Link
           href={`/event/${event.id}`}
-          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]"
+          className="block w-full mt-auto text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]"
         >
           Más información
         </Link>
