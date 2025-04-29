@@ -58,7 +58,9 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
   const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
 
   useEffect(() => {
-    onAcademySelect(initialAcademyId, initialAcademyName);
+    if (initialAcademyId && initialAcademyId !== '') {
+      onAcademySelect(initialAcademyId, initialAcademyName);
+    }
   }, [initialAcademyId, initialAcademyName, onAcademySelect]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,6 +68,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
   };
 
   const handleAcademySelect = (academyId: string, academyName: string) => {
+    console.log("Academia seleccionada manualmente:", academyId);
     setSelectedAcademyName(academyName);
     setSearchQuery('');
     setIsNewAcademy(false);
@@ -304,7 +307,6 @@ const handleSave = async () => {
   const entry: TicketEntry = {
     usersId: pareja ? [user.id, pareja.id] : [user.id],
     academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
-    academiesName: pareja ? [selectedAcademyName, coupleSelectedAcademyName] : [selectedAcademyName],
     category: user.category,
     level: selectedCategory,
     amount: event.settings.levels[selectedCategory]?.price || 0, // Asume que tienes precio en settings
@@ -319,7 +321,7 @@ const handleSave = async () => {
     eventId: event.id,
     registrationDate: Timestamp.fromDate(new Date()),
     expirationDate: Timestamp.fromDate(expirationDate),
-    inscriptionType: 'IndividualWeb',
+    inscriptionType: 'Individual',
     totalAmount: entry.amount,
     entries: [entry],
     createdBy: user.id,

@@ -113,26 +113,40 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                         )}
                     </section>
 
+                    {/* Sección de Categorías por Nivel */}
                     <section className="w-full bg-[#fef6ff] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        {/* Categorías */}
                         <div className="flex items-center space-x-3">
                             <ChartBarStacked className="text-purple-600 w-6 h-6" />
-                            <span className="text-sm md:text-base">Categorías:</span>
+                            <span className="text-sm md:text-base font-medium">Categorías por Modalidad:</span>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {event?.settings?.categories && event.settings.categories.length > 0 ? (
-                                event.settings.categories.map((category) => (
-                                    <span
-                                        key={category}
-                                        className="px-3 py-1 bg-gradient-to-t from-purple-500 bg-blue-600 text-white rounded-full text-xs md:text-sm font-medium"
-                                    >
-                                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-sm md:text-base text-gray-500">Sin categorías establecidas.</span>
-                            )}
-                        </div>
+                        
+                        {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+                            <div className="space-y-4">
+                                {Object.entries(event.settings.levels).map(([levelName, levelData]) => (
+                                    <div key={levelName} className="border-b border-purple-100 pb-3 last:border-0">
+                                        <h3 className="font-medium text-purple-800 mb-2">
+                                            {capitalizeFirstLetter(levelName)}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {levelData.categories && levelData.categories.length > 0 ? (
+                                                levelData.categories.map((category: string) => (
+                                                    <span
+                                                        key={`${levelName}-${category}`}
+                                                        className="px-3 py-1 bg-gradient-to-t from-purple-500 bg-blue-600 text-white rounded-full text-xs md:text-sm font-medium"
+                                                    >
+                                                        {capitalizeFirstLetter(category)}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-sm text-gray-500">Sin categorías definidas para este nivel.</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="text-sm md:text-base text-gray-500">Sin niveles ni categorías establecidas.</span>
+                        )}
                     </section>
 
                     <section className="w-full bg-[#fef6f2] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
@@ -166,7 +180,7 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                                         Inscripción el Mismo Día</span>
                                 )}
 
-                                {settings.pullCouple.enabled && (
+                                {settings.pullCouple && settings.pullCouple.enabled && (
                                     <span
                                         className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
                                         Se puede jalar pareja con diferencia máxima de {settings.pullCouple.difference} {settings.pullCouple.criteria === "Age" ? "años." : "categorías."}</span>
@@ -191,26 +205,22 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                         {/* Título */}
                         <div className="flex items-center space-x-3">
                             <Coins className="text-yellow-600 w-6 h-6" />
-                            <span className="text-md md:text-base font-medium text-gray-800">Precios por nivel:</span>
+                            <span className="text-md md:text-base font-medium text-gray-800">Precios por modalidad:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {event?.settings?.levels && Object.keys(event.settings.levels ?? {}).length > 0 ? (
-                                Object.entries(event.settings.levels ?? {}).map(([level, details]) => (
+                            {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+                                Object.entries(event.settings.levels).map(([levelName, levelData]) => (
                                     <span
-                                        key={level}
+                                        key={levelName}
                                         className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
                                     >
-                                        {level.charAt(0).toUpperCase() + level.slice(1)} - S/. {details?.price ?? "N/A"}
+                                        {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
                                     </span>
                                 ))
                             ) : (
                                 <span className="text-sm md:text-base text-gray-500">Sin niveles definidos.</span>
                             )}
                         </div>
-
-                        {/* Lista de precios */}
-                        <ul className="list-disc ml-6 pl-4 text-gray-700 text-sm md:text-base">
-                        </ul>
 
                         {/* Botones de acción - condicionalmente renderizados */}
                         <div className="mt-4 flex flex-col gap-3">

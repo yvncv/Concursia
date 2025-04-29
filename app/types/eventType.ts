@@ -42,12 +42,12 @@ export interface LevelData {
 export interface DanceData {
   levels: {
     [key: string]: {
+      categories: string[];
       selected: boolean;
       price: string;
       couple: boolean;
     };
   };
-  categories: string[];
 }
 
 // Interfaces para las imágenes
@@ -95,14 +95,13 @@ export interface CustomEvent {
   capacity: string;
   status: string;
   settings: {
-    categories: string[];
     levels: {
       [key: string]: {
+        categories: string[];
         price: number;
         couple: boolean;
       };
     };
-    registrationType: string[];
   };
   createdBy: string;
   lastUpdatedBy: string;

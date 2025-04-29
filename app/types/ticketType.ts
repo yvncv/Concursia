@@ -4,9 +4,8 @@ import { Timestamp } from "firebase/firestore";
 export interface TicketEntry {
   usersId: string[];             // IDs de los usuarios inscritos
   academiesId: string[];         // IDs de sus academias
-  academiesName: string[];       // Nombres de las academias
-  category: string;              // Categoría de la inscripción
-  level: string;                 // Nivel (ej. Pre-infante, Infantil, etc.)
+  category: string;              // Categoría de la inscripción  (ej. Pre-infante, Infantil, etc.)
+  level: string;                 // Nivel
   amount: number;                // Precio correspondiente a esta entrada
 }
 
@@ -18,7 +17,7 @@ export interface Ticket {
   registrationDate: Timestamp;
   paymentDate?: Timestamp;
   expirationDate: Timestamp;
-  inscriptionType: 'IndividualWeb' | 'MasivaExcel' | 'Presencial';
+  inscriptionType: 'Individual' | 'Grupal' | 'Presencial';
   totalAmount: number;
   entries: TicketEntry[];
   createdBy: string;                         // ID del usuario que lo generó

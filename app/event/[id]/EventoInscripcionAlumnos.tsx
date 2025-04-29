@@ -1,333 +1,303 @@
 "use client"
 import { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { CheckCircle, AlertCircle, Upload, FileText, XCircle, Download, RefreshCw } from "lucide-react";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  Timestamp
+} from "firebase/firestore";
+import {
+  CheckCircle,
+  AlertCircle,
+  UserPlus,
+  Trash2,
+  Users,
+  Search
+} from "lucide-react";
+import { User } from '@/app/types/userType';
+import { Ticket, TicketEntry, TicketData } from "@/app/types/ticketType";
+import useAcademies from "@/app/hooks/useAcademies";
 
 const EventoInscripcionAlumnos = ({ event, user }) => {
-  const [file, setFile] = useState(null);
-  const [fileData, setFileData] = useState([]);
-  const [validationErrors, setValidationErrors] = useState([]);
-  const [isValidating, setIsValidating] = useState(false);
+  // Estados
+  const [modalidad, setModalidad] = useState(() => {
+    const modalidadesDisponibles = Object.keys(event.settings.levels || {});
+    return modalidadesDisponibles.length > 0 ? modalidadesDisponibles[0] : "";
+  });
+  const [dniParticipante, setDniParticipante] = useState("");
+  const [dniPareja, setDniPareja] = useState("");
+  const [participanteInfo, setParticipanteInfo] = useState<User | null>(null);
+  const [parejaInfo, setParejaInfo] = useState<User | null>(null);
+  const [inscripciones, setInscripciones] = useState<any[]>([]);
+  const [isSearchingParticipante, setIsSearchingParticipante] = useState(false);
+  const [isSearchingPareja, setIsSearchingPareja] = useState(false);
+  const [searchErrorParticipante, setSearchErrorParticipante] = useState("");
+  const [searchErrorPareja, setSearchErrorPareja] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [step, setStep] = useState("upload"); // upload, review, validate, success
-  const [validationResults, setValidationResults] = useState({
-    validUsers: [],
-    invalidUsers: [],
-    userDetails: {}
-  });
-  const [isCheckingFirebase, setIsCheckingFirebase] = useState(false);
+  const [ticketId, setTicketId] = useState("");
+  const [montoTotal, setMontoTotal] = useState(0);
+  const [academiaParticipante, setAcademiaParticipante] = useState("");
+  const [academiaPareja, setAcademiaPareja] = useState("");
+  const { academies, loadingAcademies } = useAcademies();
 
-  // Estructura esperada del Excel
-  const expectedColumns = [
-    "DNI Participante",
-    "Academia Participante",
-    "Modalidad Participante",
-    "DNI Pareja",
-    "Academia Pareja"
-  ];
-
-  // Función para normalizar DNIs (asegurar formato de 8 dígitos con ceros iniciales)
-  const normalizeDNI = (dni) => {
-    if (!dni) return "";
-    
-    // Convertir a string y eliminar espacios
-    let dniStr = String(dni).trim();
-    
-    // Si tiene menos de 8 dígitos, añadir ceros al inicio
-    while (dniStr.length < 8) {
-      dniStr = "0" + dniStr;
+  useEffect(() => {
+    if (!event.settings?.levels || Object.keys(event.settings.levels).length === 0) {
+      console.error("El evento no tiene modalidades definidas");
     }
-    
-    return dniStr;
-  };
+  }, [event]);
 
-  // Validar la estructura del archivo y los datos
-  const validateExcelData = (data) => {
-    const errors = [];
+  // Opciones de modalidades
+  const modalidades = Object.keys(event.settings.levels || {});
 
-    // Verificar columnas
-    const headers = Object.keys(data[0] || {});
-    const missingColumns = expectedColumns.filter(col => {
-      const normalizedCol = col.toLowerCase().replace(/\s+/g, "");
-      return !headers.some(header =>
-        header.toLowerCase().replace(/\s+/g, "") === normalizedCol
-      );
-    });
+  // Determinar si la modalidad requiere pareja
+  const requierePareja = event.settings.levels[modalidad]?.couple || false;
 
-    if (missingColumns.length > 0) {
-      errors.push(`Faltan columnas requeridas: ${missingColumns.join(", ")}`);
+  // Calcular edad a partir de fecha de nacimiento
+  const calcularEdad = (birthDate: Timestamp | undefined) => {
+    if (!birthDate) return "N/A";
+
+    const hoy = new Date();
+    const fechaNac = birthDate.toDate();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const m = hoy.getMonth() - fechaNac.getMonth();
+
+    if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+      edad--;
     }
 
-    // Validar datos por fila
-    data.forEach((row, index) => {
-      // Normalizar DNI participante
-      const dniParticipante = normalizeDNI(row["DNI Participante"]);
-      
-      // Validar DNI (debe tener 8 dígitos)
-      if (!dniParticipante || !/^\d{8}$/.test(dniParticipante)) {
-        errors.push(`Fila ${index + 1}: DNI inválido. Debe tener 8 dígitos.`);
-      }
-
-      // Validar que tenga academia
-      if (!row["Academia Participante"]) {
-        errors.push(`Fila ${index + 1}: Falta academia del participante.`);
-      }
-
-      // Validar modalidad
-      if (!row["Modalidad Participante"]) {
-        errors.push(`Fila ${index + 1}: Falta modalidad del participante.`);
-      }
-
-      // Si hay DNI de pareja, debe haber academia de pareja
-      if (row["DNI Pareja"] && !row["Academia Pareja"]) {
-        errors.push(`Fila ${index + 1}: Tiene DNI de pareja pero falta academia de la pareja.`);
-      }
-
-      // Si hay academia de pareja, debe haber DNI de pareja
-      if (!row["DNI Pareja"] && row["Academia Pareja"]) {
-        errors.push(`Fila ${index + 1}: Tiene academia de pareja pero falta DNI de la pareja.`);
-      }
-
-      // Si hay DNI de pareja, validar formato
-      if (row["DNI Pareja"]) {
-        const dniPareja = normalizeDNI(row["DNI Pareja"]);
-        if (!/^\d{8}$/.test(dniPareja)) {
-          errors.push(`Fila ${index + 1}: DNI de pareja inválido. Debe tener 8 dígitos.`);
-        }
-      }
-    });
-
-    return errors;
+    return edad;
   };
 
-  // Manejar la carga del archivo
-  const handleFileUpload = (e) => {
-    const uploadedFile = e.target.files[0];
-
-    if (!uploadedFile) return;
-
-    // Verificar tipo de archivo
-    const fileTypes = [
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "text/csv"
-    ];
-
-    if (!fileTypes.includes(uploadedFile.type)) {
-      setValidationErrors(["Por favor sube un archivo Excel (.xlsx, .xls) o CSV."]);
+  // Buscar participante por DNI
+  const buscarParticipante = async () => {
+    if (!dniParticipante.trim()) {
+      setSearchErrorParticipante("Ingrese un DNI válido");
       return;
     }
 
-    setFile(uploadedFile);
-    setValidationErrors([]);
-  };
-
-  // Procesar el archivo Excel
-  useEffect(() => {
-    if (!file) return;
-
-    setIsValidating(true);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = e.target.result;
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        
-        // Configurar opciones para mantener el formato de texto
-        const worksheet = workbook.Sheets[sheetName];
-        
-        // Forzar a que XLSX trate todo como texto para preservar ceros iniciales
-        const parsedData = XLSX.utils.sheet_to_json(worksheet, { 
-          raw: false, // Esto ayuda a preservar el formato
-          defval: "" // Valor por defecto para celdas vacías
-        });
-
-        if (parsedData.length === 0) {
-          setValidationErrors(["El archivo está vacío."]);
-          setFileData([]);
-          setIsValidating(false);
-          return;
-        }
-
-        // Normalizar DNIs en los datos
-        const normalizedData = (parsedData as any[]).map(row => ({
-          ...row,
-          "DNI Participante": normalizeDNI(row["DNI Participante"]),
-          "DNI Pareja": row["DNI Pareja"] ? normalizeDNI(row["DNI Pareja"]) : ""
-        }));
-
-        // Validar datos
-        const errors = validateExcelData(normalizedData);
-        setValidationErrors(errors);
-        setFileData(normalizedData);
-
-        // Si no hay errores, pasar a revisión
-        if (errors.length === 0) {
-          setStep("review");
-        }
-      } catch (error) {
-        setValidationErrors(["Error al procesar el archivo. Por favor verifica el formato."]);
-        console.error("Error procesando el archivo:", error);
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    reader.onerror = () => {
-      setValidationErrors(["Error al leer el archivo."]);
-      setIsValidating(false);
-    };
-
-    reader.readAsArrayBuffer(file);
-  }, [file]);
-
-  const checkDNIsInFirebase = async () => {
-    setIsCheckingFirebase(true);
+    setIsSearchingParticipante(true);
+    setSearchErrorParticipante("");
+    setParticipanteInfo(null);
 
     try {
-      // Extraer DNIs de participantes y parejas
-      const allDNIs = fileData.flatMap(row => {
-        const dnis = [row["DNI Participante"]];
-        if (row["DNI Pareja"]) {
-          dnis.push(row["DNI Pareja"]);
-        }
-        return dnis;
-      }).filter(dni => dni); // Filtra nulos o vacíos
-
-      const uniqueDNIs = [...new Set(allDNIs)];
-
       const db = getFirestore();
       const usersCollection = collection(db, "users");
+      const normalizedDNI = dniParticipante.trim().padStart(8, '0');
+      const q = query(usersCollection, where("dni", "==", normalizedDNI));
+      const snapshot = await getDocs(q);
 
-      const results = {
-        validUsers: [],
-        invalidUsers: [],
-        userDetails: {} // Inicializa este objeto en los resultados
-      };
+      if (snapshot.empty) {
+        setSearchErrorParticipante("No se encontró ningún usuario con este DNI");
+        return;
+      }
 
-      // Verifica cada DNI en Firestore
-      const checkPromises = uniqueDNIs.map(async (dni) => {
-        try {
-          const dniStr = dni.toString(); // Asegúrate de que sea string
-          const q = query(usersCollection, where("dni", "==", dniStr));
-          const snapshot = await getDocs(q);
-
-          if (!snapshot.empty) {
-            const userData = snapshot.docs[0].data();
-            console.log(userData);
-            results.validUsers.push(dniStr);
-            // Asegúrate de que userData tenga las propiedades necesarias
-            results.userDetails[dniStr] = {
-              nombre: userData.firstName || "Nombre no disponible",
-              apellido: userData.lastName || "Apellido no disponible"
-              // otros datos relevantes
-            };
-          } else {
-            results.invalidUsers.push(dniStr);
-          }
-        } catch (err) {
-          console.error(`Error al verificar DNI ${dni}:`, err);
-          results.invalidUsers.push(dni.toString());
-        }
-      });
-
-      await Promise.all(checkPromises);
-
-      // Guarda los resultados en el estado
-      setValidationResults(results);
-      setStep("validate");
+      const userData = snapshot.docs[0].data() as User;
+      userData.id = snapshot.docs[0].id;
+      setParticipanteInfo(userData);
     } catch (error) {
-      console.error("Error verificando usuarios en Firestore:", error);
-      setValidationErrors([
-        ...validationErrors,
-        `Error al verificar usuarios en Firestore: ${error.message}`
-      ]);
+      console.error("Error al buscar participante:", error);
+      setSearchErrorParticipante("Error al buscar usuario");
     } finally {
-      setIsCheckingFirebase(false);
+      setIsSearchingParticipante(false);
     }
   };
 
-  // Enviar los datos para inscripción
-  const handleSubmit = async () => {
-    if (validationErrors.length > 0 || fileData.length === 0) return;
+  // Buscar pareja por DNI
+  const buscarPareja = async () => {
+    if (!dniPareja.trim()) {
+      setSearchErrorPareja("Ingrese un DNI válido");
+      return;
+    }
+
+    setIsSearchingPareja(true);
+    setSearchErrorPareja("");
+    setParejaInfo(null);
+
+    try {
+      const db = getFirestore();
+      const usersCollection = collection(db, "users");
+      const normalizedDNI = dniPareja.trim().padStart(8, '0');
+
+      // Verificar que la pareja no sea el mismo participante
+      if (normalizedDNI === dniParticipante.trim().padStart(8, '0')) {
+        setSearchErrorPareja("La pareja no puede ser el mismo participante");
+        setIsSearchingPareja(false);
+        return;
+      }
+
+      const q = query(usersCollection, where("dni", "==", normalizedDNI));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        setSearchErrorPareja("No se encontró ningún usuario con este DNI");
+        return;
+      }
+
+      const userData = snapshot.docs[0].data() as User;
+      userData.id = snapshot.docs[0].id;
+
+      // Verificar que los géneros sean diferentes en modalidades de pareja
+      if (requierePareja && participanteInfo && userData.gender === participanteInfo.gender) {
+        setSearchErrorPareja(`Solo permite parejas compuestas por un varón y una mujer`);
+        return;
+      }
+
+      setParejaInfo(userData);
+    } catch (error) {
+      console.error("Error al buscar pareja:", error);
+      setSearchErrorPareja("Error al buscar usuario");
+    } finally {
+      setIsSearchingPareja(false);
+    }
+  };
+
+  // Agregar inscripción a la lista
+  const agregarInscripcion = () => {
+    // Validar que exista la información necesaria
+    if (!participanteInfo) {
+      setSearchErrorParticipante("Debe buscar un participante primero");
+      return;
+    }
+
+    if (requierePareja && !parejaInfo) {
+      setSearchErrorPareja("Debe buscar una pareja para esta modalidad");
+      return;
+    }
+
+    // Determinar nivel según edad del participante principal
+    const level = modalidad;
+    const category = participanteInfo.category || "No especificada";
+
+    // Obtener precio según modalidad y nivel
+    const precioBase = event.settings.levels[modalidad]?.price || 0;
+
+    // Crear objeto de inscripción
+    const nuevaInscripcion = {
+      modalidad,
+      // Usar categoría del usuario en lugar de calcular nivel por edad
+      level: modalidad,
+      category: participanteInfo.category,
+      participante: {
+        id: participanteInfo.id,
+        nombre: `${participanteInfo.firstName} ${participanteInfo.lastName}`,
+        dni: participanteInfo.dni,
+        edad: calcularEdad(participanteInfo.birthDate),
+        genero: participanteInfo.gender,
+        telefono: participanteInfo.phoneNumber?.[0] || "No disponible",
+        academyId: academiaParticipante || "",
+        academyName: academies.find(a => a.id === academiaParticipante)?.name || "Academia no especificada"
+      },
+      pareja: parejaInfo ? {
+        id: parejaInfo.id,
+        nombre: `${parejaInfo.firstName} ${parejaInfo.lastName}`,
+        dni: parejaInfo.dni,
+        edad: calcularEdad(parejaInfo.birthDate),
+        genero: parejaInfo.gender,
+        telefono: parejaInfo.phoneNumber?.[0] || "No disponible",
+        academyId: academiaPareja || "",
+        academyName: academies.find(a => a.id === academiaPareja)?.name || "Academia no especificada"
+      } : null,
+      precio: precioBase
+    };
+
+    // Agregar a la lista de inscripciones
+    setInscripciones([...inscripciones, nuevaInscripcion]);
+
+    // Actualizar monto total
+    setMontoTotal(montoTotal + (precioBase || 0));
+
+    // Limpiar formulario
+    setDniParticipante("");
+    setDniPareja("");
+    setParticipanteInfo(null);
+    setParejaInfo(null);
+    setSearchErrorParticipante("");
+    setSearchErrorPareja("");
+  };
+
+  // Eliminar una inscripción
+  const eliminarInscripcion = (index) => {
+    const nuevasInscripciones = [...inscripciones];
+    // Restar el precio de esta inscripción del total
+    setMontoTotal(montoTotal - nuevasInscripciones[index].precio);
+    // Eliminar la inscripción
+    nuevasInscripciones.splice(index, 1);
+    setInscripciones(nuevasInscripciones);
+  };
+
+  // Enviar todas las inscripciones
+  const confirmarInscripciones = async () => {
+    if (inscripciones.length === 0) {
+      alert("Debe agregar al menos una inscripción");
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Aquí iría la lógica para enviar los datos al servidor
-      // Por ejemplo:
-      // const response = await fetch('/api/inscripcion-alumnos', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     eventId: event.id,
-      //     organizerId: user.id,
-      //     participants: fileData,
-      //     validationResults: validationResults
-      //   })
-      // });
+      const db = getFirestore();
+      const ticketsCollection = collection(db, "tickets");
 
-      // Simulamos un delay para mostrar el proceso
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Crear las entradas del ticket
+      const entries: TicketEntry[] = inscripciones.map(inscripcion => {
+        const usersId = inscripcion.pareja
+          ? [inscripcion.participante.id, inscripcion.pareja.id]
+          : [inscripcion.participante.id];
 
-      // Si todo va bien, mostrar éxito
+        const academiesId = inscripcion.pareja
+          ? [inscripcion.participante.academyId, inscripcion.pareja.academyId].filter(id => id)
+          : [inscripcion.participante.academyId].filter(id => id);
+
+        return {
+          usersId,
+          academiesId,
+          category: inscripcion.category,  // Usar la categoría del participante
+          level: inscripcion.level,        // Usar el nivel (modalidad)
+          amount: inscripcion.precio
+        };
+      });
+
+      // Crear el objeto del ticket
+      const now = Timestamp.now();
+      // Fecha de expiración: 3 días desde ahora
+      const expirationDate = Timestamp.fromDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000));
+
+      const newTicket: TicketData = {
+        status: 'Pendiente',
+        eventId: event.id,
+        registrationDate: now,
+        expirationDate: expirationDate,
+        inscriptionType: 'Grupal',
+        totalAmount: montoTotal,
+        entries,
+        createdBy: user.id
+      };
+
+      // Guardar el ticket en Firestore
+      const docRef = await addDoc(ticketsCollection, newTicket);
+
+      // Guardar el ID del ticket creado
+      setTicketId(docRef.id);
       setIsSuccess(true);
-      setStep("success");
     } catch (error) {
-      setValidationErrors(["Error al procesar la inscripción. Intenta nuevamente."]);
-      console.error("Error en la inscripción:", error);
+      console.error("Error al confirmar inscripciones:", error);
+      alert("Error al procesar la inscripción. Intenta nuevamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Descargar plantilla de Excel
-  const downloadTemplate = () => {
-    // Crear la hoja de cálculo
-    const wsData = [
-      {
-        "DNI Participante": "",
-        "Academia Participante": "",
-        "Modalidad Participante": "",
-        "DNI Pareja": "",
-        "Academia Pareja": ""
-      }
-    ];
-
-    const worksheet = XLSX.utils.json_to_sheet(wsData);
-    
-    // Modificar el formato de las celdas para DNIs
-    // Esto indica a Excel que trate estas columnas como texto
-    const range = XLSX.utils.decode_range(worksheet['!ref']);
-    for(let C = range.s.c; C <= range.e.c; C++) {
-      const address = XLSX.utils.encode_cell({r: 0, c: C});
-      const cell = worksheet[address];
-      if (cell && (cell.v === "DNI Participante" || cell.v === "DNI Pareja")) {
-        for(let R = range.s.r + 1; R <= range.e.r; R++) {
-          const dataAddress = XLSX.utils.encode_cell({r: R, c: C});
-          if(!worksheet[dataAddress]) worksheet[dataAddress] = { t: 's', v: '' };
-          worksheet[dataAddress].z = '@'; // Formato de texto
-        }
-      }
-    }
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla");
-    XLSX.writeFile(workbook, "plantilla-inscripcion-alumnos.xlsx");
-  };
-
-  // Reiniciar el proceso
-  const handleReset = () => {
-    setFile(null);
-    setFileData([]);
-    setValidationErrors([]);
+  // Reiniciar después de éxito
+  const nuevaInscripcion = () => {
+    setInscripciones([]);
+    setMontoTotal(0);
     setIsSuccess(false);
-    setValidationResults({ validUsers: [], invalidUsers: [], userDetails: {} });
-    setStep("upload");
+    setTicketId("");
+    setModalidad("Individual");
   };
 
   return (
@@ -339,357 +309,316 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
         </p>
       </div>
 
-      {/* Pasos */}
-      <div className="flex justify-center mb-8">
-        <div className="flex items-center w-full max-w-3xl">
-          <div className={`flex flex-col items-center ${step === "upload" ? "text-blue-600" : "text-gray-500"}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step === "upload" ? "border-blue-600 bg-blue-100" : "border-gray-300"}`}>
-              <Upload className="w-5 h-5" />
-            </div>
-            <span className="text-sm mt-1">Cargar</span>
-          </div>
-          <div className={`flex-1 h-1 mx-2 ${step !== "upload" ? "bg-blue-400" : "bg-gray-300"}`}></div>
+      {!isSuccess ? (
+        <div className="space-y-8">
+          {/* Formulario de inscripción */}
+          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <UserPlus className="w-5 h-5 mr-2 text-blue-600" />
+              Nueva inscripción
+            </h3>
 
-          <div className={`flex flex-col items-center ${step === "review" ? "text-blue-600" : "text-gray-500"}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step === "review" ? "border-blue-600 bg-blue-100" : "border-gray-300"}`}>
-              <FileText className="w-5 h-5" />
-            </div>
-            <span className="text-sm mt-1">Revisar</span>
-          </div>
-          <div className={`flex-1 h-1 mx-2 ${step === "review" || step === "validate" || step === "success" ? "bg-blue-400" : "bg-gray-300"}`}></div>
-
-          <div className={`flex flex-col items-center ${step === "validate" ? "text-blue-600" : "text-gray-500"}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step === "validate" ? "border-blue-600 bg-blue-100" : "border-gray-300"}`}>
-              <RefreshCw className="w-5 h-5" />
-            </div>
-            <span className="text-sm mt-1">Validar</span>
-          </div>
-          <div className={`flex-1 h-1 mx-2 ${step === "success" ? "bg-blue-400" : "bg-gray-300"}`}></div>
-
-          <div className={`flex flex-col items-center ${step === "success" ? "text-blue-600" : "text-gray-500"}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step === "success" ? "border-blue-600 bg-blue-100" : "border-gray-300"}`}>
-              <CheckCircle className="w-5 h-5" />
-            </div>
-            <span className="text-sm mt-1">Completado</span>
-          </div>
-        </div>
-      </div>
-
-      {step === "upload" && (
-        <div className="space-y-6">
-          <div className="flex flex-col items-center">
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors mb-6"
-            >
-              <Download className="w-5 h-5 mr-2" />
-              Descargar plantilla Excel
-            </button>
-
-            <div className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
-              onClick={() => document.getElementById('file-upload').click()}
-            >
-              <input
-                id="file-upload"
-                type="file"
-                accept=".xlsx, .xls, .csv"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-              <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-              <p className="mb-1 font-medium">Haz clic para seleccionar o arrastra un archivo</p>
-              <p className="text-sm text-gray-500">Excel (.xlsx, .xls) o CSV</p>
-
-              {file && (
-                <div className="mt-4 text-left p-2 bg-gray-50 rounded flex items-center">
-                  <FileText className="w-5 h-5 text-blue-500 mr-2" />
-                  <span className="text-sm font-medium truncate">{file.name}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Errores de validación */}
-          {validationErrors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-              <div className="flex items-center mb-2">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                <h3 className="font-semibold text-red-700">Errores encontrados</h3>
-              </div>
-              <ul className="text-sm text-red-600 space-y-1 pl-4">
-                {validationErrors.map((error, index) => (
-                  <li key={index} className="list-disc ml-2">{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {isValidating && (
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Validando archivo...</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {step === "review" && (
-        <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center">
-              <CheckCircle className="w-5 h-5 text-blue-500 mr-2" />
-              <p className="text-blue-700">
-                Se encontraron <span className="font-semibold">{fileData.length}</span> alumnos en el archivo.
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  {expectedColumns.map((column) => (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {fileData.slice(0, 5).map((row, index) => (
-                  <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    {expectedColumns.map((column) => (
-                      <td key={column} className="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                        {row[column] || "-"}
-                      </td>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Columna izquierda - Formulario */}
+              <div className="space-y-4">
+                {/* Selección de modalidad */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Modalidad:
+                  </label>
+                  <select
+                    value={modalidad}
+                    onChange={(e) => {
+                      setModalidad(e.target.value);
+                      // Limpiar los campos si cambia la modalidad
+                      setParejaInfo(null);
+                      setDniPareja("");
+                      setSearchErrorPareja("");
+                    }}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {modalidades.map(mod => (
+                      <option key={mod} value={mod}>{mod}</option>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </select>
+                </div>
 
-          {fileData.length > 5 && (
-            <p className="text-center text-sm text-gray-500">
-              Mostrando 5 de {fileData.length} registros.
-            </p>
-          )}
+                {/* DNI Participante */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    DNI Participante:
+                  </label>
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={dniParticipante}
+                      onChange={(e) => setDniParticipante(e.target.value)}
+                      placeholder="Ingresa DNI"
+                      className="flex-1 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      maxLength={8}
+                    />
+                    <button
+                      onClick={buscarParticipante}
+                      disabled={isSearchingParticipante}
+                      className="bg-blue-600 text-white px-3 rounded-r-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                    >
+                      {isSearchingParticipante ? (
+                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                      ) : (
+                        <Search className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  {searchErrorParticipante && (
+                    <p className="mt-1 text-sm text-red-600">{searchErrorParticipante}</p>
+                  )}
+                </div>
+                {participanteInfo && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Academia del Participante:
+                    </label>
+                    <select
+                      value={academiaParticipante}
+                      onChange={(e) => setAcademiaParticipante(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Seleccionar academia</option>
+                      {academies.map(academia => (
+                        <option key={academia.id} value={academia.id}>{academia.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-          <div className="flex justify-between mt-6">
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-200 transition-colors"
-            >
-              Cancelar
-            </button>
+                {/* DNI Pareja (solo para modalidades que lo requieren) */}
+                {requierePareja && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      DNI Pareja:
+                    </label>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={dniPareja}
+                        onChange={(e) => setDniPareja(e.target.value)}
+                        placeholder="Ingresa DNI de la pareja"
+                        className="flex-1 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        maxLength={8}
+                      />
+                      <button
+                        onClick={buscarPareja}
+                        disabled={isSearchingPareja || !participanteInfo}
+                        className="bg-blue-600 text-white px-3 rounded-r-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                      >
+                        {isSearchingPareja ? (
+                          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : (
+                          <Search className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {searchErrorPareja && (
+                      <p className="mt-1 text-sm text-red-600">{searchErrorPareja}</p>
+                    )}
+                  </div>
+                )}
 
-            <button
-              onClick={checkDNIsInFirebase}
-              disabled={isCheckingFirebase}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
-            >
-              {isCheckingFirebase ? (
-                <>
-                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></span>
-                  Verificando...
-                </>
-              ) : (
-                "Validar DNIs"
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+                {requierePareja && parejaInfo && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Academia de la Pareja:
+                    </label>
+                    <select
+                      value={academiaPareja}
+                      onChange={(e) => setAcademiaPareja(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Seleccionar academia</option>
+                      {academies.map(academia => (
+                        <option key={academia.id} value={academia.id}>{academia.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-      {step === "validate" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* DNIs válidos */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                <h3 className="font-semibold text-green-700">
-                  DNIs encontrados ({validationResults.validUsers.length})
-                </h3>
+                {/* Botón para agregar inscripción */}
+                <div className="pt-2">
+                  <button
+                    onClick={agregarInscripcion}
+                    disabled={
+                      !participanteInfo ||
+                      !academiaParticipante ||
+                      (requierePareja && (!parejaInfo || !academiaPareja))
+                    }
+                    className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-green-400"
+                  >
+                    <span className="flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 mr-2" />
+                      Agregar inscripción
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Columna derecha - Fichas de información */}
+              <div className="space-y-4">
+                {/* Ficha del participante */}
+                {participanteInfo && (
+                  <div className="bg-white rounded-md border border-blue-200 p-4 relative">
+                    <div className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                      {participanteInfo.gender === "Masculino" ? "Masculino" : "Femenino"}
+                    </div>
+                    <h4 className="font-semibold text-blue-700 mb-2">Participante encontrado</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="space-y-1">
+                        <p><span className="font-medium text-gray-600">Nombre:</span> {participanteInfo.firstName} {participanteInfo.lastName}</p>
+                        <p><span className="font-medium text-gray-600">DNI:</span> {participanteInfo.dni}</p>
+                        <p><span className="font-medium text-gray-600">Edad:</span> {calcularEdad(participanteInfo.birthDate)} años</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p><span className="font-medium text-gray-600">Academia:</span> {participanteInfo.academyName || "No especificada"}</p>
+                        <p><span className="font-medium text-gray-600">Categoría:</span> {participanteInfo.category || "No especificada"}</p>
+                        <p><span className="font-medium text-gray-600">Teléfono:</span> {participanteInfo.phoneNumber?.[0] || "No disponible"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ficha de la pareja */}
+                {requierePareja && parejaInfo && (
+                  <div className="bg-white rounded-md border border-pink-200 p-4 relative">
+                    <div className="absolute top-2 right-2 bg-pink-100 text-pink-800 text-xs font-medium px-2 py-1 rounded">
+                      {parejaInfo.gender === "M" ? "Masculino" : "Femenino"}
+                    </div>
+                    <h4 className="font-semibold text-pink-700 mb-2">Pareja encontrada</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="space-y-1">
+                        <p><span className="font-medium text-gray-600">Nombre:</span> {parejaInfo.firstName} {parejaInfo.lastName}</p>
+                        <p><span className="font-medium text-gray-600">DNI:</span> {parejaInfo.dni}</p>
+                        <p><span className="font-medium text-gray-600">Edad:</span> {calcularEdad(parejaInfo.birthDate)} años</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p><span className="font-medium text-gray-600">Academia:</span> {parejaInfo.academyName || "No especificada"}</p>
+                        <p><span className="font-medium text-gray-600">Categoría:</span> {parejaInfo.category || "No especificada"}</p>
+                        <p><span className="font-medium text-gray-600">Teléfono:</span> {parejaInfo.phoneNumber?.[0] || "No disponible"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* DNIs inválidos */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <XCircle className="w-5 h-5 text-red-500 mr-2" />
-                <h3 className="font-semibold text-red-700">
-                  DNIs no encontrados ({validationResults.invalidUsers.length})
-                </h3>
-              </div>
-            </div>
           </div>
 
-          {/* Nueva tabla detallada de participantes */}
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Detalle de participantes</h3>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      DNI Participante
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nombre y Apellido
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Academia
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Estado
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Modalidad
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      DNI Pareja
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nombre Pareja
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Academia Pareja
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Estado Pareja
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {fileData.map((row, index) => {
-                    // Convierte a string para asegurar comparación correcta
-                    const participantDNI = row["DNI Participante"]?.toString();
-                    const partnerDNI = row["DNI Pareja"]?.toString();
+          {/* Lista de inscripciones */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
+              <Users className="w-5 h-5 mr-2 text-blue-600" />
+              Inscripciones pendientes ({inscripciones.length})
+            </h3>
 
-                    // Comprueba si los DNIs están en los arrays de validación
-                    const isParticipantValid = participantDNI && validationResults.validUsers.includes(participantDNI);
-                    const isPartnerValid = partnerDNI && validationResults.validUsers.includes(partnerDNI);
-
-                    // Accede a los detalles de forma segura
-                    const participantDetails = validationResults.userDetails && participantDNI
-                      ? validationResults.userDetails[participantDNI] || null
-                      : null;
-
-                    const partnerDetails = validationResults.userDetails && partnerDNI
-                      ? validationResults.userDetails[partnerDNI] || null
-                      : null;
-
-                    return (
+            {inscripciones.length > 0 ? (
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modalidad</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
+                      {requierePareja && (
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pareja</th>
+                      )}
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Academia(s)</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {inscripciones.map((inscripcion, index) => (
                       <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {participantDNI || "-"}
+                        <td className="px-4 py-3 text-sm text-gray-700">{inscripcion.modalidad}</td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">{inscripcion.participante.nombre}</div>
+                          <div className="text-xs text-gray-500">DNI: {inscripcion.participante.dni}</div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {isParticipantValid && participantDetails
-                            ? `${participantDetails.nombre || ""} ${participantDetails.apellido || ""}`
-                            : isParticipantValid ? "Usuario encontrado" : "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {row["Academia Participante"] || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isParticipantValid
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                            }`}>
-                            {isParticipantValid
-                              ? <CheckCircle className="w-3 h-3 mr-1" />
-                              : <XCircle className="w-3 h-3 mr-1" />}
-                            {isParticipantValid ? "Encontrado" : "No encontrado"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {row["Modalidad Participante"] || "-"}
-                        </td>
-
-                        {/* Datos de la pareja */}
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {partnerDNI || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {isPartnerValid && partnerDetails
-                            ? `${partnerDetails.nombre || ""} ${partnerDetails.apellido || ""}`
-                            : isPartnerValid ? "Usuario encontrado" : "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                          {row["Academia Pareja"] || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                          {partnerDNI ? (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isPartnerValid
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                              }`}>
-                              {isPartnerValid
-                                ? <CheckCircle className="w-3 h-3 mr-1" />
-                                : <XCircle className="w-3 h-3 mr-1" />}
-                              {isPartnerValid ? "Encontrado" : "No encontrado"}
-                            </span>
-                          ) : (
-                            "-"
+                        {requierePareja && (
+                          <td className="px-4 py-3">
+                            {inscripcion.pareja ? (
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{inscripcion.pareja.nombre}</div>
+                                <div className="text-xs text-gray-500">DNI: {inscripcion.pareja.dni}</div>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-500">-</span>
+                            )}
+                          </td>
+                        )}
+                        <td className="px-4 py-3 text-sm text-gray-700">{inscripcion.category}</td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-700">{inscripcion.participante.academyName}</div>
+                          {inscripcion.pareja && inscripcion.pareja.academyName !== inscripcion.participante.academyName && (
+                            <div className="text-xs text-gray-500">{inscripcion.pareja.academyName}</div>
                           )}
                         </td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">S/. {inscripcion.precio.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => eliminarInscripcion(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                  {/* Pie de tabla con total */}
+                  <tfoot className="bg-gray-50">
+                    <tr>
+                      <td colSpan={requierePareja ? 5 : 4} className="px-4 py-3 text-sm font-semibold text-gray-700 text-right">
+                        Total:
+                      </td>
+                      <td className="px-4 py-3 text-sm font-bold text-gray-900">S/. {montoTotal.toFixed(2)}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-gray-500">
+                  No hay inscripciones pendientes. Utiliza el formulario para agregar participantes.
+                </p>
+              </div>
+            )}
+
+            {/* Botón para confirmar todas las inscripciones */}
+            {inscripciones.length > 0 && (
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={confirmarInscripciones}
+                  disabled={isSubmitting}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 text-lg font-medium flex items-center"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></span>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Confirmar {inscripciones.length} inscripciones
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-
-          {validationResults.invalidUsers.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
-              <p className="text-yellow-700">
-                <AlertCircle className="w-5 h-5 mr-1 inline" />
-                <span className="font-medium">Atención:</span> Hay {validationResults.invalidUsers.length} DNIs que no están registrados en el sistema.
-                Estos usuarios deben registrarse antes de ser inscritos al evento.
-              </p>
-            </div>
-          )}
-
-          <div className="flex justify-between mt-6">
-            <button
-              onClick={() => setStep("review")}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-200 transition-colors"
-            >
-              Volver
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || validationResults.invalidUsers.length > 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></span>
-                  Procesando...
-                </>
-              ) : (
-                "Confirmar inscripción"
-              )}
-            </button>
-          </div>
-
-          {validationResults.invalidUsers.length > 0 && (
-            <p className="text-center text-sm text-red-600 mt-2">
-              No se puede continuar con la inscripción porque hay DNIs no registrados.
-            </p>
-          )}
         </div>
-      )}
-
-      {step === "success" && (
-        <div className="text-center space-y-6">
+      ) : (
+        // Pantalla de éxito
+        <div className="text-center space-y-6 py-8">
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
@@ -697,13 +626,16 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
           <div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">¡Inscripción completada!</h3>
             <p className="text-gray-600">
-              Se han inscrito correctamente {fileData.length} alumnos al evento {event.name}.
+              Se han inscrito correctamente {inscripciones.length} alumnos al evento {event.name}.
+            </p>
+            <p className="text-gray-600 mt-1">
+              Ticket generado: <span className="font-medium">{ticketId}</span>
             </p>
           </div>
 
           <div className="pt-4">
             <button
-              onClick={handleReset}
+              onClick={nuevaInscripcion}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Realizar otra inscripción

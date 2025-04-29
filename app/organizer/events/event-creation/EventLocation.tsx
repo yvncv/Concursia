@@ -23,6 +23,60 @@ interface EventLocationProps {
   isOnlyRead: boolean;
 }
 
+// Definición de las ubicaciones comunes
+interface CommonLocation {
+  name: string;
+  data: {
+    latitude: string;
+    longitude: string;
+    department: string;
+    district: string;
+    placeName: string;
+    province: string;
+    street: string;
+  };
+}
+
+// Lista de ubicaciones comunes predefinidas
+const commonLocations: CommonLocation[] = [
+  {
+    name: "Plaza de Armas de Lima",
+    data: {
+      latitude: "-12.045988",
+      longitude: "-77.030545",
+      department: "14", // Lima
+      province: "01", // Lima
+      district: "01", // Lima
+      placeName: "Plaza Mayor de Lima",
+      street: "Jirón de la Unión, Lima"
+    }
+  },
+  {
+    name: "Parque Kennedy - Miraflores",
+    data: {
+      latitude: "-12.121627",
+      longitude: "-77.029700",
+      department: "14", // Lima
+      province: "01", // Lima
+      district: "15", // Miraflores
+      placeName: "Parque Central de Miraflores",
+      street: "Av. José Larco, Miraflores"
+    }
+  },
+  {
+    name: "Estadio Nacional",
+    data: {
+      latitude: "-12.067748",
+      longitude: "-77.033354",
+      department: "14", // Lima
+      province: "01", // Lima
+      district: "01", // Lima
+      placeName: "Estadio Nacional de Perú",
+      street: "Jr. José Díaz s/n, Lima"
+    }
+  }
+];
+
 declare global {
   interface Window {
     google: typeof google;
@@ -178,17 +232,36 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
     }
   }, [map, data.latitude, data.longitude]);
 
-
+  // Función para seleccionar una ubicación común
+  const selectCommonLocation = (locationData: CommonLocation) => {
+    updateData(locationData.data);
+  };
 
   return (
       <div className="space-y-4">
         {!isOnlyRead && (
-            <input
-                type="text"
-                ref={searchInputRef}
-                placeholder="Buscar ubicación"
-                className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-            />
+            <>
+              <input
+                  type="text"
+                  ref={searchInputRef}
+                  placeholder="Buscar ubicación"
+                  className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
+              />
+              
+              {/* Opciones comunes de ubicación */}
+              <div className="flex flex-wrap gap-2 my-2">
+                <span className="text-sm text-gray-500 self-center">Ubicaciones frecuentes:</span>
+                {commonLocations.map((location, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectCommonLocation(location)}
+                    className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                  >
+                    {location.name}
+                  </button>
+                ))}
+              </div>
+            </>
         )}
         <div
             ref={mapRef}
@@ -206,7 +279,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
                   updateData({ ...data, department: e.target.value, province: "", district: "" });
                 }}
                 className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-                disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
+                disabled={isOnlyRead}
             >
               <option value="">Selecciona departamento</option>
               {ubigeoData
@@ -224,7 +297,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
                 value={data.province}
                 onChange={(e) => updateData({ ...data, province: e.target.value, district: "" })}
                 className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-                disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
+                disabled={isOnlyRead}
             >
               <option value="">Selecciona provincia</option>
               {filteredProvinces.map((prov) => (
@@ -243,7 +316,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
                 value={data.district}
                 onChange={(e) => updateData({ ...data, district: e.target.value })}
                 className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
-                disabled={isOnlyRead} // 🔹 Deshabilitado si es solo lectura
+                disabled={isOnlyRead}
             >
               <option value="">Selecciona distrito</option>
               {filteredDistricts.map((dist) => (
@@ -259,7 +332,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
                 type="text"
                 value={data.street}
                 onChange={(e) => updateData({ ...data, street: e.target.value })}
-                readOnly={isOnlyRead} // 🔹 Solo lectura si es solo lectura
+                readOnly={isOnlyRead}
                 className="w-full px-4 py-[4.9px] border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
             />
           </div>
@@ -271,7 +344,7 @@ export default function EventLocation({ data, updateData, isOnlyRead }: EventLoc
               type="text"
               value={data.placeName}
               onChange={(e) => updateData({ ...data, placeName: e.target.value })}
-              readOnly={isOnlyRead} // 🔹 Solo lectura si es solo lectura
+              readOnly={isOnlyRead}
               className="w-full px-4 py-2 border-b-2 border-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:border-transparent focus:outline-none focus:shadow-[0px_4px_0px_0px_rgba(22,163,74,0.3)] transition-all resize-none"
           />
         </div>

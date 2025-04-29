@@ -75,10 +75,22 @@ export const useEventCreation = (): EventCreationHandler => {
       bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
     }
 
-    const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
+    // Process levels including their categories
+    const processedLevels: { 
+      [key: string]: { 
+        categories: string[]; 
+        price: number; 
+        couple: boolean; 
+      } 
+    } = {};
+    
     Object.entries(eventData.dance.levels).forEach(([level, data]) => {
       if (data.selected) {
-        processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
+        processedLevels[level] = { 
+          categories: data.categories || [], // Use the categories from each level
+          price: parseFloat(data.price), 
+          couple: data.couple 
+        };
       }
     });
 
@@ -109,8 +121,6 @@ export const useEventCreation = (): EventCreationHandler => {
       capacity: eventData.details.capacity,
       settings: {
         levels: processedLevels,
-        categories: eventData.dance.categories,
-        registrationType: [], // Ensure registrationType is included
       },
       createdBy: `${user?.firstName} ${user?.lastName}`,
       lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
