@@ -51,9 +51,10 @@ export default function LandingPage() {
                   Eventos Recientes
                 </h2>
                 <div className="flex flex-wrap justify-center gap-4">
-                  {pastEvents.map((event) => (
-                    <EventComponent key={event.id} event={event} />
-                  ))}
+                  {pastEvents.map((event, index) => {
+                    if (index >= 6) return;
+                    return <EventComponent key={event.id} event={event} />;
+                  })}
                 </div>
               </>
             ) : (
@@ -70,17 +71,20 @@ export default function LandingPage() {
             </h2>
             {events.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {events.map((event) => (
-                  <Image
-                    key={event.smallImage}
-                    src={event.smallImage}
-                    alt={`Imagen de marinera ${event.smallImage}`}
-                    width={300}
-                    height={300}
-                    className="w-full h-64 object-cover rounded-lg"
-                    loader={({ src }) => src}
-                  />
-                ))}
+                {events.map((event, index) => {
+                  if (index >= 6) return;
+                  return (
+                    <Image
+                      key={event.smallImage}
+                      src={event.smallImage}
+                      alt={`Imagen de marinera ${event.smallImage}`}
+                      width={300}
+                      height={300}
+                      className="w-full h-64 object-cover rounded-lg"
+                      loader={({ src }) => src}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <p className="text-center">
