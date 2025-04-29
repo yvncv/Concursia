@@ -4,8 +4,8 @@ import { Timestamp } from "firebase/firestore";
 export interface TicketEntry {
   usersId: string[];             // IDs de los usuarios inscritos
   academiesId: string[];         // IDs de sus academias
-  category: string;              // Categoría de la inscripción
-  level: string;                 // Nivel (ej. Pre-infante, Infantil, etc.)
+  category: string;              // Categoría de la inscripción  (ej. Pre-infante, Infantil, etc.)
+  level: string;                 // Nivel
   amount: number;                // Precio correspondiente a esta entrada
 }
 
