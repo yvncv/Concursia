@@ -19,7 +19,7 @@ export default function LandingPage() {
         <section className="relative h-[200px] sm:h-[450px] flex items-center justify-center w-full">
           {/* Carrusel de ancho completo */}
           <div className="absolute inset-0">
-            <CarruselEvento events={events} />
+            <CarruselEvento events={events} showIndicators={false}/>
           </div>
 
           {/* Fondo oscuro */}
