@@ -20,7 +20,11 @@ export default function LoginForm() {
     setError("");
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       console.log("Usuario autenticado:", userCredential.user);
       router.push("/calendario");
     } catch (err) {
@@ -42,7 +46,9 @@ export default function LoginForm() {
           >
             ← Inicio
           </button>
-          <h1 className="text-3xl font-bold mb-12 mt-10 text-center text-gray-800">Inicia sesión aquí</h1>
+          <h1 className="text-3xl font-bold mb-12 mt-10 text-center text-gray-800">
+            Inicia sesión aquí
+          </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-red-500">{error}</p>}
             <div>
@@ -69,7 +75,13 @@ export default function LoginForm() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <a href="#" className="mb-8 text-sm text-rose-500 hover:underline">¿Olvidaste la contraseña?</a>
+              <button
+                type="button"
+                onClick={() => router.push("/recover-password")}
+                className="mb-8 text-sm text-rose-500 hover:underline"
+              >
+                ¿Olvidaste la contraseña?
+              </button>
             </div>
             <button
               type="submit"
