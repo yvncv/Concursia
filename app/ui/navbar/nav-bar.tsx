@@ -95,7 +95,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
             <ul className="flex space-x-4">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendario</Link></li>
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendarioo</Link></li>
               <li><Link href="#eventos" className="text-gray-600 hover:text-red-700">Eventos Recientes</Link></li>
               <li><Link href="#galeria" className="text-gray-600 hover:text-red-700">Galería</Link></li>
               <li><Link href="#acerca" className="text-gray-600 hover:text-red-700">Acerca de</Link></li>
@@ -119,7 +119,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
             <ul className="space-y-4 px-4 pb-4 pt-2">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario</Link></li>
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario2</Link></li>
               <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
               <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
               <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
@@ -174,25 +174,25 @@ export default function Navbar({ brandName }: { brandName: string }) {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <nav>
-              <ul className="flex space-x-8">
+              <ul className="flex space-x-4">
                 {filteredLinks.map((link) => (
                   <li key={link.href}>
                     {link.label === "Logout" ? (
                       <button
                         onClick={handleSignOut}
-                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block">{link.label}</span>
+                        <span className="hidden md:block truncate">{link.label}</span>
                       </button>
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
@@ -200,7 +200,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
                         onClick={handleLinkClick}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block">{link.label}</span>
+                        <span className="hidden md:block truncate">{link.label}</span>
                       </Link>
                     )}
                   </li>
