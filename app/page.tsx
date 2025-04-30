@@ -70,9 +70,9 @@ export default function LandingPage() {
               Galería de Imágenes
             </h2>
             {events.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {events.map((event, index) => {
-                  if (index >= 6) return;
+                  if (index >= 8) return;
                   return (
                     <Image
                       key={event.smallImage}
