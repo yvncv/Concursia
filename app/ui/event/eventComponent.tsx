@@ -102,7 +102,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
           {event.name}
         </h5>
 
-        <p className="text-gray-600 test-sm md:text-md line-clamp-2">{event.description}</p>
+        <p className="text-gray-600 test-sm md:text-md line-clamp-1">{event.description}</p>
 
         <div className="md:space-y-2 space-y-0">
           <div className="flex items-center gap-2 text-gray-600">
