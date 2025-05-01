@@ -19,4 +19,9 @@ export type User = FirebaseUser & {
   academyName?: string;
   profileImage: string | File;
   createdAt: Timestamp;
+  location: {
+    department: string;
+    district: string;
+    province: string;
+  }
 };

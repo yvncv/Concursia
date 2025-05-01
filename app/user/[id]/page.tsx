@@ -107,11 +107,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const capitalizeName = (str: string) => str.replace(/\b\w/g, c => c.toUpperCase());
 
   return (
-    <main className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <main className="flex flex-col h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 flex items-center justify-between">
+      <div className={`p-8 flex items-center justify-between ${user.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
+          : user.gender === 'Femenino'
+            ? 'bg-gradient-to-r from-pink-500 to-purple-600' // Female gradient
+            : 'bg-gradient-to-r from-red-400 to-orange-600' // Default gradient
+        }`}>
         <div className="flex items-center space-x-8">
-          <div className="relative group w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
+          <div className="relative group w-40 h-40 rounded-full border-4 shadow-lg overflow-hidden">
             {croppedImage ? (
               <Image
                 src={croppedImage}
@@ -167,7 +171,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-8 bg-white">
+      <div className="flex-1 overflow-auto p-8 bg-white/65">
         <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
           <PersonalInformation foundUser={foundUser} />
           <ContactInformation foundUser={foundUser} canEdit={canEdit} />

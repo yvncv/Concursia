@@ -3,19 +3,19 @@ import { User } from '@/app/types/userType';
 
 interface Props {
   foundUser: User & {
-    department: string;
-    district: string;
-    province: string;
+    location: {
+      department: string;
+      district: string;
+      province: string;
+    };
   };
 }
 
 const PlaceInformation: React.FC<Props> = ({ foundUser }) => {
-  const { department, district, province } = foundUser;
-
   const placeItems = [
-    { label: 'Departamento', value: department || 'N/A' },
-    { label: 'Provincia', value: province || 'N/A' },
-    { label: 'Distrito', value: district || 'N/A' },
+    { label: 'Departamento', value: foundUser?.location?.department || 'N/A' },
+    { label: 'Provincia', value: foundUser?.location?.province || 'N/A' },
+    { label: 'Distrito', value: foundUser?.location?.district || 'N/A' },
   ];
 
   return (
@@ -24,18 +24,18 @@ const PlaceInformation: React.FC<Props> = ({ foundUser }) => {
         Información de Ubicación
       </h2>
 
-      {/* Map Embed */}
+      {/* Map Embed (optional) */}
       {/* <div className="mb-6">
         <label className="block text-sm font-medium text-gray-600 mb-2">
           Ubicación
         </label>
         <div className="w-full h-64 rounded-lg overflow-hidden shadow-sm">
-          iframe
+          <iframe
             title="Mapa de ubicación"
             src={mapSrc}
             className="w-full h-full"
             allowFullScreen
-          /> 
+          />
         </div>
       </div> */}
 
