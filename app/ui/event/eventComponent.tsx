@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Calendar, Clock, MapPin } from "lucide-react"
+import { BadgeCheck, Calendar, Clock, MapPin } from "lucide-react";
 import { CustomEvent } from "../../types/eventType";
 
 export default function EventComponent({ event }: { event: CustomEvent }) {
@@ -9,11 +9,13 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString("es-PE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    }).replace(/^\w/, (c) => c.toUpperCase());
+    return date
+      .toLocaleDateString("es-PE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      })
+      .replace(/^\w/, (c) => c.toUpperCase());
   };
 
   const formatTime = (timestamp: number): string =>
@@ -51,12 +53,14 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
   return (
     <div
       ref={elementRef}
-      className={`text-xs md:text-base bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto ${isVisible ? 'animate-fadeIn' : 'opacity-0'} hover:shadow-lg hover:scale-[1.02] group`}
+      className={`text-xs md:text-base bg-white relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300w-full max-w-[300px] mx-auto ${
+        isVisible ? "animate-fadeIn" : "opacity-0"
+      } hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
         {event.smallImage && (
           <>
-            <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 w-full -z-10">
               <Image
                 src={event.smallImage}
                 className="h-full w-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
@@ -69,7 +73,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
             </div>
             <Image
               src={event.smallImage}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-110"
               alt={event.name}
               width={900}
               height={200}
@@ -89,9 +93,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
           {event.name}
         </h5>
 
-        <p className="text-gray-600 line-clamp-2">
-          {event.description}
-        </p>
+        <p className="text-gray-600 line-clamp-2">{event.description}</p>
 
         <div className="md:space-y-2 space-y-0">
           <div className="flex items-center gap-2 text-gray-600">
@@ -103,29 +105,24 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
 
           <div className="flex items-center gap-2 text-gray-600">
             <Clock className="text-green-500 w-4 flex-shrink-0" />
-            <span className="truncate">
-              {formattedStartTime}
-            </span>
+            <span className="truncate">{formattedStartTime}</span>
           </div>
 
           <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="text-blue-500 w-4 flex-shrink-0" />
-            <span className="truncate">
-              {event.location.placeName}
-            </span>
+            <span className="truncate">{event.location.placeName}</span>
           </div>
 
           <div className="flex items-center gap-2 text-gray-600">
-          <BadgeCheck className="text-purple-500 w-4 flex-shrink-0" />
-            <span className="truncate">
-              {event.academyName}
-            </span>
+            <BadgeCheck className="text-purple-500 w-4 flex-shrink-0" />
+            <span className="truncate">{event.academyName}</span>
           </div>
         </div>
 
         <Link
           href={`/event/${event.id}`}
-          className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]" >
+          className="block w-full mt-auto text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]"
+        >
           Más información
         </Link>
       </div>

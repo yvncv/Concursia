@@ -174,25 +174,25 @@ export default function Navbar({ brandName }: { brandName: string }) {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <nav>
-              <ul className="flex space-x-8">
+              <ul className="flex space-x-4">
                 {filteredLinks.map((link) => (
                   <li key={link.href}>
                     {link.label === "Logout" ? (
                       <button
                         onClick={handleSignOut}
-                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block">{link.label}</span>
+                        <span className="hidden md:block truncate">{link.label}</span>
                       </button>
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
@@ -200,7 +200,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
                         onClick={handleLinkClick}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block">{link.label}</span>
+                        <span className="hidden md:block truncate">{link.label}</span>
                       </Link>
                     )}
                   </li>

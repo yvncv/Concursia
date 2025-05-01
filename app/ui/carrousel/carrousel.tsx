@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CustomEvent } from "@/app/types/eventType"
 
-const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
+const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent[], showIndicators?: boolean }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -42,13 +42,15 @@ const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Botones de anterior */}
-            <button
-                onClick={prevSlide}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
-                aria-label="Previous slide"
-            >
-                <ChevronLeft className="w-6 h-6" />
-            </button>
+            {showIndicators && 
+                <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                    aria-label="Previous slide"
+                >
+                    <ChevronLeft className="w-6 h-6" />
+                </button>
+            }
 
             {/* Contenedor de imágenes */}
             <Link href={`/event/${ids[currentIndex]}`}>
@@ -92,28 +94,32 @@ const CarruselEvento = ({ events }: { events: CustomEvent[] }) => {
             </Link>
 
             {/* Botón siguiente */}
-            <button
-                onClick={nextSlide}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
-                aria-label="Next slide"
-            >
-                <ChevronRight className="w-6 h-6" />
-            </button>
+            {showIndicators && 
+                <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                    aria-label="Next slide"
+                >
+                    <ChevronRight className="w-6 h-6" />
+                </button>
+            }
 
             {/* Indicadores */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
-                {imagenes.map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => setCurrentIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                            ? "bg-white w-4"
-                            : "bg-white/50 hover:bg-white/75"
-                            }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                    ></button>
-                ))}
-            </div>
+            {showIndicators && 
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+                    {imagenes.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrentIndex(index)}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
+                                ? "bg-white w-4"
+                                : "bg-white/50 hover:bg-white/75"
+                                }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                        ></button>
+                    ))}
+                </div>
+            }
         </div>
     );
 };
