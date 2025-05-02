@@ -12,7 +12,7 @@ const poppins = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Tusuy Perú",
+  title: "Concursia | Marinera",
   description: "Maqueta de proyecto",
   keywords: "tusuy, peru, maqueta, proyecto, marinera",
   
