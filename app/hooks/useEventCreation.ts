@@ -4,7 +4,7 @@ import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/firebase/functions";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EventFormData, CustomEvent } from '@/app/types/eventType';
+import { EventFormData, CustomEvent, LevelData } from '@/app/types/eventType';
 import { User } from "@/app/types/userType"; // Assuming you have a User type defined
 
 interface EventCreationHandler {
@@ -77,19 +77,16 @@ export const useEventCreation = (): EventCreationHandler => {
 
     // Process levels including their categories
     const processedLevels: { 
-      [key: string]: { 
-        categories: string[]; 
-        price: number; 
-        couple: boolean; 
-      } 
+      [key: string]: LevelData 
     } = {};
     
     Object.entries(eventData.dance.levels).forEach(([level, data]) => {
       if (data.selected) {
         processedLevels[level] = { 
-          categories: data.categories || [], // Use the categories from each level
-          price: parseFloat(data.price), 
-          couple: data.couple 
+          categories: data.categories || [],
+          price: Number(data.price), // o simplemente: price: value.price
+          couple: data.couple,
+          selected: true
         };
       }
     });
@@ -121,6 +118,8 @@ export const useEventCreation = (): EventCreationHandler => {
       capacity: eventData.details.capacity,
       settings: {
         levels: processedLevels,
+        categories: [],
+        registrationType: [], 
       },
       createdBy: `${user?.firstName} ${user?.lastName}`,
       lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,

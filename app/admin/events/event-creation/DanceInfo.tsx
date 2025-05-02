@@ -48,8 +48,9 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
       const level = levels.find(l => l.name === levelName);
       updatedLevels[levelName] = {
         selected: isSelecting,
-        price: data.levels[levelName]?.price || '',
-        couple: level?.couple || false
+        price: data.levels[levelName]?.price ?? 0,
+        couple: level?.couple || false,
+        categories: data.levels[levelName]?.categories || []
       };
     }
 
@@ -65,7 +66,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
     });
   };
 
-  const handlePriceChange = (level: string, price: string): void => {
+  const handlePriceChange = (level: string, price: number): void => {
     const updatedLevels = {
       ...data.levels,
       [level]: {
@@ -143,7 +144,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
                     <input
                       type="number"
                       value={data.levels[name]?.price}
-                      onChange={(e) => handlePriceChange(name, e.target.value)}
+                      onChange={(e) => handlePriceChange(name, Number(e.target.value))}
                       disabled={isOnlyRead} // 🔹 Deshabilitar en modo lectura
                       placeholder="Precio"
                       className={`px-2 py-1 w-24 rounded border text-sm

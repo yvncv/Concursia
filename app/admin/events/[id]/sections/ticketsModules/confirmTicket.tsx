@@ -21,11 +21,11 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
     if (!isOpen) return null;
 
     const handleConfirm = async () => {
-        if (input === "Cancelado") {
+        if (input === "Pagado") {
             const ticketData: TicketData = {
                 ...ticket,
                 paymentDate: Timestamp.fromDate(new Date()), // Actualiza la fecha de pago
-                status: "Cancelado" // Actualiza el estado del ticket
+                status: "Pagado" 
             };
 
             try {

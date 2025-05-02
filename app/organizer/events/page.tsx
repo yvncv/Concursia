@@ -6,7 +6,7 @@ import useUser from "@/app/firebase/functions";
 import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
-import { CustomEvent } from "@/app/types/eventType";
+import { CustomEvent, LevelData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
 import { EventFormData } from "@/app/types/eventType";
 import Link from "next/link";
@@ -112,22 +112,14 @@ const Events: React.FC = () => {
   const handleEvent = (event: CustomEvent, cmd: string) => {
     // Convertir la estructura de niveles de Firebase a la estructura de la aplicación
     const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      // Convertir cada nivel a la estructura que espera la app
       acc[key] = { 
+        ...value, 
         selected: true, 
-        price: value.price.toString(),
-        couple: value.couple,
-        categories: value.categories || [] // Asegurarnos de que categories existe
+        price: Number(value.price), 
+        categories: value.categories || [] // Asegúrate de que categories esté definido
       };
       return acc;
-    }, {} as { 
-      [key: string]: { 
-        selected: boolean; 
-        price: string; 
-        couple: boolean;
-        categories: string[];
-      } 
-    });
+    }, {} as { [key: string]: LevelData });
 
     setSelectedEvent(event);
     setEventData({

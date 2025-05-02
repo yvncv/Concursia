@@ -20,8 +20,12 @@ export interface Ticket {
   inscriptionType: 'Individual' | 'Grupal' | 'Presencial';
   totalAmount: number;
   entries: TicketEntry[];
-  createdBy: string;                         // ID del usuario que lo generó
+  createdBy: string;                     // ID del usuario que lo generó    
+  level: string;
+  usersId: string[];
+  category: string;
+  academiesName: string[];
 }
 
 // Para guardar en Firestore sin el ID (opcional)
-export type TicketData = Omit<Ticket, 'id' | 'paymentDate'>;
+export type TicketData = Omit<Ticket, 'id' >;

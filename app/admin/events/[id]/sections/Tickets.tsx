@@ -94,7 +94,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     const headers: string[] = ["ID", "Modalidad", "Categoría", "Fecha de Registro", "Estado", "Acciones"];
     const levels: string[] = ["Todos", "Seriado", "Individual", "Novel Novel", "Novel Abierto", "Novel Abierto A", "Novel Abierto B", "Nacional"];
     const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
-    const status: string[] = ["Pendiente", "Cancelado"];
+    const status: string[] = ["Pendiente", "Pagado"];
 
     return (
         <div className="p-6">

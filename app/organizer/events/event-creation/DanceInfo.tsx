@@ -31,14 +31,14 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
           ...updatedLevels["Novel Abierto A"] || {}, 
           selected: false, 
           categories: updatedLevels["Novel Abierto A"]?.categories || [],
-          price: updatedLevels["Novel Abierto A"]?.price || '',
+          price: updatedLevels["Novel Abierto A"]?.price ?? 0,
           couple: true
         },
         "Novel Abierto B": { 
           ...updatedLevels["Novel Abierto B"] || {}, 
           selected: false, 
           categories: updatedLevels["Novel Abierto B"]?.categories || [],
-          price: updatedLevels["Novel Abierto B"]?.price || '',
+          price: updatedLevels["Novel Abierto B"]?.price ?? 0,
           couple: true
         }
       };
@@ -51,7 +51,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
           ...updatedLevels["Novel Abierto"] || {}, 
           selected: false, 
           categories: updatedLevels["Novel Abierto"]?.categories || [],
-          price: updatedLevels["Novel Abierto"]?.price || '',
+          price: updatedLevels["Novel Abierto"]?.price ?? 0,
           couple: true
         }
       };
@@ -61,7 +61,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
     const level = levels.find(l => l.name === levelName);
     updatedLevels[levelName] = {
       selected: isSelecting,
-      price: data.levels[levelName]?.price || '',
+      price: data.levels[levelName]?.price ?? 0,
       couple: level?.couple || false,
       categories: data.levels[levelName]?.categories || []
     };
@@ -78,7 +78,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
     });
   };
 
-  const handlePriceChange = (level: string, price: string): void => {
+  const handlePriceChange = (level: string, price: number): void => {
     const updatedLevels = {
       ...data.levels,
       [level]: {
@@ -142,7 +142,7 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
                   <input
                     type="number"
                     value={data.levels[name]?.price}
-                    onChange={(e) => handlePriceChange(name, e.target.value)}
+                    onChange={(e) => handlePriceChange(name, Number(e.target.value))}
                     disabled={isOnlyRead}
                     placeholder="Precio"
                     className={`px-2 py-1 w-24 rounded border text-sm

@@ -274,7 +274,11 @@ const EventoInscripcionAlumnos = ({ event, user }) => {
         inscriptionType: 'Grupal',
         totalAmount: montoTotal,
         entries,
-        createdBy: user.id
+        createdBy: user.id,
+        level: modalidad,  // Asegúrate de definir `selectedLevel`
+        category: participanteInfo.category,  // Asegúrate de definir `selectedCategory`
+        usersId: [participanteInfo.id, parejaInfo.id],  // Asegúrate de que `user.id` esté definido correctamente
+        academiesName: [academiaParticipante, academiaPareja],  // Asegúrate de que `event.academyName` esté disponible
       };
 
       // Guardar el ticket en Firestore

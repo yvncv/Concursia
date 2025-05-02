@@ -28,7 +28,7 @@ const CreateEvent = () => {
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
   const [academyName, setAcademyName] = useState<string>("");
-  const [selectedLevels, setSelectedLevels] = useState<{ level: string; price: string; couple: boolean }[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState<{ level: string; price: number; couple: boolean }[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
@@ -95,7 +95,7 @@ const CreateEvent = () => {
     if (!selectedLevels.some((item) => item.level === level)) {
       setSelectedLevels((prev) => [
         ...prev,
-        { level, price: "", couple }, // El precio se inicializa con ""
+        { level, price: 0, couple }, // El precio se inicializa con ""
       ]);
     }
   };
@@ -107,7 +107,7 @@ const CreateEvent = () => {
 
   const handlePriceChange = (index: number, value: string) => {
     const updatedLevels = [...selectedLevels];
-    updatedLevels[index].price = value;
+    updatedLevels[index].price = Number(value);
     setSelectedLevels(updatedLevels);
   };
 
@@ -174,7 +174,7 @@ const CreateEvent = () => {
           levels: selectedLevels.reduce(
             (acc, item) => ({
               ...acc,
-              [item.level]: { price: parseFloat(item.price) || 0, couple: item.couple },
+              [item.level]: { price: Number(item.price) || 0, couple: item.couple },
             }),
             {}
           ),

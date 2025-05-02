@@ -45,7 +45,8 @@ const initialEventData: EventFormData = {
         street: ''
     },
     dance: {
-        levels: {}  // Updated to match the new structure
+        levels: {},  // Updated to match the new structure
+        categories: [], // ← FALTA
     },
     images: {
         smallImage: '',
