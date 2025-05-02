@@ -113,7 +113,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           : user?.gender === 'Femenino'
             ? 'bg-gradient-to-r from-pink-500 to-purple-600' // Female gradient
             : 'bg-gradient-to-r from-red-400 to-orange-600' // Default gradient
-        }`}>
+        } m-3 rounded-md`}>
         <div className="flex items-center space-x-8">
           <div className="relative group w-40 h-40 rounded-full border-4 shadow-lg overflow-hidden">
             {croppedImage ? (
@@ -171,7 +171,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-8 bg-white/65">
+      <div className="flex-1 overflow-auto p-8">
         <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
           <PersonalInformation foundUser={foundUser} />
           <ContactInformation foundUser={foundUser} canEdit={canEdit} />
