@@ -4,13 +4,7 @@ import React, { useState, useEffect, useRef, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
 import useUser from '@/app/firebase/functions';
 import { doc, updateDoc } from 'firebase/firestore';
-import { auth, db, storage } from '../../firebase/config';
-import {
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  updateEmail,
-  sendEmailVerification
-} from 'firebase/auth';
+import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
 import { LucideImage } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL, ref } from 'firebase/storage';

@@ -2,7 +2,7 @@
 //Customizacion de email
 //https://support.google.com/firebase/answer/7000714?hl=en&ref_topic=6386702&sjid=12877986704270570936-SA
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { confirmPasswordReset } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +10,16 @@ import Image from "next/image";
 import MarineraImage from "@/public/marinera.jpg";
 
 export default function RecoverPassword() {
+
+  // Asegúrate de envolver todo en Suspense
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <SearchParamsComponent />
+    </Suspense>
+  );
+}
+
+const SearchParamsComponent = () => {
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,6 +29,7 @@ export default function RecoverPassword() {
   const mode = searchParams.get("mode");
   const oobCode = searchParams.get("oobCode");
   const [succeedMessage, setSucceedMessage] = useState("");
+  
   const handleSubmitSendPassword = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
@@ -29,7 +40,7 @@ export default function RecoverPassword() {
       if (!oobCode) throw Error("oobCode requerido");
       if (!mode) throw Error("mode requerido");
 
-      if (password != confirmPassword) {
+      if (password !== confirmPassword) {
         setError("Las contraseñas deben ser iguales");
         throw Error("Las contraseñas deben ser iguales");
       }
@@ -111,4 +122,4 @@ export default function RecoverPassword() {
       </div>
     </div>
   );
-}
+};
