@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Tusuy Perú",
   description: "Maqueta de proyecto",
   keywords: "tusuy, peru, maqueta, proyecto, marinera",
+  
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

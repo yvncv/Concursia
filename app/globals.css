@@ -103,7 +103,7 @@ body {
 
 *::-webkit-scrollbar{
   background-color: var(--rojo);
-  width: 10px;
+  width: 7.5px;
 }
 *::-webkit-scrollbar-thumb{
   background-color: white;

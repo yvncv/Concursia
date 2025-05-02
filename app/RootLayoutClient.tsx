@@ -7,7 +7,7 @@ import StairTransition from "./ui/page-transition/StairTransition";
 import Footer from "./ui/footer/footer";
 
 export default function RootLayoutClient({ children }: { children: React.ReactNode }) {
-    const brandName = "SWGEMN";
+    const brandName = "CONCURSIA";
     const pathname = usePathname();
     const [showNavbar, setShowNavbar] = useState(true);
 

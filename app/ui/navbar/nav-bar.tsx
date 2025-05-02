@@ -89,7 +89,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
-            <Link href="/" className="text-xs lg:text-2xl font-bold text-red-700">{brandName}</Link>
+            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600">{brandName}</Link>
           </div>
 
           {/* Menú en Desktop */}
@@ -137,7 +137,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-gray-200" onClick={handleLinkClick}>
+            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600" onClick={handleLinkClick}>
               {brandName}
             </Link>
           </div>
