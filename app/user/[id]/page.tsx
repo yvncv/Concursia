@@ -109,8 +109,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   return (
     <main className="flex flex-col h-screen">
       {/* Header */}
-      <div className={`p-8 flex items-center justify-between ${user.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
-          : user.gender === 'Femenino'
+      <div className={`p-8 flex items-center justify-between ${user?.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
+          : user?.gender === 'Femenino'
             ? 'bg-gradient-to-r from-pink-500 to-purple-600' // Female gradient
             : 'bg-gradient-to-r from-red-400 to-orange-600' // Default gradient
         }`}>
