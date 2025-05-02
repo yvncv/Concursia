@@ -103,18 +103,20 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   return (
     <main className="flex flex-col h-screen">
       {/* Header */}
-      <div className={`p-8 flex items-center justify-between ${user?.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
+      <div
+        className={`top-0 z-10 items-center p-8 flex md:flex-row flex-col justify-around ${user?.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
           : user?.gender === 'Femenino'
             ? 'bg-gradient-to-r from-pink-500 to-purple-600' // Female gradient
             : 'bg-gradient-to-r from-red-400 to-orange-600' // Default gradient
-        } m-3 rounded-md`}>
-        <div className="flex items-center space-x-8">
-          <div className="relative group w-40 h-40 rounded-full border-4 shadow-lg overflow-hidden">
+          } m-3 rounded-md`}
+      >
+        <div className="flex flex-col md:flex-row items-center space-x-8">
+          <div className="relative group w-15 h-15 md:w-40 md:h-40 rounded-full border-4 shadow-lg overflow-hidden">
             {croppedImage ? (
               <Image
                 src={croppedImage}
                 alt="Foto de perfil"
-                className="w-full h-full object-cover"
+                className="object-cover"
                 width={160}
                 height={160}
                 unoptimized
@@ -125,7 +127,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   ? foundUser.profileImage
                   : URL.createObjectURL(foundUser.profileImage as File)}
                 alt="Foto de perfil"
-                className="w-full h-full object-cover"
+                className="object-cover"
                 width={160}
                 height={160}
                 unoptimized
@@ -134,7 +136,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               <Image
                 src={user.gender === 'Masculino' ? '/default-male.jpg' : '/default-female.jpg'}
                 alt="Foto de perfil"
-                className="w-full h-full object-cover"
+                className="object-cover"
                 width={160}
                 height={160}
                 unoptimized
@@ -149,15 +151,16 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </div>
             )}
           </div>
-          <div className="text-white">
-            <h1 className="text-4xl font-bold">{capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}</h1>
-            <p className="text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.academyId && ` • ${foundUser.academyName}`}</p>
+          <div className="text-white mt-4 md:mt-0">
+            <h1 className="bg-black/40 p-3 rounded-md md:text-4xl font-bold">{capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}</h1>
+            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.academyId && ` • ${foundUser.academyName}`}</p>
           </div>
         </div>
+
         {croppedImage && (
           <button
             onClick={handleSaveProfileImage}
-            className="px-4 py-2 bg-red-600 rounded text-white"
+            className="px-4 py-2 bg-red-600 rounded text-white mt-4 md:mt-0"
           >
             Guardar Imagen
           </button>
@@ -189,5 +192,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         />
       )}
     </main>
+
   );
 }
