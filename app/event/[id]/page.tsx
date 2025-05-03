@@ -8,8 +8,9 @@ import EventoInscripcion from "./EventoInscripcion";
 import EventoInscripcionAlumnos from "./EventoInscripcionAlumnos";
 import dynamic from "next/dynamic";
 import { use } from "react";
-import { MapPin, Calendar, User } from "lucide-react";
+import { MapPin, Calendar, User, ArrowLeftCircle } from "lucide-react";
 import useAcademy from "@/app/hooks/useAcademy";
+import Link from "next/link";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
@@ -69,7 +70,17 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <div className="absolute top-4 left-4 z-20">
+        <Link href="/calendario" passHref>
+          <div
+            className="rounded-xl p-1 shadow cursor-pointer"
+            aria-label="Ir a calendario"
+          >
+            <ArrowLeftCircle className="bg-white rounded-xl text-rojo w-6 h-6 border-red transition" />
+          </div>
+        </Link>
+      </div>
       <div className="relative h-96 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-500"
