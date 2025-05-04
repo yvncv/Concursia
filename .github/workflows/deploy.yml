@@ -13,20 +13,23 @@ jobs:
       - name: 🔄 Checkout repo
         uses: actions/checkout@v3
 
-      - name: 🟢 Setup Node
+      - name: 📥 Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: 🟢 Setup Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
 
       - name: 📦 Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: 🔨 Build Next.js project
         run: npm run build
 
-      - name: 📤 Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXT_PROJ_216FD }}"
-          channelId: live
+      - name: 🚀 Deploy to Firebase (Hosting + Functions)
+        run: |
+          npm install -g firebase-tools
+          firebase deploy --only "hosting,functions" --project next-proj-216fd
