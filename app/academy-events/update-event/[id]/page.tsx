@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { db } from "@/app/firebase/config";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { CustomEvent } from "@/app/types/eventType";

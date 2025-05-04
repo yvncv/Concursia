@@ -2,7 +2,7 @@
 import { useState } from "react";
 import useSettings from "@/app/hooks/useSettings";
 import useEvents from "@/app/hooks/useEvents";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
 import EventoInscripcionAlumnos from "./EventoInscripcionAlumnos";

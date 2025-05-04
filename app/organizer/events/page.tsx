@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus, CheckCircle } from "lucide-react";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";

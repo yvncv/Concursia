@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
-import useUser from '@/app/firebase/functions';
+import useUser from "@/app/hooks/useUser";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';

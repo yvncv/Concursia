@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import useUser from "@/app/firebase/functions"; // Asegúrate de que esta ruta sea correcta
+import useUser from "@/app/hooks/useUser";// Asegúrate de que esta ruta sea correcta
 import { db } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import { CustomEvent } from "@/app/types/eventType"; // Ajusta la ruta según tu estructura de archivos

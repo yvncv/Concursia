@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { EventFormData, CustomEvent, LevelData } from '@/app/types/eventType';
 import { User } from "@/app/types/userType"; // Assuming you have a User type defined
