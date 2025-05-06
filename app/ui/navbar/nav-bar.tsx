@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { Home, LogIn, User, Menu, X, Shield, LogOutIcon } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
-import { CustomEvent } from '@/app/types/eventType';
+import { CustomEvent } from "@/app/types/eventType";
 import { useRouter } from "next/navigation"; // Importa el router para la redirección
 import { auth } from "@/app/firebase/config";
 
@@ -18,13 +18,50 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const router = useRouter(); // Inicializa el router
 
   const enlaces = [
-    { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
-    { href: "/login", label: "Iniciar Sesión", icon: LogIn, requiresAuth: false },
-    { href: "/organizer", label: "Panel Organizador", icon: Shield, requiresAuth: true, requiresRole: "organizer" },
-    { href: "/admin", label: "Panel Admin", icon: Shield, requiresAuth: true, requiresRole: "admin" },
-    { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
+    {
+      href: "/calendario",
+      label: "Calendario",
+      icon: Home,
+      requiresAuth: false,
+    },
+    {
+      href: "/login",
+      label: "Iniciar Sesión",
+      icon: LogIn,
+      requiresAuth: false,
+    },
+    {
+      href: "/organizer",
+      label: "Panel Organizador",
+      icon: Shield,
+      requiresAuth: true,
+      requiresRole: "organizer",
+    },
+    {
+      href: "/admin",
+      label: "Panel Admin",
+      icon: Shield,
+      requiresAuth: true,
+      requiresRole: "admin",
+    },
+    {
+      href: `/user/${user?.id}`,
+      label: "Perfil",
+      icon: User,
+      requiresAuth: true,
+    },
     { href: "/login", label: "Logout", icon: LogOutIcon, requiresAuth: true },
   ];
+
+  const filteredLinks = enlaces.filter((link) => {
+    if (link.label === "Logout" && user) return true; // Always show logout if user exists
+    if (link.href === "/login" && user) return false;
+    if (link.requiresAuth) {
+      if (!user) return false;
+      if (link.requiresRole) return user.roleId === link.requiresRole;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -58,16 +95,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
     }
   };
 
-  const filteredLinks = enlaces.filter((link) => {
-    if (link.label === "Logout" && user) return true; // Always show logout if user exists
-    if (link.href === "/login" && user) return false;
-    if (link.requiresAuth) {
-      if (!user) return false;
-      if (link.requiresRole) return user.roleId === link.requiresRole;
-    }
-    return true;
-  });
-
   // Loading states
   const loadingMessage = loadingUser ? "Cargando datos..." : null;
 
@@ -77,7 +104,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
-            <span className="animate-pulse text-red-600 text-lg font-medium">{loadingMessage}</span>
+            <span className="animate-pulse text-red-600 text-lg font-medium">
+              {loadingMessage}
+            </span>
           </div>
         </div>
       </div>
@@ -89,17 +118,57 @@ export default function Navbar({ brandName }: { brandName: string }) {
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
-            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600">{brandName}</Link>
+            <Link
+              href="/"
+              className="text-2xl font-bold text-red-700 hover:text-red-600"
+            >
+              {brandName}
+            </Link>
           </div>
 
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
             <ul className="flex space-x-4">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendario</Link></li>
-              <li><Link href="#eventos" className="text-gray-600 hover:text-red-700">Eventos Recientes</Link></li>
-              <li><Link href="#galeria" className="text-gray-600 hover:text-red-700">Galería</Link></li>
-              <li><Link href="#acerca" className="text-gray-600 hover:text-red-700">Acerca de</Link></li>
-              <li><Link href="#contacto" className="text-gray-600 hover:text-red-700">Contacto</Link></li>
+              <li>
+                <Link
+                  href="/calendario"
+                  className="text-gray-600 hover:text-red-700"
+                >
+                  Calendario
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#eventos"
+                  className="text-gray-600 hover:text-red-700"
+                >
+                  Eventos Recientes
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#galeria"
+                  className="text-gray-600 hover:text-red-700"
+                >
+                  Galería
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#acerca"
+                  className="text-gray-600 hover:text-red-700"
+                >
+                  Acerca de
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#contacto"
+                  className="text-gray-600 hover:text-red-700"
+                >
+                  Contacto
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -110,7 +179,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
               className="text-red-700 hover:text-gray-200 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -119,11 +192,46 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
             <ul className="space-y-4 px-4 pb-4 pt-2">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario de Eventos</Link></li>
-              <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
-              <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
-              <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
-              <li><Link href="#contacto" className="text-gray-600 hover:text-red-700 block">Contacto</Link></li>
+              <li>
+                <Link
+                  href="/calendario"
+                  className="text-gray-600 hover:text-red-700 block"
+                >
+                  Calendario de Eventos
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#eventos"
+                  className="text-gray-600 hover:text-red-700 block"
+                >
+                  Eventos Recientes
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#galeria"
+                  className="text-gray-600 hover:text-red-700 block"
+                >
+                  Galería
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#acerca"
+                  className="text-gray-600 hover:text-red-700 block"
+                >
+                  Acerca de
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#contacto"
+                  className="text-gray-600 hover:text-red-700 block"
+                >
+                  Contacto
+                </Link>
+              </li>
             </ul>
           </div>
         )}
@@ -137,7 +245,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600" onClick={handleLinkClick}>
+            <Link
+              href="/"
+              className="text-2xl font-bold text-red-700 hover:text-red-600"
+              onClick={handleLinkClick}
+            >
               {brandName}
             </Link>
           </div>
@@ -160,7 +272,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={handleLinkClick}
                     >
-                      {event.eventType} {event.name} - {event.location.district}, {event.location.department}
+                      {event.eventType} {event.name} - {event.location.district}
+                      , {event.location.department}
                     </Link>
                   </li>
                 ))}
@@ -181,26 +294,32 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <button
                         onClick={handleSignOut}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${
+                            pathname.includes(link.href)
+                              ? "bg-red-100 text-red-700 font-bold"
+                              : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">{link.label}</span>
+                        <span className="hidden md:block truncate">
+                          {link.label}
+                        </span>
                       </button>
                     ) : (
                       <Link
                         href={link.href}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${
+                            pathname.includes(link.href)
+                              ? "bg-red-100 text-red-700 font-bold"
+                              : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                         onClick={handleLinkClick}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">{link.label}</span>
+                        <span className="hidden md:block truncate">
+                          {link.label}
+                        </span>
                       </Link>
                     )}
                   </li>
@@ -216,7 +335,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
               className="text-red-700 hover:text-gray-200 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -243,7 +366,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <button
                         onClick={handleClick} // Use the combined handler for logout and menu close
                         className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
-                      ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                      ${
+                        isActive
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                      }`}
                       >
                         <link.icon className="w-5 h-5" />
                         <span>{link.label}</span>
@@ -252,7 +379,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <Link
                         href={link.href}
                         className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
-                      ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                      ${
+                        isActive
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                      }`}
                         onClick={handleClick} // Use the same click handler for other links
                       >
                         <link.icon className="w-5 h-5" />
@@ -262,8 +393,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
                   </li>
                 );
               })}
-
-
             </ul>
           </div>
         )}
