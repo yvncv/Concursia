@@ -10,9 +10,9 @@ import { LucideImage } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL, ref } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
 import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
-import PersonalInformation from './PersonalInformation';
-import ContactInformation from './ContactInformation';
-import PlaceInformation from './PlaceInformation';
+import PersonalInformation from './components/PersonalInformation';
+import ContactInformation from './components/ContactInformation';
+import PlaceInformation from './components/PlaceInformation';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();
