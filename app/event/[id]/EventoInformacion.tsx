@@ -119,7 +119,7 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                             <ChartBarStacked className="text-purple-600 w-6 h-6" />
                             <span className="text-sm md:text-base font-medium">Categorías por Modalidad:</span>
                         </div>
-                        
+
                         {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
                             <div className="space-y-4">
                                 {Object.entries(event.settings.levels).map(([levelName, levelData]) => (
@@ -159,36 +159,33 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                         ) : error ? (
                             <span
                                 className="text-sm md:text-base text-red-500">Error al cargar Información adicional: {error}</span>
-                        ) : settings ? (
-                            <div className="flex flex-wrap gap-2">
-
-                                {settings.registration.grupalCSV && (
-                                    <span
-                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                        Inscripción Grupal CSV</span>
-                                )}
-
-                                {settings.registration.individualWeb && (
-                                    <span
-                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                        Inscripción Individual Web</span>
-                                )}
-
-                                {settings.registration.sameDay && (
-                                    <span
-                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                        Inscripción el Mismo Día</span>
-                                )}
-
-                                {settings.pullCouple && settings.pullCouple.enabled && (
-                                    <span
-                                        className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                        Se puede jalar pareja con diferencia máxima de {settings.pullCouple.difference} {settings.pullCouple.criteria === "Age" ? "años." : "categorías."}</span>
-                                )}
-                            </div>
+                        ) : settings && typeof settings === 'object' ? (
+                            (settings.registration?.grupalCSV ||
+                                settings.registration?.individualWeb ||
+                                settings.registration?.sameDay ||
+                                settings.pullCouple?.enabled) ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {settings.registration?.grupalCSV && (
+                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal CSV</span>
+                                        )}
+                                        {settings.registration?.individualWeb && (
+                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Individual Web</span>
+                                        )}
+                                        {settings.registration?.sameDay && (
+                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción el Mismo Día</span>
+                                        )}
+                                        {settings.pullCouple?.enabled && (
+                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                                Se puede jalar pareja con diferencia máxima de {settings.pullCouple.difference}{" "}
+                                                {settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
+                                            </span>
+                                        )}
+                                    </div>
+                            ) : (
+                                <span className="text-sm text-gray-500">No se encontraron configuraciones.</span>
+                            )
                         ) : (
-                            <span
-                                className="text-sm md:text-base text-gray-500">No se encontraron configuraciones.</span>
+                            <span className="text-sm text-gray-500">No se encontraron configuraciones.</span>
                         )}
                     </section>
 
