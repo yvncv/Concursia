@@ -53,6 +53,34 @@ export default function Navbar({ brandName }: { brandName: string }) {
     { href: "/login", label: "Logout", icon: LogOutIcon, requiresAuth: true },
   ];
 
+  const enlaces_landing = [
+    {
+      href: "/calendario",
+      label: "Calendario",
+      icon: Home,
+    },
+    {
+      href: "#eventos",
+      label: "Eventos Recientes",
+      icon: Home,
+    },
+    {
+      href: "#galeria",
+      label: "Galería",
+      icon: Home,
+    },
+    {
+      href: "#acerca",
+      label: "Acerca de",
+      icon: Home,
+    },
+    {
+      href: "#contacto",
+      label: "Contacto",
+      icon: Home,
+    },
+  ];
+
   const filteredLinks = enlaces.filter((link) => {
     if (link.label === "Logout" && user) return true; // Always show logout if user exists
     if (link.href === "/login" && user) return false;
@@ -128,47 +156,38 @@ export default function Navbar({ brandName }: { brandName: string }) {
 
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
-            <ul className="flex space-x-4">
-              <li>
-                <Link
-                  href="/calendario"
-                  className="text-gray-600 hover:text-red-700"
-                >
-                  Calendario
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#eventos"
-                  className="text-gray-600 hover:text-red-700"
-                >
-                  Eventos Recientes
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#galeria"
-                  className="text-gray-600 hover:text-red-700"
-                >
-                  Galería
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#acerca"
-                  className="text-gray-600 hover:text-red-700"
-                >
-                  Acerca de
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#contacto"
-                  className="text-gray-600 hover:text-red-700"
-                >
-                  Contacto
-                </Link>
-              </li>
+            <ul className="flex space-x-4 items-center">
+              {enlaces_landing.map((enlace, index) => (
+                <li key={index}>
+                  {enlace.label === "Calendario" ? (
+                    <Link
+                      href={enlace.href}
+                      className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
+                    ${
+                      pathname.includes(enlace.href)
+                        ? "bg-red-100 text-red-700 font-bold"
+                        : "hover:bg-gray-100 hover:text-black text-red-700"
+                    }`}
+                      onClick={handleLinkClick}
+                    >
+                      <enlace.icon className="w-5 h-5" />
+                      <span className="hidden md:block truncate">
+                        {enlace.label}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="relative group">
+                      <Link
+                        href={enlace.href}
+                        className="text-gray-600 hover:text-red-700"
+                      >
+                        {enlace.label}
+                      </Link>
+                      <span className="group-hover:w-full group-hover:opacity-100 opacity-0 duration-300 transition-all ease-in-out absolute bottom-0 left-0 w-[2px] h-[2px] bg-gray-600"></span>
+                    </div>
+                  )}
+                </li>
+              ))}
             </ul>
           </nav>
 
