@@ -11,6 +11,7 @@ import { use } from "react";
 import { MapPin, Calendar, User, ArrowLeftCircle } from "lucide-react";
 import useAcademy from "@/app/hooks/useAcademy";
 import Link from "next/link";
+import Image from "next/image";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
@@ -82,13 +83,30 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         </Link>
       </div>
       <div className="relative h-96 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-500"
-          style={{
-            backgroundImage: `url(${event.bannerImage})`,
-            filter: "brightness(0.6)",
-          }}
-        ></div>
+        <div className="relative w-full h-full overflow-hidden">
+          {/* Fondo desenfocado */}
+          <div className="absolute inset-0 -z-10">
+            <Image
+              src={event.bannerImage}
+              fill
+              className="object-cover w-full h-full blur-xl brightness-50 scale-125"
+              alt={`Blurred background of ${event.bannerImage}`}
+              loader={({ src }) => src}
+            />
+          </div>
+
+          {/* Imagen principal con efecto hover */}
+          <div className="relative w-full h-full transition-transform duration-500 hover:scale-105">
+            <Image
+              src={event.bannerImage}
+              fill
+              className="object-contain w-full h-full"
+              alt={`Main banner of ${event.bannerImage}`}
+              loader={({ src }) => src}
+            />
+          </div>
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <div className="max-w-6xl mx-auto">
