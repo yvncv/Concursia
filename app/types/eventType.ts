@@ -34,20 +34,17 @@ export interface LocationData {
 // Interfaces para el nivel
 export interface LevelData {
   selected: boolean;
-  price: string;
+  categories: string[];
+  price: number;
   couple: boolean;
 }
 
 // Interfaces para la información de baile
 export interface DanceData {
+  categories?: string[];
   levels: {
-    [key: string]: {
-      selected: boolean;
-      price: string;
-      couple: boolean;
-    };
+    [key: string]: LevelData;
   };
-  categories: string[];
 }
 
 // Interfaces para las imágenes
@@ -97,12 +94,9 @@ export interface CustomEvent {
   settings: {
     categories: string[];
     levels: {
-      [key: string]: {
-        price: number;
-        couple: boolean;
-      };
+      [key: string]: LevelData;
     };
-    registrationType: string[];
+    registrationType: string[]; 
   };
   createdBy: string;
   lastUpdatedBy: string;

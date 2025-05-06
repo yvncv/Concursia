@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, LogIn, User, Menu, X, Shield, LogOutIcon } from "lucide-react";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import { CustomEvent } from '@/app/types/eventType';
 import { useRouter } from "next/navigation"; // Importa el router para la redirección
@@ -89,13 +89,13 @@ export default function Navbar({ brandName }: { brandName: string }) {
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
-            <Link href="/" className="text-xs lg:text-2xl font-bold text-red-700">{brandName}</Link>
+            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600">{brandName}</Link>
           </div>
 
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
             <ul className="flex space-x-4">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendarioo</Link></li>
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendario</Link></li>
               <li><Link href="#eventos" className="text-gray-600 hover:text-red-700">Eventos Recientes</Link></li>
               <li><Link href="#galeria" className="text-gray-600 hover:text-red-700">Galería</Link></li>
               <li><Link href="#acerca" className="text-gray-600 hover:text-red-700">Acerca de</Link></li>
@@ -119,7 +119,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
             <ul className="space-y-4 px-4 pb-4 pt-2">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario2</Link></li>
+              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario de Eventos</Link></li>
               <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
               <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
               <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
@@ -137,7 +137,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-gray-200" onClick={handleLinkClick}>
+            <Link href="/" className="text-2xl font-bold text-red-700 hover:text-red-600" onClick={handleLinkClick}>
               {brandName}
             </Link>
           </div>

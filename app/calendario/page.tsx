@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import useUser from "../firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import useEvents from "../hooks/useEvents";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
@@ -52,7 +52,7 @@ export default function TodosEventos() {
         {/* Contenido Principal */}
         <div className="w-full max-w-[1400px] px-4 md:px-8 mt-12">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
-            <h1 className="text-2xl font-bold text-red-600">
+            <h1 className="md:text-2xl font-bold text-red-600">
               {user?.firstName ? `¡${user.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user.firstName)}` : "¡Bienvenido a Tusuy Perú"},
               estos son los eventos de la fecha!
             </h1>

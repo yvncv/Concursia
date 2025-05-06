@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { db } from "@/app/firebase/config";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { CustomEvent } from "@/app/types/eventType";
@@ -30,7 +30,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const [district, setDistrict] = useState<string>("");
   const [placeName, setPlaceName] = useState<string>("");
   const [academyName, setAcademyName] = useState<string>("");
-  const [selectedCategories, setSelectedCategories] = useState<{ category: string; price: string }[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<{ category: string; price: number }[]>([]);
   const [selectedLevels, setSelectedLevels] = useState([""]);
 
 
@@ -82,7 +82,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleAddCategory = (category: string) => {
     if (!selectedCategories.some((item) => item.category === category)) {
-      setSelectedCategories([...selectedCategories, { category, price: "" }]);
+      setSelectedCategories([...selectedCategories, { category, price: 0 }]);
     }
   };
 
@@ -94,7 +94,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
   const handlePriceChange = (index: number, value: string) => {
     const updatedCategories = [...selectedCategories];
     const price = parseFloat(value);
-    updatedCategories[index].price = isNaN(price) || price <= 0 ? '' : value; // Prevent invalid input
+    updatedCategories[index].price = isNaN(price) || price <= 0 ? 0 : price;
     setSelectedCategories(updatedCategories);
   };
 
@@ -143,7 +143,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
             eventData.settings?.categories
               ? Object.entries(eventData.settings.categories).map(([category, price]) => ({
                 category,
-                price: price.toString()  // Convierte el precio a string
+                price: Number(price) // Convierte el precio a string
               }))
               : [] // Retorna un array vacío si categoriesPrices es undefined o null
           );
@@ -210,7 +210,7 @@ const EditEvent = ({ params }: { params: Promise<{ id: string }> }) => {
         status: "pendiente",
         settings: {
           categoriesPrices: selectedCategories.reduce(
-            (acc, item) => ({ ...acc, [item.category]: parseFloat(item.price) || 0 }),
+            (acc, item) => ({ ...acc, [item.category]: Number(item.price) || 0 }),
             {}
           ),
           levels: selectedLevels,

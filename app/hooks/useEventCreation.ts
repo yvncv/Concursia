@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EventFormData, CustomEvent } from '@/app/types/eventType';
+import { EventFormData, CustomEvent, LevelData } from '@/app/types/eventType';
 import { User } from "@/app/types/userType"; // Assuming you have a User type defined
 
 interface EventCreationHandler {
@@ -75,10 +75,19 @@ export const useEventCreation = (): EventCreationHandler => {
       bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
     }
 
-    const processedLevels: { [key: string]: { price: number; couple: boolean } } = {};
+    // Process levels including their categories
+    const processedLevels: { 
+      [key: string]: LevelData 
+    } = {};
+    
     Object.entries(eventData.dance.levels).forEach(([level, data]) => {
       if (data.selected) {
-        processedLevels[level] = { price: parseFloat(data.price), couple: data.couple };
+        processedLevels[level] = { 
+          categories: data.categories || [],
+          price: Number(data.price), // o simplemente: price: value.price
+          couple: data.couple,
+          selected: true
+        };
       }
     });
 
@@ -109,8 +118,8 @@ export const useEventCreation = (): EventCreationHandler => {
       capacity: eventData.details.capacity,
       settings: {
         levels: processedLevels,
-        categories: eventData.dance.categories,
-        registrationType: [], // Ensure registrationType is included
+        categories: [],
+        registrationType: [], 
       },
       createdBy: `${user?.firstName} ${user?.lastName}`,
       lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,

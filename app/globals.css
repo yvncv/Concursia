@@ -29,7 +29,7 @@ body {
   margin: auto;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: auto;
-  background: linear-gradient(315deg, #ff7e7ea4 3%, #ff3a3a 38%, #ff6c6c 68%, #ff0000 98%);
+  background: linear-gradient(315deg, #ff5252 30%, #ffa069cc 65%, #ff5454 100%);
   animation: gradient 15s ease infinite;
   background-size: 400% 400%;
   background-attachment: fixed;
@@ -48,7 +48,7 @@ body {
 }
 
 .wave {
-  background: rgb(255, 255, 255);
+  background: rgba(255, 225, 225, 0.507);
   border-radius: 1000% 1000% 0 0;
   position: fixed;
   width: 200%;
@@ -103,7 +103,7 @@ body {
 
 *::-webkit-scrollbar{
   background-color: var(--rojo);
-  width: 10px;
+  width: 7.5px;
 }
 *::-webkit-scrollbar-thumb{
   background-color: white;
@@ -125,3 +125,4 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.6s ease-out forwards;
 }
+
