@@ -7,7 +7,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
 import { LucideImage } from 'lucide-react';
-import { ref as storageRef, uploadBytes, getDownloadURL, ref } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
 import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
 import PersonalInformation from './components/PersonalInformation';
@@ -45,7 +45,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     if (!user?.uid) return;
     try {
       // Crear referencia a la imagen por defecto en Firebase Storage
-      const defaultImageRef = user.gender == 'Masculino' ? ref(storage, 'users/dafault-male.JPG') : ref(storage, 'users/dafault-female.JPG');
+      const defaultImageRef = user.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
 
       // Obtener la URL pública de la imagen por defecto
       const defaultImageUrl = await getDownloadURL(defaultImageRef);
@@ -134,7 +134,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               />
             ) : (
               <Image
-                src={user.gender === 'Masculino' ? '/default-male.jpg' : '/default-female.jpg'}
+                src={user.gender === 'Masculino' ? '/default-male.JPG' : '/default-female.JPG'}
                 alt="Foto de perfil"
                 className="object-cover"
                 width={160}
