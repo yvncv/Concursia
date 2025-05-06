@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 type Role = "admin" | "organizer" | "user" | "participant" | "spectator";
 
 const routeRolePatterns: { pattern: RegExp; roles: Role[] }[] = [
-  { pattern: /^\/admin(?:$|\/)/,                roles: ["admin"] },
-  { pattern: /^\/organizer(?:$|\/)/,            roles: ["organizer"] },
+  { pattern: /^\/admin(?:$|\/)/, roles: ["admin"] },
+  { pattern: /^\/organizer(?:$|\/)/, roles: ["organizer"] },
 ];
 
 export const withRoleProtection = (WrappedComponent: React.ComponentType) => {
@@ -54,7 +54,18 @@ export const withRoleProtection = (WrappedComponent: React.ComponentType) => {
 
     // Mientras loadingUser o antes de checked → Loading
     if (loadingUser || !checked) {
-      return <div>Loading…</div>;
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
+              <span className="animate-pulse text-red-600 text-lg font-medium">
+                Cargando...
+              </span>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // Si no está permitido → nada
