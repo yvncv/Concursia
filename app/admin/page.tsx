@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-hidden">
         {/* Tarjeta de Usuarios */}
         <div className="bg-white/80 p-4 shadow-md rounded-lg">
           <h2 className="text-lg font-semibold">Usuarios</h2>
