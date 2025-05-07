@@ -24,7 +24,7 @@ const EventDashboard = () => {
   }
 
   return (
-      <div className="p-6">
+      <div className="p-6 overflow-hidden">
         <Overview event={currentEvent} />
       </div>
   );

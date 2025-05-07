@@ -1,11 +1,9 @@
-// app/events/[id]/layout.tsx
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import EventHeader from './eventHeader/EventHeader';
 import EventSidebar from './eventSideBar/EventSideBar';
 import useEvents from '@/app/hooks/useEvents';
-import { useState, useEffect } from 'react';
 import { CustomEvent } from '@/app/types/eventType';
 
 import Overview from './sections/Overview';
@@ -21,12 +19,31 @@ export default function EventLayout() {
   const { events } = useEvents();
   const [currentEvent, setCurrentEvent] = useState<CustomEvent | null>(null);
   const [activeSection, setActiveSection] = useState('overview');
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const event = events.find(e => e.id === id);
     if (event) {
       setCurrentEvent(event);
     }
+
+    // Inicializar el estado de colapso según el tamaño de pantalla
+    if (window.innerWidth < 768) {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      } else {
+        setIsCollapsed(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [id, events]);
 
   if (!currentEvent) {
@@ -58,18 +75,20 @@ export default function EventLayout() {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-100">
       <EventHeader event={currentEvent} />
-
       <div className="flex">
-        <EventSidebar 
-          activeSection={activeSection} 
+        <EventSidebar
+          activeSection={activeSection}
           setActiveSection={setActiveSection}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
         />
-        <main className="flex-1 p-4">
-          {renderSection()}
+        <main className="transition-all duration-300 overflow-x-auto flex-1">
+          <div className={`min-w-[1024px] p-6 transition-all duration-300 ${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'}`} >
+            {renderSection()}
+          </div>
         </main>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, LogIn, User, Menu, X, Shield, LogOutIcon } from "lucide-react";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import { CustomEvent } from '@/app/types/eventType';
 import { useRouter } from "next/navigation"; // Importa el router para la redirección

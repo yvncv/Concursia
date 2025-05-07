@@ -1,14 +1,37 @@
-"use client"
-import React from 'react'
+"use client";
+import React, { useState, useEffect } from 'react';
 import AdminSideBar from './adminSideBar/AdminSideBar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className='bg-black/60'>
-            <AdminSideBar />
-            <div className="flex-1 p-6 min-h-screen bg-gray-100 overflow-y-auto md:ml-64">
-                {children}
-            </div>
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsCollapsed(true); // Colapsar en pantallas pequeñas
+    } else {
+      setIsCollapsed(false); // No colapsar en pantallas grandes
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      } else {
+        setIsCollapsed(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <AdminSideBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main className="transition-all duration-300 overflow-x-auto flex-1">
+        <div className={`min-w-[1024px] p-6 transition-all duration-300 ${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'}`} >
+          {children}
         </div>
-    );
+      </main>
+    </div>
+  );
 }

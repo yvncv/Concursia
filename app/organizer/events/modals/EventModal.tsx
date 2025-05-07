@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { CircleX, Save } from "lucide-react";
 import GeneralInfo from "../event-creation/GeneralInfo";
 import EventDates from "../event-creation/EventDates";
@@ -8,6 +8,7 @@ import DanceInfo from "../event-creation/DanceInfo";
 import EventImages from "../event-creation/EventImages";
 import { EventFormData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
+import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 interface EventModalProps {
     isOpen: boolean;
@@ -65,7 +66,68 @@ const EventModal: React.FC<EventModalProps> = ({
     isEdit = false,
     isOnlyRead = false,
 }) => {
+    const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
+
+    // Cargar datos de Ubigeo al montar el componente
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data: Ubigeo[] = await fetchUbigeoINEI();
+                setUbigeoData(data);
+            } catch (error) {
+                console.error("Error al cargar los datos de Ubigeo:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
     if (!isOpen) return null;
+
+    const {
+        latitude,
+        longitude,
+        department,
+        province,
+        district,
+        placeName,
+        street
+    } = eventData.location;
+
+    const departmentCode = String(department).padStart(2, "0");
+    const provinceCode = String(province).padStart(2, "0");
+    const districtCode = String(district).padStart(2, "0");
+
+    const departmentName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === "00" &&
+            item.distrito === "00"
+    )?.nombre ?? departmentCode;
+
+    const provinceName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === provinceCode &&
+            item.distrito === "00"
+    )?.nombre ?? provinceCode;
+
+    const districtName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === provinceCode &&
+            item.distrito === districtCode
+    )?.nombre ?? districtCode;
+
+    const locationWithNames = {
+        latitude,
+        longitude,
+        department: departmentCode,
+        province: provinceCode,
+        district: districtCode,
+        placeName,
+        street,
+        departmentName,
+        provinceName,
+        districtName
+    };
 
     const getIncompleteFields = () => {
         const { general, dates, details, location, dance, images } = eventData;
@@ -153,7 +215,7 @@ const EventModal: React.FC<EventModalProps> = ({
                     {activeTab === "general" && <GeneralInfo data={eventData.general} updateData={(data) => updateEventData('general', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "dates" && <EventDates data={eventData.dates} updateData={(data) => updateEventData('dates', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "details" && <EventDetails data={eventData.details} updateData={(data) => updateEventData('details', data)} isOnlyRead={isOnlyRead} />}
-                    {activeTab === "location" && <EventLocation data={eventData.location} updateData={(data) => updateEventData('location', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "location" && <EventLocation data={locationWithNames} updateData={(data) => updateEventData('location', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "dance" && <DanceInfo data={eventData.dance} updateData={(data) => updateEventData('dance', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "images" && <EventImages data={eventData.images} updateData={(data) => updateEventData('images', data)} isOnlyRead={isOnlyRead} />}
                 </div>

@@ -42,7 +42,7 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Botones de anterior */}
-            {showIndicators && 
+            {showIndicators &&
                 <button
                     onClick={prevSlide}
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
@@ -63,11 +63,12 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                         {imagenes.map((imagen, index) => (
                             <div key={index} className="w-full h-full flex-shrink-0 relative">
                                 {/* Fondo desenfocado */}
-                                <div className="w-full absolute inset-0 -z-10">
+                                {/* Fondo desenfocado */}
+                                <div className="absolute inset-0 -z-10">
                                     <Image
-                                        fill
                                         src={imagen}
-                                        className="w-full h-full object-fill blur-xl scale-200 brightness-75"
+                                        fill
+                                        className="object-cover w-full h-full blur-xl brightness-50 scale-125"
                                         alt={`Background ${index + 1}`}
                                         priority={index === currentIndex}
                                         loader={({ src }) => src}
@@ -75,11 +76,11 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                                 </div>
 
                                 {/* Imagen principal con efecto hover */}
-                                <div className="relative h-full transition-transform duration-500 hover:scale-105">
+                                <div className="relative w-full h-full transition-transform duration-500 hover:scale-105">
                                     <Image
-                                        fill
                                         src={imagen}
-                                        className="w-full h-full object-contain object-center"
+                                        fill
+                                        className="object-contain w-full h-full"
                                         alt={`Slide ${index + 1}`}
                                         priority={index === currentIndex}
                                         loader={({ src }) => src}
@@ -94,7 +95,7 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
             </Link>
 
             {/* Botón siguiente */}
-            {showIndicators && 
+            {showIndicators &&
                 <button
                     onClick={nextSlide}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
@@ -105,7 +106,7 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
             }
 
             {/* Indicadores */}
-            {showIndicators && 
+            {showIndicators &&
                 <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
                     {imagenes.map((_, index) => (
                         <button

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus, CheckCircle } from "lucide-react";
-import useUser from "@/app/firebase/functions";
+import useUser from "@/app/hooks/useUser";
 import EventModal from "@/app/organizer/events/modals/EventModal";
 import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
@@ -173,8 +173,8 @@ const Events: React.FC = () => {
   };
 
   return (
-      <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
+      <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen overflow-hidden">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white min-w-screen">
           Gestión de Eventos
         </h1>
         <button
@@ -195,7 +195,7 @@ const Events: React.FC = () => {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden m-4">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700">
                   <tr>
                     {["Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Tipo", "Estado", "Acciones"].map((header) => (

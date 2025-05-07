@@ -162,7 +162,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
     setSelectedAcademy(academyId); // Guardamos la academia seleccionada
     setSelectedAcademyName(academyName); // Guardamos el nombre de la academia seleccionada
   };
-  
+
   const handleCambiarPareja = () => {
     setPareja(null);
     setDniPareja('');            // si lo guardas aquí, o bien pásalo al form
@@ -177,7 +177,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
   const handleNext = () => {
     setCurrentStep((prev) => Math.min(prev + 1, 2));
   };
-  
+
   // Modificar la función handleSave para usar la nueva estructura de Ticket
   const handleSave = async () => {
     // Crear la entrada para el ticket
@@ -231,21 +231,21 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
         alert("La pareja debe ser de género opuesto al tuyo.");
         return;
       }
-  
+
       alert("Pareja encontrada");
-  
+
       const checkAgeDifference = () => {
         const ageDifference = user.birthDate.toDate().getFullYear() - pareja.birthDate.toDate().getFullYear();
         return ageDifference <= settings.pullCouple.difference;
       };
-  
+
       const checkCategoryDifference = () => {
         const userCategoryIndex = categories.indexOf(user.category);
         const parejaCategoryIndex = categories.indexOf(pareja.category);
         const categoryDifference = Math.abs(userCategoryIndex - parejaCategoryIndex);
         return categoryDifference <= settings.pullCouple.difference;
       };
-  
+
       if (user.category === pareja.category) {
         alert("Las categorías coinciden");
         handleNext();
@@ -272,7 +272,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
       handleSave();
     }
   };
-  
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
@@ -318,16 +318,14 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
         )}
 
         {/* Botones de navegación */}
-        <div className="flex justify-between mt-6">
-          {currentStep > 0 && (
+        {currentStep == 1 && (
+          <div className="flex justify-between mt-6">
             <button
               onClick={() => setCurrentStep(s => s - 1)}
               className="px-6 py-2 bg-gray-200 rounded-lg"
             >
               Anterior
             </button>
-          )}
-          {currentStep < 2 && (
             <button
               disabled={!canProceed}
               onClick={handleNextAndSave}
@@ -336,12 +334,12 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
                 : 'bg-gray-400 cursor-not-allowed'
                 }`}
             >
-              {currentStep === 1 ? 'Guardar Inscripción' : 'Siguiente'}
+              Guardar Inscripción
             </button>
-          )}
-          
-        </div>
-        
+          </div>
+        )}
+
+
       </div>
     </div>
   );
