@@ -113,91 +113,94 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-hidden">
-        {/* Tarjeta de Usuarios */}
-        <div className="bg-white/80 p-4 shadow-md rounded-lg">
-          <h2 className="text-lg font-semibold">Usuarios</h2>
-          {loadingUsers ? (
-            <p>Cargando...</p>
-          ) : (
-            <p className="text-2xl font-bold">{users.length}</p>
-          )}
+      <section id="info-cards" className="">
+        <div className="flex flex-row">
+          {/* Tarjeta de Usuarios */}
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h2 className="text-lg font-semibold">Usuarios</h2>
+            {loadingUsers ? (
+              <p>Cargando...</p>
+            ) : (
+              <p className="text-2xl font-bold">{users.length}</p>
+            )}
+          </div>
+
+          {/* Tarjeta de Academias */}
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h2 className="text-lg font-semibold">Academias</h2>
+            {loadingAcademies ? (
+              <p>Cargando...</p>
+            ) : errorAcademies ? (
+              <p className="text-red-500">Error: {errorAcademies}</p>
+            ) : (
+              <p className="text-2xl font-bold">{academies.length}</p>
+            )}
+          </div>
+
+          {/* Tarjeta de Eventos Activos */}
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h2 className="text-lg font-semibold">Eventos Activos</h2>
+            {loadingEvents ? (
+              <p>Cargando...</p>
+            ) : (
+              <p className="text-2xl font-bold">{eventosActivos.length}</p>
+            )}
+          </div>
+
+          {/* Tarjeta Total de Eventos */}
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h2 className="text-lg font-semibold">Total de Eventos</h2>
+            <p className="text-2xl font-bold">{totalEventos}</p>
+          </div>
         </div>
 
-        {/* Tarjeta de Academias */}
-        <div className="bg-white p-4 shadow-md rounded-lg">
-          <h2 className="text-lg font-semibold">Academias</h2>
-          {loadingAcademies ? (
-            <p>Cargando...</p>
-          ) : errorAcademies ? (
-            <p className="text-red-500">Error: {errorAcademies}</p>
-          ) : (
-            <p className="text-2xl font-bold">{academies.length}</p>
-          )}
-        </div>
-
-        {/* Tarjeta de Eventos Activos */}
-        <div className="bg-white p-4 shadow-md rounded-lg">
-          <h2 className="text-lg font-semibold">Eventos Activos</h2>
-          {loadingEvents ? (
-            <p>Cargando...</p>
-          ) : (
-            <p className="text-2xl font-bold">{eventosActivos.length}</p>
-          )}
-        </div>
-
-        {/* Tarjeta Total de Eventos */}
-        <div className="bg-white p-4 shadow-md rounded-lg">
-          <h2 className="text-lg font-semibold">Total de Eventos</h2>
-          <p className="text-2xl font-bold">{totalEventos}</p>
-        </div>
-      </div>
+      </section>
 
       {/* Gráficos */}
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="mt-8 ">
         {/* Gráfico de Barras */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Barras)</h3>
-          <Bar data={userData} options={{ responsive: true }} />
+          <Bar data={userData} />
         </div>
 
         {/* Gráfico de Pastel */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Pastel)</h3>
-          <Pie data={pieData} options={{ responsive: true }} />
+          <Pie data={pieData} />
         </div>
 
         {/* Gráfico de Líneas */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Eventos Activos (Líneas)</h3>
-          <Line data={lineData} options={{ responsive: true }} />
+          <Line data={lineData} />
         </div>
 
         {/* Gráfico Radar */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Radar)</h3>
-          <Radar data={radarData} options={{ responsive: true }} />
+          <Radar data={radarData} />
         </div>
 
         {/* Gráfico Doughnut */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Doughnut)</h3>
-          <Doughnut data={doughnutData} options={{ responsive: true }} />
+          <Doughnut data={doughnutData} />
         </div>
 
         {/* Gráfico de Polar Area */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Polar Area)</h3>
-          <PolarArea data={polarAreaData} options={{ responsive: true }} />
+          <PolarArea data={polarAreaData} />
         </div>
 
         {/* Gráfico de Burbuja */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Usuarios vs Eventos Activos (Burbuja)</h3>
-          <Bubble data={bubbleData} options={{ responsive: true }} />
+          <Bubble data={bubbleData} />
         </div>
       </div>
     </div>

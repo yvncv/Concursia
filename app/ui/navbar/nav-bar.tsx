@@ -183,7 +183,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       >
                         {enlace.label}
                       </Link>
-                      <span className="group-hover:w-full group-hover:opacity-100 opacity-0 duration-300 transition-all ease-in-out absolute bottom-0 left-0 w-[2px] h-[2px] bg-gray-600"></span>
+                      <span className="group-hover:w-full group-hover:opacity-100 opacity-0 duration-300 transition-all ease-in-out absolute bottom-0 left-0 w-[2px] h-[2px] bg-red-700"></span>
                     </div>
                   )}
                 </li>
@@ -211,46 +211,16 @@ export default function Navbar({ brandName }: { brandName: string }) {
         {isMenuOpen && (
           <div className="md:hidden bg-white shadow-md">
             <ul className="space-y-4 px-4 pb-4 pt-2">
-              <li>
-                <Link
-                  href="/calendario"
-                  className="text-gray-600 hover:text-red-700 block"
-                >
-                  Calendario de Eventos
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#eventos"
-                  className="text-gray-600 hover:text-red-700 block"
-                >
-                  Eventos Recientes
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#galeria"
-                  className="text-gray-600 hover:text-red-700 block"
-                >
-                  Galería
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#acerca"
-                  className="text-gray-600 hover:text-red-700 block"
-                >
-                  Acerca de
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#contacto"
-                  className="text-gray-600 hover:text-red-700 block"
-                >
-                  Contacto
-                </Link>
-              </li>
+              {enlaces_landing.map((enlace, index) => (
+                <li key={index}>
+                  <Link
+                    href={enlace.href}
+                    className="text-gray-600 hover:text-red-700 block"
+                  >
+                    {enlace.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         )}
@@ -274,7 +244,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Search Bar */}
-          <div className="relative hidden w-full max-w-sm lg:block">
+          <div className="relative hidden w-full max-w-sm md:block">
             <input
               type="search"
               placeholder="Buscar eventos..."
@@ -304,7 +274,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             <nav>
               <ul className="flex space-x-4">
                 {filteredLinks.map((link) => (
@@ -348,7 +318,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-red-700 hover:text-gray-200 focus:outline-none"
@@ -365,7 +335,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <ul className="space-y-4 px-2 pb-4 pt-2">
               {filteredLinks.map((link) => {
                 const isActive = pathname.includes(link.href);
@@ -397,11 +367,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex items-center space-x-3 p-2 rounded-lg text-red-700 hover:text-gray-200 transition-colors duration-200 
+                        className={`flex items-center space-x-3 p-2 rounded-lg hover:text-black text-red-700 transition-colors duration-200 
                       ${
                         isActive
-                          ? "bg-red-100 text-red-700 font-bold"
-                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ? "bg-red-100 text-red-700 font-bold "
+                          : "hover:bg-gray-100  text-red-700 "
                       }`}
                         onClick={handleClick} // Use the same click handler for other links
                       >

@@ -62,7 +62,7 @@ export default function TodosEventos() {
           <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
               {activeEvents.length > 0 ? (
                   <div
-                      className="w-[90%] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
+                      className="w-[90%] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
                     {activeEvents.map((event) => (
                         <div
                             key={event.id}
