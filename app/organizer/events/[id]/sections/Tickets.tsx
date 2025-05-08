@@ -4,27 +4,296 @@ import useTicket from "@/app/hooks/useTicket";
 import useUsers from "@/app/hooks/useUsers";
 import { Ticket, TicketEntry } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
-import { Academy } from "@/app/types/academyType";
 import {
-  ChevronRight,
-  CircleX,
-  Eye,
-  ListRestart,
   Search,
-  Trash2,
   Filter,
+  Eye,
+  Trash2,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Users,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  ListRestart,
+  Trophy,
+  School,
+  UserCircle,
+  CreditCard,
+  Calendar,
 } from "lucide-react";
 import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
 import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
 import FilterModal, { FilterOptions } from "@/app/organizer/events/[id]/sections/ticketsModules/modals/FilterModal";
-import { collection, getDoc, getDocs, doc } from "firebase/firestore";
-import { db } from '@/app/firebase/config';
 import useAcademies from "@/app/hooks/useAcademies";
-
 
 interface TicketsProps {
   event: CustomEvent;
 }
+
+interface TicketCardProps {
+  ticket: Ticket;
+  ticketUsers: Record<string, User>;
+  academyNames: Record<string, string>;
+  onView: () => void;
+  onDelete: () => void;
+  onConfirm: () => void;
+}
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || i >= currentPage - delta && i <= currentPage + delta) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-6">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className={`p-2 rounded-lg transition-colors ${
+          currentPage === 1
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      {getPageNumbers().map((number, index) => (
+        <React.Fragment key={index}>
+          {number === '...' ? (
+            <span className="px-3 py-2 text-gray-500">...</span>
+          ) : (
+            <button
+              onClick={() => onPageChange(number as number)}
+              className={`min-w-[40px] h-10 rounded-lg transition-colors ${
+                currentPage === number
+                  ? 'bg-blue-600 text-white font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {number}
+            </button>
+          )}
+        </React.Fragment>
+      ))}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className={`p-2 rounded-lg transition-colors ${
+          currentPage === totalPages
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+    </div>
+  );
+};
+
+const TicketCard: React.FC<TicketCardProps> = ({
+  ticket,
+  ticketUsers,
+  academyNames,
+  onView,
+  onDelete,
+  onConfirm,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pagado':
+        return 'text-green-600 bg-green-100';
+      case 'Pendiente':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'Anulado':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getInscriptionTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Individual':
+        return <UserCircle className="w-4 h-4" />;
+      case 'Grupal':
+        return <Users className="w-4 h-4" />;
+      case 'Presencial':
+        return <UserCircle className="w-4 h-4" />;
+      default:
+        return <UserCircle className="w-4 h-4" />;
+    }
+  };
+
+  const renderUserInfo = (userId: string) => {
+    const user = ticketUsers[userId];
+    if (!user) return <span className="text-gray-500">Usuario no encontrado</span>;
+
+    return (
+      <div className="flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+        <span className="text-sm">{user.dni} - {user.firstName} {user.lastName}</span>
+      </div>
+    );
+  };
+
+  const renderEntry = (entry: TicketEntry, index: number) => (
+    <div key={index} className="bg-gray-50 rounded-lg p-4 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Trophy className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Modalidad y Categoría</span>
+          </div>
+          <p className="text-sm"><span className="font-medium">{entry.level}</span> - {entry.category}</p>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <School className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Academia(s)</span>
+          </div>
+          <div className="text-sm">
+            {entry.academiesId && entry.academiesId.length > 0 ? (
+              entry.academiesId.map((academyId, idx) => (
+                <div key={idx}>
+                  {academyNames[academyId] || "Academia no encontrada"}
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-500">Sin academia</span>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Participante(s)</span>
+          </div>
+          <div className="space-y-1">
+            {entry.usersId.map((userId) => (
+              <div key={userId}>
+                {renderUserInfo(userId)}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              {expanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm text-gray-600">#{ticket.id.slice(0, 8)}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                  {ticket.status}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 mt-1">
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  {getInscriptionTypeIcon(ticket.inscriptionType)}
+                  <span>{ticket.inscriptionType}</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span>{ticket.registrationDate.toDate().toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="font-medium">S/ {ticket.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onView}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Ver detalles"
+            >
+              <Eye className="w-5 h-5" />
+            </button>
+            {ticket.status === 'Pendiente' && (
+              <button
+                onClick={onConfirm}
+                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                title="Confirmar ticket"
+              >
+                <CheckCircle className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={onDelete}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Eliminar ticket"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Expandable Content */}
+      {expanded && (
+        <div className="p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Inscripciones:</h3>
+          {ticket.entries.map((entry, index) => renderEntry(entry, index))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Tickets: React.FC<TicketsProps> = ({ event }) => {
   const { tickets, loading, error, fetchTickets } = useTicket(event.id);
@@ -41,8 +310,11 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
   const [dniInput, setDniInput] = useState<string>("");
   const [tableLoading, setTableLoading] = useState(false);
   const [ticketUsers, setTicketUsers] = useState<Record<string, Record<string, User>>>({});
-  
-  // Estado para los filtros disponibles
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [ticketsPerPage] = useState(10); // You can adjust this number
+
   const [availableFilters, setAvailableFilters] = useState({
     modalities: [] as string[],
     categories: [] as string[],
@@ -52,24 +324,28 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
   useEffect(() => {
     if (tickets.length && academies.length) {
       setFilteredTickets(tickets);
-  
+
       const academyNameMap: Record<string, string> = {};
       academies.forEach((academy) => {
         academyNameMap[academy.id] = academy.name;
       });
-  
+
       setAcademyNames(academyNameMap);
       loadAllUsers();
     }
   }, [tickets, academies]);
 
-  // Load all users and academies for tickets
+  // Reset to first page when filtered tickets change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredTickets]);
+
   const loadAllUsers = async () => {
     const usersMap: Record<string, Record<string, User>> = {};
-  
+
     for (const ticket of tickets) {
       usersMap[ticket.id] = {};
-  
+
       for (const entry of ticket.entries) {
         for (const userId of entry.usersId) {
           const user = await getUserById(userId);
@@ -79,30 +355,25 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         }
       }
     }
-  
+
     setTicketUsers(usersMap);
     extractFilterValues(tickets, academyNames, usersMap);
   };
 
-  // Extract unique filter values from tickets
   const extractFilterValues = (
-    ticketsList: Ticket[], 
+    ticketsList: Ticket[],
     academyNamesMap: Record<string, string>,
     usersMap: Record<string, Record<string, User>>
   ) => {
     const modalities = new Set<string>();
     const categories = new Set<string>();
     const academies = new Set<string>();
-    
+
     ticketsList.forEach(ticket => {
       ticket.entries.forEach(entry => {
-        // Add modality (level)
         if (entry.level) modalities.add(entry.level);
-        
-        // Add category
         if (entry.category) categories.add(entry.category);
-        
-        // Add academy names
+
         if (entry.academiesId && entry.academiesId.length > 0) {
           entry.academiesId.forEach(id => {
             if (academyNamesMap[id]) academies.add(academyNamesMap[id]);
@@ -110,7 +381,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         }
       });
     });
-    
+
     setAvailableFilters({
       modalities: Array.from(modalities),
       categories: Array.from(categories),
@@ -146,9 +417,8 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     }
 
     setTableLoading(true);
-    
+
     if (!dniClean) {
-      // If DNI search is empty, show all tickets
       setFilteredTickets(tickets);
       setTableLoading(false);
       return;
@@ -156,9 +426,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
     const results = tickets.filter(ticket => {
       const ticketUserMap = ticketUsers[ticket.id] || {};
-      
-      // Check if any user in this ticket has a matching DNI
-      return Object.values(ticketUserMap).some(user => 
+      return Object.values(ticketUserMap).some(user =>
         user.dni.includes(dniClean)
       );
     });
@@ -190,262 +458,286 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     fetchTickets();
   };
 
-  // Función para aplicar los filtros seleccionados
   const applyFilters = (filterOptions: FilterOptions) => {
     const { modalities, categories, academies } = filterOptions;
-    
+
     if (!modalities.length && !categories.length && !academies.length) {
-      // Si no hay filtros seleccionados, mostrar todos los tickets
       setFilteredTickets(tickets);
       return;
     }
-    
+
     const filtered = tickets.filter(ticket => {
       return ticket.entries.some(entry => {
         const modalityMatch = modalities.length === 0 || modalities.includes(entry.level);
         const categoryMatch = categories.length === 0 || categories.includes(entry.category);
-        
-        // Check if any of the academies match the selected filter academy names
+
         const academyMatch = academies.length === 0 || (entry.academiesId && entry.academiesId.some(academyId => {
           const academyName = academyNames[academyId];
           return academyName && academies.includes(academyName);
         }));
-        
+
         return modalityMatch && categoryMatch && academyMatch;
       });
     });
-    
+
     setFilteredTickets(filtered);
   };
 
-  const renderParticipantsByGender = (entry: TicketEntry, ticketId: string) => {
-    const maleUsers: User[] = [];
-    const femaleUsers: User[] = [];
-    
-    // Group users by gender
-    entry.usersId.forEach(userId => {
-      const user = ticketUsers[ticketId]?.[userId];
-      if (user) {
-        if (user.gender === 'Masculino') {
-          maleUsers.push(user);
-        } else if (user.gender === 'Femenino') {
-          femaleUsers.push(user);
-        }
-      }
-    });
-    
-    return (
-      <div className="flex flex-col gap-1">
-        {maleUsers.length > 0 && (
-          <div>
-            <span className="font-semibold">Varón: </span>
-            {maleUsers.map((user, idx) => (
-              <span key={user.id}>
-                {user.dni} - {user.firstName} {user.lastName}
-                {idx < maleUsers.length - 1 ? ', ' : ''}
-              </span>
-            ))}
-          </div>
-        )}
-        
-        {femaleUsers.length > 0 && (
-          <div>
-            <span className="font-semibold">Mujer: </span>
-            {femaleUsers.map((user, idx) => (
-              <span key={user.id}>
-                {user.dni} - {user.firstName} {user.lastName}
-                {idx < femaleUsers.length - 1 ? ', ' : ''}
-              </span>
-            ))}
-          </div>
-        )}
-        
-        {maleUsers.length === 0 && femaleUsers.length === 0 && (
-          <div>No hay información disponible</div>
-        )}
-      </div>
-    );
+  // Pagination calculations
+  const indexOfLastTicket = currentPage * ticketsPerPage;
+  const indexOfFirstTicket = indexOfLastTicket - ticketsPerPage;
+  const currentTickets = filteredTickets.slice(indexOfFirstTicket, indexOfLastTicket);
+  const totalPages = Math.ceil(filteredTickets.length / ticketsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
   };
 
-  const headers = [
-    "ID",
-    "Participante(s)",
-    "Modalidad",
-    "Categoría",
-    "Academia",
-    "Fecha de Registro",
-    "Precio",
-    "Estado",
-    "Acciones",
-  ];
+  // Statistics
+  const stats = {
+    total: filteredTickets.length,
+    pending: filteredTickets.filter(t => t.status === 'Pendiente').length,
+    paid: filteredTickets.filter(t => t.status === 'Pagado').length,
+    canceled: filteredTickets.filter(t => t.status === 'Anulado').length,
+    totalAmount: filteredTickets.reduce((sum, t) => sum + t.totalAmount, 0),
+  };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-extrabold mb-4">Tickets del Evento</h1>
-      <section className="w-full flex justify-between items-center h-10 mb-4 gap-x-2">
-        <form
-          className="h-full w-3/4 relative"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            await handleSearchEventByDNI(dniInput);
-          }}
-        >
-          <input
-            className="h-full px-4 w-full rounded-lg border-2 border-gray-700 focus:outline-none"
-            placeholder="Buscar por dni..."
-            value={dniInput}
-            onChange={(e) => setDniInput(e.target.value)}
-            type="text"
-          />
-          <Search className="absolute top-1/2 -translate-y-1/2 right-4" />
-        </form>
-        <button
-          title="Limpiar filtro de dni"
-          onClick={async () => {
-            setDniInput("");
-            await handleSearchEventByDNI("");
-          }}
-          className="px-4 h-full bg-white w-20 border-2 border-gray-700 rounded-lg text-black flex justify-center items-center gap-x-2"
-        >
-          <ListRestart size={16} />
-        </button>
-        
-        <button
-          onClick={() => setIsFilterMenuOpen(true)}
-          className="px-4 h-full bg-blue-600 hover:bg-blue-700 transition-colors w-1/4 border-0 rounded-lg text-white flex justify-center items-center gap-x-2"
-        >
-          <Filter size={16} />
-          <span>Filtrar Tickets</span>
-        </button>
-      </section>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Gestión de Tickets</h1>
 
-      <div className="overflow-x-auto rounded-lg p-4 bg-white shadow-md">
-        <table className="w-full border-collapse shadow-md rounded-lg">
-          <thead className="bg-gray-100">
-            <tr>
-              {headers.map((header) => (
-                <th
-                  key={header}
-                  className="px-4 py-3 text-left text-sm font-medium text-black uppercase tracking-wider border-b"
-                >
-                  {header}
-                </th>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Tickets</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+              <div className="p-3 bg-gray-100 rounded-full">
+                <Users className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pendientes</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-full">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pagados</p>
+                <p className="text-2xl font-bold text-green-600">{stats.paid}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Anulados</p>
+                <p className="text-2xl font-bold text-red-600">{stats.canceled}</p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-full">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total S/</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.totalAmount.toFixed(2)}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
+                <CreditCard className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Buscar por DNI..."
+                value={dniInput}
+                onChange={(e) => setDniInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearchEventByDNI(dniInput)}
+                className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </div>
+
+            <button
+              onClick={() => {
+                setDniInput("");
+                handleSearchEventByDNI("");
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <ListRestart className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => setIsFilterMenuOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Filter className="w-5 h-5" />
+              Filtrar
+            </button>
+          </div>
+        </div>
+
+        {/* Tickets List */}
+        <div className="space-y-4">
+          {tableLoading ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando tickets...</p>
+            </div>
+          ) : currentTickets.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <p className="text-gray-600">No se encontraron tickets</p>
+            </div>
+          ) : (
+            <>
+              {currentTickets.map((ticket) => (
+                <TicketCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  ticketUsers={ticketUsers[ticket.id] || {}}
+                  academyNames={academyNames}
+                  onView={() => openModal(ticket)}
+                  onDelete={() => handleDeleteTicket(ticket)}
+                  onConfirm={() => handleConfirmTicket(ticket)}
+                />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {!tableLoading ? (
-              filteredTickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td className="px-4 py-3 border-b">{ticket.id}</td>
-                  <td className="px-4 py-3 border-b">
-                    {ticket.entries.map((entry, i) => (
-                      <div key={i} className="mb-1">
-                        {renderParticipantsByGender(entry, ticket.id)}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="px-4 py-3 border-b">
-                    {ticket.entries.map((entry, i) => (
-                      <div key={i}>{entry.level}</div>
-                    ))}
-                  </td>
-                  <td className="px-4 py-3 border-b">
-                    {ticket.entries.map((entry, i) => (
-                      <div key={i}>{entry.category}</div>
-                    ))}
-                  </td>
-                  <td className="px-4 py-3 border-b">
-                    {ticket.entries.map((entry, i) => (
-                      <div key={i}>
-                        {entry.academiesId && entry.academiesId.length > 0 
-                          ? entry.academiesId.map((academyId, idx) => (
-                              <span key={idx}>
-                                {academyNames[academyId] || "Academia no encontrada"}
-                                {idx < entry.academiesId.length - 1 ? ", " : ""}
-                              </span>
-                            ))
-                          : "Sin academia"
-                        }
-                      </div>
-                    ))}
-                  </td>
-                  <td className="px-4 py-3 border-b">
-                    {ticket.registrationDate.toDate().toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 border-b">
-                    S/ {ticket.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 border-b">{ticket.status}</td>
-                  <td className="px-4 py-3 border-b">
-                    <div className="flex justify-around">
-                      <Eye
-                        size={20}
-                        className="text-blue-500 hover:cursor-pointer"
-                        onClick={() => openModal(ticket)}
-                      />
-                      <Trash2
-                        size={20}
-                        className="text-red-500 hover:cursor-pointer"
-                        onClick={() => handleDeleteTicket(ticket)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={headers.length} className="text-center py-4">
-                  Cargando tickets...
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              
+              {/* Pagination Information */}
+              <div className="text-center text-sm text-gray-600 mt-4">
+                Mostrando {indexOfFirstTicket + 1} - {Math.min(indexOfLastTicket, filteredTickets.length)} de {filteredTickets.length} tickets
+              </div>
+
+              {/* Pagination Component */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Detail Modal */}
       {isModalOpen && selectedTicket && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Detalles del Ticket</h2>
+              <h2 className="text-xl font-bold">Detalles del Ticket #{selectedTicket.id.slice(0, 8)}</h2>
               <button onClick={closeModal} className="text-gray-500 hover:text-red-600">
-                <CircleX size={32} />
+                <XCircle className="w-6 h-6" />
               </button>
             </div>
             <div className="space-y-4">
-              {selectedTicket.entries.map((entry, i) => (
-                <div key={i} className="border-t pt-4">
-                  <p><strong>Modalidad:</strong> {entry.level}</p>
-                  <p><strong>Categoría:</strong> {entry.category}</p>
-                  <p><strong>Academia(s):</strong> {
-                    entry.academiesId && entry.academiesId.length > 0
-                      ? entry.academiesId.map(id => academyNames[id] || "Academia no encontrada").join(", ")
-                      : "Sin academia"
-                  }</p>
-                  <p><strong>Participantes:</strong></p>
-                  <div className="ml-6 mt-2">
-                    {renderParticipantsByGender(entry, selectedTicket.id)}
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Estado</p>
+                  <p className={`font-medium ${selectedTicket.status === 'Pagado' ? 'text-green-600' :
+                      selectedTicket.status === 'Pendiente' ? 'text-yellow-600' :
+                        'text-red-600'
+                    }`}>{selectedTicket.status}</p>
                 </div>
-              ))}
-              <p><strong>Fecha de Registro:</strong> {selectedTicket.registrationDate.toDate().toLocaleString()}</p>
-              <p><strong>Fecha de Pago:</strong> {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleString() : 'No disponible'}</p>
-              <p><strong>Estado:</strong> {selectedTicket.status}</p>
-              <p><strong>Total a pagar:</strong> S/ {selectedTicket.totalAmount.toFixed(2)}</p>
+                <div>
+                  <p className="text-sm text-gray-600">Tipo de Inscripción</p>
+                  <p className="font-medium">{selectedTicket.inscriptionType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Fecha de Registro</p>
+                  <p className="font-medium">{selectedTicket.registrationDate.toDate().toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Fecha de Pago</p>
+                  <p className="font-medium">
+                    {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleString() : 'No disponible'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total a Pagar</p>
+                  <p className="font-medium text-lg">S/ {selectedTicket.totalAmount.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-3">Inscripciones</h3>
+                {selectedTicket.entries.map((entry, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-4 mb-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Modalidad - Categoría</p>
+                        <p className="font-medium">{entry.level} - {entry.category}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Academia(s)</p>
+                        <div>
+                          {entry.academiesId && entry.academiesId.length > 0
+                            ? entry.academiesId.map(id => academyNames[id] || "Academia no encontrada").join(", ")
+                            : "Sin academia"
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Participantes</p>
+                        <div className="space-y-1">
+                          {entry.usersId.map((userId) => {
+                            const user = ticketUsers[selectedTicket.id]?.[userId];
+                            return user ? (
+                              <div key={userId} className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+                                <span className="text-sm">{user.dni} - {user.firstName} {user.lastName}</span>
+                              </div>
+                            ) : (
+                              <span key={userId} className="text-sm text-gray-500">Usuario no encontrado</span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {selectedTicket.status === "Pendiente" && (
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-6">
                   <button
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
                     onClick={() => handleConfirmTicket(selectedTicket)}
                   >
-                    Confirmar
+                    Confirmar Pago
                   </button>
                   <button
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
                     onClick={() => handleDeleteTicket(selectedTicket)}
                   >
-                    Eliminar
+                    Eliminar Ticket
                   </button>
                 </div>
               )}
