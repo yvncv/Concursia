@@ -3,8 +3,29 @@ import React from "react";
 import useUsers from "@/app/hooks/useUsers";
 import useAcademies from "@/app/hooks/useAcademies";
 import useEvents from "@/app/hooks/useEvents";
-import { Bar, Pie, Line, Radar, Doughnut, PolarArea, Bubble } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, Filler, RadialLinearScale } from "chart.js";
+import {
+  Bar,
+  Pie,
+  Line,
+  Radar,
+  Doughnut,
+  PolarArea,
+  Bubble,
+} from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Filler,
+  RadialLinearScale,
+} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -25,7 +46,9 @@ const Dashboard: React.FC = () => {
   const { academies, loadingAcademies, errorAcademies } = useAcademies();
   const { events, loadingEvents } = useEvents();
 
-  const eventosActivos = events.filter((evento) => evento.status === "en curso");
+  const eventosActivos = events.filter(
+    (evento) => evento.status === "en curso"
+  );
   const totalEventos = events.length;
 
   const userData = {
@@ -33,7 +56,12 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: "Datos",
-        data: [users.length, academies.length, eventosActivos.length, totalEventos],
+        data: [
+          users.length,
+          academies.length,
+          eventosActivos.length,
+          totalEventos,
+        ],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -44,7 +72,12 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academies.length, eventosActivos.length, totalEventos],
+        data: [
+          users.length,
+          academies.length,
+          eventosActivos.length,
+          totalEventos,
+        ],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -69,7 +102,12 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: "Datos",
-        data: [users.length, academies.length, eventosActivos.length, totalEventos],
+        data: [
+          users.length,
+          academies.length,
+          eventosActivos.length,
+          totalEventos,
+        ],
         backgroundColor: "rgba(255, 99, 132, 0.2)",
         borderColor: "#FF6384",
         borderWidth: 1,
@@ -81,7 +119,12 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academies.length, eventosActivos.length, totalEventos],
+        data: [
+          users.length,
+          academies.length,
+          eventosActivos.length,
+          totalEventos,
+        ],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -92,7 +135,12 @@ const Dashboard: React.FC = () => {
     labels: ["Usuarios", "Academias", "Eventos Activos", "Total de Eventos"],
     datasets: [
       {
-        data: [users.length, academies.length, eventosActivos.length, totalEventos],
+        data: [
+          users.length,
+          academies.length,
+          eventosActivos.length,
+          totalEventos,
+        ],
         backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
         hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
       },
@@ -156,20 +204,23 @@ const Dashboard: React.FC = () => {
             <p className="text-2xl font-bold">{totalEventos}</p>
           </div>
         </div>
-
       </section>
 
       {/* Gráficos */}
       <div className="mt-8 ">
         {/* Gráfico de Barras */}
         <div className="bg-white p-4 shadow-md rounded-lg">
-          <h3 className="text-lg font-semibold">Datos por Categoría (Barras)</h3>
+          <h3 className="text-lg font-semibold">
+            Datos por Categoría (Barras)
+          </h3>
           <Bar data={userData} />
         </div>
 
         {/* Gráfico de Pastel */}
         <div className="bg-white p-4 shadow-md rounded-lg">
-          <h3 className="text-lg font-semibold">Datos por Categoría (Pastel)</h3>
+          <h3 className="text-lg font-semibold">
+            Datos por Categoría (Pastel)
+          </h3>
           <Pie data={pieData} />
         </div>
 
@@ -187,19 +238,25 @@ const Dashboard: React.FC = () => {
 
         {/* Gráfico Doughnut */}
         <div className="bg-white p-4 shadow-md rounded-lg">
-          <h3 className="text-lg font-semibold">Datos por Categoría (Doughnut)</h3>
+          <h3 className="text-lg font-semibold">
+            Datos por Categoría (Doughnut)
+          </h3>
           <Doughnut data={doughnutData} />
         </div>
 
         {/* Gráfico de Polar Area */}
         <div className="bg-white p-4 shadow-md rounded-lg">
-          <h3 className="text-lg font-semibold">Datos por Categoría (Polar Area)</h3>
+          <h3 className="text-lg font-semibold">
+            Datos por Categoría (Polar Area)
+          </h3>
           <PolarArea data={polarAreaData} />
         </div>
 
         {/* Gráfico de Burbuja */}
         <div className="bg-white p-4 shadow-md rounded-lg">
-          <h3 className="text-lg font-semibold">Usuarios vs Eventos Activos (Burbuja)</h3>
+          <h3 className="text-lg font-semibold">
+            Usuarios vs Eventos Activos (Burbuja)
+          </h3>
           <Bubble data={bubbleData} />
         </div>
       </div>
