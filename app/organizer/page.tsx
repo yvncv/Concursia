@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
       <section id="info-cards" className="">
-        <div className="flex flex-row">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-x-4">
           {/* Tarjeta de Usuarios */}
           <div className="bg-white p-4 shadow-md rounded-lg">
             <h2 className="text-lg font-semibold">Usuarios</h2>
@@ -207,13 +207,13 @@ const Dashboard: React.FC = () => {
       </section>
 
       {/* Gráficos */}
-      <div className="mt-8 ">
+      <div className="mt-8 grid  grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-x-4">
         {/* Gráfico de Barras */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">
             Datos por Categoría (Barras)
           </h3>
-          <Bar data={userData} />
+          <Bar data={userData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico de Pastel */}
@@ -221,19 +221,19 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-semibold">
             Datos por Categoría (Pastel)
           </h3>
-          <Pie data={pieData} />
+          <Pie data={pieData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico de Líneas */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Eventos Activos (Líneas)</h3>
-          <Line data={lineData} />
+          <Line data={lineData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico Radar */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">Datos por Categoría (Radar)</h3>
-          <Radar data={radarData} />
+          <Radar data={radarData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico Doughnut */}
@@ -241,7 +241,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-semibold">
             Datos por Categoría (Doughnut)
           </h3>
-          <Doughnut data={doughnutData} />
+          <Doughnut data={doughnutData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico de Polar Area */}
@@ -249,7 +249,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-semibold">
             Datos por Categoría (Polar Area)
           </h3>
-          <PolarArea data={polarAreaData} />
+          <PolarArea data={polarAreaData} options={{ responsive: true }} />
         </div>
 
         {/* Gráfico de Burbuja */}
@@ -257,7 +257,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-semibold">
             Usuarios vs Eventos Activos (Burbuja)
           </h3>
-          <Bubble data={bubbleData} />
+          <Bubble data={bubbleData} options={{ responsive: true }} />
         </div>
       </div>
     </div>

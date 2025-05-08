@@ -1,9 +1,13 @@
 "use client";
-import { usePathname } from 'next/navigation';
-import OrganizerSideBar from './organizerSideBar/OrganizerSideBar';
-import { useState, useEffect } from 'react';
+import { usePathname } from "next/navigation";
+import OrganizerSideBar from "./organizerSideBar/OrganizerSideBar";
+import { useState, useEffect } from "react";
 
-export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
+export default function OrganizerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -23,8 +27,8 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Excluir layout en rutas específicas (como detalle de eventos)
@@ -34,9 +38,16 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <OrganizerSideBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <OrganizerSideBar
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+      />
       <main className="transition-all duration-300 overflow-x-auto flex-1">
-        <div className={`min-w-[1024px] p-6 transition-all duration-300 ${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'}`} >
+        <div
+          className={`p-6 transition-all duration-300 ${
+            isCollapsed ? "w-[calc(100vw-4rem)]" : "w-[calc(100vw-16rem)]"
+          }`}
+        >
           {children}
         </div>
       </main>
