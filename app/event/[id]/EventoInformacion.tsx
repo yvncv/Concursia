@@ -273,6 +273,38 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             )}
                         </div>
                     </div>
+                    <div className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
+                        {/* Título */}
+                        <div className="flex items-center space-x-3">
+                            <Coins className="text-yellow-600 w-6 h-6" />
+                            <span className="text-md md:text-base font-medium text-gray-800">Precios por entrada:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+                                Object.entries(event.settings.levels).map(([levelName, levelData]) => (
+                                    <span
+                                        key={levelName}
+                                        className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
+                                    >
+                                        {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-sm md:text-base text-gray-500">Sin niveles definidos.</span>
+                            )}
+                        </div>
+                        {/* Botones de acción - condicionalmente renderizados */}
+                        <div className="mt-4 flex flex-col gap-3">
+                            {/* {canRegister && ( */}
+                                <button
+                                    onClick={() => alert('Hola')}
+                                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-green-600 hover:to-green-700 active:scale-95"
+                                >
+                                    Comprar mi entrada
+                                </button>
+                            {/* )} */}
+                        </div>
+                    </div>
 
                     {/* Sección del Mapa */}
                     <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-lg">

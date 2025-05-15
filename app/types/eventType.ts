@@ -65,6 +65,29 @@ export interface EventFormData {
   images: ImagesData;
 }
 
+// Define el tipo de datos para la configuración de inscripción
+export interface RegistrationSettings {
+    grupalCSV: boolean
+    individualWeb: boolean
+    sameDay: boolean
+}
+
+// Define el tipo de datos para la configuración de "jalar pareja"
+export interface PullCoupleSettings {
+    enabled: boolean
+    criteria: "Category" | "Age"
+    difference: number
+}
+
+// Define el tipo principal para todas las configuraciones del evento
+export interface EventSettings {
+    eventId: string // ID del evento al que pertenece la configuración
+    registration: RegistrationSettings
+    pullCouple: PullCoupleSettings
+    // Aquí puedes seguir agregando más configuraciones en el futuro
+}
+
+
 // Interfaz para el evento en Firestore
 export interface CustomEvent {
   id: string;
@@ -74,7 +97,11 @@ export interface CustomEvent {
   endDate: Timestamp; // Timestamp de Firestore
   academyId: string | undefined;
   academyName: string;
-  organizerId: string;
+  organizerId: string; // ID del organizador legal
+  staff?:{
+    userId: string;
+    userStaffType: string[]; // "inscripciones" | "presencia" | "logistica" | "recaudo";
+  }[];
   smallImage: string;
   bannerImage: string;
   location: {
@@ -98,7 +125,7 @@ export interface CustomEvent {
     };
     registrationType: string[]; 
   };
-  createdBy: string;
+  createdBy: string; // ID del organizador o staff que creo el evento
   lastUpdatedBy: string;
   createdAt: Timestamp; // Timestamp de Firestore
   updatedAt: Timestamp; // Timestamp de Firestore
