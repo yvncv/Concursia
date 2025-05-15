@@ -74,11 +74,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-lg transition-colors ${
-                    currentPage === 1
+                className={`p-2 rounded-lg transition-colors ${currentPage === 1
                         ? 'text-gray-400 cursor-not-allowed'
                         : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                    }`}
             >
                 <ChevronLeft className="w-5 h-5" />
             </button>
@@ -90,11 +89,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                     ) : (
                         <button
                             onClick={() => onPageChange(number as number)}
-                            className={`min-w-[40px] h-10 rounded-lg transition-colors ${
-                                currentPage === number
+                            className={`min-w-[40px] h-10 rounded-lg transition-colors ${currentPage === number
                                     ? 'bg-blue-600 text-white font-medium'
                                     : 'text-gray-700 hover:bg-gray-100'
-                            }`}
+                                }`}
                         >
                             {number}
                         </button>
@@ -105,11 +103,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-lg transition-colors ${
-                    currentPage === totalPages
+                className={`p-2 rounded-lg transition-colors ${currentPage === totalPages
                         ? 'text-gray-400 cursor-not-allowed'
                         : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                    }`}
             >
                 <ChevronRight className="w-5 h-5" />
             </button>
@@ -148,11 +145,11 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         const today = new Date();
         let age = today.getFullYear() - birth.getFullYear();
         const monthDiff = today.getMonth() - birth.getMonth();
-        
+
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
             age--;
         }
-        
+
         return age;
     };
 
@@ -160,7 +157,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         try {
             const q = query(collection(db, 'participants'), where('eventId', '==', event.id));
             const querySnapshot = await getDocs(q);
-            
+
             const participantRows: ParticipantRow[] = await Promise.all(
                 querySnapshot.docs.map(async (docSnapshot) => {
                     const participant = {
@@ -207,9 +204,9 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         }
 
         const term = searchTerm.toLowerCase();
-        const filtered = participants.filter(row => 
+        const filtered = participants.filter(row =>
             row.participant.code.toLowerCase().includes(term) ||
-            row.users.some(user => 
+            row.users.some(user =>
                 user.dni.toLowerCase().includes(term) ||
                 `${user.firstName} ${user.lastName}`.toLowerCase().includes(term)
             ) ||
@@ -220,18 +217,25 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
     };
 
     const getStatusBadge = (status: string) => {
-        const statusColors = {
-            active: 'bg-green-100 text-green-800',
-            inactive: 'bg-gray-100 text-gray-800',
-            eliminated: 'bg-red-100 text-red-800'
+        const statusColors: Record<string, string> = {
+            pagado: 'bg-green-100 text-green-800',
+            ingresado: 'bg-blue-100 text-blue-800',
+            en_tunel: 'bg-yellow-100 text-yellow-800',
+            bailando: 'bg-purple-100 text-purple-800',
+            evaluado: 'bg-indigo-100 text-indigo-800',
+            clasificado: 'bg-emerald-100 text-emerald-800',
+            eliminado: 'bg-red-100 text-red-800',
+            ganador: 'bg-orange-100 text-orange-800',
+            default: 'bg-gray-100 text-gray-800'
         };
-        
+
         return (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || statusColors.inactive}`}>
-                {status}
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || statusColors.default}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1).replaceAll('_', ' ')}
             </span>
         );
     };
+
 
     const getPhaseBadge = (phase: string) => {
         const phaseColors = {
@@ -239,7 +243,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
             semifinals: 'bg-purple-100 text-purple-800',
             finals: 'bg-yellow-100 text-yellow-800'
         };
-        
+
         return (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${phaseColors[phase] || phaseColors.initial}`}>
                 {phase}
@@ -291,7 +295,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-gray-900 mb-6">Participantes del Evento</h1>
-                
+
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white rounded-lg shadow p-4">
@@ -402,9 +406,6 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                         Estado
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Fase
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
@@ -430,8 +431,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                     {row.users.map((user, index) => (
                                                         <div key={user.id} className="flex items-center gap-3">
                                                             {user.profileImage && user.profileImage !== '' ? (
-                                                                <img 
-                                                                    src={user.profileImage as string} 
+                                                                <img
+                                                                    src={user.profileImage as string}
                                                                     alt={user.firstName}
                                                                     className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                                                     onError={(e) => {
@@ -462,9 +463,6 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {getStatusBadge(row.participant.status)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {getPhaseBadge(row.participant.phase)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <button
@@ -553,8 +551,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                 {/* User Image */}
                                                 <div className="flex-shrink-0">
                                                     {user.profileImage && user.profileImage !== '' ? (
-                                                        <img 
-                                                            src={user.profileImage as string} 
+                                                        <img
+                                                            src={user.profileImage as string}
                                                             alt={user.firstName}
                                                             className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                                                             onError={(e) => {
@@ -568,7 +566,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                
+
                                                 {/* User Info */}
                                                 <div className="flex-1 grid grid-cols-2 gap-4">
                                                     <div>
