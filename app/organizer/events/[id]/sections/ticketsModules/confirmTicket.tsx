@@ -52,8 +52,8 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
                     level: entry.level,
                     scoreIds: [],
                     ticketId: ticket.id,
-                    phase: "initial",
-                    status: "active",
+                    phase: "",
+                    status: "Pagado",
                     createdAt: Timestamp.fromDate(new Date()),
                     updatedAt: Timestamp.fromDate(new Date())
                 };

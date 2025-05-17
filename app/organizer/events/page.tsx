@@ -38,8 +38,8 @@ const Events: React.FC = () => {
       status: ''
     },
     dates: {
-      startDate: Timestamp.now(), // Inicializa con Timestamp
-      endDate: Timestamp.now() // Inicializa con Timestamp
+      startDate: Timestamp.now(),
+      endDate: Timestamp.now()
     },
     details: {
       capacity: '',
@@ -62,6 +62,18 @@ const Events: React.FC = () => {
       bannerImage: '',
       smallImagePreview: '',
       bannerImagePreview: ''
+    },
+    settings: {
+      inscription: {
+        groupEnabled: false,
+        individualEnabled: false,
+        onSiteEnabled: false
+      },
+      pullCouple: {
+        enabled: false,
+        criteria: "Category",
+        difference: 0
+      }
     }
   });
 
@@ -161,8 +173,8 @@ const Events: React.FC = () => {
     const eventToSave = {
       ...eventData,
       dates: {
-        startDate: eventData.dates.startDate, // Mantén como Timestamp
-        endDate: eventData.dates.endDate, // Mantén como Timestamp
+        startDate: eventData.dates.startDate,
+        endDate: eventData.dates.endDate,
       },
     };
 
@@ -181,12 +193,12 @@ const Events: React.FC = () => {
 
   const handleEvent = (event: CustomEvent, cmd: string) => {
     // Convertir la estructura de niveles de Firebase a la estructura de la aplicación
-    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
+    const levelsWithSelected = Object.entries(event.dance.levels).reduce((acc, [key, value]) => {
       acc[key] = { 
         ...value, 
         selected: true, 
         price: Number(value.price), 
-        categories: value.categories || [] // Asegúrate de que categories esté definido
+        categories: value.categories || []
       };
       return acc;
     }, {} as { [key: string]: LevelData });
@@ -199,8 +211,8 @@ const Events: React.FC = () => {
         status: event.status,
       },
       dates: {
-        startDate: event.startDate, // Mantén como Timestamp
-        endDate: event.endDate, // Mantén como Timestamp
+        startDate: event.startDate,
+        endDate: event.endDate,
       },
       details: {
         capacity: event.capacity,
@@ -223,17 +235,30 @@ const Events: React.FC = () => {
         bannerImage: event.bannerImage,
         smallImagePreview: event.smallImage,
         bannerImagePreview: event.bannerImage,
+      },
+      settings: event.settings || {
+        inscription: {
+          groupEnabled: false,
+          individualEnabled: false,
+          onSiteEnabled: false
+        },
+        pullCouple: {
+          enabled: false,
+          criteria: "Category",
+          difference: 0
+        }
       }
     });
+    
     if (cmd == "edit") {
-      setIsCreateModalOpen(true)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(true);
+      setIsViewModalOpen(false);
     } else if (cmd == "view") {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(true)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(true);
     } else {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(false);
     }
   };
 
@@ -483,10 +508,10 @@ const Events: React.FC = () => {
       )}
       
       <EventModal
-        isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
+        isOpen={isCreateModalOpen || isViewModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
-          setIsViewModalOpen(false);  // Asegúrate de cerrar ambos modales
+          setIsViewModalOpen(false);
           setSelectedEvent(null);
         }}
         onSave={handleSaveEvent}
@@ -494,10 +519,9 @@ const Events: React.FC = () => {
         setActiveTab={setActiveTab}
         eventData={eventData}
         updateEventData={updateEventData}
-        isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
-        isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
+        isEdit={!!selectedEvent && !isViewModalOpen}
+        isOnlyRead={isViewModalOpen}
       />
-
 
       {selectedEvent && (
         <DeleteEventModal
