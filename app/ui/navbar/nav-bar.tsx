@@ -245,6 +245,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
               placeholder="Buscar eventos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchTerm.trim() !== "") {
+                  router.push(`/search-results?query=${encodeURIComponent(searchTerm)}`);
+                }
+              }}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             {filteredEvents.length > 0 && (
