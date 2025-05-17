@@ -29,9 +29,10 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
       )}
 
       {/* ¡Aquí lo movemos fuera para que siempre se muestre! */}
-      <StairTransition />
+      {/* <StairTransition /> */}
 
-      <PageTransition>{children}</PageTransition>
+      {/* <PageTransition>{children}</PageTransition> */}
+      {children}
 
       {showNavbar && <Footer brandName={brandName} />}
     </>

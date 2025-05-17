@@ -30,11 +30,11 @@ export default function RegisterForm() {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dni, setDni] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState<string>('');  
+  const [lastName, setLastName] = useState<string>('');  
   const [category, setCategory] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [birthDate, setBirthDate] = useState<string>('');  
+  const [gender, setGender] = useState<string>('');  
   const [step, setStep] = useState(1);
   const [emailExistsError, setEmailExistsError] = useState("");
   const [dniExistsError, setDniExistsError] = useState("");
@@ -170,7 +170,7 @@ export default function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      let profileImageUrl = null;
+      let profileImageUrl = await getDownloadURL(gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG'));
       if (croppedImage) {
         profileImageUrl = await uploadProfileImage(croppedImage, user.uid);
       }
@@ -247,9 +247,9 @@ export default function RegisterForm() {
       );
 
       if (response.data.success && response.data.data) {
-        setFirstName(capitalizeText(response.data.data.name));
-        setLastName(capitalizeText(response.data.data.surname));
-        setBirthDate(response.data.data.date_of_birth);
+        setFirstName(capitalizeText(response.data.data.name) || '');
+        setLastName(capitalizeText(response.data.data.surname) || '');
+        setBirthDate(response.data.data.date_of_birth || '');
 
         setLocationData({
           department: capitalizeText(response.data.data.department) || "",
@@ -444,7 +444,7 @@ export default function RegisterForm() {
                   <input
                     type="text"
                     id="firstName"
-                    value={firstName}
+                    value={firstName || ''}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Juan"
@@ -457,7 +457,7 @@ export default function RegisterForm() {
                   <input
                     type="text"
                     id="lastName"
-                    value={lastName}
+                    value={lastName || ''}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Perez Prado"
@@ -473,7 +473,7 @@ export default function RegisterForm() {
                   id="birthDate"
                   min={`${new Date().getFullYear() - 120}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
                   max={`${new Date().getFullYear() - 1}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
-                  value={birthDate}
+                  value={birthDate || ''}
                   readOnly
                   onChange={(e) => setBirthDate(e.target.value)}
                   className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"

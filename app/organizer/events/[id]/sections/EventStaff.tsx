@@ -6,7 +6,7 @@ import { CustomEvent } from '@/app/types/eventType';
 import { User } from '@/app/types/userType';
 import InfoUser from '@/app/ui/info-user/InfoUser';
 import { 
-  X, Check, AlertCircle, Search, UserPlus, Edit, Trash2, 
+  X, AlertCircle, Search, UserPlus, Edit, Trash2, 
   Save, XCircle, Eye, Info, CheckCircle2
 } from 'lucide-react';
 

@@ -134,7 +134,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               />
             ) : (
               <Image
-                src={user.gender === 'Masculino' ? '/default-male.JPG' : '/default-female.JPG'}
+                src={user?.gender === 'Masculino' ? '/default-male.JPG' : '/default-female.JPG'}
                 alt="Foto de perfil"
                 className="object-cover"
                 width={160}
