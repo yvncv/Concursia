@@ -24,15 +24,15 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
   ]
 
   // Crear secciones dinámicas basadas en los niveles del evento
-  const levelSections = Object.entries(event.settings.levels)
+  const levelSections = Object.entries(event.dance.levels)
     .map(([levelId, _]) => ({
       id: levelId,
-      title: levelId, // Usar directamente el ID como título
+      title: levelId.charAt(0).toUpperCase() + levelId.slice(1), // Capitalizar el título
       icon: Layers
     }))
 
   // Debug para ver qué niveles hay
-  console.log("Niveles del evento:", event.settings.levels)
+  console.log("Niveles del evento:", event.dance.levels)
   console.log("Secciones de nivel generadas:", levelSections)
 
   // Combinar secciones base con secciones de niveles
@@ -46,12 +46,12 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
         return <Schedule event={event} />
       default:
         // Para cualquier sección de nivel, usar el componente Modality genérico
-        if (event.settings.levels[activeSection]) {
+        if (event.dance.levels[activeSection]) {
           return (
             <Modality 
               event={event}
               modalityId={activeSection}
-              modalityTitle={activeSection}
+              modalityTitle={activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
             />
           )
         }

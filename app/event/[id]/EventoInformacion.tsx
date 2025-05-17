@@ -1,15 +1,13 @@
 'use client';
 
 import { CustomEvent } from "@/app/types/eventType";
-import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircleIcon } from "lucide-react";
+import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircle } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
-import { EventSettings } from "@/app/types/settingsType";
 
 interface EventoInformacionProps {
     event: CustomEvent;
     openModal: () => void;
     onInscribir: () => void;
-    settings: EventSettings | null;
     onInscribirAlumnos: () => void;
     user: any;  // Usando 'any' para coincidir con tu implementación de useUser
     isEventOrganizer?: boolean;
@@ -23,7 +21,6 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     event, 
     openModal, 
     onInscribir, 
-    settings, 
     onInscribirAlumnos, 
     user, 
     isEventOrganizer, 
@@ -74,18 +71,32 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
         (user?.id && event.organizerId === user.id);
 
     // Determine if inscription types are enabled based on settings
-    // If props are provided, use those values. Otherwise, check settings directly
-    const individualWebEnabled = isIndividualWebEnabled !== undefined 
-        ? isIndividualWebEnabled 
-        : (settings?.registration?.individualWeb || false);
+    // IMPORTANTE: Priorizar los valores recibidos por props, que vienen de useSettings()
+    const individualEnabled = isIndividualWebEnabled !== undefined 
+        ? isIndividualWebEnabled         // Usar valores de props (de useSettings)
+        : (event?.settings?.inscription?.individualEnabled || false);
     
-    const grupalCSVEnabled = isGrupalCSVEnabled !== undefined 
-        ? isGrupalCSVEnabled 
-        : (settings?.registration?.grupalCSV || false);
-
-    // Check if user can register themselves or others based on their role and settings
-    const canRegister = !isOrganizer && individualWebEnabled;
-    const canRegisterStudents = user?.roleId === "organizer" && !isOrganizer && grupalCSVEnabled;
+    const groupEnabled = isGrupalCSVEnabled !== undefined 
+        ? isGrupalCSVEnabled            // Usar valores de props (de useSettings)
+        : (event?.settings?.inscription?.groupEnabled || false);
+    
+    console.log("DEBUG - Event settings:", {
+        eventId: event.id,
+        inscriptionFromProps: { 
+            individualEnabled: isIndividualWebEnabled, 
+            groupEnabled: isGrupalCSVEnabled 
+        },
+        inscriptionFromEvent: {
+            individualEnabled: event?.settings?.inscription?.individualEnabled,
+            groupEnabled: event?.settings?.inscription?.groupEnabled
+        },
+        calculatedValues: {
+            individualEnabled,
+            groupEnabled,
+            isOrganizer,
+            userRole: user?.roleId
+        }
+    });
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
@@ -145,9 +156,9 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             <span className="text-sm md:text-base font-medium">Categorías por Modalidad:</span>
                         </div>
 
-                        {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
+                        {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
                             <div className="space-y-4">
-                                {Object.entries(event.settings.levels).map(([levelName, levelData]) => (
+                                {Object.entries(event.dance.levels).map(([levelName, levelData]) => (
                                     <div key={levelName} className="border-b border-purple-100 pb-3 last:border-0">
                                         <h3 className="font-medium text-purple-800 mb-2">
                                             {capitalizeFirstLetter(levelName)}
@@ -176,7 +187,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
 
                     <section className="w-full bg-[#fef6f2] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
                         <div className="flex items-center space-x-3">
-                            <AlertCircleIcon className="text-yellow-600 w-6 h-6" />
+                            <AlertCircle className="text-yellow-600 w-6 h-6" />
                             <span className="text-sm md:text-base">Información adicional:</span>
                         </div>
                         {loading ? (
@@ -184,25 +195,25 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         ) : error ? (
                             <span
                                 className="text-sm md:text-base text-red-500">Error al cargar Información adicional: {error}</span>
-                        ) : settings && typeof settings === 'object' ? (
-                            (settings.registration?.grupalCSV ||
-                                settings.registration?.individualWeb ||
-                                settings.registration?.sameDay ||
-                                settings.pullCouple?.enabled) ? (
+                        ) : event.settings && typeof event.settings === 'object' ? (
+                            (event.settings.inscription?.groupEnabled ||
+                                event.settings.inscription?.individualEnabled ||
+                                event.settings.inscription?.onSiteEnabled ||
+                                event.settings.pullCouple?.enabled) ? (
                                     <div className="flex flex-wrap gap-2">
-                                        {settings.registration?.grupalCSV && (
-                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal CSV</span>
+                                        {event.settings.inscription?.groupEnabled && (
+                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal</span>
                                         )}
-                                        {settings.registration?.individualWeb && (
+                                        {event.settings.inscription?.individualEnabled && (
                                             <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Individual Web</span>
                                         )}
-                                        {settings.registration?.sameDay && (
+                                        {event.settings.inscription?.onSiteEnabled && (
                                             <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción el Mismo Día</span>
                                         )}
-                                        {settings.pullCouple?.enabled && (
+                                        {event.settings.pullCouple?.enabled && (
                                             <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                                Se puede jalar pareja con diferencia máxima de {settings.pullCouple.difference}{" "}
-                                                {settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
+                                                Se puede jalar pareja con diferencia máxima de {event.settings.pullCouple.difference}{" "}
+                                                {event.settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
                                             </span>
                                         )}
                                     </div>
@@ -230,8 +241,8 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             <span className="text-md md:text-base font-medium text-gray-800">Precios por modalidad:</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
-                                Object.entries(event.settings.levels).map(([levelName, levelData]) => (
+                            {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
+                                Object.entries(event.dance.levels).map(([levelName, levelData]) => (
                                     <span
                                         key={levelName}
                                         className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
@@ -244,31 +255,33 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             )}
                         </div>
 
-                        {/* Botones de acción - condicionalmente renderizados basados en rol y configuración */}
+                        {/* Botones de acción con renderizado simplificado */}
                         <div className="mt-4 flex flex-col gap-3">
+                            {/* Botón de inscripción individual */}
                             {!isOrganizer && (
                                 <button
                                     onClick={onInscribir}
-                                    disabled={!individualWebEnabled}
+                                    disabled={!individualEnabled}
                                     className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
-                                        ${individualWebEnabled 
+                                        ${individualEnabled 
                                             ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-95" 
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    {individualWebEnabled ? "Inscribir" : "Inscripción web no disponible"}
+                                    {individualEnabled ? "Inscribir" : "Inscripción web no disponible"}
                                 </button>
                             )}
 
+                            {/* Botón de inscripción grupal */}
                             {user?.roleId === "organizer" && !isOrganizer && (
                                 <button
                                     onClick={onInscribirAlumnos}
-                                    disabled={!grupalCSVEnabled}
+                                    disabled={!groupEnabled}
                                     className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
-                                        ${grupalCSVEnabled 
+                                        ${groupEnabled 
                                             ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:scale-95" 
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    {grupalCSVEnabled ? "Inscribir alumnos" : "Inscripción grupal CSV no disponible"}
+                                    {groupEnabled ? "Inscribir alumnos" : "Inscripción grupal no disponible"}
                                 </button>
                             )}
                         </div>
@@ -280,7 +293,6 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             longitude={event.location.coordinates.longitude} />
                     </div>
                 </div>
-
             </div>
         </div>
     );

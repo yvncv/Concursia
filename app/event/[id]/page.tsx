@@ -70,10 +70,10 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const adaptedEvent = event ? adaptEventForInscripcionAlumnos(event) : null;
 
   // Determine if individual web inscription is enabled
-  const isIndividualWebEnabled = settings?.registration?.individualWeb || false;
+  const isIndividualWebEnabled = settings?.inscription?.individualEnabled || false;
   
   // Determine if group CSV inscription is enabled
-  const isGrupalCSVEnabled = settings?.registration?.grupalCSV || false;
+  const isGrupalCSVEnabled = settings?.inscription?.groupEnabled || false;
 
   // Set active tab to information if the current tab is disabled based on settings
   useEffect(() => {
@@ -238,7 +238,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 onInscribirAlumnos={handleInscribirAlumnosClick}
                 user={user}
                 isEventOrganizer={isEventOrganizer}
-                settings={settings}
                 loading={loadingSettings}
                 error={error_settings}
                 isIndividualWebEnabled={isIndividualWebEnabled}
@@ -250,7 +249,6 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                   <EventoInscripcion
                     event={event}
                     openModal={() => setIsAcademyModalOpen(true)}
-                    settings={settings}
                     user={user} 
                   />
                 ) : (

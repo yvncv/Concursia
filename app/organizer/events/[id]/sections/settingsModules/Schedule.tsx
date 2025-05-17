@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import type { CustomEvent } from "@/app/types/eventType"
-import { GripVertical, Save, Clock, AlertCircle } from "lucide-react"
+import { GripVertical, Save, Clock, AlertCircle, Calendar, Timer } from "lucide-react"
 
 interface ScheduleProps {
   event: CustomEvent
@@ -15,11 +15,13 @@ interface ScheduleItem {
   modalityName: string
   category: string
   order: number
+  estimatedTime: number
 }
 
 const Schedule: React.FC<ScheduleProps> = ({ event }) => {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([])
   const [draggedItem, setDraggedItem] = useState<number | null>(null)
+  const [draggedOverItem, setDraggedOverItem] = useState<number | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
 
   // Generar los items del cronograma basados en las modalidades y categorías
@@ -27,24 +29,35 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
     const items: ScheduleItem[] = []
     let orderIndex = 0
 
-    console.log("Niveles del evento:", event.settings.levels)
+    console.log("Evento completo:", event)
+    console.log("Niveles del evento:", event.dance?.levels)
+
+    if (!event.dance?.levels) {
+      console.error("No se encontraron niveles en event.dance")
+      return
+    }
 
     // Iterar sobre cada modalidad
-    Object.entries(event.settings.levels).forEach(([modalityId, modalityData]) => {
-      // No filtrar por selected, mostrar todas las modalidades que tengan categorías
+    Object.entries(event.dance.levels).forEach(([modalityId, modalityData]) => {
+      console.log(`Revisando modalidad ${modalityId}:`, modalityData)
+      
+      // Verificar si tiene categorías (independientemente de selected)
       if (modalityData.categories && modalityData.categories.length > 0) {
-        console.log(`Modalidad ${modalityId}:`, modalityData)
+        console.log(`Modalidad ${modalityId} tiene ${modalityData.categories.length} categorías`)
         
         // Crear un item por cada categoría de la modalidad
         modalityData.categories.forEach((category) => {
           items.push({
             id: `${modalityId}-${category}`,
             modalityId,
-            modalityName: modalityId,
+            modalityName: modalityId.charAt(0).toUpperCase() + modalityId.slice(1),
             category,
-            order: orderIndex++
+            order: orderIndex++,
+            estimatedTime: getTimeEstimate(category)
           })
         })
+      } else {
+        console.log(`Modalidad ${modalityId} no tiene categorías`)
       }
     })
 
@@ -52,24 +65,48 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
     setScheduleItems(items)
   }, [event])
 
+  const getTimeEstimate = (category: string): number => {
+    // Estimaciones de tiempo en minutos por categoría
+    const estimates: { [key: string]: number } = {
+      "Infante": 3,
+      "Juvenil": 4,
+      "Adulto": 5,
+      "Master": 5,
+      "Solo Masculino": 4,
+      "Solo Femenino": 4,
+      "Parejas": 5,
+      "Grupos": 7
+    }
+    return estimates[category] || 4
+  }
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index)
     e.dataTransfer.effectAllowed = "move"
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
+    setDraggedOverItem(index)
+  }
+
+  const handleDragLeave = () => {
+    setDraggedOverItem(null)
   }
 
   const handleDragEnd = () => {
     setDraggedItem(null)
+    setDraggedOverItem(null)
   }
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault()
     
-    if (draggedItem === null || draggedItem === dropIndex) return
+    if (draggedItem === null || draggedItem === dropIndex) {
+      setDraggedOverItem(null)
+      return
+    }
 
     const draggedItemData = scheduleItems[draggedItem]
     const newItems = [...scheduleItems]
@@ -88,130 +125,166 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
     
     setScheduleItems(reorderedItems)
     setDraggedItem(null)
+    setDraggedOverItem(null)
     setHasChanges(true)
   }
 
   const handleSave = async () => {
     // Aquí implementarías la lógica para guardar el orden
     console.log("Guardando orden del cronograma:", scheduleItems)
-    // Por ahora solo mostramos el orden en consola
     setHasChanges(false)
     
-    // Podrías guardar esto en alguna propiedad del evento como `scheduleOrder`
-    // o crear una colección separada para el cronograma
+    // TODO: Guardar en Firebase
+    // Podrías guardar esto en event.settings.scheduleOrder o similar
   }
 
-  const getTimeEstimate = (category: string): string => {
-    // Estimaciones de tiempo por categoría (puedes ajustar según tu evento)
-    const estimates: { [key: string]: string } = {
-      "Infante": "3 min",
-      "Juvenil": "4 min",
-      "Adulto": "5 min",
-      "Master": "5 min",
-      "Solo Masculino": "4 min",
-      "Solo Femenino": "4 min",
-      "Parejas": "5 min",
-      "Grupos": "7 min"
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours > 0) {
+      return `${hours}h ${mins}min`
     }
-    return estimates[category] || "4 min"
+    return `${mins} min`
+  }
+
+  const calculateTotalTime = (): number => {
+    return scheduleItems.reduce((total, item) => total + item.estimatedTime, 0)
   }
 
   if (scheduleItems.length === 0) {
     return (
       <div className="text-center py-12">
-        <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 text-lg mb-2">No hay modalidades configuradas</p>
         <p className="text-gray-500 text-sm mb-4">
-          Configura las modalidades y categorías en sus respectivas secciones
+          Para crear el cronograma, primero debes configurar las categorías en cada modalidad
         </p>
-        <div className="text-left max-w-md mx-auto bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-600 font-medium mb-2">Información del evento:</p>
-          <pre className="text-xs text-gray-500 overflow-auto">
-            {JSON.stringify(event.settings.levels, null, 2)}
-          </pre>
-        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Cronograma del Evento
-        </h2>
-        <p className="text-gray-600">
-          Arrastra y suelta para reorganizar el orden de las presentaciones
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Cronograma del Evento
+          </h2>
+          <p className="text-gray-600">
+            Arrastra y suelta para reorganizar el orden de las presentaciones
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-gray-500">Tiempo total estimado</div>
+          <div className="text-2xl font-bold text-blue-600">{formatTime(calculateTotalTime())}</div>
+        </div>
       </div>
 
       {hasChanges && (
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex items-start">
-          <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 mt-0.5" />
-          <div>
+          <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
             <p className="text-yellow-800 font-medium">Cambios sin guardar</p>
             <p className="text-yellow-700 text-sm">
               Has realizado cambios en el orden. No olvides guardarlos.
             </p>
           </div>
+          <button
+            onClick={handleSave}
+            className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+          >
+            <Save className="h-4 w-4 inline mr-1" />
+            Guardar ahora
+          </button>
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="max-h-[600px] overflow-y-auto pr-2 space-y-2">
         {scheduleItems.map((item, index) => (
-          <div
-            key={item.id}
-            draggable
-            onDragStart={(e) => handleDragStart(e, index)}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onDrop={(e) => handleDrop(e, index)}
-            className={`bg-white border rounded-lg p-4 cursor-move transition-all ${
-              draggedItem === index 
-                ? "opacity-50 border-blue-300" 
-                : "hover:shadow-lg border-gray-200"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <GripVertical className="h-5 w-5 text-gray-400" />
+          <div key={item.id}>
+            {/* Indicador de drop */}
+            {draggedOverItem === index && draggedItem !== index && (
+              <div className="h-1 bg-blue-400 rounded-full my-2 animate-pulse" />
+            )}
+            
+            <div
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDragEnd={handleDragEnd}
+              onDrop={(e) => handleDrop(e, index)}
+              className={`bg-white border rounded-lg p-4 cursor-move transition-all transform ${
+                draggedItem === index 
+                  ? "opacity-50 scale-95 rotate-2" 
+                  : draggedOverItem === index && draggedItem !== index
+                  ? "border-blue-400 shadow-lg"
+                  : "hover:shadow-md border-gray-200"
+              }`}
+            >
+              <div className="flex items-center">
+                <GripVertical className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                 
-                <div className="flex items-center space-x-2">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {item.modalityName} - {item.category}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Duración estimada: {getTimeEstimate(item.category)}
-                    </p>
+                <div className="flex-1 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full text-sm font-bold">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-900">{item.modalityName}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-700">{item.category}</span>
+                      </div>
+                      <div className="text-sm text-gray-500 mt-0.5">
+                        <Timer className="h-3 w-3 inline mr-1" />
+                        {item.estimatedTime} minutos
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500 font-medium">
+                    {formatTime(
+                      scheduleItems.slice(0, index).reduce((sum, item) => sum + item.estimatedTime, 0)
+                    )} desde el inicio
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-sm text-gray-600">
-                Orden: {item.order + 1}
               </div>
             </div>
           </div>
         ))}
+        
+        {/* Indicador final de drop */}
+        {draggedOverItem === scheduleItems.length && (
+          <div className="h-1 bg-blue-400 rounded-full my-2 animate-pulse" />
+        )}
       </div>
 
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h3 className="font-medium text-blue-900 mb-2">Resumen del cronograma</h3>
-        <div className="text-sm text-blue-800 space-y-1">
-          <p>• Total de presentaciones: {scheduleItems.length}</p>
-          <p>• Tiempo estimado total: {
-            scheduleItems.reduce((total, item) => {
-              const time = parseInt(getTimeEstimate(item.category)) || 4
-              return total + time
-            }, 0)
-          } minutos</p>
-          <p>• Modalidades incluidas: {
-            [...new Set(scheduleItems.map(item => item.modalityName))].length
-          }</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-blue-900">Presentaciones</h3>
+            <span className="text-2xl font-bold text-blue-600">{scheduleItems.length}</span>
+          </div>
+          <p className="text-sm text-blue-700">Total de actos programados</p>
+        </div>
+        
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-green-900">Modalidades</h3>
+            <span className="text-2xl font-bold text-green-600">
+              {[...new Set(scheduleItems.map(item => item.modalityName))].length}
+            </span>
+          </div>
+          <p className="text-sm text-green-700">Niveles incluidos</p>
+        </div>
+        
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-purple-900">Duración</h3>
+            <span className="text-2xl font-bold text-purple-600">{formatTime(calculateTotalTime())}</span>
+          </div>
+          <p className="text-sm text-purple-700">Tiempo total estimado</p>
         </div>
       </div>
 
@@ -219,13 +292,13 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
         <button
           onClick={handleSave}
           disabled={!hasChanges}
-          className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 flex items-center ${
+          className={`px-6 py-3 rounded-md focus:outline-none focus:ring-2 flex items-center transition-colors ${
             hasChanges
               ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="h-5 w-5 mr-2" />
           Guardar cambios
         </button>
       </div>

@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from "react";
 import useSettings from "@/app/hooks/useSettings";
-import type { EventSettings } from "@/app/types/settingsType";
+import type { EventSettings } from "@/app/types/eventType";
 
 interface ParticipantsProps {
     eventId: string;
 }
 
-// Definimos el orden y las etiquetas de las opciones de registro
-const REGISTRATION_OPTIONS = [
+// Definimos el orden y las etiquetas de las opciones de inscripción
+const INSCRIPTION_OPTIONS = [
     {
-        key: 'grupalCSV',
+        key: 'groupEnabled',
         label: 'Inscripción grupal (CSV/Excel)'
     },
     {
-        key: 'individualWeb',
+        key: 'individualEnabled',
         label: 'Inscripción individual vía web'
     },
     {
-        key: 'sameDay',
+        key: 'onSiteEnabled',
         label: 'Inscripción el mismo día del concurso'
     }
 ] as const;
@@ -33,7 +33,21 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     // Inicializar el estado local cuando se cargan las configuraciones
     useEffect(() => {
         if (settings) {
-            setLocalSettings(JSON.parse(JSON.stringify(settings))); // Deep clone
+            // Si las configuraciones tienen la estructura antigua, convertirlas a la nueva
+            let settingsToUse = JSON.parse(JSON.stringify(settings)); // Deep clone
+            
+            // Migración de datos si es necesario
+            if (settingsToUse.registration && !settingsToUse.inscription) {
+                settingsToUse.inscription = {
+                    groupEnabled: settingsToUse.registration.grupalCSV || false,
+                    individualEnabled: settingsToUse.registration.individualWeb || false,
+                    onSiteEnabled: settingsToUse.registration.sameDay || false
+                };
+                // Eliminamos la estructura antigua
+                delete settingsToUse.registration;
+            }
+            
+            setLocalSettings(settingsToUse);
             setHasChanges(false);
         }
     }, [settings]);
@@ -42,19 +56,37 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     if (error) return <p className="text-red-500">Error: {error}</p>;
     if (!settings || !localSettings) return <p>No se encontraron configuraciones para este evento.</p>;
 
-    if (!localSettings.registration || !localSettings.pullCouple) {
-        return <p className="text-yellow-500">⚠️ Falta información en la configuración.</p>;
+    // Verificar estructura de datos
+    if (!localSettings.inscription || !localSettings.pullCouple) {
+        // Inicializar si no existen
+        const updatedSettings = { ...localSettings };
+        if (!updatedSettings.inscription) {
+            updatedSettings.inscription = {
+                groupEnabled: false,
+                individualEnabled: false,
+                onSiteEnabled: false
+            };
+        }
+        if (!updatedSettings.pullCouple) {
+            updatedSettings.pullCouple = {
+                enabled: false,
+                criteria: "Category",
+                difference: 0
+            };
+        }
+        setLocalSettings(updatedSettings);
+        return <p className="text-yellow-500">⚠️ Inicializando configuración...</p>;
     }
 
     // Maneja la actualización de configuración de inscripción
-    const handleRegistrationChange = (field: keyof EventSettings["registration"]) => {
+    const handleInscriptionChange = (field: keyof EventSettings["inscription"]) => {
         if (!localSettings) return;
         
         const updatedSettings = {
             ...localSettings,
-            registration: {
-                ...localSettings.registration,
-                [field]: !localSettings.registration[field]
+            inscription: {
+                ...localSettings.inscription,
+                [field]: !localSettings.inscription[field]
             }
         };
         
@@ -97,7 +129,19 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     // Descartar los cambios
     const handleDiscardChanges = () => {
         if (settings) {
-            setLocalSettings(JSON.parse(JSON.stringify(settings)));
+            let settingsToUse = JSON.parse(JSON.stringify(settings));
+            
+            // Asegurarnos de que estamos usando la estructura nueva al descartar cambios
+            if (settingsToUse.registration && !settingsToUse.inscription) {
+                settingsToUse.inscription = {
+                    groupEnabled: settingsToUse.registration.grupalCSV || false,
+                    individualEnabled: settingsToUse.registration.individualWeb || false,
+                    onSiteEnabled: settingsToUse.registration.sameDay || false
+                };
+                delete settingsToUse.registration;
+            }
+            
+            setLocalSettings(settingsToUse);
             setHasChanges(false);
         }
     };
@@ -110,7 +154,7 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
             <div className="mb-8 border-b pb-6">
                 <h3 className="text-lg font-medium mb-4">Modalidad de Inscripción</h3>
                 <div className="grid gap-3">
-                    {REGISTRATION_OPTIONS.map(({ key, label }) => (
+                    {INSCRIPTION_OPTIONS.map(({ key, label }) => (
                         <label 
                             key={key} 
                             className="flex items-center p-3 hover:bg-gray-50 rounded-md transition-colors duration-150 cursor-pointer"
@@ -118,8 +162,8 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
                             <input
                                 type="checkbox"
                                 disabled={loading || saving}
-                                checked={localSettings.registration[key as keyof EventSettings["registration"]] ?? false}
-                                onChange={() => handleRegistrationChange(key as keyof EventSettings["registration"])}
+                                checked={localSettings.inscription[key as keyof EventSettings["inscription"]] ?? false}
+                                onChange={() => handleInscriptionChange(key as keyof EventSettings["inscription"])}
                                 className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                             <span className="ml-3 text-gray-700">{label}</span>
