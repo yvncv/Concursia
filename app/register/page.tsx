@@ -116,6 +116,25 @@ export default function RegisterForm() {
     else setCategory('Oro');
   };
 
+  const capitalizeText = (text: string) => {
+  if (!text) return '';
+  
+  // Lista de palabras que no se deben capitalizar (artículos, preposiciones, etc.)
+  const nonCapitalizedWords = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u'];
+  
+  return text
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Siempre capitalizar la primera palabra
+      if (index === 0 || !nonCapitalizedWords.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+};
+
   const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateEmail(email)) {
@@ -228,14 +247,14 @@ export default function RegisterForm() {
       );
 
       if (response.data.success && response.data.data) {
-        setFirstName(response.data.data.name);
-        setLastName(response.data.data.surname);
+        setFirstName(capitalizeText(response.data.data.name));
+        setLastName(capitalizeText(response.data.data.surname));
         setBirthDate(response.data.data.date_of_birth);
 
         setLocationData({
-          department: response.data.data.department || "",
-          province: response.data.data.province || "",
-          district: response.data.data.district || ""
+          department: capitalizeText(response.data.data.department) || "",
+          province: capitalizeText(response.data.data.province) || "",
+          district: capitalizeText(response.data.data.district) || ""
         });
       } else {
         setDniError("No se encontró el DNI.");

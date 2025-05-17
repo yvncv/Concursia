@@ -46,12 +46,24 @@ const initialEventData: EventFormData = {
         street: ''
     },
     dance: {
-        levels: {},  // Updated to match the new structure
-        categories: [], // ← FALTA
+        levels: {}  // Updated to match the new structure
     },
     images: {
         smallImage: '',
         bannerImage: ''
+    },
+    // Añadimos la propiedad settings que faltaba, con la nueva estructura inscription
+    settings: {
+        inscription: {
+            groupEnabled: false,
+            individualEnabled: false,
+            onSiteEnabled: false
+        },
+        pullCouple: {
+            enabled: false,
+            criteria: "Category",
+            difference: 0
+        }
     }
 };
 
@@ -130,7 +142,7 @@ const EventModal: React.FC<EventModalProps> = ({
     };
 
     const getIncompleteFields = () => {
-        const { general, dates, details, location, dance, images } = eventData;
+        const { general, dates, details, location, dance, images, settings } = eventData;
         const incompleteFields = [];
 
         if (!general.name) incompleteFields.push('Nombre');
@@ -148,7 +160,6 @@ const EventModal: React.FC<EventModalProps> = ({
         if (!location.province) incompleteFields.push('Provincia');
         if (!location.street) incompleteFields.push('Calle');
         if (Object.keys(dance.levels).length === 0) incompleteFields.push('Niveles de baile');
-        // Removed the check for dance.categories as it's no longer a top-level property
         if (!images.smallImage) incompleteFields.push('Imagen pequeña');
         if (!images.bannerImage) incompleteFields.push('Imagen de portada');
 
@@ -162,6 +173,7 @@ const EventModal: React.FC<EventModalProps> = ({
         updateEventData('location', initialEventData.location);
         updateEventData('dance', initialEventData.dance);
         updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '' });
+        updateEventData('settings', initialEventData.settings); // Añadimos el reseteo de settings
     };
 
     const handleSave = () => {

@@ -3,16 +3,12 @@
 import type React from "react"
 import { useState } from "react"
 import type { CustomEvent } from "@/app/types/eventType"
-import { SettingsIcon, Layers, Users, Star, Award, MessageCircle, Sliders, ChevronRight } from "lucide-react"
+import { SettingsIcon, Layers, CalendarClock, ChevronRight } from "lucide-react"
 
 // Importando los módulos de configuración
 import General from "./settingsModules/General"
-import Categories from "./settingsModules/Categories"
-import Participants from "./settingsModules/Participants"
-import Evaluations from "./settingsModules/Evaluations"
-import Awards from "./settingsModules/Awards"
-import Comments from "./settingsModules/Comments"
-import Advanced from "./settingsModules/Advanced"
+import Schedule from "./settingsModules/Schedule"
+import Modality from "./settingsModules/Modality"
 
 interface SettingsProps {
   event: CustomEvent
@@ -21,34 +17,49 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ event }) => {
   const [activeSection, setActiveSection] = useState("general")
 
-  const configSections = [
+  // Configuración base con secciones fijas
+  const baseConfigSections = [
     { id: "general", title: "Configuración General", icon: SettingsIcon },
-    { id: "categories", title: "Categorías", icon: Layers },
-    { id: "participants", title: "Participantes", icon: Users },
-    { id: "evaluations", title: "Evaluaciones y Puntajes", icon: Star },
-    { id: "awards", title: "Premios y Reconocimientos", icon: Award },
-    { id: "comments", title: "Comentarios del Público", icon: MessageCircle },
-    { id: "advanced", title: "Configuraciones Avanzadas", icon: Sliders },
+    { id: "cronograma", title: "Cronograma", icon: CalendarClock },
   ]
+
+  // Crear secciones dinámicas basadas en los niveles del evento
+  const levelSections = Object.entries(event.dance.levels)
+    .map(([levelId, _]) => ({
+      id: levelId,
+      title: levelId.charAt(0).toUpperCase() + levelId.slice(1), // Capitalizar el título
+      icon: Layers
+    }))
+
+  // Debug para ver qué niveles hay
+  console.log("Niveles del evento:", event.dance.levels)
+  console.log("Secciones de nivel generadas:", levelSections)
+
+  // Combinar secciones base con secciones de niveles
+  const configSections = [...baseConfigSections, ...levelSections]
 
   const renderSection = () => {
     switch (activeSection) {
       case "general":
-        return <General event={event} />
-      case "categories":
-        return <Categories event={event}/>
-      case "participants":
-        return <Participants eventId={event.id}/>
-      case "evaluations":
-        return <Evaluations event={event}/>
-      case "awards":
-        return <Awards event={event}/>
-      case "comments":
-        return <Comments event={event}/>
-      case "advanced":
-        return <Advanced event={event}/>
+        return <General eventId={event.id} />
+      case "cronograma":
+        return <Schedule event={event} />
       default:
-        return null
+        // Para cualquier sección de nivel, usar el componente Modality genérico
+        if (event.dance.levels[activeSection]) {
+          return (
+            <Modality 
+              event={event}
+              modalityId={activeSection}
+              modalityTitle={activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+            />
+          )
+        }
+        return (
+          <div className="text-center py-8">
+            <p className="text-gray-600">Sección no encontrada</p>
+          </div>
+        )
     }
   }
 

@@ -156,10 +156,6 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
               <button className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
                 <Plus className="h-4 w-4" />
               </button>
-              <button className="text-white hover:bg-white/20 hidden sm:flex items-center space-x-2 px-3 py-2 rounded-md transition-colors">
-                <Printer className="h-4 w-4" />
-                <span className="text-sm">Imprimir con Canva</span>
-              </button>
               <button className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
                 <svg
                   width="15"

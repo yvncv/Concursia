@@ -8,7 +8,6 @@ import useUsers from '@/app/hooks/useUsers';
 import { Timestamp } from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
 import { Ticket, TicketEntry } from "@/app/types/ticketType";
-import { EventSettings } from "@/app/types/settingsType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
 
@@ -83,8 +82,8 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: {
         </div>
       )}
       <div className="flex flex-wrap gap-4 p-4 justify-center">
-        {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
-          Object.entries(event.settings.levels).map(([level]) => (
+        {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
+          Object.entries(event.dance.levels).map(([level]) => (
             <button
               key={level}
               onClick={() => {
@@ -105,12 +104,11 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: {
   );
 };
 
-const EventoInscripcion = ({ event, openModal, user, settings }:
+const EventoInscripcion = ({ event, openModal, user }:
   {
     event: CustomEvent,
     openModal: () => void,
-    user: User,
-    settings: EventSettings | null
+    user: User
   }) => {
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -154,7 +152,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
-    setIsCoupleRequired(event.settings.levels[category]?.couple || false); // Actualiza el estado de isCoupleRequired
+    setIsCoupleRequired(event.dance.levels[category]?.couple || false); // Actualiza el estado de isCoupleRequired usando la nueva estructura
     setCurrentStep(1); // Avanza al siguiente paso
   };
 
@@ -186,7 +184,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
       academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
       category: user.category,
       level: selectedCategory,
-      amount: Number(event.settings.levels[selectedCategory]?.price) || 0,
+      amount: Number(event.dance.levels[selectedCategory]?.price) || 0, // Usar la nueva estructura
     };
 
     // Crear fecha de expiración (por ejemplo, 48 horas después)
@@ -225,7 +223,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
   const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
 
   const handleNextAndSave = () => {
-    if (settings != null && settings.pullCouple.enabled && pareja != null) {
+    if (event.settings?.pullCouple?.enabled && pareja != null) {
       // → Validación de género diferente
       if (pareja.gender === user.gender) {
         alert("La pareja debe ser de género opuesto al tuyo.");
@@ -236,14 +234,14 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
 
       const checkAgeDifference = () => {
         const ageDifference = user.birthDate.toDate().getFullYear() - pareja.birthDate.toDate().getFullYear();
-        return ageDifference <= settings.pullCouple.difference;
+        return ageDifference <= event.settings.pullCouple.difference;
       };
 
       const checkCategoryDifference = () => {
         const userCategoryIndex = categories.indexOf(user.category);
         const parejaCategoryIndex = categories.indexOf(pareja.category);
         const categoryDifference = Math.abs(userCategoryIndex - parejaCategoryIndex);
-        return categoryDifference <= settings.pullCouple.difference;
+        return categoryDifference <= event.settings.pullCouple.difference;
       };
 
       if (user.category === pareja.category) {
@@ -251,7 +249,7 @@ const EventoInscripcion = ({ event, openModal, user, settings }:
         handleNext();
         handleSave();
       } else {
-        if (settings.pullCouple.criteria === "Age") {
+        if (event.settings.pullCouple.criteria === "Age") {
           if (checkAgeDifference()) {
             handleNext();
             handleSave();

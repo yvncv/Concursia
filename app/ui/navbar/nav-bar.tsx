@@ -128,15 +128,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
     }
   };
 
-  const filteredLinks = enlaces.filter((link) => {
-    if (link.label === "Logout" && user) return true;
-    if (link.href === "/login" && user) return false;
-    if (link.requiresAuth) {
-      if (!user) return false;
-      if (link.requiresRole) return user.roleId === link.requiresRole;
-    }
-    return true;
-  });
   // Loading states
   const loadingMessage = loadingUser ? "Cargando datos..." : null;
 
@@ -175,11 +166,10 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     <Link
                       href={enlace.href}
                       className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                    ${
-                      pathname.includes(enlace.href)
-                        ? "bg-red-100 text-red-700 font-bold"
-                        : "hover:bg-gray-100 hover:text-black text-red-700"
-                    }`}
+                    ${pathname.includes(enlace.href)
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                        }`}
                       onClick={handleLinkClick}
                     >
                       <enlace.icon className="w-5 h-5" />
@@ -260,8 +250,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
             <li><Link href="#contacto" className="text-gray-600 hover:text-red-700 block">Contacto</Link></li>
             {user ? (
               <li>
-                <Link 
-                  href={`/user/${user.id}`} 
+                <Link
+                  href={`/user/${user.id}`}
                   className="flex items-center space-x-2 text-gray-600 hover:text-red-700 block"
                 >
                   <User className="w-5 h-5" />
@@ -369,10 +359,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <button
                         onClick={handleSignOut}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${
-                            pathname.includes(link.href)
-                              ? "bg-red-100 text-red-700 font-bold"
-                              : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${pathname.includes(link.href)
+                            ? "bg-red-100 text-red-700 font-bold"
+                            : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
                         <link.icon className="w-5 h-5" />
@@ -384,10 +373,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <Link
                         href={link.href}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${
-                            pathname.includes(link.href)
-                              ? "bg-red-100 text-red-700 font-bold"
-                              : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${pathname.includes(link.href)
+                            ? "bg-red-100 text-red-700 font-bold"
+                            : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                         onClick={handleLinkClick}
                       >
@@ -402,49 +390,66 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </ul>
             </nav>
           </div>
-        </div>
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-red-700 hover:text-gray-200 focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
 
-        {/* Mobile Menu - Added margin-top for spacing */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out mt-3 ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-            }`}
-        >
-          <ul className="space-y-4 px-2 pb-4 pt-2 bg-white rounded-lg shadow-md">
-            {filteredLinks.map((link) => {
-              const isActive = pathname.includes(link.href);
-              const handleClick = async () => {
-                setIsMenuOpen(false);
-                handleLinkClick();
-                if (link.label === "Logout") {
-                  await handleSignOut();
-                }
-              };
-              return (
-                <li key={link.href}>
-                  {link.label === "Logout" ? (
-                    <button
-                      onClick={handleClick}
-                      className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-                    ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
-                    >
-                      <link.icon className="w-5 h-5" />
-                      <span>{link.label}</span>
-                    </button>
-                  ) : (
-                    <Link
-                      href={link.href}
-                      className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-                    ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
-                      onClick={handleClick}
-                    >
-                      <link.icon className="w-5 h-5" />
-                      <span>{link.label}</span>
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          {/* Mobile Menu - Transition and content */}
+          <div
+            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mt-3 ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+              }`}
+          >
+            <ul className="space-y-4 px-2 pb-4 pt-2 bg-white rounded-lg shadow-md">
+              {filteredLinks.map((link) => {
+                const isActive = pathname.includes(link.href);
+
+                const handleClick = async () => {
+                  setIsMenuOpen(false);
+                  handleLinkClick();
+                  if (link.label === "Logout") {
+                    await handleSignOut();
+                  }
+                };
+
+                return (
+                  <li key={link.href}>
+                    {link.label === "Logout" ? (
+                      <button
+                        onClick={handleClick}
+                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
+              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span>{link.label}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
+              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        onClick={handleClick}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span>{link.label}</span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
         </div>
       </div>
     </nav>
