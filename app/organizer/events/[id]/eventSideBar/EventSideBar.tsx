@@ -2,6 +2,7 @@ import React, {  useEffect, Dispatch, SetStateAction } from 'react';
 import {
   LayoutDashboard,
   Users,
+  LucideShieldCheck,
   Calendar,
   Settings,
   BarChart,
@@ -49,6 +50,7 @@ const EventSideBar: React.FC<EventSideBarProps> = ({
     { id: 'tickets', label: 'Tickets', icon: <Ticket size={20} /> },
     { id: 'participants', label: 'Participantes', icon: <Users size={20} /> },
     { id: 'schedule', label: 'Horarios', icon: <Calendar size={20} /> },
+    { id: 'eventstaff', label: 'Staff del Evento', icon: <LucideShieldCheck size={20} /> },
     { id: 'statistics', label: 'Estadísticas', icon: <BarChart size={20} /> },
     { id: 'messages', label: 'Mensajes', icon: <MessageSquare size={20} /> },
     { id: 'settings', label: 'Configuración', icon: <Settings size={20} /> },

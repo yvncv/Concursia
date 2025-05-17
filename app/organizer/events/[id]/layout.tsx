@@ -13,6 +13,7 @@ import Schedule from './sections/Schedule';
 import Statistics from './sections/Statistics';
 import Messages from './sections/Messages';
 import Settings from './sections/Settings';
+import EventStaff from './sections/EventStaff';
 
 export default function EventLayout() {
   const { id } = useParams();
@@ -62,6 +63,8 @@ export default function EventLayout() {
         return <Tickets event={currentEvent} />;
       case 'participants':
         return <Participants event={currentEvent} />;
+      case 'eventstaff':
+        return <EventStaff event={currentEvent} />;
       case 'schedule':
         return <Schedule event={currentEvent} />;
       case 'statistics':

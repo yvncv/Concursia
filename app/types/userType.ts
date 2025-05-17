@@ -21,6 +21,10 @@ export type User = FirebaseUser & {
     academyId?: string; // id de la academia a la que pertenece
     attendedEvents?: string[]; // eventos a los que asistió
   };
+  staffOf?: {
+    eventId: string;
+    userStaffType: string[]; // Puede estar en varios roles
+  }[];
   location?: {
     department?: string;
     district?: string;
