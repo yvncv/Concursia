@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import useEvents from "@/app/hooks/useEvents";
 import useAcademies from "@/app/hooks/useAcademies";
+import useUsers from "@/app/hooks/useUsers";
 
 export default function Resultados() {
     const searchParams = useSearchParams();
     const query = searchParams.get("query") || "";
     const { events } = useEvents();
     const { academies } = useAcademies();
+    const { users } = useUsers();
     const [filteredResults, setFilteredResults] = useState([]);
 
     useEffect(() => {
@@ -28,12 +30,18 @@ export default function Resultados() {
         );
 
         const filteredAcademies = academies.filter((academy) =>
-            academy.name.toLowerCase().includes(lowerQuery) || ""
-
+            academy.name.toLowerCase().includes(lowerQuery)
         );
 
-        setFilteredResults([...filteredEvents, ...filteredAcademies]);
-    }, [query, events, academies]);
+        const filteredUsers = users.filter((user) =>
+            user.firstName.toLowerCase().includes(lowerQuery) ||
+            user.lastName.toLowerCase().includes(lowerQuery) ||
+            user.email.at(0).toLowerCase().includes(lowerQuery) ||
+            user.email.at(1)?.toLowerCase().includes(lowerQuery)
+        );
+
+        setFilteredResults([...filteredEvents, ...filteredAcademies, ...filteredUsers]);
+    }, [query, events, academies, users]);
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -42,13 +50,15 @@ export default function Resultados() {
                 <ul className="space-y-4">
                     {filteredResults.map((result) => (
                         <li key={result.id} className="p-4 border rounded-lg shadow bg-[#fef6ff] hover:bg-[#d3cfd4]">
-                            <Link href={result.eventType ? `/event/${result.id}` : `/academy/${result.id}`} className="text-red-600 hover:underline">
+                            <Link href={result.eventType ? `/event/${result.id}` : result.email ? `/user/${result.id}` : `/academy/${result.id}`} className="text-red-600 hover:underline">
                                 {result.name}
                             </Link>
                             <p className="text-gray-600">
                                 {result.eventType
                                     ? `${result.eventType} - ${result.location.district}, ${result.location.department}`
-                                    : `Academia - ${result.location.district}, ${result.location.department}`}
+                                    : result.email
+                                        ? `Usuario ${result.firstName} ${result.lastName} - ${result.email}`
+                                        : `Academia - ${result.location.district}, ${result.location.department}`}
                             </p>
                         </li>
                     ))}
