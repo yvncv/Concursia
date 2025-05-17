@@ -248,6 +248,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchTerm.trim() !== "") {
                   router.push(`/search-results?query=${encodeURIComponent(searchTerm)}`);
+                  setSearchTerm("");
                 }
               }}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600"
