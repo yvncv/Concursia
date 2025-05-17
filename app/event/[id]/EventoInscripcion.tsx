@@ -182,7 +182,7 @@ const EventoInscripcion = ({ event, openModal, user }:
     const entry: TicketEntry = {
       usersId: pareja ? [user.id, pareja.id] : [user.id],
       academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
-      category: user.category,
+      category: user.marinera.participant.category,
       level: selectedCategory,
       amount: Number(event.dance.levels[selectedCategory]?.price) || 0, // Usar la nueva estructura
     };
@@ -238,13 +238,13 @@ const EventoInscripcion = ({ event, openModal, user }:
       };
 
       const checkCategoryDifference = () => {
-        const userCategoryIndex = categories.indexOf(user.category);
-        const parejaCategoryIndex = categories.indexOf(pareja.category);
+        const userCategoryIndex = categories.indexOf(user.marinera.participant.category);
+        const parejaCategoryIndex = categories.indexOf(pareja.marinera.participant.category);
         const categoryDifference = Math.abs(userCategoryIndex - parejaCategoryIndex);
         return categoryDifference <= event.settings.pullCouple.difference;
       };
 
-      if (user.category === pareja.category) {
+      if (user.marinera.participant.category === pareja.marinera.participant.category) {
         alert("Las categorías coinciden");
         handleNext();
         handleSave();
