@@ -1,7 +1,7 @@
 'use client';
 
 import { CustomEvent } from "@/app/types/eventType";
-import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircle, UserPlus, Users, ShoppingCart, Ticket } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
 
 interface EventoInformacionProps {
@@ -17,14 +17,14 @@ interface EventoInformacionProps {
     isGrupalCSVEnabled?: boolean;
 }
 
-const EventoInformacion: React.FC<EventoInformacionProps> = ({ 
-    event, 
-    openModal, 
-    onInscribir, 
-    onInscribirAlumnos, 
-    user, 
-    isEventOrganizer, 
-    loading, 
+const EventoInformacion: React.FC<EventoInformacionProps> = ({
+    event,
+    openModal,
+    onInscribir,
+    onInscribirAlumnos,
+    user,
+    isEventOrganizer,
+    loading,
     error,
     isIndividualWebEnabled,
     isGrupalCSVEnabled
@@ -72,19 +72,19 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
 
     // Determine if inscription types are enabled based on settings
     // IMPORTANTE: Priorizar los valores recibidos por props, que vienen de useSettings()
-    const individualEnabled = isIndividualWebEnabled !== undefined 
+    const individualEnabled = isIndividualWebEnabled !== undefined
         ? isIndividualWebEnabled         // Usar valores de props (de useSettings)
         : (event?.settings?.inscription?.individualEnabled || false);
-    
-    const groupEnabled = isGrupalCSVEnabled !== undefined 
+
+    const groupEnabled = isGrupalCSVEnabled !== undefined
         ? isGrupalCSVEnabled            // Usar valores de props (de useSettings)
         : (event?.settings?.inscription?.groupEnabled || false);
-    
+
     console.log("DEBUG - Event settings:", {
         eventId: event.id,
-        inscriptionFromProps: { 
-            individualEnabled: isIndividualWebEnabled, 
-            groupEnabled: isGrupalCSVEnabled 
+        inscriptionFromProps: {
+            individualEnabled: isIndividualWebEnabled,
+            groupEnabled: isGrupalCSVEnabled
         },
         inscriptionFromEvent: {
             individualEnabled: event?.settings?.inscription?.individualEnabled,
@@ -200,23 +200,23 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                                 event.settings.inscription?.individualEnabled ||
                                 event.settings.inscription?.onSiteEnabled ||
                                 event.settings.pullCouple?.enabled) ? (
-                                    <div className="flex flex-wrap gap-2">
-                                        {event.settings.inscription?.groupEnabled && (
-                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal</span>
-                                        )}
-                                        {event.settings.inscription?.individualEnabled && (
-                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Individual Web</span>
-                                        )}
-                                        {event.settings.inscription?.onSiteEnabled && (
-                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción el Mismo Día</span>
-                                        )}
-                                        {event.settings.pullCouple?.enabled && (
-                                            <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                                Se puede jalar pareja con diferencia máxima de {event.settings.pullCouple.difference}{" "}
-                                                {event.settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
-                                            </span>
-                                        )}
-                                    </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {event.settings.inscription?.groupEnabled && (
+                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal</span>
+                                    )}
+                                    {event.settings.inscription?.individualEnabled && (
+                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Individual Web</span>
+                                    )}
+                                    {event.settings.inscription?.onSiteEnabled && (
+                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción el Mismo Día</span>
+                                    )}
+                                    {event.settings.pullCouple?.enabled && (
+                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
+                                            Se puede jalar pareja con diferencia máxima de {event.settings.pullCouple.difference}{" "}
+                                            {event.settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
+                                        </span>
+                                    )}
+                                </div>
                             ) : (
                                 <span className="text-sm text-gray-500">No se encontraron configuraciones.</span>
                             )
@@ -233,40 +233,44 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                 </article>
 
                 <div className="order-2 h-full flex flex-col space-y-6 justify-between">
-                    {/* Sección de Precios */}
-                    <div className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        {/* Título */}
-                        <div className="flex items-center space-x-3">
+                    {/* Sección de Precios - Diseño Mejorado */}
+                    <div className="w-full bg-gradient-to-br from-white to-[#FFF6F6] p-6 rounded-2xl shadow-lg border border-red-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-800">Inscripción</h3>
                             <Coins className="text-yellow-600 w-6 h-6" />
-                            <span className="text-md md:text-base font-medium text-gray-800">Precios por modalidad:</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
-                                Object.entries(event.dance.levels).map(([levelName, levelData]) => (
-                                    <span
-                                        key={levelName}
-                                        className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
-                                    >
-                                        {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-sm md:text-base text-gray-500">Sin niveles definidos.</span>
-                            )}
                         </div>
 
-                        {/* Botones de acción con renderizado simplificado */}
-                        <div className="mt-4 flex flex-col gap-3">
+                        <div className="mb-4">
+                            <p className="text-base font-medium text-gray-700 mb-3">Precios por modalidad:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
+                                    Object.entries(event.dance.levels).map(([levelName, levelData]) => (
+                                        <span
+                                            key={levelName}
+                                            className="px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
+                                        >
+                                            {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-500">Sin niveles definidos.</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Botones de acción */}
+                        <div className="mt-6 flex flex-col gap-3">
                             {/* Botón de inscripción individual */}
                             {!isOrganizer && (
                                 <button
                                     onClick={onInscribir}
                                     disabled={!individualEnabled}
-                                    className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
-                                        ${individualEnabled 
-                                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-95" 
+                                    className={`w-full py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 flex items-center justify-center gap-2
+                        ${individualEnabled
+                                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-98 shadow-md hover:shadow-lg"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
+                                    {individualEnabled ? <UserPlus className="w-5 h-5" /> : null}
                                     {individualEnabled ? "Inscribir" : "Inscripción web no disponible"}
                                 </button>
                             )}
@@ -276,53 +280,67 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                                 <button
                                     onClick={onInscribirAlumnos}
                                     disabled={!groupEnabled}
-                                    className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
-                                        ${groupEnabled 
-                                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:scale-95" 
+                                    className={`w-full py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 flex items-center justify-center gap-2
+                        ${groupEnabled
+                                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:scale-98 shadow-md hover:shadow-lg"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
+                                    {groupEnabled ? <Users className="w-5 h-5" /> : null}
                                     {groupEnabled ? "Inscribir alumnos" : "Inscripción grupal no disponible"}
                                 </button>
                             )}
                         </div>
                     </div>
-                    <div className="w-full bg-[#FFF6F6] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        {/* Título */}
-                        <div className="flex items-center space-x-3">
-                            <Coins className="text-yellow-600 w-6 h-6" />
-                            <span className="text-md md:text-base font-medium text-gray-800">Precios por entrada:</span>
+
+                    {/* Sección de Espectador - Diseño Mejorado */}
+                    <div className="w-full bg-gradient-to-br from-white to-[#FFF6F6] p-6 rounded-2xl shadow-lg border border-red-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-800">Espectador</h3>
+                            <Ticket className="text-green-600 w-6 h-6" />
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {event?.settings?.levels && Object.keys(event.settings.levels).length > 0 ? (
-                                Object.entries(event.settings.levels).map(([levelName, levelData]) => (
-                                    <span
-                                        key={levelName}
-                                        className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-xs md:text-sm font-medium"
-                                    >
-                                        {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-sm md:text-base text-gray-500">Sin niveles definidos.</span>
-                            )}
+
+                        <div className="mb-4">
+                            <p className="text-base font-medium text-gray-700 mb-3">Precios por entrada:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
+                                    Object.entries(event.dance.levels).map(([levelName, levelData]) => (
+                                        <span
+                                            key={levelName}
+                                            className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
+                                        >
+                                            {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-500">Sin niveles definidos.</span>
+                                )}
+                            </div>
                         </div>
-                        {/* Botones de acción - condicionalmente renderizados */}
-                        <div className="mt-4 flex flex-col gap-3">
-                            {/* {canRegister && ( */}
-                                <button
-                                    onClick={() => alert('Hola')}
-                                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-green-600 hover:to-green-700 active:scale-95"
-                                >
-                                    Comprar mi entrada
-                                </button>
-                            {/* )} */}
+
+                        {/* Botón de compra */}
+                        <div className="mt-6">
+                            <button
+                                onClick={() => alert('Hola')}
+                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 active:scale-98 flex items-center justify-center gap-2"
+                            >
+                                <ShoppingCart className="w-5 h-5" />
+                                Comprar mi entrada
+                            </button>
                         </div>
                     </div>
 
                     {/* Sección del Mapa */}
-                    <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-lg">
-                        <Map latitude={event.location.coordinates.latitude}
-                            longitude={event.location.coordinates.longitude} />
+                    <div className="rounded-2xl overflow-hidden flex-grow hidden md:block shadow-xl border border-gray-200">
+                        <div className="p-4 bg-gray-50 border-b border-gray-200">
+                            <div className="flex items-center gap-2">
+                                <MapPin className="text-red-500 w-5 h-5" />
+                                <h3 className="text-base font-medium text-gray-700">Ubicación del evento</h3>
+                            </div>
+                        </div>
+                        <Map
+                            latitude={event.location.coordinates.latitude}
+                            longitude={event.location.coordinates.longitude}
+                        />
                     </div>
                 </div>
             </div>

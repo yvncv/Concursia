@@ -128,16 +128,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
     }
   };
 
-  const filteredLinks = enlaces.filter((link) => {
-    if (link.label === "Logout" && user) return true;
-    if (link.href === "/login" && user) return false;
-    if (link.requiresAuth) {
-      if (!user) return false;
-      if (link.requiresRole) return user.roleId === link.requiresRole;
-    }
-    return true;
-  });
-
   // Loading states
   const loadingMessage = loadingUser ? "Cargando datos..." : null;
 
@@ -463,6 +453,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
         </div>
+      </div>
     </nav>
   );
 }
