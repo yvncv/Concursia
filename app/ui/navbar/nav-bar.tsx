@@ -23,13 +23,78 @@ export default function Navbar({ brandName }: { brandName: string }) {
   }, [pathname]);
 
   const enlaces = [
-    { href: "/calendario", label: "Calendario", icon: Home, requiresAuth: false },
-    { href: "/login", label: "Iniciar Sesión", icon: LogIn, requiresAuth: false },
-    { href: "/organizer", label: "Panel Organizador", icon: Shield, requiresAuth: true, requiresRole: "organizer" },
-    { href: "/admin", label: "Panel Admin", icon: Shield, requiresAuth: true, requiresRole: "admin" },
-    { href: `/user/${user?.id}`, label: "Perfil", icon: User, requiresAuth: true },
+    {
+      href: "/calendario",
+      label: "Calendario",
+      icon: Home,
+      requiresAuth: false,
+    },
+    {
+      href: "/login",
+      label: "Iniciar Sesión",
+      icon: LogIn,
+      requiresAuth: false,
+    },
+    {
+      href: "/organizer",
+      label: "Panel Organizador",
+      icon: Shield,
+      requiresAuth: true,
+      requiresRole: "organizer",
+    },
+    {
+      href: "/admin",
+      label: "Panel Admin",
+      icon: Shield,
+      requiresAuth: true,
+      requiresRole: "admin",
+    },
+    {
+      href: `/user/${user?.id}`,
+      label: "Perfil",
+      icon: User,
+      requiresAuth: true,
+    },
     { href: "/login", label: "Logout", icon: LogOutIcon, requiresAuth: true },
   ];
+
+  const enlaces_landing = [
+    {
+      href: "/calendario",
+      label: "Calendario",
+      icon: Home,
+    },
+    {
+      href: "#eventos",
+      label: "Eventos Recientes",
+      icon: Home,
+    },
+    {
+      href: "#galeria",
+      label: "Galería",
+      icon: Home,
+    },
+    {
+      href: "#acerca",
+      label: "Acerca de",
+      icon: Home,
+    },
+    {
+      href: "#contacto",
+      label: "Contacto",
+      icon: Home,
+    },
+  ];
+
+  const filteredLinks = enlaces.filter((link) => {
+    if (link.label === "Logout" && user) return true; // Always show logout if user exists
+    if (link.href === "/login" && user) return false;
+    if (link.requiresAuth) {
+      if (!user) return false;
+      if (link.requiresRole) return user.roleId === link.requiresRole;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -72,7 +137,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
     }
     return true;
   });
-
   // Loading states
   const loadingMessage = loadingUser ? "Cargando datos..." : null;
 
@@ -82,7 +146,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
-            <span className="animate-pulse text-red-600 text-lg font-medium">{loadingMessage}</span>
+            <span className="animate-pulse text-red-600 text-lg font-medium">
+              {loadingMessage}
+            </span>
           </div>
         </div>
       </div>
@@ -102,12 +168,38 @@ export default function Navbar({ brandName }: { brandName: string }) {
 
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
-            <ul className="flex space-x-4">
-              <li><Link href="/calendario" className="text-gray-600 hover:text-red-700">Calendario</Link></li>
-              <li><Link href="#eventos" className="text-gray-600 hover:text-red-700">Eventos Recientes</Link></li>
-              <li><Link href="#galeria" className="text-gray-600 hover:text-red-700">Galería</Link></li>
-              <li><Link href="#acerca" className="text-gray-600 hover:text-red-700">Acerca de</Link></li>
-              <li><Link href="#contacto" className="text-gray-600 hover:text-red-700">Contacto</Link></li>
+            <ul className="flex space-x-4 items-center">
+              {enlaces_landing.map((enlace, index) => (
+                <li key={index}>
+                  {enlace.label === "Calendario" ? (
+                    <Link
+                      href={enlace.href}
+                      className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
+                    ${
+                      pathname.includes(enlace.href)
+                        ? "bg-red-100 text-red-700 font-bold"
+                        : "hover:bg-gray-100 hover:text-black text-red-700"
+                    }`}
+                      onClick={handleLinkClick}
+                    >
+                      <enlace.icon className="w-5 h-5" />
+                      <span className="hidden md:block truncate">
+                        {enlace.label}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="relative group">
+                      <Link
+                        href={enlace.href}
+                        className="text-gray-600 hover:text-red-700"
+                      >
+                        {enlace.label}
+                      </Link>
+                      <span className="group-hover:w-full group-hover:opacity-100 opacity-0 duration-300 transition-all ease-in-out absolute bottom-0 left-0 w-[2px] h-[2px] bg-red-700"></span>
+                    </div>
+                  )}
+                </li>
+              ))}
             </ul>
           </nav>
 
@@ -147,11 +239,14 @@ export default function Navbar({ brandName }: { brandName: string }) {
               className="text-red-700 hover:text-gray-200 focus:outline-none transition-colors duration-300"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
-
         {/* Menú para Mobile - Añadida transición suave */}
         <div
           className={`md:hidden bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
@@ -237,7 +332,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
               {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
             </button>
           </div>
-
           {/* Desktop Search Bar */}
           <div className="relative hidden md:block w-full max-w-sm mx-2">
             <input
@@ -256,7 +350,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={handleLinkClick}
                     >
-                      {event.eventType} {event.name} - {event.location.district}, {event.location.department}
+                      {event.eventType} {event.name} - {event.location.district}
+                      , {event.location.department}
                     </Link>
                   </li>
                 ))}
@@ -265,7 +360,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             <nav>
               <ul className="flex space-x-4">
                 {filteredLinks.map((link) => (
@@ -274,26 +369,32 @@ export default function Navbar({ brandName }: { brandName: string }) {
                       <button
                         onClick={handleSignOut}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${
+                            pathname.includes(link.href)
+                              ? "bg-red-100 text-red-700 font-bold"
+                              : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">{link.label}</span>
+                        <span className="hidden md:block truncate">
+                          {link.label}
+                        </span>
                       </button>
                     ) : (
                       <Link
                         href={link.href}
                         className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ${
+                            pathname.includes(link.href)
+                              ? "bg-red-100 text-red-700 font-bold"
+                              : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                         onClick={handleLinkClick}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">{link.label}</span>
+                        <span className="hidden md:block truncate">
+                          {link.label}
+                        </span>
                       </Link>
                     )}
                   </li>
@@ -311,7 +412,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
           <ul className="space-y-4 px-2 pb-4 pt-2 bg-white rounded-lg shadow-md">
             {filteredLinks.map((link) => {
               const isActive = pathname.includes(link.href);
-
               const handleClick = async () => {
                 setIsMenuOpen(false);
                 handleLinkClick();
@@ -319,7 +419,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
                   await handleSignOut();
                 }
               };
-
               return (
                 <li key={link.href}>
                   {link.label === "Logout" ? (

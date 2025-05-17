@@ -13,7 +13,12 @@ import Link from "next/link";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const { createEvent, updateEvent, loading: creatingEvent, error: createError } = useEventCreation();
+  const {
+    createEvent,
+    updateEvent,
+    loading: creatingEvent,
+    error: createError,
+  } = useEventCreation();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -33,36 +38,36 @@ const Events: React.FC = () => {
   
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
-      name: '',
-      description: '',
-      status: ''
+      name: "",
+      description: "",
+      status: "",
     },
     dates: {
       startDate: Timestamp.now(), // Inicializa con Timestamp
-      endDate: Timestamp.now() // Inicializa con Timestamp
+      endDate: Timestamp.now(), // Inicializa con Timestamp
     },
     details: {
-      capacity: '',
-      eventType: ''
+      capacity: "",
+      eventType: "",
     },
     location: {
-      latitude: '',
-      longitude: '',
-      department: '',
-      district: '',
-      placeName: '',
-      province: '',
-      street: ''
+      latitude: "",
+      longitude: "",
+      department: "",
+      district: "",
+      placeName: "",
+      province: "",
+      street: "",
     },
     dance: {
-      levels: {}
+      levels: {},
     },
     images: {
-      smallImage: '',
-      bannerImage: '',
-      smallImagePreview: '',
-      bannerImagePreview: ''
-    }
+      smallImage: "",
+      bannerImage: "",
+      smallImagePreview: "",
+      bannerImagePreview: "",
+    },
   });
 
   // Efecto para filtrar los eventos basados en los criterios de búsqueda y filtrado
@@ -122,12 +127,17 @@ const Events: React.FC = () => {
   const updateEventData = <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => {
     setEventData(prev => ({
       ...prev,
-      [section]: { ...prev[section], ...data }
+      [section]: { ...prev[section], ...data },
     }));
   };
 
-  const loadingMessage = loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : null;
-  
+
+  const loadingMessage = loadingUser
+    ? "Cargando datos..."
+    : loadingEvents
+    ? "Cargando eventos..."
+    : null;
+        
   // Función para resetear todos los filtros
   const resetFilters = () => {
     setSearchTerm("");
@@ -171,7 +181,11 @@ const Events: React.FC = () => {
       : await createEvent(eventToSave, user);
 
     if (success) {
-      alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
+      alert(
+        selectedEvent
+          ? "Evento actualizado exitosamente"
+          : "Evento creado exitosamente"
+      );
       setIsCreateModalOpen(false);
       setSelectedEvent(null);
     } else {
@@ -181,15 +195,18 @@ const Events: React.FC = () => {
 
   const handleEvent = (event: CustomEvent, cmd: string) => {
     // Convertir la estructura de niveles de Firebase a la estructura de la aplicación
-    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { 
-        ...value, 
-        selected: true, 
-        price: Number(value.price), 
-        categories: value.categories || [] // Asegúrate de que categories esté definido
-      };
-      return acc;
-    }, {} as { [key: string]: LevelData });
+    const levelsWithSelected = Object.entries(event.settings.levels).reduce(
+      (acc, [key, value]) => {
+        acc[key] = {
+          ...value,
+          selected: true,
+          price: Number(value.price),
+          categories: value.categories || [], // Asegúrate de que categories esté definido
+        };
+        return acc;
+      },
+      {} as { [key: string]: LevelData }
+    );
 
     setSelectedEvent(event);
     setEventData({
@@ -216,24 +233,24 @@ const Events: React.FC = () => {
         street: event.location.street,
       },
       dance: {
-        levels: levelsWithSelected
+        levels: levelsWithSelected,
       },
       images: {
         smallImage: event.smallImage,
         bannerImage: event.bannerImage,
         smallImagePreview: event.smallImage,
         bannerImagePreview: event.bannerImage,
-      }
+      },
     });
     if (cmd == "edit") {
-      setIsCreateModalOpen(true)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(true);
+      setIsViewModalOpen(false);
     } else if (cmd == "view") {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(true)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(true);
     } else {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(false);
     }
   };
 
@@ -481,7 +498,6 @@ const Events: React.FC = () => {
           </div>
         </div>
       )}
-      
       <EventModal
         isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
         onClose={() => {
@@ -497,8 +513,6 @@ const Events: React.FC = () => {
         isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
         isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
       />
-
-
       {selectedEvent && (
         <DeleteEventModal
           isOpen={isDeleteModalOpen}
