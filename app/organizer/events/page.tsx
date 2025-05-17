@@ -87,7 +87,7 @@ const Events: React.FC = () => {
     if (!user || loadingEvents) return;
     
     // Filtrar primero por academia
-    let filtered = events.filter((event) => event.academyId === user?.academyId);
+    let filtered = events.filter((event) => event.academyId === user?.marinera?.academyId || user?.academyId); // en firebase el type está desactualizado
     
     // Extraer los tipos de eventos únicos para el selector de filtros
     const types = [...new Set(filtered.map(event => event.eventType))];
