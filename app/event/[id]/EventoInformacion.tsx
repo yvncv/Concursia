@@ -5,18 +5,33 @@ import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, A
 import Map from "@/app/ui/map/mapa";
 import { EventSettings } from "@/app/types/settingsType";
 
-const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribirAlumnos, user, isEventOrganizer, loading, error }:
-    {
-        event: CustomEvent,
-        openModal: () => void,
-        onInscribir: () => void,
-        settings: EventSettings | null,
-        onInscribirAlumnos: () => void,
-        user: any,  // Usando 'any' para coincidir con tu implementación de useUser
-        isEventOrganizer?: boolean,
-        loading: boolean,
-        error: string | null
-    }) => {
+interface EventoInformacionProps {
+    event: CustomEvent;
+    openModal: () => void;
+    onInscribir: () => void;
+    settings: EventSettings | null;
+    onInscribirAlumnos: () => void;
+    user: any;  // Usando 'any' para coincidir con tu implementación de useUser
+    isEventOrganizer?: boolean;
+    loading: boolean;
+    error: string | null;
+    isIndividualWebEnabled?: boolean;
+    isGrupalCSVEnabled?: boolean;
+}
+
+const EventoInformacion: React.FC<EventoInformacionProps> = ({ 
+    event, 
+    openModal, 
+    onInscribir, 
+    settings, 
+    onInscribirAlumnos, 
+    user, 
+    isEventOrganizer, 
+    loading, 
+    error,
+    isIndividualWebEnabled,
+    isGrupalCSVEnabled
+}) => {
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);
@@ -58,9 +73,19 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
         isEventOrganizer :
         (user?.id && event.organizerId === user.id);
 
-    // Check if user can register themselves or others
-    const canRegister = !isOrganizer;
-    const canRegisterStudents = user?.roleId === "organizer" && !isOrganizer;
+    // Determine if inscription types are enabled based on settings
+    // If props are provided, use those values. Otherwise, check settings directly
+    const individualWebEnabled = isIndividualWebEnabled !== undefined 
+        ? isIndividualWebEnabled 
+        : (settings?.registration?.individualWeb || false);
+    
+    const grupalCSVEnabled = isGrupalCSVEnabled !== undefined 
+        ? isGrupalCSVEnabled 
+        : (settings?.registration?.grupalCSV || false);
+
+    // Check if user can register themselves or others based on their role and settings
+    const canRegister = !isOrganizer && individualWebEnabled;
+    const canRegisterStudents = user?.roleId === "organizer" && !isOrganizer && grupalCSVEnabled;
 
     return (
         <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
@@ -219,23 +244,31 @@ const EventoInformacion = ({ event, openModal, onInscribir, settings, onInscribi
                             )}
                         </div>
 
-                        {/* Botones de acción - condicionalmente renderizados */}
+                        {/* Botones de acción - condicionalmente renderizados basados en rol y configuración */}
                         <div className="mt-4 flex flex-col gap-3">
-                            {canRegister && (
+                            {!isOrganizer && (
                                 <button
                                     onClick={onInscribir}
-                                    className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-95"
+                                    disabled={!individualWebEnabled}
+                                    className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
+                                        ${individualWebEnabled 
+                                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-95" 
+                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    Inscribir
+                                    {individualWebEnabled ? "Inscribir" : "Inscripción web no disponible"}
                                 </button>
                             )}
 
-                            {canRegisterStudents && (
+                            {user?.roleId === "organizer" && !isOrganizer && (
                                 <button
                                     onClick={onInscribirAlumnos}
-                                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md hover:from-blue-600 hover:to-blue-700 active:scale-95"
+                                    disabled={!grupalCSVEnabled}
+                                    className={`w-full py-2 px-4 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:shadow-md
+                                        ${grupalCSVEnabled 
+                                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:scale-95" 
+                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    Inscribir alumnos
+                                    {grupalCSVEnabled ? "Inscribir alumnos" : "Inscripción grupal CSV no disponible"}
                                 </button>
                             )}
                         </div>

@@ -12,10 +12,8 @@ export interface PullCoupleSettings {
     difference: number
 }
 
-// Define el tipo principal para todas las configuraciones del evento
 export interface EventSettings {
     eventId: string // ID del evento al que pertenece la configuración
     registration: RegistrationSettings
     pullCouple: PullCoupleSettings
-    // Aquí puedes seguir agregando más configuraciones en el futuro
 }

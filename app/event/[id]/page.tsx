@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useSettings from "@/app/hooks/useSettings";
 import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/hooks/useUser";
@@ -15,15 +15,47 @@ import Image from "next/image";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
+// Type adapter for converting coordinates from string to number for EventoInscripcionAlumnos
+const adaptEventForInscripcionAlumnos = (event: any): any => {
+  if (!event) return null;
+  
+  // Create a deep copy of the event to avoid modifying the original
+  const adaptedEvent = {
+    ...event,
+    location: {
+      ...event.location,
+      coordinates: {
+        ...event.location.coordinates,
+        // Convert string coordinates to numbers if they're strings
+        latitude: typeof event.location.coordinates.latitude === 'string' 
+          ? parseFloat(event.location.coordinates.latitude) 
+          : event.location.coordinates.latitude,
+        longitude: typeof event.location.coordinates.longitude === 'string' 
+          ? parseFloat(event.location.coordinates.longitude) 
+          : event.location.coordinates.longitude,
+      }
+    }
+  };
+  
+  return adaptedEvent;
+};
+
+// Helper function to ensure coordinates are strings for Map component
+const ensureStringCoordinates = (value: any): string => {
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+  return value;
+};
+
 const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   const { user } = useUser();
   const { events, loadingEvents, error } = useEvents();
   const [activeTab, setActiveTab] = useState<"informacion" | "inscripcion" | "inscripcionAlumnos">("informacion");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState(false);
-  const [inscripcionEnabled, setInscripcionEnabled] = useState(false);
   const { id } = use(params);
-  const { settings, loading, error: error_settings } = useSettings(id);
+  const { settings, loading: loadingSettings, error: error_settings } = useSettings(id);
 
   const event = events.find((event) => event.id === id);
   const { academy } = useAcademy(event?.academyId);
@@ -34,12 +66,37 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
   // Determina si el usuario es un organizador (cualquier organizador)
   const isOrganizer = user?.roleId === "organizer";
 
+  // Adapt the event for EventoInscripcionAlumnos to fix type incompatibility
+  const adaptedEvent = event ? adaptEventForInscripcionAlumnos(event) : null;
+
+  // Determine if individual web inscription is enabled
+  const isIndividualWebEnabled = settings?.registration?.individualWeb || false;
+  
+  // Determine if group CSV inscription is enabled
+  const isGrupalCSVEnabled = settings?.registration?.grupalCSV || false;
+
+  // Set active tab to information if the current tab is disabled based on settings
+  useEffect(() => {
+    if (
+      (activeTab === "inscripcion" && !isIndividualWebEnabled) ||
+      (activeTab === "inscripcionAlumnos" && !isGrupalCSVEnabled)
+    ) {
+      setActiveTab("informacion");
+    }
+  }, [activeTab, isIndividualWebEnabled, isGrupalCSVEnabled]);
+
   const handleInscribirClick = () => {
-    setActiveTab("inscripcion");
+    // Only allow changing tab if individual web inscription is enabled
+    if (isIndividualWebEnabled) {
+      setActiveTab("inscripcion");
+    }
   };
 
   const handleInscribirAlumnosClick = () => {
-    setActiveTab("inscripcionAlumnos");
+    // Only allow changing tab if group CSV inscription is enabled
+    if (isGrupalCSVEnabled) {
+      setActiveTab("inscripcionAlumnos");
+    }
   };
 
   if (loadingEvents) {
@@ -137,32 +194,40 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               Información
             </button>
 
-            {/* Tab de Inscripción - visible para todos */}
+            {/* Tab de Inscripción - visible solo si individualWeb está habilitado */}
             <button
-              className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+              className={`flex-1 px-6 py-4 text-center font-medium transition-colors 
+                ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed" : ""}
                 ${activeTab === "inscripcion"
                   ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"}`}
-              onClick={() => setActiveTab("inscripcion")}
+              onClick={() => isIndividualWebEnabled && setActiveTab("inscripcion")}
+              disabled={!isIndividualWebEnabled}
             >
               Inscripción
+              {!isIndividualWebEnabled && (
+                <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
+              )}
             </button>
 
-            {/* Tab de Inscripción de Alumnos - solo visible para organizadores */}
-            {
-              isOrganizer && (
-                <button
-                  className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+            {/* Tab de Inscripción de Alumnos - solo visible para organizadores y si grupalCSV está habilitado */}
+            {isOrganizer && (
+              <button
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+                  ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
                   ${activeTab === "inscripcionAlumnos"
-                      ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500 hover:text-gray-700"}`}
-                  onClick={() => setActiveTab("inscripcionAlumnos")}
-                >
-                  Inscripción de Alumnos
-                </button>
-              )
-            }
-          </div >
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:text-gray-700"}`}
+                onClick={() => isGrupalCSVEnabled && setActiveTab("inscripcionAlumnos")}
+                disabled={!isGrupalCSVEnabled}
+              >
+                Inscripción de Alumnos
+                {!isGrupalCSVEnabled && (
+                  <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
+                )}
+              </button>
+            )}
+          </div>
 
           <div className="p-6">
             {activeTab === "informacion" ? (
@@ -173,17 +238,27 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 onInscribirAlumnos={handleInscribirAlumnosClick}
                 user={user}
                 isEventOrganizer={isEventOrganizer}
-                settings={settings}   // Asegúrate de pasar `settings`
-                loading={loading}     // Asegúrate de pasar `loading`
-                error={error}
+                settings={settings}
+                loading={loadingSettings}
+                error={error_settings}
+                isIndividualWebEnabled={isIndividualWebEnabled}
+                isGrupalCSVEnabled={isGrupalCSVEnabled}
               />
             ) : activeTab === "inscripcion" ? (
               user ? (
-                <EventoInscripcion
-                  event={event}
-                  openModal={() => setIsAcademyModalOpen(true)}
-                  settings={settings}
-                  user={user} />
+                isIndividualWebEnabled ? (
+                  <EventoInscripcion
+                    event={event}
+                    openModal={() => setIsAcademyModalOpen(true)}
+                    settings={settings}
+                    user={user} 
+                  />
+                ) : (
+                  <div className="flex flex-col items-center py-12 text-gray-500">
+                    <User className="w-12 h-12 mb-4" />
+                    <p className="text-lg">La inscripción web individual no está habilitada para este evento.</p>
+                  </div>
+                )
               ) : (
                 <div className="flex flex-col items-center py-12 text-gray-500">
                   <User className="w-12 h-12 mb-4" />
@@ -192,7 +267,14 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               )
             ) : activeTab === "inscripcionAlumnos" ? (
               user ? (
-                <EventoInscripcionAlumnos event={event} user={user} />
+                isGrupalCSVEnabled ? (
+                  <EventoInscripcionAlumnos event={adaptedEvent} user={user} />
+                ) : (
+                  <div className="flex flex-col items-center py-12 text-gray-500">
+                    <User className="w-12 h-12 mb-4" />
+                    <p className="text-lg">La inscripción grupal CSV no está habilitada para este evento.</p>
+                  </div>
+                )
               ) : (
                 <div className="flex flex-col items-center py-12 text-gray-500">
                   <User className="w-12 h-12 mb-4" />
@@ -201,8 +283,8 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               )
             ) : null}
           </div>
-        </div >
-      </div >
+        </div>
+      </div>
 
       {isModalOpen && (
         <div
@@ -234,58 +316,54 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             <div className="p-4 h-[400px] sm:h-[500px]">
               <div className="rounded-lg overflow-hidden h-full">
                 <Map
-                  latitude={event.location.coordinates.latitude}
-                  longitude={event.location.coordinates.longitude}
+                  latitude={ensureStringCoordinates(event.location.coordinates.latitude)}
+                  longitude={ensureStringCoordinates(event.location.coordinates.longitude)}
                 />
               </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {
-        isAcademyModalOpen && academy && (
+      {isAcademyModalOpen && academy && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setIsAcademyModalOpen(false)}
+        >
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setIsAcademyModalOpen(false)}
+            className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white/80 rounded-xl shadow-lg w-full max-w-3xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Encabezado del modal */}
-              <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-                  Ubicación de{" "}
-                  <span className="text-red-600">
-                    {academy.name}
-                  </span>
-                </h2>
-                <button
-                  onClick={() => setIsAcademyModalOpen(false)}
-                  className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
-                  aria-label="Cerrar modal"
-                >
-                  ✕
-                </button>
-              </div>
+            {/* Encabezado del modal */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                Ubicación de{" "}
+                <span className="text-red-600">
+                  {academy.name}
+                </span>
+              </h2>
+              <button
+                onClick={() => setIsAcademyModalOpen(false)}
+                className="bg-gradient-to-r from-red-600 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:from-red-500 hover:to-red-400 transition-all duration-300"
+                aria-label="Cerrar modal"
+              >
+                ✕
+              </button>
+            </div>
 
-              {/* Contenido principal */}
-              <div className="p-4 h-[400px] sm:h-[500px]">
-                <div className="rounded-lg overflow-hidden h-full">
-                  <Map
-                    latitude={academy.location.coordinates.latitude}
-                    longitude={academy.location.coordinates.longitude}
-                  />
-                </div>
+            {/* Contenido principal */}
+            <div className="p-4 h-[400px] sm:h-[500px]">
+              <div className="rounded-lg overflow-hidden h-full">
+                <Map
+                  latitude={ensureStringCoordinates(academy.location.coordinates.latitude)}
+                  longitude={ensureStringCoordinates(academy.location.coordinates.longitude)}
+                />
               </div>
             </div>
           </div>
-        )
-      }
-
-    </div >
+        </div>
+      )}
+    </div>
   );
 };
 
