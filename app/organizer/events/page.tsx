@@ -13,7 +13,12 @@ import Link from "next/link";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const { createEvent, updateEvent, loading: creatingEvent, error: createError } = useEventCreation();
+  const {
+    createEvent,
+    updateEvent,
+    loading: creatingEvent,
+    error: createError,
+  } = useEventCreation();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -33,29 +38,29 @@ const Events: React.FC = () => {
   
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
-      name: '',
-      description: '',
-      status: ''
+      name: "",
+      description: "",
+      status: "",
     },
     dates: {
       startDate: Timestamp.now(),
       endDate: Timestamp.now()
     },
     details: {
-      capacity: '',
-      eventType: ''
+      capacity: "",
+      eventType: "",
     },
     location: {
-      latitude: '',
-      longitude: '',
-      department: '',
-      district: '',
-      placeName: '',
-      province: '',
-      street: ''
+      latitude: "",
+      longitude: "",
+      department: "",
+      district: "",
+      placeName: "",
+      province: "",
+      street: "",
     },
     dance: {
-      levels: {}
+      levels: {},
     },
     images: {
       smallImage: '',
@@ -134,7 +139,7 @@ const Events: React.FC = () => {
   const updateEventData = <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => {
     setEventData(prev => ({
       ...prev,
-      [section]: { ...prev[section], ...data }
+      [section]: { ...prev[section], ...data },
     }));
   };
 
@@ -183,7 +188,11 @@ const Events: React.FC = () => {
       : await createEvent(eventToSave, user);
 
     if (success) {
-      alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
+      alert(
+        selectedEvent
+          ? "Evento actualizado exitosamente"
+          : "Evento creado exitosamente"
+      );
       setIsCreateModalOpen(false);
       setSelectedEvent(null);
     } else {
@@ -228,7 +237,7 @@ const Events: React.FC = () => {
         street: event.location.street,
       },
       dance: {
-        levels: levelsWithSelected
+        levels: levelsWithSelected,
       },
       images: {
         smallImage: event.smallImage,
