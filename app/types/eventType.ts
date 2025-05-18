@@ -105,7 +105,7 @@ export interface PhaseSettings {
 // ——— Configuración global del evento ———
 export interface EventSettings {
   inscription: InscriptionSettings;
-  registration: RegistrationSettings;
+  registration?: RegistrationSettings;
   pullCouple: PullCoupleSettings;
   schedule?: {
     items: ScheduleItem[];
@@ -135,26 +135,17 @@ export interface EventFormData {
 
 // Define el tipo de datos para la configuración de inscripción
 export interface RegistrationSettings {
-    grupalCSV: boolean
-    individualWeb: boolean
-    sameDay: boolean
+    grupalCSV: boolean;
+    individualWeb: boolean;
+    sameDay: boolean;
 }
 
 // Define el tipo de datos para la configuración de "jalar pareja"
 export interface PullCoupleSettings {
-    enabled: boolean
-    criteria: "Category" | "Age"
-    difference: number
+    enabled: boolean;
+    criteria: "Category" | "Age";
+    difference: number;
 }
-
-// Define el tipo principal para todas las configuraciones del evento
-export interface EventSettings {
-    eventId: string // ID del evento al que pertenece la configuración
-    registration: RegistrationSettings
-    pullCouple: PullCoupleSettings
-    // Aquí puedes seguir agregando más configuraciones en el futuro
-}
-
 
 // Interfaz para el evento en Firestore
 export interface CustomEvent {

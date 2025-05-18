@@ -46,7 +46,7 @@ const EventSideBar: React.FC<EventSideBarProps> = ({
 
       <nav className="p-4">
         <ul className="space-y-2">
-          {sections.map(item => (
+          {sections?.map(item => (
             <li key={item.id}>
               <button
                 onClick={() => setActiveSection(item.id)}

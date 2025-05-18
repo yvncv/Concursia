@@ -14,6 +14,7 @@ import EventStaff from './sections/EventStaff';
 import Schedule from './sections/Schedule';
 import Statistics from './sections/Statistics';
 import Messages from './sections/Messages';
+import Settings from './sections/Settings';
 
 import {
   LayoutDashboard,
@@ -23,20 +24,20 @@ import {
   CalendarDays,
   BarChart2,
   MessageSquare,
-  Settings
+  Settings as SettingsIcon
 } from "lucide-react";
 
 
 // Maestro de secciones
 const ALL_SECTIONS = [
-  { id: 'overview',     name: 'Visión General', component: Overview,     icon: <LayoutDashboard size={18} /> },
-  { id: 'tickets',      name: 'Entradas',        component: Tickets,      icon: <Ticket size={18} /> },
-  { id: 'participants', name: 'Participantes',   component: Participants, icon: <Users size={18} /> },
-  { id: 'eventstaff',   name: 'Personal',        component: EventStaff,   icon: <UserCog size={18} /> },
-  { id: 'schedule',     name: 'Horario',         component: Schedule,     icon: <CalendarDays size={18} /> },
-  { id: 'statistics',   name: 'Estadísticas',    component: Statistics,   icon: <BarChart2 size={18} /> },
-  { id: 'messages',     name: 'Mensajes',        component: Messages,     icon: <MessageSquare size={18} /> },
-  { id: 'settings',     name: 'Configuración',   component: Settings,     icon: <Settings size={18} /> },
+  { id: 'overview', name: 'Visión General', component: Overview, icon: <LayoutDashboard size={18} /> },
+  { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
+  { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
+  { id: 'eventstaff', name: 'Personal', component: EventStaff, icon: <UserCog size={18} /> },
+  { id: 'schedule', name: 'Horario', component: Schedule, icon: <CalendarDays size={18} /> },
+  { id: 'statistics', name: 'Estadísticas', component: Statistics, icon: <BarChart2 size={18} /> },
+  { id: 'messages', name: 'Mensajes', component: Messages, icon: <MessageSquare size={18} /> },
+  { id: 'settings', name: 'Configuración', component: Settings, icon: <SettingsIcon size={18} /> },
 ];
 
 
@@ -46,22 +47,27 @@ export default function EventLayout() {
   const { user } = useUser();
   const [currentEvent, setCurrentEvent] = useState<CustomEvent | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-const myEntry = useMemo(
-  () => currentEvent?.staff?.find(s => s.userId === user?.id) ?? null,
-  [currentEvent?.staff, user?.id]
-);
-const myPerms = myEntry?.permissions || [];
+  const myEntry = useMemo(
+    () => currentEvent?.staff?.find(s => s.userId === user?.id) ?? null,
+    [currentEvent?.staff, user?.id]
+  );
+  const myPerms = myEntry?.permissions || [];
 
   // Secciones permitidas
-  const allowedSections = useMemo(
-    () => ALL_SECTIONS.filter(sec =>
+  const allowedSections = useMemo(() => {
+    if (user?.roleId === "organizer") return ALL_SECTIONS;
+    return ALL_SECTIONS.filter(sec =>
       sec.id === 'overview' || myPerms.includes(sec.id)
-    ),
-    [myPerms]
-  );
+    );
+  }, [user?.roleId, myPerms]);
 
   // Sección activa
-  const [activeSection, setActiveSection] = useState(allowedSections[0].id);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeSection && allowedSections?.length > 0) {
+      setActiveSection(allowedSections[0].id);
+    }
+  }, [allowedSections, activeSection]);
   useEffect(() => {
     const ev = events.find(e => e.id === id);
     if (ev) setCurrentEvent(ev);
@@ -92,7 +98,7 @@ const myPerms = myEntry?.permissions || [];
           setIsCollapsed={setIsCollapsed}
         />
         <main className="flex-1 overflow-x-auto transition-all duration-300">
-          <div className={`${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'} p-6 min-w-[1024px]`}>  
+          <div className={`${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'} p-6 min-w-[1024px]`}>
             <ActiveComponent event={currentEvent} />
           </div>
         </main>
