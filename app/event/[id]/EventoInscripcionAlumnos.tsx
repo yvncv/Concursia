@@ -196,7 +196,7 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
         inscriptionType: 'Grupal',
         totalAmount: montoTotal,
         entries,
-        createdBy: user.id,
+        createdBy: user?.id,
         level: modalidad,
         category: representativeCategory,
         usersId: allUsersId,

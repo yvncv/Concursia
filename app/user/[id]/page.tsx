@@ -19,7 +19,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { user } = useUser();
   const { id } = use(params);
   const foundUser = users.find(u => u.id === id);
-  const canEdit = Boolean(foundUser && user && foundUser.id === user.id);
+  const canEdit = Boolean(foundUser && user && foundUser.id === user?.id);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -45,12 +45,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     if (!user?.uid) return;
     try {
       // Crear referencia a la imagen por defecto en Firebase Storage
-      const defaultImageRef = user.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
+      const defaultImageRef = user?.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
 
       // Obtener la URL pública de la imagen por defecto
       const defaultImageUrl = await getDownloadURL(defaultImageRef);
       // Referencia al documento del usuario en Firestore
-      const userRef = doc(db, "users", user.uid);
+      const userRef = doc(db, "users", user?.uid);
 
       // Actualizar la URL de la imagen en Firestore
       await updateDoc(userRef, { profileImage: defaultImageUrl });
@@ -72,10 +72,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     try {
       const res = await fetch(croppedImage);
       const blob = await res.blob();
-      const imageRef = storageRef(storage, `users/${user.uid}`);
+      const imageRef = storageRef(storage, `users/${user?.uid}`);
       await uploadBytes(imageRef, blob);
       const publicUrl = await getDownloadURL(imageRef);
-      await updateDoc(doc(db, 'users', user.uid), { profileImage: publicUrl });
+      await updateDoc(doc(db, 'users', user?.uid), { profileImage: publicUrl });
       setCroppedImage(null);
     } catch (e) {
       console.error('Error guardando imagen:', e);

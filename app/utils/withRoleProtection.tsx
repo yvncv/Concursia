@@ -59,10 +59,10 @@ export const withRoleProtection = <P extends object>(
         const isStaff = Boolean(
           user &&
           events.some(ev =>
-            ev.staff?.some(s => s.userId === user.id)
+            ev.staff?.some(s => s.userId === user?.id)
           )
         );
-        if (user && (user.roleId === "organizer" || isStaff)) {
+        if (user && (user?.roleId === "organizer" || isStaff)) {
           setIsAllowed(true);
         } else {
           router.replace("/unauthorized");

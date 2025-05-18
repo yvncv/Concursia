@@ -57,8 +57,8 @@ export const useEventCreation = (): EventCreationHandler => {
 
   useEffect(() => {
     const fetchAcademyName = async () => {
-      if (user && (user.marinera?.academyId)) {
-        const academyRef = doc(db, "academias", (user.marinera?.academyId));
+      if (user && (user?.marinera?.academyId)) {
+        const academyRef = doc(db, "academias", (user?.marinera?.academyId));
         const academySnap = await getDoc(academyRef);
         if (academySnap.exists()) {
           setAcademyName(academySnap.data().name);
@@ -116,9 +116,9 @@ export const useEventCreation = (): EventCreationHandler => {
       status: eventData.general.status,
       startDate: eventData.dates.startDate,
       endDate: eventData.dates.endDate,
-      academyId: user.marinera?.academyId,
+      academyId: user?.marinera?.academyId,
       academyName: academyName,
-      organizerId: user.uid,
+      organizerId: user?.uid,
       smallImage: smallImageUrl,
       bannerImage: bannerImageUrl,
       location: {
@@ -138,8 +138,8 @@ export const useEventCreation = (): EventCreationHandler => {
         levels: processedLevels,
       },
       settings: eventData.settings || DEFAULT_SETTINGS,
-      createdBy: user.uid,
-      lastUpdatedBy: user.uid,
+      createdBy: user?.uid,
+      lastUpdatedBy: user?.uid,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };

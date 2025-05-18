@@ -172,18 +172,22 @@ export default function RegisterForm() {
 
       let profileImageUrl = await getDownloadURL(gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG'));
       if (croppedImage) {
-        profileImageUrl = await uploadProfileImage(croppedImage, user.uid);
+        profileImageUrl = await uploadProfileImage(croppedImage, user?.uid);
       }
 
-      await setDoc(doc(db, "users", user.uid), {
-        id: user.uid,
+      await setDoc(doc(db, "users", user?.uid), {
+        id: user?.uid,
         roleId: "user",
         dni,
         firstName,
         lastName,
         birthDate: Timestamp.fromDate(new Date(`${birthDate}T00:00:00`)),
         gender,
-        category: category,
+        marinera: {
+          participant: { // campo con informacion del usuario si es participante
+            category: category,// eventos en los que participó
+          }, // id de la academia a la que pertenece // eventos a los que asistió
+        },
         email: [email],
         phoneNumber: [phoneNumber],
         location: {

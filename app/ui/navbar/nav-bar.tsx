@@ -18,7 +18,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const router = useRouter();
 
   const isStaffOfAnyEvent = user && events.some(ev =>
-    ev.staff?.some(staff => staff.userId === user.id)
+    ev.staff?.some(staff => staff.userId === user?.id)
   );
 
   // Reset the menu state when pathname changes
@@ -104,7 +104,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
     if (link.href === "/login" && user) return false;
     if (link.requiresAuth) {
       if (!user) return false;
-      if (link.requiresRole) return user.roleId === link.requiresRole;
+      if (link.requiresRole) return user?.roleId === link.requiresRole;
     }
     return true;
   });
@@ -210,7 +210,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <Link
-                href={`/user/${user.id}`}
+                href={`/user/${user?.id}`}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
               >
                 <User className="w-5 h-5" />
@@ -265,7 +265,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             {user ? (
               <li>
                 <Link
-                  href={`/user/${user.id}`}
+                  href={`/user/${user?.id}`}
                   className="flex items-center space-x-2 text-gray-600 hover:text-red-700 block"
                 >
                   <User className="w-5 h-5" />

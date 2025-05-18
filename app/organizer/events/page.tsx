@@ -92,7 +92,7 @@ const Events: React.FC = () => {
     if (!user || loadingEvents) return;
 
     // Filtrar primero por academia
-    let filtered = events.filter((event) => event.academyId === user?.marinera?.academyId || event.staff?.some(s => s.userId === user.id)); // en firebase el type está desactualizado
+    let filtered = events.filter((event) => event.academyId === user?.marinera?.academyId || event.staff?.some(s => s.userId === user?.id)); // en firebase el type está desactualizado
 
     // Extraer los tipos de eventos únicos para el selector de filtros
     const types = [...new Set(filtered.map(e => e.eventType))];
@@ -318,7 +318,7 @@ const Events: React.FC = () => {
             </button>
 
             {
-              (user.roleId == "organizer") && (
+              (user?.roleId == "organizer") && (
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -507,7 +507,7 @@ const Events: React.FC = () => {
                           <Eye className="w-5 h-5" />
                         </button>
                         {
-                          event.organizerId == user.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent")) && (
+                          (event.organizerId === user?.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent"))) && (
                             <button
                               className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
                               title="Editar"
@@ -518,7 +518,7 @@ const Events: React.FC = () => {
                           )
                         }
                         {
-                          event.organizerId == user.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent")) && (
+                          (event.organizerId === user?.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent"))) && (
                             <button
                               className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                               title="Eliminar"
