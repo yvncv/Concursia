@@ -133,7 +133,6 @@ export interface EventFormData {
   settings: EventSettings;
 }
 
-<<<<<<< Updated upstream
 // Define el tipo de datos para la configuración de inscripción
 export interface RegistrationSettings {
     grupalCSV: boolean
@@ -158,9 +157,6 @@ export interface EventSettings {
 
 
 // Interfaz para el evento en Firestore
-=======
-// ——— Modelo de evento en Firestore ———
->>>>>>> Stashed changes
 export interface CustomEvent {
   id: string;
   name: string;
