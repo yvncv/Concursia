@@ -15,7 +15,7 @@ const PersonalInformation: React.FC<Props> = ({ foundUser }) => {
     { label: 'DNI', value: foundUser.dni || 'N/A' },
     { label: 'Fecha de Nacimiento', value: formattedBirthDate },
     { label: 'Género', value: foundUser.gender || 'N/A' },
-    { label: 'Categoría', value: foundUser.category || 'N/A' },
+    { label: 'Categoría', value: foundUser.marinera?.participant?.category || 'N/A' },
   ];
   // Definir iconos para diferentes tipos de información
   const icons = [

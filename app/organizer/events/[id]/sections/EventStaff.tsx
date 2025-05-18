@@ -95,7 +95,7 @@ export default function EventStaff({ event }: EventStaffProps) {
     }
     
     // Verificar si el usuario ya está en el staff
-    const existingEntry = staffEntries.find(e => e.userId === user.id);
+    const existingEntry = staffEntries.find(e => e.userId === user?.id);
     if (existingEntry) {
       setNewUser(user);
       setNewPermissions(existingEntry.permissions);
@@ -215,7 +215,7 @@ export default function EventStaff({ event }: EventStaffProps) {
     setDeleteConfirmation(null);
     
     if (member?.user) {
-      showNotification('success', `${member.user.firstName} ${member.user.lastName} eliminado del personal`);
+      showNotification('success', `${member.user?.firstName} ${member.user?.lastName} eliminado del personal`);
     }
   };
 

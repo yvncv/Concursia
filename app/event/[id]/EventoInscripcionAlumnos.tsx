@@ -1,9 +1,9 @@
 "use client"
 import { useState, useEffect } from "react";
 import { getFirestore, collection, addDoc, Timestamp } from "firebase/firestore";
-import { CheckCircle, Users } from "lucide-react";
+// import { CheckCircle, Users } from "lucide-react";
 import { User } from '@/app/types/userType';
-import { TicketData } from "@/app/types/ticketType";
+// import { TicketData } from "@/app/types/ticketType";
 import useAcademies from "@/app/hooks/useAcademies";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
 import useAcademy from "@/app/hooks/useAcademy";
@@ -196,7 +196,7 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
         inscriptionType: 'Grupal',
         totalAmount: montoTotal,
         entries,
-        createdBy: user.id,
+        createdBy: user?.id,
         level: modalidad,
         category: representativeCategory,
         usersId: allUsersId,
@@ -218,21 +218,21 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
   };
 
   // Reiniciar después de éxito
-  const nuevaInscripcion = (): void => {
-    setInscripciones([]);
-    setMontoTotal(0);
-    setIsSuccess(false);
-    setTicketId("");
+  // const nuevaInscripcion = (): void => {
+  //   setInscripciones([]);
+  //   setMontoTotal(0);
+  //   setIsSuccess(false);
+  //   setTicketId("");
     
-    // Verificar que event.dance y event.dance.levels existen
-    if (!event.dance || !event.dance.levels) {
-      console.error("El evento no tiene modalidades definidas");
-      setModalidad("");
-      return;
-    }
+  //   // Verificar que event.dance y event.dance.levels existen
+  //   if (!event.dance || !event.dance.levels) {
+  //     console.error("El evento no tiene modalidades definidas");
+  //     setModalidad("");
+  //     return;
+  //   }
     
-    setModalidad(Object.keys(event.dance.levels)[0] || "");
-  };
+  //   setModalidad(Object.keys(event.dance.levels)[0] || "");
+  // };
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-6 border border-gray-100">

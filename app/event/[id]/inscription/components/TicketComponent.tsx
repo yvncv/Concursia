@@ -138,10 +138,10 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-gray-700">
                 {user && (
                   <>
-                    <p><span className="font-medium">Nombre:</span> {user.firstName} {user.lastName}</p>
-                    <p><span className="font-medium">DNI:</span> {user.dni}</p>
-                    <p><span className="font-medium">Categoría:</span> {user.category}</p>
-                    {user.level && <p><span className="font-medium">Nivel:</span> {user.level}</p>}
+                    <p><span className="font-medium">Nombre:</span> {user?.firstName} {user?.lastName}</p>
+                    <p><span className="font-medium">DNI:</span> {user?.dni}</p>
+                    <p><span className="font-medium">Categoría:</span> {user?.category}</p>
+                    {user?.level && <p><span className="font-medium">Nivel:</span> {user?.level}</p>}
                   </>
                 )}
               </div>

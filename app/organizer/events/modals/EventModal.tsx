@@ -57,7 +57,12 @@ const initialEventData: EventFormData = {
         inscription: {
             groupEnabled: false,
             individualEnabled: false,
-            onSiteEnabled: false
+            onSiteEnabled: false,
+        },
+        registration: {
+            grupalCSV: false,
+            individualWeb: false,
+            sameDay: false
         },
         pullCouple: {
             enabled: false,
@@ -142,7 +147,7 @@ const EventModal: React.FC<EventModalProps> = ({
     };
 
     const getIncompleteFields = () => {
-        const { general, dates, details, location, dance, images, settings } = eventData;
+        const { general, dates, details, location, dance, images } = eventData;
         const incompleteFields = [];
 
         if (!general.name) incompleteFields.push('Nombre');

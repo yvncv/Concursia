@@ -19,7 +19,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { user } = useUser();
   const { id } = use(params);
   const foundUser = users.find(u => u.id === id);
-  const canEdit = Boolean(foundUser && user && foundUser.id === user.id);
+  const canEdit = Boolean(foundUser && user && foundUser.id === user?.id);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -45,12 +45,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     if (!user?.uid) return;
     try {
       // Crear referencia a la imagen por defecto en Firebase Storage
-      const defaultImageRef = user.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
+      const defaultImageRef = user?.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
 
       // Obtener la URL pública de la imagen por defecto
       const defaultImageUrl = await getDownloadURL(defaultImageRef);
       // Referencia al documento del usuario en Firestore
-      const userRef = doc(db, "users", user.uid);
+      const userRef = doc(db, "users", user?.uid);
 
       // Actualizar la URL de la imagen en Firestore
       await updateDoc(userRef, { profileImage: defaultImageUrl });
@@ -72,10 +72,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     try {
       const res = await fetch(croppedImage);
       const blob = await res.blob();
-      const imageRef = storageRef(storage, `users/${user.uid}`);
+      const imageRef = storageRef(storage, `users/${user?.uid}`);
       await uploadBytes(imageRef, blob);
       const publicUrl = await getDownloadURL(imageRef);
-      await updateDoc(doc(db, 'users', user.uid), { profileImage: publicUrl });
+      await updateDoc(doc(db, 'users', user?.uid), { profileImage: publicUrl });
       setCroppedImage(null);
     } catch (e) {
       console.error('Error guardando imagen:', e);
@@ -99,6 +99,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   if (!foundUser) return <div className="text-center mt-20">Usuario no encontrado.</div>;
 
   const capitalizeName = (str: string) => str.replace(/\b\w/g, c => c.toUpperCase());
+
+  const safeUser = {
+    ...foundUser,
+    location: {
+      department: foundUser.location?.department || "",
+      province: foundUser.location?.province || "",
+      district: foundUser.location?.district || "",
+    }
+  };
 
   return (
     <main className="flex flex-col h-screen">
@@ -153,7 +162,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </div>
           <div className="text-white mt-4 md:mt-0">
             <h1 className="bg-black/40 p-3 rounded-md md:text-4xl font-bold">{capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}</h1>
-            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.academyId && ` • ${foundUser.academyName}`}</p>
+            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.marinera?.academyId && ` • ${foundUser.marinera?.academyId}`}</p>
           </div>
         </div>
 
@@ -172,7 +181,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
           <PersonalInformation foundUser={foundUser} />
           <ContactInformation foundUser={foundUser} canEdit={canEdit} />
-          <PlaceInformation foundUser={foundUser} />
+          <PlaceInformation foundUser={safeUser} />
         </form>
       </div>
 

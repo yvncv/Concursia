@@ -206,7 +206,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                                 <td className="px-4 py-2">
                                     <div className="space-y-2">
                                         {users.map(user => (
-                                            <div key={user.id}>{user.dni} {user.firstName} {user.lastName}</div>
+                                            <div key={user?.id}>{user?.dni} {user?.firstName} {user?.lastName}</div>
                                         ))}
                                     </div>
                                 </td>

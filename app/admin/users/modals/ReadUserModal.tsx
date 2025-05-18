@@ -164,10 +164,10 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
             </div>
             <div>
               <h2 className="text-2xl font-bold">{userFullName}</h2>
-              <p className="text-blue-100">{user.email[0]}</p>
-              {user.roleId && (
+              <p className="text-blue-100">{user?.email[0]}</p>
+              {user?.roleId && (
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-800/40 rounded-full text-xs font-medium">
-                  {user.roleId}
+                  {user?.roleId}
                 </span>
               )}
             </div>

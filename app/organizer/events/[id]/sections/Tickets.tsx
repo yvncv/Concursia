@@ -167,8 +167,8 @@ const TicketCard: React.FC<TicketCardProps> = ({
 
     return (
       <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-        <span className="text-sm">{user.dni} - {user.firstName} {user.lastName}</span>
+        <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+        <span className="text-sm">{user?.dni} - {user?.firstName} {user?.lastName}</span>
       </div>
     );
   };
@@ -427,7 +427,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     const results = tickets.filter(ticket => {
       const ticketUserMap = ticketUsers[ticket.id] || {};
       return Object.values(ticketUserMap).some(user =>
-        user.dni.includes(dniClean)
+        user?.dni.includes(dniClean)
       );
     });
 
@@ -711,8 +711,8 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                             const user = ticketUsers[selectedTicket.id]?.[userId];
                             return user ? (
                               <div key={userId} className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-                                <span className="text-sm">{user.dni} - {user.firstName} {user.lastName}</span>
+                                <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+                                <span className="text-sm">{user?.dni} - {user?.firstName} {user?.lastName}</span>
                               </div>
                             ) : (
                               <span key={userId} className="text-sm text-gray-500">Usuario no encontrado</span>

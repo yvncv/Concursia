@@ -24,12 +24,11 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
   ]
 
   // Crear secciones dinámicas basadas en los niveles del evento
-  const levelSections = Object.entries(event.dance.levels)
-    .map(([levelId, _]) => ({
-      id: levelId,
-      title: levelId.charAt(0).toUpperCase() + levelId.slice(1), // Capitalizar el título
-      icon: Layers
-    }))
+  const levelSections = Object.entries(event.dance?.levels || {}).map(([levelId, _]) => ({
+    id: levelId,
+    title: levelId.charAt(0).toUpperCase() + levelId.slice(1),
+    icon: Layers
+  }));
 
   // Debug para ver qué niveles hay
   console.log("Niveles del evento:", event.dance.levels)
@@ -48,7 +47,7 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
         // Para cualquier sección de nivel, usar el componente Modality genérico
         if (event.dance.levels[activeSection]) {
           return (
-            <Modality 
+            <Modality
               event={event}
               modalityId={activeSection}
               modalityTitle={activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
@@ -72,11 +71,10 @@ const Settings: React.FC<SettingsProps> = ({ event }) => {
             {configSections.map((section) => (
               <button
                 key={section.id}
-                className={`w-full text-left px-4 py-3 flex items-center justify-between transition-colors ${
-                  activeSection === section.id
+                className={`w-full text-left px-4 py-3 flex items-center justify-between transition-colors ${activeSection === section.id
                     ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
                     : "hover:bg-gray-50"
-                }`}
+                  }`}
                 onClick={() => setActiveSection(section.id)}
               >
                 <div className="flex items-center">

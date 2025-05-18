@@ -23,7 +23,7 @@ export type User = FirebaseUser & {
   };
   staffOf?: {
     eventId: string;
-    userStaffType: string[]; // Puede estar en varios roles
+    permissions: string[]; // Puede estar en varios roles
   }[];
   location?: {
     department?: string;

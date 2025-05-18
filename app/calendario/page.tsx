@@ -53,7 +53,7 @@ export default function TodosEventos() {
         <div className="w-full max-w-[1400px] px-4 md:px-8 mt-12">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
             <h1 className="md:text-2xl font-bold text-red-600">
-              {user?.firstName ? `¡${user.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user.firstName)}` : "¡Bienvenido a Tusuy Perú"},
+              {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Tusuy Perú"},
               estos son los eventos de la fecha!
             </h1>
           </div>

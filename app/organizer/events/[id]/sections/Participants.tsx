@@ -208,8 +208,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         const filtered = participants.filter(row =>
             row.participant.code.toLowerCase().includes(term) ||
             row.users.some(user =>
-                user.dni.toLowerCase().includes(term) ||
-                `${user.firstName} ${user.lastName}`.toLowerCase().includes(term)
+                user?.dni.toLowerCase().includes(term) ||
+                `${user?.firstName} ${user?.lastName}`.toLowerCase().includes(term)
             ) ||
             row.participant.category.toLowerCase().includes(term)
         );
@@ -430,11 +430,11 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                             <td className="px-6 py-4">
                                                 <div className="space-y-2">
                                                     {row.users.map((user, index) => (
-                                                        <div key={user.id} className="flex items-center gap-3">
-                                                            {user.profileImage && user.profileImage !== '' ? (
+                                                        <div key={user?.id} className="flex items-center gap-3">
+                                                            {user?.profileImage && user?.profileImage !== '' ? (
                                                                 <img
-                                                                    src={user.profileImage as string}
-                                                                    alt={user.firstName}
+                                                                    src={user?.profileImage as string}
+                                                                    alt={user?.firstName}
                                                                     className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                                                     onError={(e) => {
                                                                         (e.target as HTMLImageElement).src = '';
@@ -447,9 +447,9 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                                 </div>
                                                             )}
                                                             <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+                                                                <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
                                                                 <span className="text-sm">
-                                                                    {user.dni} - {user.firstName} {user.lastName}
+                                                                    {user?.dni} - {user?.firstName} {user?.lastName}
                                                                 </span>
                                                             </div>
                                                         </div>

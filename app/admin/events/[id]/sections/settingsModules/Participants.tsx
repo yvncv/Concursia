@@ -1,6 +1,6 @@
 import React from "react";
 import useSettings from "@/app/hooks/useSettings";
-import type { EventSettings } from "@/app/types/settingsType";
+import { EventSettings } from "@/app/types/eventType";
 
 interface ParticipantsProps {
     eventId: string;
