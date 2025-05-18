@@ -40,7 +40,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
       requiresAuth: false,
     },
     {
-      href: "/organizer",
+      href: "/organize",
       label: "Eventos",
       icon: Shield,
       requiresAuth: true,
@@ -90,9 +90,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
     },
   ];
 
-  if (isStaffOfAnyEvent && !enlaces.some(e => e.href === "/organizer/")) {
+  if (isStaffOfAnyEvent && !enlaces.some(e => e.href === "/organize/")) {
     enlaces.unshift({
-      href: "/organizer/",
+      href: "/organize/",
       label: "Eventos",
       icon: Shield,
       requiresAuth: true,

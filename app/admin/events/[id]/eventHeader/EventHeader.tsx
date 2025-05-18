@@ -86,7 +86,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
         <div className="flex items-center justify-between">
           {/* Left section */}
           <div className="flex items-center space-x-4">
-            <Link href="/organizer/events" className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
+            <Link href="/organize/events" className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="flex items-center space-x-4">

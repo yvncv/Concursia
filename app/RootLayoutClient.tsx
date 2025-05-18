@@ -14,7 +14,7 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
 
   // Actualizar el estado cuando cambie la ruta
   useEffect(() => {
-    setShowNavbar(pathname === "/organizer/events" || !pathname.startsWith("/organizer/events/"));
+    setShowNavbar(pathname === "/organize/events" || !pathname.startsWith("/organize/events/"));
   }, [pathname]);
 
   return (

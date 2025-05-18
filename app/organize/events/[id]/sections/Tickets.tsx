@@ -23,9 +23,9 @@ import {
   CreditCard,
   Calendar,
 } from "lucide-react";
-import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
-import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
-import FilterModal, { FilterOptions } from "@/app/organizer/events/[id]/sections/ticketsModules/modals/FilterModal";
+import DeleteTicket from "@/app/organize/events/[id]/sections/ticketsModules/deleteTicket";
+import ConfirmTicket from "@/app/organize/events/[id]/sections/ticketsModules/confirmTicket";
+import FilterModal, { FilterOptions } from "@/app/organize/events/[id]/sections/ticketsModules/modals/FilterModal";
 import useAcademies from "@/app/hooks/useAcademies";
 
 interface TicketsProps {

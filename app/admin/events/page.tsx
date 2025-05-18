@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
-import EventModal from "@/app/organizer/events/modals/EventModal";
-import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
+import EventModal from "@/app/organize/events/modals/EventModal";
+import DeleteEventModal from "@/app/organize/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
@@ -228,7 +228,7 @@ const Events: React.FC = () => {
                     <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                         <Link
-                          href={`/organizer/events/${event.id}`}
+                          href={`/organize/events/${event.id}`}
                           className="hover:text-red-600 transition-colors"
                         >
                           {event.name}

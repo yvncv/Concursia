@@ -53,7 +53,7 @@ export const withRoleProtection = <P extends object>(
         return;
       }
 
-      // 2) listado de eventos: /organizer/events
+      // 2) listado de eventos: /organize/events
       if (isEventList) {
         // permitimos a organizador global o a cualquier staff en al menos un evento
         const isStaff = Boolean(
@@ -71,7 +71,7 @@ export const withRoleProtection = <P extends object>(
         return;
       }
 
-      // 3) detalle de evento: /organizer/events/[id]/...
+      // 3) detalle de evento: /organize/events/[id]/...
       if (isEventDetail) {
         const eventId = parts[2];
         const section = parts[3] || "overview";

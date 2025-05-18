@@ -26,8 +26,8 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsC
   }, []);
 
   const enlaces = [
-    { label: "Dashboard", href: "/organizer", icon: <LayoutDashboard size={20} /> },
-    { label: "Events", href: "/organizer/events", icon: <Calendar size={20} /> },
+    { label: "Dashboard", href: "/organize", icon: <LayoutDashboard size={20} /> },
+    { label: "Events", href: "/organize/events", icon: <Calendar size={20} /> },
   ];
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);

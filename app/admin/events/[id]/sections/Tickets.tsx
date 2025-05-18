@@ -5,8 +5,8 @@ import useUsers from '@/app/hooks/useUsers';
 import { Ticket } from '@/app/types/ticketType';
 import { User } from '@/app/types/userType';
 import { CircleX } from "lucide-react";
-import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
-import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
+import DeleteTicket from "@/app/organize/events/[id]/sections/ticketsModules/deleteTicket";
+import ConfirmTicket from "@/app/organize/events/[id]/sections/ticketsModules/confirmTicket";
 
 interface TicketsProps {
     event: CustomEvent;

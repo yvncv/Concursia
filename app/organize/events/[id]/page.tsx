@@ -1,4 +1,4 @@
-// app/organizer/events/[id]/page.tsx
+// app/organize/events/[id]/page.tsx
 "use client";
 import React from 'react';
 import { useParams } from 'next/navigation';

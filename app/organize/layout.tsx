@@ -32,7 +32,7 @@ export default function OrganizerLayout({
   }, []);
 
   // Excluir layout en rutas específicas (como detalle de eventos)
-  if (pathname.startsWith("/organizer/events/")) {
+  if (pathname.startsWith("/organize/events/")) {
     return <>{children}</>;
   }
 
