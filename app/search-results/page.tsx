@@ -14,6 +14,7 @@ export default function Resultados() {
     const { academies } = useAcademies();
     const { users } = useUsers();
     const [filteredResults, setFilteredResults] = useState([]);
+    const [filter, setFilter] = useState("all"); // Estado para el filtro
 
     useEffect(() => {
         if (query.trim() === "") {
@@ -40,32 +41,80 @@ export default function Resultados() {
             user.email.at(1)?.toLowerCase().includes(lowerQuery)
         );
 
-        setFilteredResults([...filteredEvents, ...filteredAcademies, ...filteredUsers]);
-    }, [query, events, academies, users]);
+        let results = [];
+        if (filter === "events") results = filteredEvents;
+        else if (filter === "academies") results = filteredAcademies;
+        else if (filter === "users") results = filteredUsers;
+        else results = [...filteredEvents, ...filteredAcademies, ...filteredUsers];
+
+        setFilteredResults(results);
+    }, [query, events, academies, users, filter]);
 
     return (
-        <div className="container mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold mb-4">Resultados para: "{query}"</h1>
-            {filteredResults.length > 0 ? (
-                <ul className="space-y-4">
-                    {filteredResults.map((result) => (
-                        <li key={result.id} className="p-4 border rounded-lg shadow bg-[#fef6ff] hover:bg-[#d3cfd4]">
-                            <Link href={result.eventType ? `/event/${result.id}` : result.email ? `/user/${result.id}` : `/academy/${result.id}`} className="text-red-600 hover:underline">
-                                {result.name}
-                            </Link>
-                            <p className="text-gray-600">
-                                {result.eventType
-                                    ? `${result.eventType} - ${result.location.district}, ${result.location.department}`
-                                    : result.email
-                                        ? `Usuario ${result.firstName} ${result.lastName} - ${result.email}`
-                                        : `Academia - ${result.location.district}, ${result.location.department}`}
-                            </p>
-                        </li>
-                    ))}
+        <div className="flex">
+            {/* Barra lateral */}
+            <aside className="w-1/4 p-4 bg-gray-100 border-r">
+                <h2 className="text-lg font-bold mb-4">Filtrar por:</h2>
+                <ul className="space-y-2">
+                    <li>
+                        <button
+                            onClick={() => setFilter("all")}
+                            className={`w-full text-left px-4 py-2 rounded-lg ${filter === "all" ? "bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+                        >
+                            Todos
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setFilter("events")}
+                            className={`w-full text-left px-4 py-2 rounded-lg ${filter === "events" ? "bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+                        >
+                            Eventos
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setFilter("academies")}
+                            className={`w-full text-left px-4 py-2 rounded-lg ${filter === "academies" ? "bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+                        >
+                            Academias
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setFilter("users")}
+                            className={`w-full text-left px-4 py-2 rounded-lg ${filter === "users" ? "bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+                        >
+                            Usuarios
+                        </button>
+                    </li>
                 </ul>
-            ) : (
-                <p className="text-gray-600">No se encontraron resultados.</p>
-            )}
+            </aside>
+
+            {/* Resultados */}
+            <main className="w-3/4 p-6">
+                <h1 className="text-2xl font-bold mb-4">Resultados para: "{query}"</h1>
+                {filteredResults.length > 0 ? (
+                    <ul className="space-y-4">
+                        {filteredResults.map((result) => (
+                            <li key={result.id} className="p-4 border rounded-lg shadow bg-[#fef6ff] hover:bg-[#d3cfd4]">
+                                <Link href={result.eventType ? `/event/${result.id}` : result.email ? `/user/${result.id}` : `/academy/${result.id}`} className="text-red-600 hover:underline">
+                                    {result.name}
+                                </Link>
+                                <p className="text-gray-600">
+                                    {result.eventType
+                                        ? `${result.eventType} - ${result.location.district}, ${result.location.department}`
+                                        : result.email
+                                            ? `Usuario ${result.firstName} ${result.lastName} - ${result.email}`
+                                            : `Academia - ${result.location.district}, ${result.location.department}`}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-gray-600">No se encontraron resultados.</p>
+                )}
+            </main>
         </div>
     );
 }
