@@ -21,6 +21,11 @@ export const useEventCreation = (): EventCreationHandler => {
   const [academyName, setAcademyName] = useState<string>("");
 
   const DEFAULT_SETTINGS: EventSettings = {
+    inscription: {
+      groupEnabled: false,
+      individualEnabled: false,
+      onSiteEnabled: false,
+    },
     registration: {
       grupalCSV: false,
       individualWeb: false,
@@ -52,8 +57,8 @@ export const useEventCreation = (): EventCreationHandler => {
 
   useEffect(() => {
     const fetchAcademyName = async () => {
-      if (user && user.academyId) {
-        const academyRef = doc(db, "academias", user.academyId);
+      if (user && (user.marinera?.academyId)) {
+        const academyRef = doc(db, "academias", (user.marinera?.academyId));
         const academySnap = await getDoc(academyRef);
         if (academySnap.exists()) {
           setAcademyName(academySnap.data().name);
@@ -111,7 +116,7 @@ export const useEventCreation = (): EventCreationHandler => {
       status: eventData.general.status,
       startDate: eventData.dates.startDate,
       endDate: eventData.dates.endDate,
-      academyId: user.academyId,
+      academyId: user.marinera?.academyId,
       academyName: academyName,
       organizerId: user.uid,
       smallImage: smallImageUrl,

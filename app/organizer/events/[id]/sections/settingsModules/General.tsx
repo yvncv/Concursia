@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import useSettings from "@/app/hooks/useSettings";
-import type { EventSettings } from "@/app/types/eventType";
+import { EventSettings } from "@/app/types/eventType";
 
 interface ParticipantsProps {
     eventId: string;
@@ -34,7 +34,7 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     useEffect(() => {
         if (settings) {
             // Si las configuraciones tienen la estructura antigua, convertirlas a la nueva
-            let settingsToUse = JSON.parse(JSON.stringify(settings)); // Deep clone
+            const settingsToUse = JSON.parse(JSON.stringify(settings)); // Deep clone
             
             // Migración de datos si es necesario
             if (settingsToUse.registration && !settingsToUse.inscription) {
@@ -129,7 +129,7 @@ const Participants: React.FC<ParticipantsProps> = ({ eventId }) => {
     // Descartar los cambios
     const handleDiscardChanges = () => {
         if (settings) {
-            let settingsToUse = JSON.parse(JSON.stringify(settings));
+            const settingsToUse = JSON.parse(JSON.stringify(settings));
             
             // Asegurarnos de que estamos usando la estructura nueva al descartar cambios
             if (settingsToUse.registration && !settingsToUse.inscription) {

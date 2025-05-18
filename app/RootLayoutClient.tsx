@@ -2,8 +2,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NavbarControl from "./ui/navbar/navbar-control";
-import PageTransition from "./ui/page-transition/PageTransition";
-import StairTransition from "./ui/page-transition/StairTransition";
+// import PageTransition from "./ui/page-transition/PageTransition";
+// import StairTransition from "./ui/page-transition/StairTransition";
 import Footer from "./ui/footer/footer";
 import { withRoleProtection } from "./utils/withRoleProtection";
 

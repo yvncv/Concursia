@@ -283,7 +283,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
               <div className="space-y-4">
                 {[
                   { id: 'gender', label: 'Género', value: user.gender, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-                  { id: 'category', label: 'Categoría', value: user.category, icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
+                  { id: 'category', label: 'Categoría', value: user.marinera?.participant?.category, icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
                   // { id: 'level', label: 'Nivel', value: user.level, icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
                 ].map(({ id, label, value, icon }) => (
                   <div key={id} className="flex items-center">
@@ -350,7 +350,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
             <div className="md:col-span-2 mt-2">
               <AcademySelector
                 onAcademySelect={handleAcademySelect}
-                initialAcademyId={user.academyId || ''}
+                initialAcademyId={user.marinera?.academyId || ''}
                 initialAcademyName={user.academyName || 'Libre'} />
             </div>
           </div>
@@ -439,7 +439,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
                       <div className="space-y-3">
                         {[
                           { id: 'gender', label: 'Género', value: pareja.gender },
-                          { id: 'category', label: 'Categoría', value: pareja.category },
+                          { id: 'category', label: 'Categoría', value: pareja.marinera?.participant?.category },
                           // { id: 'level', label: 'Nivel', value: pareja.level },
                         ].map(({ id, label, value }) => (
                           <div key={id} className="flex items-center">
@@ -486,7 +486,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
                     <div className="md:col-span-2 mt-1">
                       <AcademySelector
                         onAcademySelect={handleCoupleAcademySelect}
-                        initialAcademyId={pareja.academyId || ''}
+                        initialAcademyId={pareja.marinera?.academyId || ''}
                         initialAcademyName={pareja.academyName || 'Libre'} />
                     </div>
                   </div>

@@ -3,83 +3,127 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import useUser from "@/app/hooks/useUser";
+import useEvents from "@/app/hooks/useEvents";
 import { useEffect, useState } from "react";
 
-type Role = "admin" | "organizer" | "user" | "participant" | "spectator";
+// type Role = "admin" | "organizer" | "user" | "participant" | "spectator";
 
-const routeRolePatterns: { pattern: RegExp; roles: Role[] }[] = [
-  { pattern: /^\/admin(?:$|\/)/, roles: ["admin"] },
-  { pattern: /^\/organizer(?:$|\/)/, roles: ["organizer"] },
-];
-
-export const withRoleProtection = (WrappedComponent: React.ComponentType) => {
-  const ProtectedComponent = (props: any) => {
+export const withRoleProtection = <P extends object>(
+  WrappedComponent: React.ComponentType<P>
+) => {
+  const ProtectedComponent: React.FC<P> = (props) => {
     const router = useRouter();
     const pathname = usePathname();
     const { user, loadingUser } = useUser();
+    const { events, loadingEvents } = useEvents();
     const [checked, setChecked] = useState(false);
     const [isAllowed, setIsAllowed] = useState(false);
 
     useEffect(() => {
-      if (loadingUser) return;
-
-      // 1) Si no hay usuario → redirect + bloquea todo render
-      // if (!user) {
-      //   router.replace("/login");
-      //   setChecked(true);
-      //   return;
-      // }
-
-      // 2) Busca patrón de ruta
-      const match = routeRolePatterns.find(({ pattern }) =>
-        pattern.test(pathname)
-      );
-
-      // 3) Rutas públicas (sin match) → permitimos
-      if (!match) {
+      // pase de error o login
+      if (
+        pathname === "/unauthorized" ||
+        pathname === "/404" ||
+        pathname === "/login"
+      ) {
         setIsAllowed(true);
         setChecked(true);
         return;
       }
 
-      // 4) Rutas protegidas → chequear rol
-      if (match.roles.includes(user?.roleId as Role)) {
-        setIsAllowed(true);
-      } else {
-        router.replace("/unauthorized");
+      // mientras carga user o events
+      if (loadingUser || loadingEvents || !events) {
+        setChecked(false);
+        return;
       }
 
+      const parts = pathname.split("/").filter(Boolean);
+      const isAdminRoute = /^\/admin(?:$|\/)/.test(pathname);
+      const isEventList = parts[0] === "organizer" && parts[1] === "events" && parts.length === 2;
+      const isEventDetail = parts[0] === "organizer" && parts[1] === "events" && parts.length >= 3;
+
+      // 1) /admin
+      if (isAdminRoute) {
+        if (user?.roleId === "admin") {
+          setIsAllowed(true);
+        } else {
+          router.replace("/unauthorized");
+        }
+        setChecked(true);
+        return;
+      }
+
+      // 2) listado de eventos: /organizer/events
+      if (isEventList) {
+        // permitimos a organizador global o a cualquier staff en al menos un evento
+        const isStaff = Boolean(
+          user &&
+          events.some(ev =>
+            ev.staff?.some(s => s.userId === user.id)
+          )
+        );
+        if (user && (user.roleId === "organizer" || isStaff)) {
+          setIsAllowed(true);
+        } else {
+          router.replace("/unauthorized");
+        }
+        setChecked(true);
+        return;
+      }
+
+      // 3) detalle de evento: /organizer/events/[id]/...
+      if (isEventDetail) {
+        const eventId = parts[2];
+        const section = parts[3] || "overview";
+        const ev = events.find(e => e.id === eventId);
+        if (!ev) {
+          router.replace("/404");
+          setChecked(true);
+          return;
+        }
+        // organizador global del evento
+        if (user?.roleId === "organizer" || ev.organizerId === user?.id) {
+          setIsAllowed(true);
+          setChecked(true);
+          return;
+        }
+        // staff
+        const staffEntry = ev.staff?.find(s => s.userId === user?.id);
+        if (!staffEntry) {
+          router.replace("/unauthorized");
+        } else if (
+          section === "overview" ||
+          staffEntry.permissions.includes(section)
+        ) {
+          setIsAllowed(true);
+        } else {
+          router.replace("/unauthorized");
+        }
+        setChecked(true);
+        return;
+      }
+
+      // 4) resto de rutas: públicas
+      setIsAllowed(true);
       setChecked(true);
-    }, [user, loadingUser, pathname, router]);
+    }, [
+      user,
+      loadingUser,
+      events,
+      loadingEvents,
+      pathname,
+      router
+    ]);
 
-    // Mientras loadingUser o antes de checked → Loading
-    if (loadingUser || !checked) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
-              <span className="animate-pulse text-red-600 text-lg font-medium">
-                Cargando...
-              </span>
-            </div>
-          </div>
-        </div>
-      );
+    if (loadingUser || loadingEvents || !checked) {
+      return <div>…Cargando…</div>;
     }
-
-    // Si no está permitido → nada
-    if (!isAllowed) {
-      return null;
-    }
-
-    // Finalmente, renderizamos el componente
+    if (!isAllowed) return null;
     return <WrappedComponent {...props} />;
   };
 
-  // displayName para ESLint/DevTools
-  const name = WrappedComponent.displayName || WrappedComponent.name || "Component";
-  ProtectedComponent.displayName = `withRoleProtection(${name})`;
-
+  ProtectedComponent.displayName = `withRoleProtection(${
+    WrappedComponent.displayName || WrappedComponent.name || "Component"
+  })`;
   return ProtectedComponent;
 };

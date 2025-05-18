@@ -1,18 +1,17 @@
-import React, {  useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useEffect, Dispatch, SetStateAction } from 'react';
 import {
-  LayoutDashboard,
-  Users,
-  LucideShieldCheck,
-  Calendar,
-  Settings,
-  BarChart,
-  MessageSquare,
-  Ticket,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 
+interface Section {
+  id: string;
+  name: string;
+  icon: React.ReactNode; // si quieres recibir también el icono
+}
+
 interface EventSideBarProps {
+  sections: Section[];
   activeSection: string;
   setActiveSection: (section: string) => void;
   isCollapsed: boolean;
@@ -20,64 +19,50 @@ interface EventSideBarProps {
 }
 
 const EventSideBar: React.FC<EventSideBarProps> = ({
+  sections,
   activeSection,
   setActiveSection,
   isCollapsed,
   setIsCollapsed
 }) => {
 
-  // Add window resize handler to collapse sidebar on mobile automatically
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
-      }
+      setIsCollapsed(window.innerWidth < 768);
     };
-
-    // Set initial state
     handleResize();
-
-    // Add event listener
     window.addEventListener('resize', handleResize);
-
-    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Define menu items directly with JSX for the icons
-  const menuItems = [
-    { id: 'overview', label: 'Resumen', icon: <LayoutDashboard size={20} /> },
-    { id: 'tickets', label: 'Tickets', icon: <Ticket size={20} /> },
-    { id: 'participants', label: 'Participantes', icon: <Users size={20} /> },
-    { id: 'schedule', label: 'Horarios', icon: <Calendar size={20} /> },
-    { id: 'eventstaff', label: 'Staff del Evento', icon: <LucideShieldCheck size={20} /> },
-    { id: 'statistics', label: 'Estadísticas', icon: <BarChart size={20} /> },
-    { id: 'messages', label: 'Mensajes', icon: <MessageSquare size={20} /> },
-    { id: 'settings', label: 'Configuración', icon: <Settings size={20} /> },
-  ];
+  }, [setIsCollapsed]);
 
   return (
     <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md min-h-screen transition-all duration-300 relative`}>
-      <button onClick={() => setIsCollapsed(!isCollapsed)} className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-gray-600 hover:text-red-600 transition-colors z-10" >
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-gray-600 hover:text-red-600 transition-colors z-10"
+      >
         {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>
 
       <nav className="p-4">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
+          {sections.map(item => (
             <li key={item.id}>
               <button
-                onClick={() => setActiveSection(item.id)} // Actualiza la sección activa
-                className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'} px-4 py-2 rounded-lg transition-colors ${activeSection === item.id
+                onClick={() => setActiveSection(item.id)}
+                className={`w-full flex items-center ${
+                  isCollapsed ? 'justify-center' : 'justify-start'
+                } px-4 py-2 rounded-lg transition-colors ${
+                  activeSection === item.id
                     ? 'bg-red-100 text-red-600'
                     : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                title={isCollapsed ? item.label : ''}
+                }`}
+                title={isCollapsed ? item.name : ''}
               >
                 <div className="flex-shrink-0">
-                  {item.icon}
+                  {item.icon /* recibe el icono por prop */}
                 </div>
-                {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                {!isCollapsed && <span className="ml-3">{item.name}</span>}
               </button>
             </li>
           ))}

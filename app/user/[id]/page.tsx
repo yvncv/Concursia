@@ -100,6 +100,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   const capitalizeName = (str: string) => str.replace(/\b\w/g, c => c.toUpperCase());
 
+  const safeUser = {
+    ...foundUser,
+    location: {
+      department: foundUser.location?.department || "",
+      province: foundUser.location?.province || "",
+      district: foundUser.location?.district || "",
+    }
+  };
+
   return (
     <main className="flex flex-col h-screen">
       {/* Header */}
@@ -153,7 +162,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </div>
           <div className="text-white mt-4 md:mt-0">
             <h1 className="bg-black/40 p-3 rounded-md md:text-4xl font-bold">{capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}</h1>
-            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.academyId && ` • ${foundUser.academyName}`}</p>
+            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.marinera?.academyId && ` • ${foundUser.marinera?.academyId}`}</p>
           </div>
         </div>
 
@@ -172,7 +181,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
           <PersonalInformation foundUser={foundUser} />
           <ContactInformation foundUser={foundUser} canEdit={canEdit} />
-          <PlaceInformation foundUser={foundUser} />
+          <PlaceInformation foundUser={safeUser} />
         </form>
       </div>
 
