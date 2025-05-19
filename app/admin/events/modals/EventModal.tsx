@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { CircleX, Save } from "lucide-react";
 import GeneralInfo from "../event-creation/GeneralInfo";
 import EventDates from "../event-creation/EventDates";
@@ -8,6 +8,7 @@ import DanceInfo from "../event-creation/DanceInfo";
 import EventImages from "../event-creation/EventImages";
 import { EventFormData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
+import { fetchUbigeoINEI, Ubigeo } from "@/app/ubigeo/ubigeoService";
 
 interface EventModalProps {
     isOpen: boolean;
@@ -28,8 +29,8 @@ const initialEventData: EventFormData = {
         status: ''
     },
     dates: {
-        startDate: Timestamp.now(), // Inicializa con Timestamp
-        endDate: Timestamp.now() // Inicializa con Timestamp
+        startDate: Timestamp.now(),
+        endDate: Timestamp.now()
     },
     details: {
         capacity: '',
@@ -45,12 +46,24 @@ const initialEventData: EventFormData = {
         street: ''
     },
     dance: {
-        levels: {},
-        categories: []
+        levels: {}  // Updated to match the new structure
     },
     images: {
         smallImage: '',
         bannerImage: ''
+    },
+    // Añadimos la propiedad settings que faltaba, con la nueva estructura inscription
+    settings: {
+        inscription: {
+            groupEnabled: false,
+            individualEnabled: false,
+            onSiteEnabled: false
+        },
+        pullCouple: {
+            enabled: false,
+            criteria: "Category",
+            difference: 0
+        }
     }
 };
 
@@ -65,14 +78,76 @@ const EventModal: React.FC<EventModalProps> = ({
     isEdit = false,
     isOnlyRead = false,
 }) => {
+    const [ubigeoData, setUbigeoData] = useState<Ubigeo[]>([]);
+
+    // Cargar datos de Ubigeo al montar el componente
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data: Ubigeo[] = await fetchUbigeoINEI();
+                setUbigeoData(data);
+            } catch (error) {
+                console.error("Error al cargar los datos de Ubigeo:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
     if (!isOpen) return null;
 
+    const {
+        latitude,
+        longitude,
+        department,
+        province,
+        district,
+        placeName,
+        street
+    } = eventData.location;
+
+    const departmentCode = String(department).padStart(2, "0");
+    const provinceCode = String(province).padStart(2, "0");
+    const districtCode = String(district).padStart(2, "0");
+
+    const departmentName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === "00" &&
+            item.distrito === "00"
+    )?.nombre ?? departmentCode;
+
+    const provinceName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === provinceCode &&
+            item.distrito === "00"
+    )?.nombre ?? provinceCode;
+
+    const districtName = ubigeoData.find(
+        item => item.departamento === departmentCode &&
+            item.provincia === provinceCode &&
+            item.distrito === districtCode
+    )?.nombre ?? districtCode;
+
+    const locationWithNames = {
+        latitude,
+        longitude,
+        department: departmentCode,
+        province: provinceCode,
+        district: districtCode,
+        placeName,
+        street,
+        departmentName,
+        provinceName,
+        districtName
+    };
+
     const getIncompleteFields = () => {
-        const { general, dates, details, location, dance, images } = eventData;
+        const { general, dates, details, location, dance, images, settings } = eventData;
         const incompleteFields = [];
 
         if (!general.name) incompleteFields.push('Nombre');
         if (!general.description) incompleteFields.push('Descripción');
+        if (!general.status) incompleteFields.push('Inactivo');
         if (!dates.startDate) incompleteFields.push('Fecha de inicio');
         if (!dates.endDate) incompleteFields.push('Fecha de fin');
         if (!details.capacity) incompleteFields.push('Capacidad');
@@ -85,7 +160,6 @@ const EventModal: React.FC<EventModalProps> = ({
         if (!location.province) incompleteFields.push('Provincia');
         if (!location.street) incompleteFields.push('Calle');
         if (Object.keys(dance.levels).length === 0) incompleteFields.push('Niveles de baile');
-        if (dance.categories.length === 0) incompleteFields.push('Categorías de baile');
         if (!images.smallImage) incompleteFields.push('Imagen pequeña');
         if (!images.bannerImage) incompleteFields.push('Imagen de portada');
 
@@ -99,6 +173,7 @@ const EventModal: React.FC<EventModalProps> = ({
         updateEventData('location', initialEventData.location);
         updateEventData('dance', initialEventData.dance);
         updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '' });
+        updateEventData('settings', initialEventData.settings); // Añadimos el reseteo de settings
     };
 
     const handleSave = () => {
@@ -116,7 +191,6 @@ const EventModal: React.FC<EventModalProps> = ({
         onClose();
     };
 
-
     const tabs = [
         { id: "general", label: "General" },
         { id: "dates", label: "Días" },
@@ -125,9 +199,6 @@ const EventModal: React.FC<EventModalProps> = ({
         { id: "dance", label: "Categoría/Niveles" },
         { id: "images", label: "Imágenes" },
     ];
-
-
-
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -156,7 +227,7 @@ const EventModal: React.FC<EventModalProps> = ({
                     {activeTab === "general" && <GeneralInfo data={eventData.general} updateData={(data) => updateEventData('general', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "dates" && <EventDates data={eventData.dates} updateData={(data) => updateEventData('dates', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "details" && <EventDetails data={eventData.details} updateData={(data) => updateEventData('details', data)} isOnlyRead={isOnlyRead} />}
-                    {activeTab === "location" && <EventLocation data={eventData.location} updateData={(data) => updateEventData('location', data)} isOnlyRead={isOnlyRead} />}
+                    {activeTab === "location" && <EventLocation data={locationWithNames} updateData={(data) => updateEventData('location', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "dance" && <DanceInfo data={eventData.dance} updateData={(data) => updateEventData('dance', data)} isOnlyRead={isOnlyRead} />}
                     {activeTab === "images" && <EventImages data={eventData.images} updateData={(data) => updateEventData('images', data)} isOnlyRead={isOnlyRead} />}
                 </div>

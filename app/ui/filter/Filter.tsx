@@ -8,6 +8,7 @@ export interface FiltersProps {
 
 export interface FilterState {
     category: string;
+    level: string;
     department: string;
     dateRange: {
         start: string;
@@ -18,6 +19,7 @@ export interface FilterState {
 export default function Filters({ events, onFilterChange }: FiltersProps) {
     const [filters, setFilters] = useState<FilterState>({
         category: "",
+        level: "",
         department: "",
         dateRange: {
             start: "",
@@ -25,10 +27,35 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
         },
     });
 
-    // Obtener valores únicos para los filtros
-    const categories = Array.from(
-        new Set(events.flatMap((event) => event.settings.categories))
+    // Obtener todas las modalidades (levels) disponibles en los eventos
+    const levels = Array.from(
+        new Set(
+            events.flatMap((event) => 
+                Object.keys(event.dance.levels)
+            )
+        )
     );
+
+    // Obtener todas las categorías disponibles en todos los levels
+    const categories = Array.from(
+        new Set(
+            events.flatMap((event) => 
+                Object.entries(event.dance.levels)
+                    .flatMap(([_, levelData]) => levelData.categories || [])
+            )
+        )
+    );
+
+    // Si hay un level seleccionado, filtramos las categorías por ese level
+    const filteredCategories = filters.level 
+        ? Array.from(
+            new Set(
+                events.flatMap((event) => 
+                    event.dance.levels[filters.level]?.categories || []
+                )
+            )
+        )
+        : categories;
 
     const departments = Array.from(
         new Set(events.map((event) => event.location.department))
@@ -42,25 +69,47 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
             ...filters,
             [key]: value,
         };
+        
+        // Si cambiamos de level, resetear el filtro de categoría
+        if (key === 'level') {
+            newFilters.category = '';
+        }
+        
         setFilters(newFilters);
         onFilterChange(newFilters);
     };
 
     return (
         <div className="w-full flex flex-wrap gap-4 mb-6">
+            {/* Filtro por Modalidad (Level) */}
+            <select
+                value={filters.level}
+                onChange={(e) => handleFilterChange("level", e.target.value)}
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 border-gray-300"
+            >
+                <option value="">Todas las modalidades</option>
+                {levels.map((level) => (
+                    <option key={level} value={level}>
+                        {level}
+                    </option>
+                ))}
+            </select>
+
+            {/* Filtro por Categoría */}
             <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange("category", e.target.value)}
                 className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 border-gray-300"
             >
                 <option value="">Todas las categorías</option>
-                {categories.map((category) => (
+                {filteredCategories.map((category) => (
                     <option key={category} value={category}>
                         {category}
                     </option>
                 ))}
             </select>
 
+            {/* Filtro por Departamento */}
             <select
                 value={filters.department}
                 onChange={(e) => handleFilterChange("department", e.target.value)}
@@ -74,6 +123,7 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
                 ))}
             </select>
 
+            {/* Filtro por Rango de Fechas */}
             <div className="flex gap-2 items-center flex-wrap">
                 <span>desde: </span>
                 <input  
@@ -103,4 +153,3 @@ export default function Filters({ events, onFilterChange }: FiltersProps) {
         </div>
     );
 }
-

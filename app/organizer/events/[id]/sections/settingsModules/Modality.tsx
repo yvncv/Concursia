@@ -2,8 +2,10 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import type { CustomEvent } from "@/app/types/eventType"
+import type { CustomEvent, LevelConfig } from "@/app/types/eventType"
 import { Save, Grid3x3, Hash, Info, Gavel, Layout, AlertCircle, User } from "lucide-react"
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/app/firebase/config"
 
 interface ModalityProps {
   event: CustomEvent
@@ -11,37 +13,50 @@ interface ModalityProps {
   modalityTitle: string
 }
 
-interface ModalityConfig {
-  blocks: number
-  tracksPerBlock: number
-  judgesCount: number
-  notes?: string
-}
-
 const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle }) => {
-  const [config, setConfig] = useState<ModalityConfig>({
-    blocks: 1,
-    tracksPerBlock: 3,
-    judgesCount: 3,
-    notes: ""
-  })
+  // Estado para la configuración
+  const [config, setConfig] = useState<LevelConfig | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Cargar la configuración existente cuando cambia la modalidad
+  useEffect(() => {
+    setIsLoading(true)
+    try {
+      // Obtener la configuración existente de la modalidad seleccionada
+      if (event?.dance?.levels?.[modalityId]?.config) {
+        setConfig(event.dance.levels[modalityId].config as LevelConfig)
+      } else {
+        console.warn(`No se encontró configuración para la modalidad ${modalityId}. Esto no debería suceder.`)
+      }
+    } catch (error) {
+      console.error("Error al cargar la configuración:", error)
+    } finally {
+      setHasChanges(false)
+      setSaveError(null)
+      setIsLoading(false)
+    }
+  }, [event, modalityId])
 
   // Calcular el máximo de pistas permitido basado en el número de bloques
   const getMaxTracksPerBlock = () => {
+    if (!config) return 6
     return config.blocks === 1 ? 6 : 4
   }
 
   // Ajustar pistas si se excede el máximo al cambiar bloques
   useEffect(() => {
-    if (config.blocks > 1 && config.tracksPerBlock > 4) {
-      setConfig(prev => ({ ...prev, tracksPerBlock: 4 }))
+    if (config && config.blocks > 1 && config.tracksPerBlock > 4) {
+      setConfig({ ...config, tracksPerBlock: 4 })
       setHasChanges(true)
     }
-  }, [config.blocks, config.tracksPerBlock])
+  }, [config?.blocks, config?.tracksPerBlock])
 
-  const handleInputChange = (field: keyof ModalityConfig, value: number | string) => {
+  const handleInputChange = (field: keyof LevelConfig, value: number | string) => {
+    if (!config) return
+
     if (field === 'tracksPerBlock') {
       const numValue = parseInt(value as string) || 1
       const maxAllowed = config.blocks === 1 ? 6 : 4
@@ -54,23 +69,50 @@ const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle })
   }
 
   const handleSave = async () => {
+    if (!config) return
+
     setSaving(true)
+    setSaveError(null)
+
     try {
       console.log("Guardando configuración de", modalityTitle, config)
+      
+      // Referencia al documento del evento
+      const eventRef = doc(db, "eventos", event.id)
+      
+      // Crear un objeto actualizado para los niveles
+      const updatedLevels = { ...event.dance.levels }
+      
+      // Actualizar la configuración de esta modalidad específica
+      updatedLevels[modalityId] = {
+        ...updatedLevels[modalityId],
+        config: config
+      }
+      
+      // Actualizar el documento en Firestore
+      await updateDoc(eventRef, {
+        "dance.levels": updatedLevels,
+        "updatedAt": new Date() // Actualizar la fecha de última modificación
+      })
+      
       setHasChanges(false)
-      // TODO: Implementar guardado en Firebase
+      console.log("Configuración guardada exitosamente")
     } catch (error) {
       console.error("Error al guardar:", error)
+      setSaveError("Ocurrió un error al guardar la configuración. Intenta nuevamente.")
     } finally {
       setSaving(false)
     }
   }
 
   const calculateTotalSpaces = () => {
+    if (!config) return 0
     return config.blocks * config.tracksPerBlock
   }
 
   const getJudgesVisualization = (isTopRow: boolean, judgesForThisSection: number) => {
+    if (!config) return null
+    
     const totalJudges = judgesForThisSection
     const judgesInRow = isTopRow
       ? Math.ceil(totalJudges / 2)
@@ -91,6 +133,8 @@ const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle })
   }
 
   const getSpaceVisualization = () => {
+    if (!config) return null
+
     if (config.blocks === 1) {
       // Visualización para un solo bloque con jurados (HORIZONTAL)
       return (
@@ -194,10 +238,34 @@ const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle })
             </div>
           ))}
         </div>
+      </div>
+    )
+  }
 
-        <p className="text-sm text-gray-600 text-center mt-4">
-          Vista de cómo se dividirá la pista del coliseo
-        </p>
+  // Mostrar indicador de carga mientras se obtiene la configuración
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-48 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay configuración, mostrar mensaje de error
+  if (!config) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center p-6 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Error de configuración</h3>
+          <p className="text-red-700">
+            No se encontró la configuración para la modalidad <strong>{modalityTitle}</strong>.
+            Por favor, contacta al administrador del sistema.
+          </p>
+        </div>
       </div>
     )
   }
@@ -363,7 +431,7 @@ const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle })
             Notas adicionales
           </div>
           <textarea
-            value={config.notes}
+            value={config.notes || ''}
             onChange={(e) => handleInputChange('notes', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
@@ -380,18 +448,22 @@ const Modality: React.FC<ModalityProps> = ({ event, modalityId, modalityTitle })
           </p>
         </div>
       )}
+      
+      {saveError && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+          <p className="text-red-800">{saveError}</p>
+        </div>
+      )}
 
       <div className="flex justify-end gap-3">
         {hasChanges && (
           <button
             onClick={() => {
-              setConfig({
-                blocks: 1,
-                tracksPerBlock: 3,
-                judgesCount: 3,
-                notes: ""
-              })
-              setHasChanges(false)
+              // Restaurar la configuración original
+              if (event.dance.levels[modalityId]?.config) {
+                setConfig(event.dance.levels[modalityId].config as LevelConfig)
+                setHasChanges(false)
+              }
             }}
             className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
           >

@@ -1,10 +1,11 @@
 // hooks/useGlobalCategories.ts
 import { useState, useEffect } from "react";
-import { getFirestore, doc, getDoc, DocumentData } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { CategoryLevel, DEFAULT_CATEGORIAS } from "../types/categoriesType";
 
 interface CategoriesHookResult {
   categorias: CategoryLevel[];
+  categoriasPorNivel: CategoryLevel[]; // Añadimos este para mantener compatibilidad
   loading: boolean;
   error: Error | null;
 }
@@ -24,11 +25,23 @@ export function useGlobalCategories(): CategoriesHookResult {
         
         if (categoriasSnap.exists()) {
           const data = categoriasSnap.data();
-          // Aseguramos que los datos cumplen con nuestro tipo
-          const categoriasFromFirebase = data.categoriasPorNivel as CategoryLevel[];
-          setCategorias(categoriasFromFirebase);
+          // Verificamos que el campo existe y procesamos los datos
+          if (data.categoriesByLevel) {
+            let categoriasArray: CategoryLevel[];
+            
+            if (Array.isArray(data.categoriesByLevel)) {
+              // Si ya es un array, lo usamos directamente
+              categoriasArray = data.categoriesByLevel;
+            } else {
+              // Si es un objeto indexado, lo convertimos a array
+              categoriasArray = Object.values(data.categoriesByLevel);
+            }
+            
+            setCategorias(categoriasArray);
+          } else {
+            console.warn("El campo categoriesByLevel no existe en el documento categories, usando valores por defecto");
+          }
         } else {
-          // Fallback a las categorías por defecto
           console.warn("No se encontraron categorías en Firebase, usando valores por defecto");
         }
       } catch (err) {
@@ -42,5 +55,11 @@ export function useGlobalCategories(): CategoriesHookResult {
     fetchCategorias();
   }, []);
   
-  return { categorias, loading, error };
+  // Retornamos ambas propiedades para mantener compatibilidad
+  return { 
+    categorias, 
+    categoriasPorNivel: categorias, // Alias para mantener compatibilidad
+    loading, 
+    error 
+  };
 }
