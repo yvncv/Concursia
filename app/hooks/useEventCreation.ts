@@ -4,8 +4,18 @@ import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/hooks/useUser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EventFormData, CustomEvent, LevelData, EventSettings } from '@/app/types/eventType';
+import { 
+  EventFormData, 
+  CustomEvent, 
+  LevelData, 
+  EventSettings, 
+  LevelConfig,
+  ScheduleItem,
+  CompetitionPhase,
+  Gender
+} from '@/app/types/eventType';
 import { User } from "@/app/types/userType";
+import { v4 as uuidv4 } from 'uuid';
 
 interface EventCreationHandler {
   createEvent: (eventData: EventFormData, user: User) => Promise<{ success: boolean; message: string }>;
@@ -20,22 +30,178 @@ export const useEventCreation = (): EventCreationHandler => {
   const [error, setError] = useState<string | null>(null);
   const [academyName, setAcademyName] = useState<string>("");
 
+  // Configuración predeterminada para cada modalidad (level)
+  const DEFAULT_LEVEL_CONFIG: LevelConfig = {
+    blocks: 1,
+    tracksPerBlock: 4,
+    judgesCount: 5,
+    notes: ""
+  };
+
+  // Configuraciones por defecto del evento
   const DEFAULT_SETTINGS: EventSettings = {
     inscription: {
       groupEnabled: false,
-      individualEnabled: false,
-      onSiteEnabled: false,
-    },
-    registration: {
-      grupalCSV: false,
-      individualWeb: false,
-      sameDay: false
+      individualEnabled: true,
+      onSiteEnabled: true
     },
     pullCouple: {
       enabled: false,
       criteria: "Category",
       difference: 0
+    },
+    phases: {
+      semifinalThreshold: 12, // Si hay más de 12 participantes, habrá semifinal
+      finalParticipantsCount: 6, // 6 participantes pasan a la final
+      timePerParticipant: {
+        [CompetitionPhase.ELIMINATORIA]: 3, // 3 minutos por participante en eliminatorias
+        [CompetitionPhase.SEMIFINAL]: 4,    // 4 minutos por participante en semifinales
+        [CompetitionPhase.FINAL]: 5         // 5 minutos por participante en finales
+      }
+    },
+    schedule: {
+      items: [],
+      lastUpdated: Timestamp.now(),
+      dayCount: 1
     }
+  };
+
+  // Función para generar los ítems del schedule basados en las modalidades y categorías
+  const generateScheduleItems = (
+    levels: { [key: string]: LevelData }
+  ): ScheduleItem[] => {
+    const scheduleItems: ScheduleItem[] = [];
+    let orderCounter = 1;
+
+    // Procesamos primero el Seriado (tanda única = final)
+    if (levels["Seriado"] && levels["Seriado"].selected) {
+      const seriadoCategories = levels["Seriado"].categories || [];
+      
+      // Seriado Mujeres
+      seriadoCategories.forEach(category => {
+        scheduleItems.push({
+          id: uuidv4(),
+          levelId: "Seriado",
+          category: category,
+          gender: "Mujeres",
+          phase: CompetitionPhase.FINAL, // Seriado es siempre final (tanda única)
+          order: orderCounter++,
+          estimatedTime: 15 // Aproximadamente 15 minutos por categoría
+        });
+      });
+      
+      // Seriado Varones
+      seriadoCategories.forEach(category => {
+        scheduleItems.push({
+          id: uuidv4(),
+          levelId: "Seriado",
+          category: category,
+          gender: "Varones",
+          phase: CompetitionPhase.FINAL, // Seriado es siempre final (tanda única)
+          order: orderCounter++,
+          estimatedTime: 15 // Aproximadamente 15 minutos por categoría
+        });
+      });
+    }
+
+    // Procesamos Individual (con eliminatorias, semifinales y finales)
+    if (levels["Individual"] && levels["Individual"].selected) {
+      const individualCategories = levels["Individual"].categories || [];
+      
+      // Procesamos las fases para Mujeres
+      ["Mujeres", "Varones"].forEach((gender) => {
+        // Eliminatorias
+        individualCategories.forEach(category => {
+          scheduleItems.push({
+            id: uuidv4(),
+            levelId: "Individual",
+            category: category,
+            gender: gender as Gender,
+            phase: CompetitionPhase.ELIMINATORIA,
+            order: orderCounter++,
+            estimatedTime: 20 // Aproximadamente 20 minutos por categoría en eliminatorias
+          });
+        });
+        
+        // Semifinales
+        individualCategories.forEach(category => {
+          scheduleItems.push({
+            id: uuidv4(),
+            levelId: "Individual",
+            category: category,
+            gender: gender as Gender,
+            phase: CompetitionPhase.SEMIFINAL,
+            order: orderCounter++,
+            estimatedTime: 15 // Aproximadamente 15 minutos por categoría en semifinales
+          });
+        });
+        
+        // Finales
+        individualCategories.forEach(category => {
+          scheduleItems.push({
+            id: uuidv4(),
+            levelId: "Individual",
+            category: category,
+            gender: gender as Gender,
+            phase: CompetitionPhase.FINAL,
+            order: orderCounter++,
+            estimatedTime: 10 // Aproximadamente 10 minutos por categoría en finales
+          });
+        });
+      });
+    }
+
+    // Procesamos el resto de modalidades (Novel Novel, Novel Abierto, etc.)
+    Object.entries(levels).forEach(([levelId, levelData]) => {
+      // Saltamos Seriado e Individual que ya fueron procesados
+      if (levelId === "Seriado" || levelId === "Individual" || !levelData.selected) {
+        return;
+      }
+      
+      const categories = levelData.categories || [];
+      
+      // Para estas modalidades, no separamos por género (son mixtas)
+      // Eliminatorias
+      categories.forEach(category => {
+        scheduleItems.push({
+          id: uuidv4(),
+          levelId: levelId,
+          category: category,
+          gender: "Mixto",
+          phase: CompetitionPhase.ELIMINATORIA,
+          order: orderCounter++,
+          estimatedTime: 20 // Aproximadamente 20 minutos por categoría en eliminatorias
+        });
+      });
+      
+      // Semifinales
+      categories.forEach(category => {
+        scheduleItems.push({
+          id: uuidv4(),
+          levelId: levelId,
+          category: category,
+          gender: "Mixto",
+          phase: CompetitionPhase.SEMIFINAL,
+          order: orderCounter++,
+          estimatedTime: 15 // Aproximadamente 15 minutos por categoría en semifinales
+        });
+      });
+      
+      // Finales
+      categories.forEach(category => {
+        scheduleItems.push({
+          id: uuidv4(),
+          levelId: levelId,
+          category: category,
+          gender: "Mixto",
+          phase: CompetitionPhase.FINAL,
+          order: orderCounter++,
+          estimatedTime: 10 // Aproximadamente 10 minutos por categoría en finales
+        });
+      });
+    });
+
+    return scheduleItems;
   };
 
   const uploadImage = async (image: File, eventId: string, type: 'banner' | 'small'): Promise<string> => {
@@ -72,11 +238,7 @@ export const useEventCreation = (): EventCreationHandler => {
       await fetchAcademyName();
     };
 
-    const fetchDataAsync = async () => {
-      await fetchData();
-    };
-
-    fetchDataAsync().catch(error => {
+    fetchData().catch(error => {
       console.error("Error fetching data:", error);
     });
   }, [user]);
@@ -93,7 +255,7 @@ export const useEventCreation = (): EventCreationHandler => {
       bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
     }
 
-    // Process levels including their categories
+    // Process levels including their categories and add default config
     const processedLevels: { 
       [key: string]: LevelData 
     } = {};
@@ -104,10 +266,25 @@ export const useEventCreation = (): EventCreationHandler => {
           categories: data.categories || [],
           price: Number(data.price),
           couple: data.couple,
-          selected: true
+          selected: true,
+          config: data.config || DEFAULT_LEVEL_CONFIG // Añadimos config por defecto
         };
       }
     });
+
+    // Aseguramos que tenemos settings establecidos
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      ...eventData.settings
+    };
+    
+    // Generamos los items del schedule si no existen
+    if (!settings.schedule || !settings.schedule.items || settings.schedule.items.length === 0) {
+      settings.schedule = {
+        ...DEFAULT_SETTINGS.schedule,
+        items: generateScheduleItems(processedLevels)
+      };
+    }
 
     return {
       id: eventId,
@@ -137,9 +314,9 @@ export const useEventCreation = (): EventCreationHandler => {
       dance: {
         levels: processedLevels,
       },
-      settings: eventData.settings || DEFAULT_SETTINGS,
-      createdBy: user?.uid,
-      lastUpdatedBy: user?.uid,
+      settings: settings,
+      createdBy: user.uid,
+      lastUpdatedBy: user.uid,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
@@ -195,10 +372,29 @@ export const useEventCreation = (): EventCreationHandler => {
     }
 
     try {
-      const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
-      event.updatedAt = Timestamp.now(); // Solo actualizamos el timestamp de actualización
+      // Para actualización, necesitamos primero obtener el evento actual
+      const eventDocRef = doc(db, "eventos", eventId);
+      const eventDocSnap = await getDoc(eventDocRef);
+      
+      if (!eventDocSnap.exists()) {
+        throw new Error("El evento no existe");
+      }
+      
+      const currentEvent = eventDocSnap.data() as CustomEvent;
+      
+      // Procesar los nuevos datos del evento
+      const updatedEvent = await processEventData(eventData, user, eventId, academyName, uploadImage);
+      
+      // Preservar el schedule existente si ya existe, a menos que sea explícitamente actualizado
+      if (currentEvent.settings?.schedule?.items?.length > 0 && 
+          (!eventData.settings?.schedule || !eventData.settings.schedule.items)) {
+        updatedEvent.settings.schedule = currentEvent.settings.schedule;
+      }
+      
+      // Actualizar la fecha de última modificación
+      updatedEvent.updatedAt = Timestamp.now();
 
-      await setDoc(doc(db, "eventos", eventId), event, { merge: true });
+      await setDoc(doc(db, "eventos", eventId), updatedEvent, { merge: true });
 
       return {
         success: true,
