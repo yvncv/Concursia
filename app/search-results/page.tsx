@@ -98,8 +98,8 @@ export default function Resultados() {
                     <ul className="space-y-4">
                         {filteredResults.map((result) => (
                             <li key={result.id} className="p-4 border rounded-lg shadow bg-[#fef6ff] hover:bg-[#d3cfd4]">
-                                <Link href={result.eventType ? `/event/${result.id}` : result.email ? `/user/${result.id}` : `/academy/${result.id}`} className="text-red-600 hover:underline">
-                                    {result.name}
+                                <Link href={result.eventType ? `/event/${result.id}` : result.roleId === 'user' ? `/profiles/user/${result.id}` : `/profiles/academy/${result.id}`} className="text-red-600 hover:underline">
+                                   {result.name} {result.firstName} {result.lastName}
                                 </Link>
                                 <p className="text-gray-600">
                                     {result.eventType
