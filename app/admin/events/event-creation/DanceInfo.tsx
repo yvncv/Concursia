@@ -1,5 +1,3 @@
-"use client";
-
 import React from 'react';
 import { DanceData } from '@/app/types/eventType';
 
@@ -10,7 +8,7 @@ interface DanceInfoProps {
 }
 
 export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoProps) {
-  const categories = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
+  const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
   const levels: Array<{ name: string; couple: boolean }> = [
     { name: "Seriado", couple: false },
     { name: "Individual", couple: false },
@@ -21,11 +19,8 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
     { name: "Nacional", couple: true }
   ];
 
-  // Obtiene el primer nivel seleccionado
-  const currentLevelId = Object.keys(data.levels).find(l => data.levels[l].selected);
-
   const handleLevelChange = (levelName: string): void => {
-    let updated = { ...data.levels };
+    let updatedLevels = { ...data.levels };
     const isSelecting = !data.levels[levelName]?.selected;
 
     // Si estamos seleccionando "Novel Abierto", deshabilitamos "Novel Abierto A" y "Novel Abierto B"
@@ -71,16 +66,30 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
       categories: data.levels[levelName]?.categories || []
     };
 
-    updateData({ ...data, levels: updated });
+    // Verificar si no hay ningún nivel seleccionado
+    const noLevelsSelected = Object.values(updatedLevels).every(level => !level.selected);
+    if (noLevelsSelected) {
+      updatedLevels = {};
+    }
+
+    updateData({
+      ...data,
+      levels: updatedLevels
+    });
   };
 
   const handlePriceChange = (level: string, price: number): void => {
+    const updatedLevels = {
+      ...data.levels,
+      [level]: {
+        ...data.levels[level],
+        price
+      }
+    };
+
     updateData({
       ...data,
-      levels: {
-        ...data.levels,
-        [level]: { ...data.levels[level], price }
-      }
+      levels: updatedLevels
     });
   };
 

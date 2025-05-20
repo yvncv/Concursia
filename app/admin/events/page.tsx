@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus, CheckCircle, Search, Filter, Calendar, X } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
-import EventModal from "@/app/organize/events/modals/EventModal";
-import DeleteEventModal from "@/app/organize/events/modals/DeleteEventModal";
+import EventModal from "@/app/admin/events/modals/EventModal";
+import DeleteEventModal from "@/app/admin/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
@@ -82,7 +82,7 @@ const Events: React.FC = () => {
     if (!user || loadingEvents) return;
     
     // Filtrar primero por academia
-    let filtered = events.filter((event) => event.academyId === user?.academyId);
+    let filtered = events.filter((event) => event.academyId === user?.marinera.academyId);
     
     // Extraer los tipos de eventos únicos para el selector de filtros
     const types = [...new Set(filtered.map(event => event.eventType))];
@@ -205,7 +205,7 @@ const Events: React.FC = () => {
 
     setSelectedEvent(event);
     setEventData({
-     general: {
+      general: {
         name: event.name,
         description: event.description,
         status: event.status,
