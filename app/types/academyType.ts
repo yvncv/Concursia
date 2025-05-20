@@ -6,6 +6,7 @@ export interface Academy {
   name: string;
   email: string;
   phoneNumber: string;
+  profileImage: string | File;
   location: {
     street: string; // Calle del lugar del evento
     district: string; // Distrito del lugar del evento
