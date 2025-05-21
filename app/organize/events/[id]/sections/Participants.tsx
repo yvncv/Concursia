@@ -22,6 +22,7 @@ import {
     ChevronRight,
     UserCircle
 } from "lucide-react";
+import InfoUser from '@/app/ui/info-user/InfoUser';
 
 interface ParticipantsProps {
     event: CustomEvent;
@@ -207,8 +208,8 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
         const filtered = participants.filter(row =>
             row.participant.code.toLowerCase().includes(term) ||
             row.users.some(user =>
-                user.dni.toLowerCase().includes(term) ||
-                `${user.firstName} ${user.lastName}`.toLowerCase().includes(term)
+                user?.dni.toLowerCase().includes(term) ||
+                `${user?.firstName} ${user?.lastName}`.toLowerCase().includes(term)
             ) ||
             row.participant.category.toLowerCase().includes(term)
         );
@@ -429,11 +430,11 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                             <td className="px-6 py-4">
                                                 <div className="space-y-2">
                                                     {row.users.map((user, index) => (
-                                                        <div key={user.id} className="flex items-center gap-3">
-                                                            {user.profileImage && user.profileImage !== '' ? (
+                                                        <div key={user?.id} className="flex items-center gap-3">
+                                                            {user?.profileImage && user?.profileImage !== '' ? (
                                                                 <img
-                                                                    src={user.profileImage as string}
-                                                                    alt={user.firstName}
+                                                                    src={user?.profileImage as string}
+                                                                    alt={user?.firstName}
                                                                     className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                                                     onError={(e) => {
                                                                         (e.target as HTMLImageElement).src = '';
@@ -446,9 +447,9 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                                 </div>
                                                             )}
                                                             <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${user.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
+                                                                <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
                                                                 <span className="text-sm">
-                                                                    {user.dni} - {user.firstName} {user.lastName}
+                                                                    {user?.dni} - {user?.firstName} {user?.lastName}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -542,65 +543,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                             </div>
 
                             {/* Información de usuarios */}
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <h3 className="text-lg font-semibold mb-3">Participante(s)</h3>
-                                <div className="space-y-3">
-                                    {selectedParticipant.users.map((user) => (
-                                        <div key={user.id} className="bg-white rounded-lg p-4 border border-gray-200">
-                                            <div className="flex items-start gap-4">
-                                                {/* User Image */}
-                                                <div className="flex-shrink-0">
-                                                    {user.profileImage && user.profileImage !== '' ? (
-                                                        <img
-                                                            src={user.profileImage as string}
-                                                            alt={user.firstName}
-                                                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).src = '';
-                                                                (e.target as HTMLImageElement).className = 'hidden';
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                                                            <UserCircle className="w-12 h-12 text-gray-500" />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* User Info */}
-                                                <div className="flex-1 grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Nombre Completo</p>
-                                                        <p className="font-medium">{user.firstName} {user.lastName}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">DNI</p>
-                                                        <p className="font-medium">{user.dni}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Género</p>
-                                                        <p className="font-medium">{user.gender}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Edad</p>
-                                                        <p className="font-medium">{calculateAge(user.birthDate)} años</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-600">Fecha de Nacimiento</p>
-                                                        <p className="font-medium">{user.birthDate.toDate().toLocaleDateString()}</p>
-                                                    </div>
-                                                    {user.academyName && (
-                                                        <div>
-                                                            <p className="text-sm text-gray-600">Academia</p>
-                                                            <p className="font-medium">{user.academyName}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <InfoUser users = {selectedParticipant.users} title={'Participante(s)'} />
 
                             {/* Información del ticket */}
                             {selectedParticipant.ticket && (

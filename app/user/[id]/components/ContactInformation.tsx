@@ -33,7 +33,7 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         emailSecondary: foundUser.email[1] || '',
         phonePrimary: foundUser.phoneNumber[0] || '',
         phoneSecondary: foundUser.phoneNumber[1] || '',
-        academyId: foundUser.academyId || ''
+        academyId: foundUser.marinera?.academyId || ''
       });
     }
   }, [foundUser]);
@@ -43,7 +43,7 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
       contactInfo.emailSecondary !== (foundUser.email[1] || '') ||
       contactInfo.phonePrimary !== (foundUser.phoneNumber[0] || '') ||
       contactInfo.phoneSecondary !== (foundUser.phoneNumber[1] || '') ||
-      contactInfo.academyId !== (foundUser.academyId || '');
+      contactInfo.academyId !== (foundUser.marinera?.academyId || '');
     setHasChanges(changed);
   }, [contactInfo, foundUser]);
 
@@ -92,7 +92,7 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         email: [foundUser.email[0], contactInfo.emailSecondary],
         phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary]
       };
-      if (contactInfo.academyId !== (foundUser.academyId || '')) {
+      if (contactInfo.academyId !== (foundUser.marinera?.academyId || '')) {
         updateData.academyId = contactInfo.academyId;
       }
       await updateDoc(userRef, updateData);

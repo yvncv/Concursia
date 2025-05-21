@@ -4,8 +4,8 @@ import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/hooks/useUser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EventFormData, CustomEvent, LevelData } from '@/app/types/eventType';
-import { User } from "@/app/types/userType"; // Assuming you have a User type defined
+import { EventFormData, CustomEvent, LevelData, EventSettings } from '@/app/types/eventType';
+import { User } from "@/app/types/userType";
 
 interface EventCreationHandler {
   createEvent: (eventData: EventFormData, user: User) => Promise<{ success: boolean; message: string }>;
@@ -19,6 +19,24 @@ export const useEventCreation = (): EventCreationHandler => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [academyName, setAcademyName] = useState<string>("");
+
+  const DEFAULT_SETTINGS: EventSettings = {
+    inscription: {
+      groupEnabled: false,
+      individualEnabled: false,
+      onSiteEnabled: false,
+    },
+    registration: {
+      grupalCSV: false,
+      individualWeb: false,
+      sameDay: false
+    },
+    pullCouple: {
+      enabled: false,
+      criteria: "Category",
+      difference: 0
+    }
+  };
 
   const uploadImage = async (image: File, eventId: string, type: 'banner' | 'small'): Promise<string> => {
     const folder = type === 'banner' ? 'bannerImages' : 'smallImages';
@@ -39,8 +57,8 @@ export const useEventCreation = (): EventCreationHandler => {
 
   useEffect(() => {
     const fetchAcademyName = async () => {
-      if (user && user.academyId) {
-        const academyRef = doc(db, "academias", user.academyId);
+      if (user && (user?.marinera?.academyId)) {
+        const academyRef = doc(db, "academias", (user?.marinera?.academyId));
         const academySnap = await getDoc(academyRef);
         if (academySnap.exists()) {
           setAcademyName(academySnap.data().name);
@@ -84,7 +102,7 @@ export const useEventCreation = (): EventCreationHandler => {
       if (data.selected) {
         processedLevels[level] = { 
           categories: data.categories || [],
-          price: Number(data.price), // o simplemente: price: value.price
+          price: Number(data.price),
           couple: data.couple,
           selected: true
         };
@@ -98,9 +116,9 @@ export const useEventCreation = (): EventCreationHandler => {
       status: eventData.general.status,
       startDate: eventData.dates.startDate,
       endDate: eventData.dates.endDate,
-      academyId: user.academyId,
+      academyId: user?.marinera?.academyId,
       academyName: academyName,
-      organizerId: user.uid,
+      organizerId: user?.uid,
       smallImage: smallImageUrl,
       bannerImage: bannerImageUrl,
       location: {
@@ -116,13 +134,12 @@ export const useEventCreation = (): EventCreationHandler => {
       },
       eventType: eventData.details.eventType,
       capacity: eventData.details.capacity,
-      settings: {
+      dance: {
         levels: processedLevels,
-        categories: [],
-        registrationType: [], 
       },
-      createdBy: `${user?.firstName} ${user?.lastName}`,
-      lastUpdatedBy: `${user?.firstName} ${user?.lastName}`,
+      settings: eventData.settings || DEFAULT_SETTINGS,
+      createdBy: user?.uid,
+      lastUpdatedBy: user?.uid,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
@@ -179,6 +196,7 @@ export const useEventCreation = (): EventCreationHandler => {
 
     try {
       const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
+      event.updatedAt = Timestamp.now(); // Solo actualizamos el timestamp de actualización
 
       await setDoc(doc(db, "eventos", eventId), event, { merge: true });
 

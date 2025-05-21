@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus, CheckCircle, Search, Filter, Calendar, X } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
-import EventModal from "@/app/organizer/events/modals/EventModal";
-import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
+import EventModal from "@/app/organize/events/modals/EventModal";
+import DeleteEventModal from "@/app/organize/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
@@ -13,14 +13,19 @@ import Link from "next/link";
 
 const Events: React.FC = () => {
   const { events, loadingEvents, error } = useEvents();
-  const { createEvent, updateEvent, loading: creatingEvent, error: createError } = useEventCreation();
+  const {
+    createEvent,
+    updateEvent,
+    loading: creatingEvent,
+    error: createError,
+  } = useEventCreation();
   const { user, loadingUser } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CustomEvent | null>(null);
   const [activeTab, setActiveTab] = useState("general");
-  
+
   // Estados para búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -30,72 +35,89 @@ const Events: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<CustomEvent[]>([]);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
-  
+
   const [eventData, setEventData] = useState<EventFormData>({
     general: {
-      name: '',
-      description: '',
-      status: ''
+      name: "",
+      description: "",
+      status: "",
     },
     dates: {
-      startDate: Timestamp.now(), // Inicializa con Timestamp
-      endDate: Timestamp.now() // Inicializa con Timestamp
+      startDate: Timestamp.now(),
+      endDate: Timestamp.now()
     },
     details: {
-      capacity: '',
-      eventType: ''
+      capacity: "",
+      eventType: "",
     },
     location: {
-      latitude: '',
-      longitude: '',
-      department: '',
-      district: '',
-      placeName: '',
-      province: '',
-      street: ''
+      latitude: "",
+      longitude: "",
+      department: "",
+      district: "",
+      placeName: "",
+      province: "",
+      street: "",
     },
     dance: {
-      levels: {}
+      levels: {},
     },
     images: {
       smallImage: '',
       bannerImage: '',
       smallImagePreview: '',
       bannerImagePreview: ''
+    },
+    settings: {
+      inscription: {
+        groupEnabled: false,
+        individualEnabled: false,
+        onSiteEnabled: false,
+      },
+      registration: {
+        grupalCSV: false,
+        individualWeb: false,
+        sameDay: false
+      },
+      pullCouple: {
+        enabled: false,
+        criteria: "Category",
+        difference: 0
+      }
     }
   });
 
   // Efecto para filtrar los eventos basados en los criterios de búsqueda y filtrado
   useEffect(() => {
     if (!user || loadingEvents) return;
-    
+
     // Filtrar primero por academia
-    let filtered = events.filter((event) => event.academyId === user?.academyId);
-    
+    let filtered = events.filter((event) => event.academyId === user?.marinera?.academyId || event.staff?.some(s => s.userId === user?.id)); // en firebase el type está desactualizado
+
     // Extraer los tipos de eventos únicos para el selector de filtros
-    const types = [...new Set(filtered.map(event => event.eventType))];
+    const types = [...new Set(filtered.map(e => e.eventType))];
     setEventTypes(types);
-    
+
     // Aplicar búsqueda por texto
     if (searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        event => 
-          event.name.toLowerCase().includes(term) || 
+        event =>
+          event.name.toLowerCase().includes(term) ||
           event.description.toLowerCase().includes(term)
       );
     }
-    
+
     // Aplicar filtro por estado
     if (statusFilter !== "all") {
       filtered = filtered.filter(event => event.status === statusFilter);
     }
-    
+
     // Aplicar filtro por tipo
     if (typeFilter !== "all") {
       filtered = filtered.filter(event => event.eventType === typeFilter);
     }
-    
+
     // Aplicar filtro por fecha de inicio
     if (startDateFilter) {
       const startDate = new Date(startDateFilter);
@@ -105,7 +127,7 @@ const Events: React.FC = () => {
         return eventStart >= startDate;
       });
     }
-    
+
     // Aplicar filtro por fecha de fin
     if (endDateFilter) {
       const endDate = new Date(endDateFilter);
@@ -115,19 +137,19 @@ const Events: React.FC = () => {
         return eventEnd <= endDate;
       });
     }
-    
+
     setFilteredEvents(filtered);
   }, [events, user, searchTerm, statusFilter, typeFilter, startDateFilter, endDateFilter, loadingEvents]);
 
   const updateEventData = <K extends keyof EventFormData>(section: K, data: Partial<EventFormData[K]>) => {
     setEventData(prev => ({
       ...prev,
-      [section]: { ...prev[section], ...data }
+      [section]: { ...prev[section], ...data },
     }));
   };
 
   const loadingMessage = loadingUser ? "Cargando datos..." : loadingEvents ? "Cargando eventos..." : null;
-  
+
   // Función para resetear todos los filtros
   const resetFilters = () => {
     setSearchTerm("");
@@ -161,8 +183,8 @@ const Events: React.FC = () => {
     const eventToSave = {
       ...eventData,
       dates: {
-        startDate: eventData.dates.startDate, // Mantén como Timestamp
-        endDate: eventData.dates.endDate, // Mantén como Timestamp
+        startDate: eventData.dates.startDate,
+        endDate: eventData.dates.endDate,
       },
     };
 
@@ -171,7 +193,11 @@ const Events: React.FC = () => {
       : await createEvent(eventToSave, user);
 
     if (success) {
-      alert(selectedEvent ? "Evento actualizado exitosamente" : "Evento creado exitosamente");
+      alert(
+        selectedEvent
+          ? "Evento actualizado exitosamente"
+          : "Evento creado exitosamente"
+      );
       setIsCreateModalOpen(false);
       setSelectedEvent(null);
     } else {
@@ -181,12 +207,12 @@ const Events: React.FC = () => {
 
   const handleEvent = (event: CustomEvent, cmd: string) => {
     // Convertir la estructura de niveles de Firebase a la estructura de la aplicación
-    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { 
-        ...value, 
-        selected: true, 
-        price: Number(value.price), 
-        categories: value.categories || [] // Asegúrate de que categories esté definido
+    const levelsWithSelected = Object.entries(event.dance.levels).reduce((acc, [key, value]) => {
+      acc[key] = {
+        ...value,
+        selected: true,
+        price: Number(value.price),
+        categories: value.categories || []
       };
       return acc;
     }, {} as { [key: string]: LevelData });
@@ -199,8 +225,8 @@ const Events: React.FC = () => {
         status: event.status,
       },
       dates: {
-        startDate: event.startDate, // Mantén como Timestamp
-        endDate: event.endDate, // Mantén como Timestamp
+        startDate: event.startDate,
+        endDate: event.endDate,
       },
       details: {
         capacity: event.capacity,
@@ -216,24 +242,42 @@ const Events: React.FC = () => {
         street: event.location.street,
       },
       dance: {
-        levels: levelsWithSelected
+        levels: levelsWithSelected,
       },
       images: {
         smallImage: event.smallImage,
         bannerImage: event.bannerImage,
         smallImagePreview: event.smallImage,
         bannerImagePreview: event.bannerImage,
+      },
+      settings: event.settings || {
+        inscription: {
+          groupEnabled: false,
+          individualEnabled: false,
+          onSiteEnabled: false,
+        },
+        registration: {
+          grupalCSV: false,
+          individualWeb: false,
+          sameDay: false
+        },
+        pullCouple: {
+          enabled: false,
+          criteria: "Category",
+          difference: 0
+        }
       }
     });
+
     if (cmd == "edit") {
-      setIsCreateModalOpen(true)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(true);
+      setIsViewModalOpen(false);
     } else if (cmd == "view") {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(true)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(true);
     } else {
-      setIsCreateModalOpen(false)
-      setIsViewModalOpen(false)
+      setIsCreateModalOpen(false);
+      setIsViewModalOpen(false);
     }
   };
 
@@ -247,7 +291,7 @@ const Events: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white min-w-screen">
         Gestión de Eventos
       </h1>
-      
+
       {/* Sección de búsqueda y filtros */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -263,7 +307,7 @@ const Events: React.FC = () => {
               className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -272,17 +316,21 @@ const Events: React.FC = () => {
               <Filter size={20} />
               {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
             </button>
-            
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus size={20} />
-              Crear Evento
-            </button>
+
+            {
+              (user?.roleId == "organizer") && (
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <Plus size={20} />
+                  Crear Evento
+                </button>
+              )
+            }
           </div>
         </div>
-        
+
         {/* Filtros adicionales (expandibles) */}
         {showFilters && (
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 transition-all">
@@ -301,7 +349,7 @@ const Events: React.FC = () => {
                   <option value="inactive">Inactivo</option>
                 </select>
               </div>
-              
+
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tipo de Evento
@@ -317,7 +365,7 @@ const Events: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Desde
@@ -334,7 +382,7 @@ const Events: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Hasta
@@ -351,7 +399,7 @@ const Events: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-end">
                 <button
                   onClick={resetFilters}
@@ -365,13 +413,13 @@ const Events: React.FC = () => {
           </div>
         )}
       </div>
-      
+
       {/* Resultados de la búsqueda y filtros */}
       <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
         Mostrando {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''}
         {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || startDateFilter || endDateFilter) && ' con los filtros aplicados'}
       </div>
-      
+
       {loadingEvents ? (
         <div className="flex justify-center items-center h-64">
           <p className="text-gray-600 dark:text-gray-300">Cargando eventos...</p>
@@ -412,9 +460,9 @@ const Events: React.FC = () => {
                   <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-left">
                       <Link
-                        href={`/organizer/events/${event.id}`}
+                        href={`/organize/events/${event.id}`}
                         className="hover:text-red-600 transition-colors"
-                      > 
+                      >
                         {event.name}
                       </Link>
                     </td>
@@ -447,7 +495,7 @@ const Events: React.FC = () => {
                         <Link
                           className="text-pink-500 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors"
                           title="Verificar"
-                          href={`/organizer/events/${event.id}`}
+                          href={`/organize/events/${event.id}`}
                         >
                           <CheckCircle className="w-5 h-5" />
                         </Link>
@@ -458,20 +506,28 @@ const Events: React.FC = () => {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                        <button
-                          className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
-                          title="Editar"
-                          onClick={() => handleEvent(event, "edit")}
-                        >
-                          <FilePenLine className="w-5 h-5" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                          title="Eliminar"
-                          onClick={() => handleDeleteEvent(event)}
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        {
+                          (event.organizerId === user?.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent"))) && (
+                            <button
+                              className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
+                              title="Editar"
+                              onClick={() => handleEvent(event, "edit")}
+                            >
+                              <FilePenLine className="w-5 h-5" />
+                            </button>
+                          )
+                        }
+                        {
+                          (event.organizerId === user?.id || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent"))) && (
+                            <button
+                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                              title="Eliminar"
+                              onClick={() => handleDeleteEvent(event)}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )
+                        }
                       </div>
                     </td>
                   </tr>
@@ -481,12 +537,11 @@ const Events: React.FC = () => {
           </div>
         </div>
       )}
-      
       <EventModal
-        isOpen={isCreateModalOpen || isViewModalOpen}  // El modal se abre si cualquiera de estos estados es true
+        isOpen={isCreateModalOpen || isViewModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
-          setIsViewModalOpen(false);  // Asegúrate de cerrar ambos modales
+          setIsViewModalOpen(false);
           setSelectedEvent(null);
         }}
         onSave={handleSaveEvent}
@@ -494,10 +549,9 @@ const Events: React.FC = () => {
         setActiveTab={setActiveTab}
         eventData={eventData}
         updateEventData={updateEventData}
-        isEdit={!!selectedEvent && !isViewModalOpen}  // Asegúrate de no permitir la edición cuando esté en solo lectura
-        isOnlyRead={isViewModalOpen}  // Solo lectura cuando se está visualizando
+        isEdit={!!selectedEvent && !isViewModalOpen}
+        isOnlyRead={isViewModalOpen}
       />
-
 
       {selectedEvent && (
         <DeleteEventModal

@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import useEvents from "@/app/hooks/useEvents";
 import { Eye, FilePenLine, Trash2, Plus } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
-import EventModal from "@/app/organizer/events/modals/EventModal";
-import DeleteEventModal from "@/app/organizer/events/modals/DeleteEventModal";
+import EventModal from "@/app/organize/events/modals/EventModal";
+import DeleteEventModal from "@/app/organize/events/modals/DeleteEventModal";
 import { useEventCreation } from "@/app/hooks/useEventCreation";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
 import { Timestamp } from "firebase/firestore";
@@ -27,8 +27,8 @@ const Events: React.FC = () => {
       status: ''
     },
     dates: {
-      startDate: Timestamp.now(), // Inicializa con Timestamp
-      endDate: Timestamp.now() // Inicializa con Timestamp
+      startDate: Timestamp.now(),
+      endDate: Timestamp.now()
     },
     details: {
       capacity: '',
@@ -44,14 +44,30 @@ const Events: React.FC = () => {
       street: ''
     },
     dance: {
-      levels: {},
-      categories: []
+      levels: {}
     },
     images: {
       smallImage: '',
       bannerImage: '',
       smallImagePreview: '',
       bannerImagePreview: ''
+    },
+    settings: {
+      inscription: {
+        groupEnabled: false,
+        individualEnabled: false,
+        onSiteEnabled: false
+      },
+      registration: {
+        grupalCSV: false,
+        individualWeb: false,
+        sameDay: false
+      },
+      pullCouple: {
+        enabled: false,
+        criteria: "Category",
+        difference: 0
+      }
     }
   });
 
@@ -107,26 +123,26 @@ const Events: React.FC = () => {
   };
 
   const handleEvent = (event: CustomEvent, cmd: string) => {
-    const levelsWithSelected = Object.entries(event.settings.levels).reduce((acc, [key, value]) => {
-      acc[key] = { 
-        ...value, 
-        selected: true, 
-        price: Number(value.price), 
-        categories: value.categories || [] // Asegúrate de que categories esté definido
+    const levelsWithSelected = Object.entries(event.dance.levels).reduce((acc, [key, value]) => {
+      acc[key] = {
+        ...value,
+        selected: true,
+        price: Number(value.price),
+        categories: value.categories || []
       };
       return acc;
     }, {} as { [key: string]: LevelData });
 
     setSelectedEvent(event);
     setEventData({
-      general: {
+     general: {
         name: event.name,
         description: event.description,
-        status: ''
+        status: event.status || ''
       },
       dates: {
-        startDate: event.startDate, // Mantén como Timestamp
-        endDate: event.endDate, // Mantén como Timestamp
+        startDate: event.startDate,
+        endDate: event.endDate,
       },
       details: {
         capacity: event.capacity,
@@ -143,15 +159,16 @@ const Events: React.FC = () => {
       },
       dance: {
         levels: levelsWithSelected,
-        categories: event.settings.categories,
       },
       images: {
         smallImage: event.smallImage,
         bannerImage: event.bannerImage,
         smallImagePreview: event.smallImage,
         bannerImagePreview: event.bannerImage,
-      }
+      },
+      settings: event.settings
     });
+    
     if (cmd == "edit") {
       setIsCreateModalOpen(true)
       setIsViewModalOpen(false)
@@ -211,7 +228,7 @@ const Events: React.FC = () => {
                     <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                         <Link
-                          href={`/organizer/events/${event.id}`}
+                          href={`/organize/events/${event.id}`}
                           className="hover:text-red-600 transition-colors"
                         >
                           {event.name}

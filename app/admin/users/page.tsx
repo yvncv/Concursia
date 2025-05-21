@@ -52,32 +52,32 @@ const Users: React.FC = () => {
             <tbody className="divide-y dark:divide-gray-700">
               {users.map((user) => (
                 <tr
-                  key={user.id}
+                  key={user?.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                     {`${user?.firstName} ${user?.lastName}`}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {Array.isArray(user.email)
-                      ? user.email.length > 1
-                        ? user.email[1] === ""
-                          ? user.email[0]
-                          : user.email.join(", ")
-                        : user.email[0]
-                      : user.email}
+                    {Array.isArray(user?.email)
+                      ? user?.email.length > 1
+                        ? user?.email[1] === ""
+                          ? user?.email[0]
+                          : user?.email.join(", ")
+                        : user?.email[0]
+                      : user?.email}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {user.roleId}
+                    {user?.roleId}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {user.gender}
+                    {user?.gender}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {new Date(user.birthDate.toDate()).toLocaleDateString()}
+                    {new Date(user?.birthDate.toDate()).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {new Date(user.createdAt.toDate()).toLocaleDateString()}
+                    {new Date(user?.createdAt.toDate()).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center space-x-2">

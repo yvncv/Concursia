@@ -2,8 +2,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NavbarControl from "./ui/navbar/navbar-control";
-import PageTransition from "./ui/page-transition/PageTransition";
-import StairTransition from "./ui/page-transition/StairTransition";
+// import PageTransition from "./ui/page-transition/PageTransition";
+// import StairTransition from "./ui/page-transition/StairTransition";
 import Footer from "./ui/footer/footer";
 import { withRoleProtection } from "./utils/withRoleProtection";
 
@@ -14,7 +14,7 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
 
   // Actualizar el estado cuando cambie la ruta
   useEffect(() => {
-    setShowNavbar(pathname === "/organizer/events" || !pathname.startsWith("/organizer/events/"));
+    setShowNavbar(pathname === "/organize/events" || !pathname.startsWith("/organize/events/"));
   }, [pathname]);
 
   return (
@@ -29,9 +29,10 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
       )}
 
       {/* ¡Aquí lo movemos fuera para que siempre se muestre! */}
-      <StairTransition />
+      {/* <StairTransition /> */}
 
-      <PageTransition>{children}</PageTransition>
+      {/* <PageTransition>{children}</PageTransition> */}
+      {children}
 
       {showNavbar && <Footer brandName={brandName} />}
     </>

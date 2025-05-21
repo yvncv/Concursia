@@ -49,13 +49,13 @@ export default function UnAuthorized () {
         ))}
       </div>
       
-      <div className="relative z-10 max-w-lg w-full bg-gray-200 bg-opacity-30 backdrop-blur-sm rounded-2xl p-8 text-center border border-gray-100 shadow-2xl">
+      <div className="relative z-10 max-w-lg w-full bg-gray-200 bg-opacity-30 backdrop-blur-md rounded-2xl p-8 text-center border border-gray-100 shadow-2xl">
         <h1 className="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600 mb-4">404</h1>
         
-        <h2 className="text-3xl font-bold text-black mb-4">Página no encontrada</h2>
+        <h2 className="text-3xl font-bold text-rojo mb-4">Página no encontrada</h2>
         
-        <p className="text-gray-900 text-lg mb-8">
-          La página que estás buscando parece haberse perdido en el espacio digital.
+        <p className="text-red-900 text-lg mb-8">
+          La página que estás buscando no se encuentra disponible en este momento.
         </p>
         
         <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">

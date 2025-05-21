@@ -4,9 +4,9 @@ import { User } from '@/app/types/userType';
 interface Props {
   foundUser: User & {
     location: {
-      department: string;
-      district: string;
-      province: string;
+      department?: string;
+      district?: string;
+      province?: string;
     };
   };
 }
