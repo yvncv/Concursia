@@ -22,9 +22,22 @@ const Academies = () => {
 
   const { getUserById } = useUsers();
 
-  const [newAcademy, setNewAcademy] = useState<Omit<Academy, "id"> | null>(
-    null
-  );
+  const [newAcademy, setNewAcademy] = useState<
+    Omit<Academy, "id" | "createdAt" | "updatedAt">
+  >({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    location: {
+      street: "",
+      district: "",
+      province: "",
+      department: "",
+      placeName: "",
+      coordinates: { latitude: "", longitude: "" },
+    },
+    organizerId: "",
+  });
   const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null);
   // Estado para almacenar los nombres de usuario ya cargados
   const [userNames, setUserNames] = useState<Record<string, string>>({});
@@ -201,54 +214,39 @@ const Academies = () => {
   ];
 
   const handleSaveAcademy = async () => {
-    try {
-      const docRef = await saveAcademy(newAcademy);
-      console.log("Academy saved: ", docRef);
-      console.log(academies);
-    } catch (error) {
-      console.error("Error saving academy: ", error);
-    }
+    setNewAcademy({
+      name: "",
+      email: "",
+      phoneNumber: "",
+      location: {
+        street: "",
+        district: "",
+        province: "",
+        department: "",
+        placeName: "",
+        coordinates: { latitude: "", longitude: "" },
+      },
+      organizerId: "",
+    });
+    setDialogMode("add");
+    setDialogOpen(true);
   };
 
   const handleDeleteAcademy = async (academy: Academy) => {
     setSelectedAcademy(academy);
     setDialogMode("delete");
     setDialogOpen(true);
-    // try {
-    //   const success = await deleteAcademy(id);
-    //   if (success) {
-    //     console.log("Academy deleted successfully");
-    //   } else {
-    //     console.error("Failed to delete academy");
-    //   }
-    // } catch (error) {
-    //   console.error("Error deleting academy: ", error);
-    // }
   };
 
   const handleUpdateAcademy = async (academyToUpdate: Academy) => {
     setSelectedAcademy(academyToUpdate);
     setDialogMode("edit");
     setDialogOpen(true);
-    // try {
-    //   const academyToUpdate = academies.find((academy) => academy.id === id);
-    //   if (academyToUpdate) {
-    //     const updatedAcademy = {
-    //       ...academyToUpdate,
-    //       updatedAt: Timestamp.now(),
-    //     };
-    //     await updateAcademy(id, updatedAcademy);
-    //     console.log("Academy updated successfully");
-    //   } else {
-    //     console.error("Academy not found");
-    //   }
-    // } catch (error) {
-    //   console.error("Error updating academy: ", error);
-    // }
   };
 
   const handleSeeAcademy = async (academy: Academy) => {
     setSelectedAcademy(academy);
+    console.log(academy);
     setDialogMode("view");
     setDialogOpen(true);
   };
@@ -258,13 +256,22 @@ const Academies = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div id="table-div" className="w-full px-4">
+    <div className="flex flex-col p-4 h-screen">
+      <div id="general-actions" className="">
+        <button
+          id="add-academy"
+          onClick={handleSaveAcademy}
+          className="p-2 rounded-md text-white bg-rojo uppercase"
+        >
+          Agregar
+        </button>
+      </div>
+      <div id="table-div" className="w-full">
         <AcademiesDatatable columns={columns} data={academies} />
       </div>
 
       {/* Academy Dialog */}
-      {dialogOpen && selectedAcademy && (
+      {dialogOpen && (dialogMode === "add" || selectedAcademy) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b">
@@ -283,6 +290,229 @@ const Academies = () => {
             </div>
 
             <div className="p-6">
+              {dialogMode === "add" && (
+                <div className="flex flex-col gap-y-4">
+                  {/* Form fields for editing will go here */}
+                  <div>
+                    <label htmlFor="add-name">Nombre de academia:</label> <br />
+                    <input
+                      id="add-name"
+                      type="text"
+                      value={newAcademy.name}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          name: e.target.value,
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-email">Email:</label> <br />
+                    <input
+                      id="add-email"
+                      type="text"
+                      value={newAcademy.email}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          email: e.target.value,
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-phoneNumber">Celular:</label> <br />
+                    <input
+                      id="add-phoneNumber"
+                      type="text"
+                      value={newAcademy.phoneNumber}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          phoneNumber: e.target.value,
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-placeName">
+                      Nombre del lugar:
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="add-location-placeName"
+                      type="text"
+                      value={newAcademy.location.placeName}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            placeName: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-street">Dirección:</label>{" "}
+                    <br />
+                    <input
+                      id="add-location-street"
+                      type="text"
+                      value={newAcademy.location.street}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            street: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-province">Provincia:</label>{" "}
+                    <br />
+                    <input
+                      id="add-location-province"
+                      type="text"
+                      value={newAcademy.location.province}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            province: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-department">
+                      Departamento:
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="add-location-department"
+                      type="text"
+                      value={newAcademy.location.department}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            department: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-district">Distrito:</label>{" "}
+                    <br />
+                    <input
+                      id="add-location-district"
+                      type="text"
+                      value={newAcademy.location.district}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            district: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-coordinates-latitude">
+                      Latitude:
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="add-location-coordinates-longitude"
+                      type="text"
+                      value={newAcademy.location.coordinates.latitude}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            coordinates: {
+                              ...newAcademy.location.coordinates,
+                              latitude: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-location-coordinates-longitude">
+                      Longitud:
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="add-location-coordinates-longitude"
+                      type="text"
+                      value={newAcademy.location.coordinates.longitude}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          location: {
+                            ...newAcademy.location,
+                            coordinates: {
+                              ...newAcademy.location.coordinates,
+                              longitude: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="add-organizerId">Organizador:</label> <br />
+                    <input
+                      id="add-organizerId"
+                      type="text"
+                      value={newAcademy.organizerId}
+                      onChange={(e) =>
+                        setNewAcademy({
+                          ...newAcademy,
+                          organizerId: e.target.value,
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                </div>
+              )}
+
               {dialogMode === "view" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -395,6 +625,26 @@ const Academies = () => {
                       className="p-2 border border-gray-300 rounded-lg w-full"
                     />
                   </div>
+
+                  <div>
+                    <label htmlFor="edit-location-street">Dirección:</label>{" "}
+                    <br />
+                    <input
+                      id="edit-location-street"
+                      type="text"
+                      value={selectedAcademy.location.street}
+                      onChange={(e) =>
+                        setSelectedAcademy({
+                          ...selectedAcademy,
+                          location: {
+                            ...selectedAcademy.location,
+                            street: e.target.value,
+                          },
+                        })
+                      }
+                      className="p-2 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -412,6 +662,32 @@ const Academies = () => {
             </div>
 
             <div className="flex justify-end gap-2 p-4 border-t bg-gray-50">
+              {dialogMode === "add" && (
+                <>
+                  <button
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                    onClick={handleCloseDialog}
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onClick={async () => {
+                      console.log(newAcademy);
+                      if (newAcademy) {
+                        await saveAcademy({
+                          ...newAcademy,
+                          createdAt: Timestamp.now(),
+                          updatedAt: Timestamp.now(),
+                        });
+                      }
+                      handleCloseDialog();
+                    }}
+                  >
+                    Guardar Cambios
+                  </button>
+                </>
+              )}
               {dialogMode === "view" && (
                 <button
                   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
@@ -431,9 +707,16 @@ const Academies = () => {
                   </button>
                   <button
                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
-                    onClick={() => {
+                    onClick={async () => {
                       // Logic for update would go here
-                      console.log(selectedAcademy.name);
+                      console.log(selectedAcademy);
+                      if (selectedAcademy) {
+                        const updatedAcademy = {
+                          ...selectedAcademy,
+                          updatedAt: Timestamp.now(),
+                        };
+                        await updateAcademy(selectedAcademy.id, updatedAcademy);
+                      }
                       // handleCloseDialog();
                     }}
                   >
