@@ -90,7 +90,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
     },
   ];
 
-  if (isStaffOfAnyEvent && !enlaces.some(e => e.href === "/organize/")) {
+  if (isStaffOfAnyEvent && user.roleId !== "organizer" && !enlaces.some(e => e.href === "/organize/")) {
     enlaces.unshift({
       href: "/organize/",
       label: "Eventos",
