@@ -6,12 +6,13 @@ import Image from "next/image";
 import React, {useState} from "react";
 import LocationInformation from "@/app/profiles/components/LocationInformation";
 import useUser from "@/app/hooks/useUser";
+import afiliateAcademy from '@/app/hooks/afiliateAcademy';
 
 export default function AcademyProfilePage() {
     const { id } = useParams(); // Obtener el ID dinámico de la URL
     const { academies, loadingAcademies, errorAcademies } = useAcademies();
     const [croppedImage] = useState<string | null>(null);
-    const { user} = useUser();
+    const { user, loadingUser } = useUser();
 
     if (loadingAcademies) return <div className="text-center mt-20">Cargando academia...</div>;
     if (errorAcademies) return <div className="text-center mt-20">Error: {errorAcademies}</div>;
@@ -20,11 +21,16 @@ export default function AcademyProfilePage() {
 
     if (!academy) return <div className="text-center mt-20">Academia no encontrada.</div>;
 
-    const afiliated = user?.academyId === academy.id;
+    const afiliated = user?.marinera.academyId === academy.id;
 
-    function handleUpdateAfiliation() {
-        console.log('Afiliación actualizada');
+    const handleUpdateAfiliation= async () =>  {
+        if (!academy || !academy.id || !academy.name) return;
 
+        try {
+            await afiliateAcademy(academy.id, academy.name, user, loadingUser);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     return (

@@ -9,7 +9,7 @@ import LocationInformation from "@/app/profiles/components/LocationInformation";
 export default function UserProfilePage() {
     const { id } = useParams(); // Obtener el ID dinámico de la URL
     const { users, loadingUsers, error } = useUsers();
-    const [croppedImage, setCroppedImage] = useState<string | null>(null);
+    const [croppedImage] = useState<string | null>(null);
 
     if (loadingUsers) return <div className="text-center mt-20">Cargando usuario...</div>;
     if (error) return <div className="text-center mt-20">Error: {error}</div>;
@@ -65,7 +65,7 @@ export default function UserProfilePage() {
                     </div>
                     <div className="text-white mt-4 md:mt-0">
                         <h1 className="bg-black/40 p-3 rounded-md md:text-4xl font-bold">{capitalizeName(user.firstName + ' ' + user.lastName)}</h1>
-                        <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{user.roleId.toUpperCase()}{user.academyId && ` • ${user.academyName}`}</p>
+                        <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{user.roleId.toUpperCase()} {user.marinera.academyId && ` • ${user.marinera.academyName}`}</p>
                     </div>
                 </div>
 
@@ -80,7 +80,11 @@ export default function UserProfilePage() {
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-8">
-                <LocationInformation foundUser={user.location} />
+                <LocationInformation locationData={{
+                    department: user.location?.department || 'N/A',
+                    district: user.location?.district || 'N/A',
+                    province: user.location?.province || 'N/A',
+                }} />
 
             </div>
 
