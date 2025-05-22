@@ -7,27 +7,38 @@ import React, {useState} from "react";
 import LocationInformation from "@/app/profiles/components/LocationInformation";
 import useUser from "@/app/hooks/useUser";
 import afiliateAcademy from '@/app/hooks/afiliateAcademy';
+import { useEffect } from "react";
 
 export default function AcademyProfilePage() {
     const { id } = useParams(); // Obtener el ID dinámico de la URL
     const { academies, loadingAcademies, errorAcademies } = useAcademies();
     const [croppedImage] = useState<string | null>(null);
+    const [isAfiliated, setIsAfiliated] = useState(false);
     const { user, loadingUser } = useUser();
+
+    const academy = academies.find((academy) => academy.id === id);
+
+    useEffect(() => {
+        if (user && academy) {
+            setIsAfiliated(user.marinera?.academyId === academy.id);
+        }
+    }, [user, academy]);
 
     if (loadingAcademies) return <div className="text-center mt-20">Cargando academia...</div>;
     if (errorAcademies) return <div className="text-center mt-20">Error: {errorAcademies}</div>;
 
-    const academy = academies.find((academy) => academy.id === id);
+
 
     if (!academy) return <div className="text-center mt-20">Academia no encontrada.</div>;
 
-    const afiliated = user?.marinera.academyId === academy.id;
+
 
     const handleUpdateAfiliation= async () =>  {
         if (!academy || !academy.id || !academy.name) return;
 
         try {
             await afiliateAcademy(academy.id, academy.name, user, loadingUser);
+            setIsAfiliated(true); // Actualiza el estado local al éxito
         } catch (error) {
             console.error(error);
         }
@@ -79,12 +90,12 @@ export default function AcademyProfilePage() {
                         <div className="mt-8 flex justify-center">
                             <button
                                 onClick={handleUpdateAfiliation}
-                                disabled={afiliated}
-                                className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 ${afiliated===false
+                                disabled={isAfiliated}
+                                className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 ${isAfiliated===false
                                     ? 'bg-green-600 hover:bg-green-700 shadow-sm hover:shadow'
                                     : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
                             >
-                                {afiliated===false ? (
+                                {isAfiliated===false ? (
                                     <span className="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
