@@ -19,7 +19,9 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { user } = useUser();
   const { id } = use(params);
   const foundUser = users.find(u => u.id === id);
-  const canEdit = Boolean(foundUser && user && foundUser.id === user?.id);
+  
+  // FIXED: Usar uid en lugar de id para la comparación con Firebase Auth
+  const canEdit = Boolean(foundUser && user && foundUser.id === user?.uid);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -179,7 +181,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       {/* Content */}
       <div className="flex-1 overflow-auto p-8">
         <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
-          <PersonalInformation foundUser={foundUser} />
+          <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
           <ContactInformation foundUser={foundUser} canEdit={canEdit} />
           <PlaceInformation foundUser={safeUser} />
         </form>

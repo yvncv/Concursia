@@ -12,6 +12,7 @@ export type User = FirebaseUser & {
   email: string[];
   phoneNumber?: string[];
   profileImage?: string | File;
+  coverImage?: string | File;
   marinera?: {
     participant?: { // campo con informacion del usuario si es participante
       level: string;
@@ -30,6 +31,14 @@ export type User = FirebaseUser & {
     department?: string;
     district?: string;
     province?: string;
+  };
+  socialMedia?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    youtube?: string;
+    whatsapp?: string;
+    twitter?: string;
   };
   createdAt: Timestamp;
 };
