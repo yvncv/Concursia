@@ -15,6 +15,7 @@ export default function AcademyProfilePage() {
     const [croppedImage] = useState<string | null>(null);
     const [isAfiliated, setIsAfiliated] = useState(false);
     const { user, loadingUser } = useUser();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const academy = academies.find((academy) => academy.id === id);
 
@@ -31,23 +32,20 @@ export default function AcademyProfilePage() {
 
     if (!academy) return <div className="text-center mt-20">Academia no encontrada.</div>;
 
-
-
-    const handleUpdateAfiliation= async () =>  {
-        if (!academy || !academy.id || !academy.name) return;
-
+    const confirmAfiliation = async () => {
         try {
             await afiliateAcademy(academy.id, academy.name, user, loadingUser);
             setIsAfiliated(true); // Actualiza el estado local al éxito
+            setIsModalOpen(false); // Cierra el modal
         } catch (error) {
             console.error(error);
         }
-    }
-
+    };
     const handleClearAfiliation= async () =>  {
         try {
             await afiliateAcademy('', '', user, loadingUser);
             setIsAfiliated(false); // Actualiza el estado local al éxito
+            setIsModalOpen(false); // Cierra el modal
         } catch (error) {
             console.error(error);
         }
@@ -98,10 +96,7 @@ export default function AcademyProfilePage() {
                         {/* Afiliate button */}
                         <div className="mt-8 flex justify-center">
                             <button
-                                onClick={
-                                    isAfiliated ? handleClearAfiliation :
-                                handleUpdateAfiliation
-                            }
+                                onClick={() => setIsModalOpen(true)}
                                 className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 ${isAfiliated===false
                                     ? 'bg-green-600 hover:bg-green-700 shadow-sm hover:shadow'
                                     : 'bg-gray-400 opacity-70'}`}
@@ -119,6 +114,42 @@ export default function AcademyProfilePage() {
                     </div>
                 </div>
             </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 className="text-lg font-bold mb-4">
+                        {isAfiliated ? "Confirmar Desafiliación" : "Confirmar Afiliación"}
+                    </h2>
+                    <p>
+                        {isAfiliated
+                            ? `¿Estás seguro de que deseas desafiliarte de la academia "${academy.name}"?`
+                            : `¿Estás seguro de que deseas afiliarte a la academia "${academy.name}"?`}
+                    </p>
+                    <p>
+                        {isAfiliated
+                            ? ``
+                            : `Al afiliarte, aceptas que la academía pueda inscribirte en los concursos de forma más rápida.`}
+                    </p>
+                    <div className="mt-4 flex justify-end space-x-4">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={isAfiliated ? handleClearAfiliation : confirmAfiliation}
+                            className={`px-4 py-2 ${isAfiliated === false
+                                ? 'bg-green-600 text-white rounded hover:bg-green-700'
+                                : 'bg-red-600 text-white rounded hover:bg-red-700'}`}
+                        >
+                            Confirmar
+                        </button>
+                    </div>
+                    </div>
+                </div>
+            )}
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-8">
