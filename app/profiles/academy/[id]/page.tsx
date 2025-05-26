@@ -44,6 +44,15 @@ export default function AcademyProfilePage() {
         }
     }
 
+    const handleClearAfiliation= async () =>  {
+        try {
+            await afiliateAcademy('', '', user, loadingUser);
+            setIsAfiliated(false); // Actualiza el estado local al éxito
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     return (
         <main className="flex flex-col h-screen">
             {/* Header */}
@@ -89,11 +98,13 @@ export default function AcademyProfilePage() {
                         {/* Afiliate button */}
                         <div className="mt-8 flex justify-center">
                             <button
-                                onClick={handleUpdateAfiliation}
-                                disabled={isAfiliated}
+                                onClick={
+                                    isAfiliated ? handleClearAfiliation :
+                                handleUpdateAfiliation
+                            }
                                 className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 ${isAfiliated===false
                                     ? 'bg-green-600 hover:bg-green-700 shadow-sm hover:shadow'
-                                    : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
+                                    : 'bg-gray-400 opacity-70'}`}
                             >
                                 {isAfiliated===false ? (
                                     <span className="flex items-center">
@@ -102,7 +113,7 @@ export default function AcademyProfilePage() {
                                         </svg>
                                         Afiliarse
                                     </span>
-                                ) : 'Afiliado'}
+                                ) : 'Ya está afiliado'}
                             </button>
                         </div>
                     </div>
