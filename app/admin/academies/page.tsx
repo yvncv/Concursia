@@ -765,7 +765,7 @@ const Academies = () => {
   );
 };
 
-interface ColumnDef<T = any> {
+export interface ColumnDef<T = any> {
   key: string; // Clave para acceder al dato en el objeto
   title: string; // Título por defecto para el encabezado
   render?: (value: any, item: T, index: number) => React.ReactNode; // Función opcional para renderizar contenido personalizado
@@ -778,7 +778,7 @@ interface AcademiesDatatableProps<T> {
   data: T[];
 }
 
-const AcademiesDatatable = <T extends Record<string, any>>({
+export const AcademiesDatatable = <T extends Record<string, any>>({
   columns,
   data,
 }: AcademiesDatatableProps<T>) => {
