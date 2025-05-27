@@ -7,6 +7,7 @@ import useUsers from "@/app/hooks/useUsers";
 import { db } from "@/app/firebase/config";
 import { doc, updateDoc } from "firebase/firestore";
 import ConfirmModal from "./modals/DesafiliateStudentModal";
+import AcademyJoinRequestsSection from "./components/AcademyJoinRequestsSection";
 
 const OrganizeAcademyPage = () => {
   const { user, loadingUser } = useUser();
@@ -35,7 +36,6 @@ const OrganizeAcademyPage = () => {
     }
   };
 
-
   if (loadingUser || loadingAcademies || loadingUsers) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -47,7 +47,7 @@ const OrganizeAcademyPage = () => {
     );
   }
 
-  const academy = academies.find((a) => a.id === user?.marinera?.academyId);
+  const academy = academies.find((a) => a.organizerId === user?.uid);
   if (!academy) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -85,9 +85,9 @@ const OrganizeAcademyPage = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                    Configuración de la Academia
+                    Gestión de Academia
                   </h1>
-                  <p className="text-gray-600 mt-1">Gestiona la información y alumnos de tu academia</p>
+                  <p className="text-gray-600 mt-1">Administra tu academia y las solicitudes de afiliación</p>
                 </div>
               </div>
             </div>
@@ -184,6 +184,15 @@ const OrganizeAcademyPage = () => {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Solicitudes de Afiliación - Nueva sección */}
+          <div className="mb-8">
+            <AcademyJoinRequestsSection 
+              academyId={academy.id!}
+              academyName={academy.name}
+              users={users}
+            />
           </div>
 
           {/* Alumnos Afiliados - Ahora ocupa todo el ancho */}
