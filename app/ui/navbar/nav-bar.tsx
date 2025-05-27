@@ -460,7 +460,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </button>
             {/* DROPDOWN PARA DESKTOP */}
             {filteredResults.length > 0 && (
-              <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-80 overflow-y-auto">
+              <ul className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg bg-white shadow-lg max-h-80 overflow-y-auto">
                 {filteredResults.map((result) => (
                   <li key={`${result.type}-${result.id}`}>
                     <Link
