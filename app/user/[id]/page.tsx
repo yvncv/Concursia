@@ -6,7 +6,7 @@ import useUser from "@/app/hooks/useUser";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
-import { LucideImage } from 'lucide-react';
+import { LucideImage, User as UserIcon, Trophy, MapPin, Award, Calendar } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
 import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
@@ -25,6 +25,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedCoverImage, setCoverImage] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     // reset when user changes
     setSelectedImage(null);
     setCroppedImage(null);
+    setCoverImage(null);
   }, [foundUser]);
 
   const handleFileSelect = (file: File) => {
@@ -47,7 +49,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     if (!user?.uid) return;
     try {
       // Crear referencia a la imagen por defecto en Firebase Storage
-      const defaultImageRef = user?.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
+      const defaultImageRef = foundUser?.gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG');
 
       // Obtener la URL pública de la imagen por defecto
       const defaultImageUrl = await getDownloadURL(defaultImageRef);
@@ -84,6 +86,21 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     }
   };
 
+  const handleSaveCoverImage = async () => {
+    if (!user?.uid || !selectedCoverImage || !foundUser?.id) return;
+    try {
+      const res = await fetch(selectedCoverImage);
+      const blob = await res.blob();
+      const imageRef = storageRef(storage, `users/${foundUser.id}/cover`);
+      await uploadBytes(imageRef, blob);
+      const publicUrl = await getDownloadURL(imageRef);
+      await updateDoc(doc(db, 'users', foundUser.id), { coverImage: publicUrl });
+      setCoverImage(null);
+    } catch (e) {
+      console.error('Error guardando imagen de portada:', e);
+    }
+  };
+
   const handleCloseModal = () => {
     setIsCropModalOpen(false);
     if (!croppedImage) {
@@ -111,81 +128,295 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  return (
-    <main className="flex flex-col h-screen">
-      {/* Header */}
-      <div
-        className={`top-0 z-10 items-center p-8 flex md:flex-row flex-col justify-around ${user?.gender === 'Masculino' ? 'bg-gradient-to-r from-blue-500 to-purple-700' // Male gradient
-          : user?.gender === 'Femenino'
-            ? 'bg-gradient-to-r from-pink-500 to-purple-600' // Female gradient
-            : 'bg-gradient-to-r from-red-400 to-orange-600' // Default gradient
-          } m-3 rounded-md`}
-      >
-        <div className="flex flex-col md:flex-row items-center space-x-8">
-          <div className="relative group w-15 h-15 md:w-40 md:h-40 rounded-full border-4 shadow-lg overflow-hidden">
-            {croppedImage ? (
-              <Image
-                src={croppedImage}
-                alt="Foto de perfil"
-                className="object-cover"
-                width={160}
-                height={160}
-                unoptimized
-              />
-            ) : foundUser.profileImage ? (
-              <Image
-                src={typeof foundUser.profileImage === 'string'
-                  ? foundUser.profileImage
-                  : URL.createObjectURL(foundUser.profileImage as File)}
-                alt="Foto de perfil"
-                className="object-cover"
-                width={160}
-                height={160}
-                unoptimized
-              />
-            ) : (
-              <Image
-                src={user?.gender === 'Masculino' ? '/default-male.JPG' : '/default-female.JPG'}
-                alt="Foto de perfil"
-                className="object-cover"
-                width={160}
-                height={160}
-                unoptimized
-              />
-            )}
-            {canEdit && (
-              <div
-                className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer"
-                onClick={() => setIsChangeImageModalOpen(true)}
-              >
-                <LucideImage className="text-white" size={24} />
-              </div>
-            )}
-          </div>
-          <div className="text-white mt-4 md:mt-0">
-            <h1 className="bg-black/40 p-3 rounded-md md:text-4xl font-bold">{capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}</h1>
-            <p className="bg-black/40 p-3 rounded-md md:text-xl mt-2">{foundUser.roleId.toUpperCase()}{foundUser.marinera?.academyId && ` • ${foundUser.marinera?.academyId}`}</p>
-          </div>
-        </div>
+  // Calcular edad si existe fecha de nacimiento
+  const calculateAge = () => {
+    if (!foundUser.birthDate) return null;
+    
+    let birthDate: Date;
+    
+    // Verificar si es un Timestamp de Firebase
+    if (foundUser.birthDate && typeof foundUser.birthDate === 'object' && 'toDate' in foundUser.birthDate) {
+      birthDate = foundUser.birthDate.toDate();
+    } else {
+      // Si no es un Timestamp, intentar convertir directamente
+      birthDate = new Date(foundUser.birthDate as any);
+    }
+    
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1;
+    }
+    return age;
+  };
 
-        {croppedImage && (
+  const age = calculateAge();
+
+  return (
+    <main className="flex flex-col min-h-screen bg-gray-50">
+      {/* Cover Image Section */}
+      <div className={`relative h-80 overflow-hidden ${
+        foundUser?.gender === 'Masculino' 
+          ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600' 
+          : foundUser?.gender === 'Femenino'
+            ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500' 
+            : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
+      }`}>
+        {foundUser.coverImage && (
+          <Image
+            src={typeof foundUser.coverImage === 'string' 
+              ? foundUser.coverImage 
+              : URL.createObjectURL(foundUser.coverImage as File)}
+            alt="Portada del perfil"
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        )}
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-40" />
+        
+        {/* Edit Cover Button */}
+        {canEdit && (
           <button
-            onClick={handleSaveProfileImage}
-            className="px-4 py-2 bg-red-600 rounded text-white mt-4 md:mt-0"
+            className="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full transition-all duration-200"
+            aria-label="Cambiar imagen de portada"
           >
-            Guardar Imagen
+            <LucideImage className="w-5 h-5" />
           </button>
         )}
+
+        {/* User Header Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-8">
+          <div className="flex items-end space-x-6">
+            {/* Profile Image */}
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+                {croppedImage ? (
+                  <Image
+                    src={croppedImage}
+                    alt="Foto de perfil"
+                    width={128}
+                    height={128}
+                    className="object-cover w-full h-full"
+                    unoptimized
+                  />
+                ) : foundUser.profileImage ? (
+                  <Image
+                    src={typeof foundUser.profileImage === 'string'
+                      ? foundUser.profileImage
+                      : URL.createObjectURL(foundUser.profileImage as File)}
+                    alt="Foto de perfil"
+                    width={128}
+                    height={128}
+                    className="object-cover w-full h-full"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <UserIcon className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
+                
+                {canEdit && (
+                  <div
+                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                    onClick={() => setIsChangeImageModalOpen(true)}
+                  >
+                    <LucideImage className="text-white w-6 h-6" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* User Info */}
+            <div className="text-white flex-1">
+              <h1 className="text-4xl font-bold mb-2">
+                {capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
+              </h1>
+              <div className="flex items-center space-x-6 text-lg">
+                <div className="flex items-center space-x-2">
+                  <Trophy className="w-5 h-5" />
+                  <span>{foundUser.marinera?.participant?.category || 'Participante'}</span>
+                </div>
+                {age && (
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>{age} años</span>
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-5 h-5" />
+                  <span>{foundUser.location?.district || 'Ubicación'}, {foundUser.location?.department || 'Perú'}</span>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center space-x-4">
+                <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                  {foundUser.roleId?.toUpperCase() || 'USUARIO'}
+                </span>
+                {foundUser.marinera?.academyId && (
+                  <span className="text-blue-200">
+                    Academia: {foundUser.marinera.academyId}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-8">
-        <form onSubmit={handleUpdateProfile} className="max-w-5xl mx-auto space-y-8">
-          <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
-          <ContactInformation foundUser={foundUser} canEdit={canEdit} />
-          <PlaceInformation foundUser={safeUser} />
-        </form>
+      <div className="flex-1 p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Trophy className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {foundUser.marinera?.participant?.category || 'N/A'}
+                  </p>
+                  <p className="text-gray-600">Categoría</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <UserIcon className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {foundUser.gender === 'Masculino' ? 'M' : foundUser.gender === 'Femenino' ? 'F' : '-'}
+                  </p>
+                  <p className="text-gray-600">Género</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <Award className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {foundUser.roleId === 'organizer' ? 'Org.' : foundUser.roleId === 'participant' ? 'Part.' : 'User'}
+                  </p>
+                  <p className="text-gray-600">Rol</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-orange-100 p-3 rounded-full">
+                  <Calendar className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {age || 'N/A'}
+                  </p>
+                  <p className="text-gray-600">Años</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Main Info */}
+            <div className="lg:col-span-2 space-y-8">
+              <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
+              <ContactInformation foundUser={foundUser} canEdit={canEdit} />
+              <PlaceInformation foundUser={safeUser} />
+            </div>
+
+            {/* Right Column - Additional Info */}
+            <div className="space-y-8">
+              {/* Activity Status */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Estado</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-green-800">Activo</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">
+                        Miembro desde {foundUser.createdAt.toDate().getFullYear()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Perfil actualizado</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Información verificada</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Achievements */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Logros</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <Award className="w-5 h-5 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-800">Perfil Completo</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                    <Trophy className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-800">Participante Activo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Save Buttons - Solo visible para propietarios */}
+      {canEdit && (croppedImage || selectedCoverImage) && (
+        <div className="fixed bottom-6 right-6 space-y-3">
+          {croppedImage && (
+            <button
+              onClick={handleSaveProfileImage}
+              className="block w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors"
+            >
+              Guardar Foto
+            </button>
+          )}
+          {selectedCoverImage && (
+            <button
+              onClick={handleSaveCoverImage}
+              className="block w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-lg transition-colors"
+            >
+              Guardar Portada
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Modals */}
       <ChangeProfileImageModal
@@ -203,6 +434,5 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         />
       )}
     </main>
-
   );
 }
