@@ -24,4 +24,14 @@ export type User = FirebaseUser & {
     district: string;
     province: string;
   }
+  marinera: {
+    academyId: string;
+    attendedEvents: string[];
+    participant: {
+      category: string;
+      level: string;
+      participatedEvents: string[];
+    }
+    participatedEvents: string[];
+  }
 };
