@@ -4,8 +4,7 @@ import React from "react";
 import useUser from "@/app/hooks/useUser";
 import useAcademies from "@/app/hooks/useAcademies";
 import useUsers from "@/app/hooks/useUsers";
-import { db } from "@/app/firebase/config";
-import { doc, updateDoc } from "firebase/firestore";
+import { useAcademyMembershipManagement } from "@/app/hooks/academy/useAcademyMembershipManagement";
 import ConfirmModal from "./modals/DesafiliateStudentModal";
 import AcademyJoinRequestsSection from "./components/AcademyJoinRequestsSection";
 
@@ -13,27 +12,55 @@ const OrganizeAcademyPage = () => {
   const { user, loadingUser } = useUser();
   const { academies, loadingAcademies } = useAcademies();
   const { users, loadingUsers } = useUsers();
+  
+  // USAR EL NUEVO HOOK EN LUGAR DE LA FUNCIÓN ANTIGUA
+  const { removeStudent, loading: removingStudent, error: removeError } = useAcademyMembershipManagement();
+  
   const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(null);
+  const [selectedStudentName, setSelectedStudentName] = React.useState<string>("");
   const [modalOpen, setModalOpen] = React.useState(false);
 
-  const removeStudentFromAcademy = async (userId: string) => {
-    const userRef = doc(db, "users", userId);
-    await updateDoc(userRef, {
-      "marinera.academyId": null,
-      "marinera.academyName": null,
-    });
-  };
+  // ELIMINAR LA FUNCIÓN ANTIGUA
+  // const removeStudentFromAcademy = async (userId: string) => { ... }
 
-  const handleOpenModal = (studentId: string) => {
+  const handleOpenModal = (studentId: string, studentName: string) => {
     setSelectedStudentId(studentId);
+    setSelectedStudentName(studentName);
     setModalOpen(true);
   };
 
+  // ACTUALIZAR LA FUNCIÓN PARA USAR EL NUEVO HOOK
   const handleConfirmRemove = async () => {
-    if (selectedStudentId) {
-      await removeStudentFromAcademy(selectedStudentId);
-      setSelectedStudentId(null);
+    if (selectedStudentId && academy?.id && user?.uid) {
+      try {
+        console.log("🔄 Expulsando estudiante con nuevo hook:");
+        console.log("- studentId:", selectedStudentId);
+        console.log("- academyId:", academy.id);
+        console.log("- organizerId:", user.uid);
+        
+        await removeStudent(
+          selectedStudentId,
+          academy.id,
+          user.uid,
+          "Removido por el organizador desde el panel de gestión"
+        );
+        
+        // Cerrar modal y limpiar estado
+        setModalOpen(false);
+        setSelectedStudentId(null);
+        setSelectedStudentName("");
+        
+        console.log("✅ Estudiante expulsado exitosamente");
+      } catch (error) {
+        console.error("❌ Error al expulsar estudiante:", error);
+      }
     }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedStudentId(null);
+    setSelectedStudentName("");
   };
 
   if (loadingUser || loadingAcademies || loadingUsers) {
@@ -91,6 +118,30 @@ const OrganizeAcademyPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Error de expulsión (si existe) */}
+          {removeError && (
+            <div className="mb-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.982 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <p className="text-red-700 font-medium">Error al expulsar estudiante:</p>
+                </div>
+                <p className="text-red-600 mt-1">{removeError.message}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Solicitudes de Afiliación */}
+          <div className="mb-8">
+            <AcademyJoinRequestsSection 
+              academyId={academy.id!}
+              academyName={academy.name}
+              users={users}
+            />
           </div>
 
           {/* Información General */}
@@ -186,16 +237,7 @@ const OrganizeAcademyPage = () => {
             </div>
           </div>
 
-          {/* Solicitudes de Afiliación - Nueva sección */}
-          <div className="mb-8">
-            <AcademyJoinRequestsSection 
-              academyId={academy.id!}
-              academyName={academy.name}
-              users={users}
-            />
-          </div>
-
-          {/* Alumnos Afiliados - Ahora ocupa todo el ancho */}
+          {/* Alumnos Afiliados */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
             <div className="p-8 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -270,10 +312,18 @@ const OrganizeAcademyPage = () => {
                             </td>
                             <td className="py-6 px-6">
                               <button
-                                onClick={() => handleOpenModal(student.id)}
-                                className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                                onClick={() => handleOpenModal(student.id, `${student.firstName} ${student.lastName}`)}
+                                disabled={removingStudent}
+                                className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:bg-gray-100 disabled:text-gray-500 transition-colors"
                               >
-                                Desafiliar
+                                {removingStudent ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                    Procesando...
+                                  </>
+                                ) : (
+                                  'Desafiliar'
+                                )}
                               </button>
                             </td>
                           </tr>
@@ -287,11 +337,13 @@ const OrganizeAcademyPage = () => {
           </div>
         </div>
       </div>
+      
       <ConfirmModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         onConfirm={handleConfirmRemove}
-        message="¿Deseas desafiliar a este alumno de tu academia? Esta acción no se puede deshacer."
+        message={`¿Deseas desafiliar a ${selectedStudentName} de tu academia? Esta acción actualizará el historial de membresía y no se puede deshacer.`}
+        loading={removingStudent}
       />
     </>
   );

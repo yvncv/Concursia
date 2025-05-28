@@ -168,6 +168,7 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
                   academyName={foundAcademy.name}
                   userId={user?.uid}
                   userAlreadyHasAcademy={userAlreadyHasAcademy}
+                  userCurrentAcademyId={currentUserData?.marinera?.academyId}
                 />
               </div>
             )}

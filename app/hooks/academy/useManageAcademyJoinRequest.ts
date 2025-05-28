@@ -3,10 +3,13 @@ import {
   getFirestore, 
   doc, 
   updateDoc, 
+  addDoc,
+  collection,
   serverTimestamp,
   FirestoreError,
   runTransaction
 } from "firebase/firestore";
+import { AcademyMembershipRecord } from "@/app/types/academyMembershipRecordType";
 
 interface UseManageAcademyJoinRequestResult {
   acceptRequest: (requestId: string, userId: string, academyId: string, academyName: string) => Promise<void>;
@@ -33,24 +36,35 @@ export function useManageAcademyJoinRequest(): UseManageAcademyJoinRequestResult
       
       // Usar transacción para asegurar consistencia
       await runTransaction(db, async (transaction) => {
-        // Actualizar la solicitud
+        // 1. Actualizar la solicitud
         const requestRef = doc(db, "academyJoinRequests", requestId);
         transaction.update(requestRef, {
           status: "accepted",
           responseDate: serverTimestamp()
         });
 
-        // Actualizar el usuario para afiliarlo a la academia
+        // 2. Actualizar el usuario para afiliarlo a la academia
         const userRef = doc(db, "users", userId);
         transaction.update(userRef, {
           "marinera.academyId": academyId,
           "marinera.academyName": academyName
         });
+
+        // 3. Crear registro en el historial de membresía
+        const membershipRef = doc(collection(db, "academyMembershipHistory"));
+        const membershipRecord: Omit<AcademyMembershipRecord, "id"> = {
+          userId,
+          academyId,
+          joinedAt: serverTimestamp()
+          // leftAt, removedBy, reason se quedan undefined (no han salido aún)
+        };
+        
+        transaction.set(membershipRef, membershipRecord);
       });
 
-      console.log("Solicitud aceptada exitosamente");
+      console.log("✅ Solicitud aceptada exitosamente y registro de membresía creado");
     } catch (err: any) {
-      console.error("Error al aceptar solicitud:", err);
+      console.error("❌ Error al aceptar solicitud:", err);
       
       if (err instanceof FirestoreError) {
         switch (err.code) {
@@ -85,9 +99,9 @@ export function useManageAcademyJoinRequest(): UseManageAcademyJoinRequestResult
         responseDate: serverTimestamp()
       });
 
-      console.log("Solicitud rechazada exitosamente");
+      console.log("✅ Solicitud rechazada exitosamente");
     } catch (err: any) {
-      console.error("Error al rechazar solicitud:", err);
+      console.error("❌ Error al rechazar solicitud:", err);
       
       if (err instanceof FirestoreError) {
         switch (err.code) {
