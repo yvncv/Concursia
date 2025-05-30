@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, use } from 'react';
 import useAcademies from '@/app/hooks/useAcademies';
 import useUser from "@/app/hooks/useUser";
 import useUsers from '@/app/hooks/useUsers';
+import useAcademy from "@/app/hooks/useAcademy";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
@@ -169,6 +170,7 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
                   userId={user?.uid}
                   userAlreadyHasAcademy={userAlreadyHasAcademy}
                   userCurrentAcademyId={currentUserData?.marinera?.academyId}
+                  userCurrentAcademyName={currentUserData?.marinera?.academyName}
                 />
               </div>
             )}

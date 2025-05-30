@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, use } from 'react';
 import useUsers from '@/app/hooks/useUsers';
 import useUser from "@/app/hooks/useUser";
+import useAcademy from "@/app/hooks/useAcademy";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
@@ -13,13 +14,15 @@ import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
 import PersonalInformation from './components/PersonalInformation';
 import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
+import AcademyHistory from './components/AcademyHistory';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();
   const { user } = useUser();
   const { id } = use(params);
   const foundUser = users.find(u => u.id === id);
-  
+  const { academy, loadingAcademy } = useAcademy(foundUser?.marinera?.academyId);
+
   // FIXED: Usar uid en lugar de id para la comparación con Firebase Auth
   const canEdit = Boolean(foundUser && user && foundUser.id === user?.uid);
 
@@ -131,9 +134,9 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   // Calcular edad si existe fecha de nacimiento
   const calculateAge = () => {
     if (!foundUser.birthDate) return null;
-    
+
     let birthDate: Date;
-    
+
     // Verificar si es un Timestamp de Firebase
     if (foundUser.birthDate && typeof foundUser.birthDate === 'object' && 'toDate' in foundUser.birthDate) {
       birthDate = foundUser.birthDate.toDate();
@@ -141,11 +144,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       // Si no es un Timestamp, intentar convertir directamente
       birthDate = new Date(foundUser.birthDate as any);
     }
-    
+
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       return age - 1;
     }
@@ -157,17 +160,16 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       {/* Cover Image Section */}
-      <div className={`relative h-80 overflow-hidden ${
-        foundUser?.gender === 'Masculino' 
-          ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600' 
+      <div className={`relative h-80 overflow-hidden ${foundUser?.gender === 'Masculino'
+          ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
           : foundUser?.gender === 'Femenino'
-            ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500' 
+            ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
             : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
-      }`}>
+        }`}>
         {foundUser.coverImage && (
           <Image
-            src={typeof foundUser.coverImage === 'string' 
-              ? foundUser.coverImage 
+            src={typeof foundUser.coverImage === 'string'
+              ? foundUser.coverImage
               : URL.createObjectURL(foundUser.coverImage as File)}
             alt="Portada del perfil"
             fill
@@ -175,10 +177,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             unoptimized
           />
         )}
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-40" />
-        
+
         {/* Edit Cover Button */}
         {canEdit && (
           <button
@@ -220,7 +222,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     <UserIcon className="w-12 h-12 text-gray-400" />
                   </div>
                 )}
-                
+
                 {canEdit && (
                   <div
                     className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
@@ -259,7 +261,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </span>
                 {foundUser.marinera?.academyId && (
                   <span className="text-blue-200">
-                    Academia: {foundUser.marinera.academyId}
+                    Academia: {loadingAcademy ? 'Cargando...' : academy?.name || 'No disponible'}
                   </span>
                 )}
               </div>
@@ -286,7 +288,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-green-100 p-3 rounded-full">
@@ -300,7 +302,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-purple-100 p-3 rounded-full">
@@ -314,7 +316,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-orange-100 p-3 rounded-full">
@@ -341,6 +343,9 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
             {/* Right Column - Additional Info */}
             <div className="space-y-8">
+              {/* Academy History */}
+              <AcademyHistory userId={foundUser.id} />
+              
               {/* Activity Status */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Estado</h3>
@@ -358,36 +363,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                         Miembro desde {foundUser.createdAt.toDate().getFullYear()}
                       </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Perfil actualizado</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Información verificada</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Achievements */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Logros</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                    <Award className="w-5 h-5 text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-800">Perfil Completo</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
-                    <Trophy className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm font-medium text-purple-800">Participante Activo</span>
                   </div>
                 </div>
               </div>
