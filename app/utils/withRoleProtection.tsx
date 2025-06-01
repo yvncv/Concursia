@@ -39,8 +39,8 @@ export const withRoleProtection = <P extends object>(
 
       const parts = pathname.split("/").filter(Boolean);
       const isAdminRoute = /^\/admin(?:$|\/)/.test(pathname);
-      const isEventList = parts[0] === "organizer" && parts[1] === "events" && parts.length === 2;
-      const isEventDetail = parts[0] === "organizer" && parts[1] === "events" && parts.length >= 3;
+      const isEventList = parts[0] === "organize" && parts[1] === "events" && parts.length === 2;
+      const isEventDetail = parts[0] === "organize" && parts[1] === "events" && parts.length >= 3;
 
       // 1) /admin
       if (isAdminRoute) {
