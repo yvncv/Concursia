@@ -1,11 +1,11 @@
 "use client"
 import { useState, useEffect } from "react";
 import { getFirestore, collection, addDoc, Timestamp } from "firebase/firestore";
-import { CheckCircle, Users } from "lucide-react";
+// import { CheckCircle, Users } from "lucide-react";
 import { User } from '@/app/types/userType';
-import { TicketData } from "@/app/types/ticketType";
+// import { TicketData } from "@/app/types/ticketType";
 import useAcademies from "@/app/hooks/useAcademies";
-import { LevelData } from "@/app/types/eventType";
+import { CustomEvent, LevelData } from "@/app/types/eventType";
 import useAcademy from "@/app/hooks/useAcademy";
 
 import InscriptionForm from "./inscription-group/components/InscriptionForm";
@@ -13,33 +13,6 @@ import InscriptionList from "./inscription-group/components/InscriptionList";
 import TicketComponent from "./inscription-group/components/TicketComponent";
 
 // Definición de tipos
-interface EventSettings {
-  levels: {
-    [key: string]: {
-      price?: number;
-      couple?: boolean;
-      description?: string;
-      categories?: string[];
-    };
-  };
-}
-
-interface EventLocation {
-  placeName: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-interface Event {
-  id: string;
-  name: string;
-  academyId?: string;
-  settings: EventSettings;
-  location?: EventLocation;
-}
-
 interface Participante {
   id: string;
   nombre: string;
@@ -63,14 +36,27 @@ interface Inscripcion {
 }
 
 interface EventoInscripcionAlumnosProps {
-  event: Event;
+  event: CustomEvent;
   user: User;
 }
 
 const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ event, user }) => {
+  // Verificación inicial de la estructura del evento
+  useEffect(() => {
+    if (!event.dance?.levels || Object.keys(event.dance.levels).length === 0) {
+      console.error("El evento no tiene modalidades definidas en dance.levels");
+    }
+  }, [event]);
+
   // Estados
   const [modalidad, setModalidad] = useState<string>(() => {
-    const modalidadesDisponibles = Object.keys(event.settings.levels || {});
+    // Verificar que event.dance y event.dance.levels existen
+    if (!event.dance || !event.dance.levels) {
+      console.error("El evento no tiene modalidades definidas");
+      return "";
+    }
+    
+    const modalidadesDisponibles = Object.keys(event.dance.levels);
     return modalidadesDisponibles.length > 0 ? modalidadesDisponibles[0] : "";
   });
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
@@ -95,7 +81,18 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
   };
 
   // Adapter function to convert Event to the expected format for InscriptionForm
-  const adaptEventForInscriptionForm = (event: Event): any => {
+  const adaptEventForInscriptionForm = (event: CustomEvent): any => {
+    // Verificar que event.dance y event.dance.levels existen
+    if (!event.dance || !event.dance.levels) {
+      console.error("El evento no tiene niveles definidos en dance.levels");
+      return {
+        ...event,
+        settings: {
+          levels: {}
+        }
+      };
+    }
+    
     // Create a new object with the correct structure
     const adaptedEvent = {
       ...event,
@@ -103,29 +100,20 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
         levels: {} as { [key: string]: LevelData }
       }
     };
-  
+
     // Convert each level to the expected LevelData format
-    Object.keys(event.settings.levels).forEach(key => {
-      const level = event.settings.levels[key];
+    Object.keys(event.dance.levels).forEach(key => {
+      const level = event.dance.levels[key];
       adaptedEvent.settings.levels[key] = {
         price: level.price,
         couple: level.couple,
-        description: level.description,
-        // Add the missing properties required by LevelData
         selected: true, // default value
         categories: level.categories || [], // Use existing categories or empty array
-        // Add any other required properties from LevelData that might be missing
       } as LevelData;
     });
-  
+
     return adaptedEvent;
   };
-
-  useEffect(() => {
-    if (!event.settings?.levels || Object.keys(event.settings.levels).length === 0) {
-      console.error("El evento no tiene modalidades definidas");
-    }
-  }, [event]);
 
   // Agregar inscripción a la lista
   const agregarInscripcion = (nuevaInscripcion: Inscripcion): void => {
@@ -208,7 +196,7 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
         inscriptionType: 'Grupal',
         totalAmount: montoTotal,
         entries,
-        createdBy: user.id,
+        createdBy: user?.id,
         level: modalidad,
         category: representativeCategory,
         usersId: allUsersId,
@@ -230,13 +218,21 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
   };
 
   // Reiniciar después de éxito
-  const nuevaInscripcion = (): void => {
-    setInscripciones([]);
-    setMontoTotal(0);
-    setIsSuccess(false);
-    setTicketId("");
-    setModalidad(Object.keys(event.settings.levels || {})[0] || "");
-  };
+  // const nuevaInscripcion = (): void => {
+  //   setInscripciones([]);
+  //   setMontoTotal(0);
+  //   setIsSuccess(false);
+  //   setTicketId("");
+    
+  //   // Verificar que event.dance y event.dance.levels existen
+  //   if (!event.dance || !event.dance.levels) {
+  //     console.error("El evento no tiene modalidades definidas");
+  //     setModalidad("");
+  //     return;
+  //   }
+    
+  //   setModalidad(Object.keys(event.dance.levels)[0] || "");
+  // };
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-6 border border-gray-100">
@@ -267,13 +263,13 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
             confirmarInscripciones={confirmarInscripciones}
             isSubmitting={isSubmitting}
             montoTotal={montoTotal}
-            event={event}
+            event={adaptEventForInscriptionForm(event)}
           />
         </div>
       ) : (
         // Pantalla de éxito - Usando el componente TicketComponent
         <TicketComponent
-          event={event}
+          event={adaptEventForInscriptionForm(event)}
           user={user}
           academy={academy}
           ticketId={ticketId}

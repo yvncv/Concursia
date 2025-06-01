@@ -76,7 +76,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose, onUpdate }) => {
         updatedAt: Timestamp.now()
       };
       
-      await updateDoc(doc(db, "users", user.id), updatedUser);
+      await updateDoc(doc(db, "users", user?.id), updatedUser);
       setSuccess(true);
       
       if (onUpdate) onUpdate();
@@ -251,10 +251,10 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose, onUpdate }) => {
             </div>
             <div>
               <h2 className="text-2xl font-bold">{userFullName}</h2>
-              <p className="text-blue-100">{user.email[0]}</p>
-              {user.roleId && (
+              <p className="text-blue-100">{user?.email[0]}</p>
+              {user?.roleId && (
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-800/40 rounded-full text-xs font-medium">
-                  {user.roleId}
+                  {user?.roleId}
                 </span>
               )}
             </div>

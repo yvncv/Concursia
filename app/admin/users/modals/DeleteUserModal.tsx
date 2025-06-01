@@ -16,7 +16,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ user, onClose }) => {
   const handleDelete = async () => {
     if (input === `${user?.firstName} ${user?.lastName}`) {
       try {
-        await deleteDoc(doc(db, "users", user.id));
+        await deleteDoc(doc(db, "users", user?.id));
         onClose();
       } catch (error) {
         console.error("Error deleting user:", error);

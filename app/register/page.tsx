@@ -30,11 +30,11 @@ export default function RegisterForm() {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dni, setDni] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState<string>('');  
+  const [lastName, setLastName] = useState<string>('');  
   const [category, setCategory] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [birthDate, setBirthDate] = useState<string>('');  
+  const [gender, setGender] = useState<string>('');  
   const [step, setStep] = useState(1);
   const [emailExistsError, setEmailExistsError] = useState("");
   const [dniExistsError, setDniExistsError] = useState("");
@@ -116,6 +116,25 @@ export default function RegisterForm() {
     else setCategory('Oro');
   };
 
+  const capitalizeText = (text: string) => {
+  if (!text) return '';
+  
+  // Lista de palabras que no se deben capitalizar (artículos, preposiciones, etc.)
+  const nonCapitalizedWords = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u'];
+  
+  return text
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Siempre capitalizar la primera palabra
+      if (index === 0 || !nonCapitalizedWords.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+};
+
   const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateEmail(email)) {
@@ -151,20 +170,24 @@ export default function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      let profileImageUrl = null;
+      let profileImageUrl = await getDownloadURL(gender == 'Masculino' ? storageRef(storage, 'users/dafault-male.JPG') : storageRef(storage, 'users/dafault-female.JPG'));
       if (croppedImage) {
-        profileImageUrl = await uploadProfileImage(croppedImage, user.uid);
+        profileImageUrl = await uploadProfileImage(croppedImage, user?.uid);
       }
 
-      await setDoc(doc(db, "users", user.uid), {
-        id: user.uid,
+      await setDoc(doc(db, "users", user?.uid), {
+        id: user?.uid,
         roleId: "user",
         dni,
         firstName,
         lastName,
         birthDate: Timestamp.fromDate(new Date(`${birthDate}T00:00:00`)),
         gender,
-        category: category,
+        marinera: {
+          participant: { // campo con informacion del usuario si es participante
+            category: category,// eventos en los que participó
+          }, // id de la academia a la que pertenece // eventos a los que asistió
+        },
         email: [email],
         phoneNumber: [phoneNumber],
         location: {
@@ -228,14 +251,14 @@ export default function RegisterForm() {
       );
 
       if (response.data.success && response.data.data) {
-        setFirstName(response.data.data.name);
-        setLastName(response.data.data.surname);
-        setBirthDate(response.data.data.date_of_birth);
+        setFirstName(capitalizeText(response.data.data.name) || '');
+        setLastName(capitalizeText(response.data.data.surname) || '');
+        setBirthDate(response.data.data.date_of_birth || '');
 
         setLocationData({
-          department: response.data.data.department || "",
-          province: response.data.data.province || "",
-          district: response.data.data.district || ""
+          department: capitalizeText(response.data.data.department) || "",
+          province: capitalizeText(response.data.data.province) || "",
+          district: capitalizeText(response.data.data.district) || ""
         });
       } else {
         setDniError("No se encontró el DNI.");
@@ -425,7 +448,7 @@ export default function RegisterForm() {
                   <input
                     type="text"
                     id="firstName"
-                    value={firstName}
+                    value={firstName || ''}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Juan"
@@ -438,7 +461,7 @@ export default function RegisterForm() {
                   <input
                     type="text"
                     id="lastName"
-                    value={lastName}
+                    value={lastName || ''}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                     placeholder="Perez Prado"
@@ -454,7 +477,7 @@ export default function RegisterForm() {
                   id="birthDate"
                   min={`${new Date().getFullYear() - 120}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
                   max={`${new Date().getFullYear() - 1}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
-                  value={birthDate}
+                  value={birthDate || ''}
                   readOnly
                   onChange={(e) => setBirthDate(e.target.value)}
                   className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"

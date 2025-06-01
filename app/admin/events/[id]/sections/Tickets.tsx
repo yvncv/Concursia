@@ -5,8 +5,8 @@ import useUsers from '@/app/hooks/useUsers';
 import { Ticket } from '@/app/types/ticketType';
 import { User } from '@/app/types/userType';
 import { CircleX } from "lucide-react";
-import DeleteTicket from "@/app/organizer/events/[id]/sections/ticketsModules/deleteTicket";
-import ConfirmTicket from "@/app/organizer/events/[id]/sections/ticketsModules/confirmTicket";
+import DeleteTicket from "@/app/organize/events/[id]/sections/ticketsModules/deleteTicket";
+import ConfirmTicket from "@/app/organize/events/[id]/sections/ticketsModules/confirmTicket";
 
 interface TicketsProps {
     event: CustomEvent;
@@ -206,7 +206,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                                 <td className="px-4 py-2">
                                     <div className="space-y-2">
                                         {users.map(user => (
-                                            <div key={user.id}>{user.dni} {user.firstName} {user.lastName}</div>
+                                            <div key={user?.id}>{user?.dni} {user?.firstName} {user?.lastName}</div>
                                         ))}
                                     </div>
                                 </td>
