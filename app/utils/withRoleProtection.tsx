@@ -116,7 +116,18 @@ export const withRoleProtection = <P extends object>(
     ]);
 
     if (loadingUser || loadingEvents || !checked) {
-      return <div>…Cargando…</div>;
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
+              <span className="animate-pulse text-red-600 text-lg font-medium">
+                Cargando datos...
+              </span>
+            </div>
+          </div>
+        </div>
+      );
     }
     if (!isAllowed) return null;
     return <WrappedComponent {...props} />;
