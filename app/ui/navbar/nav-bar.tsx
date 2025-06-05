@@ -18,6 +18,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredResults, setFilteredResults] = useState([]);
+  const [showMobileSearch, setShowMobileSearch] = useState(false); // Nueva estado para mostrar/ocultar búsqueda
   const pathname = usePathname();
   const router = useRouter();
 
@@ -28,6 +29,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   // Reset the menu state when pathname changes
   useEffect(() => {
     setIsMenuOpen(false);
+    setShowMobileSearch(false); // También resetear la búsqueda
   }, [pathname]);
 
   // Mantener el término de búsqueda sincronizado con la URL en la página de resultados
@@ -210,6 +212,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
     if (searchTerm.trim() !== "") {
       router.push(`/search-results?query=${encodeURIComponent(searchTerm)}`);
       setFilteredResults([]); // Cerrar dropdown
+      setShowMobileSearch(false); // Cerrar búsqueda mobile
     }
   };
 
@@ -365,80 +368,18 @@ export default function Navbar({ brandName }: { brandName: string }) {
   }
 
   return (
-    <nav className="bg-white shadow-md py-3">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex items-center justify-between w-full">
-          {/* Mobile Layout */}
-          <div className="flex items-center justify-between w-full md:w-auto gap-3">
-            {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
-              <img src="/concursia.png" alt="Logo" className="w-12 h-12 sm:w-9 sm:h-9" />
-              <span className="text-2xl font-bold text-red-700 hover:text-red-600 hidden md:inline">{brandName}</span>
-            </Link>
-
-            {/* Search Bar on mobile */}
-            <div className="relative flex-grow mx-2 md:hidden">
-              <div className="flex items-center bg-gray-100 rounded-full">
-                <div className="flex items-center flex-grow px-3 py-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <input
-                    type="search"
-                    placeholder="Encuentra eventos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearchSubmit();
-                      }
-                    }}
-                    className="bg-transparent border-none focus:ring-0 outline-none w-full text-sm"
-                  />
-                </div>
-                <button
-                  onClick={handleSearchSubmit}
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-r-full transition-colors duration-200"
-                  aria-label="Buscar"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-              {/* DROPDOWN PARA MOBILE */}
-              {filteredResults.length > 0 && (
-                <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
-                  {filteredResults.map((result) => (
-                    <li key={`${result.type}-${result.id}`}>
-                      <Link
-                        href={result.href}
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm border-b last:border-b-0"
-                        onClick={handleLinkClick}
-                      >
-                        <div className="flex items-center space-x-2">
-                          {result.type === 'event' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Evento</span>}
-                          {result.type === 'academy' && <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academia</span>}
-                          {result.type === 'user' && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Usuario</span>}
-                        </div>
-                        <div className="mt-1 text-sm">{result.displayText}</div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 p-1 md:hidden"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
-            </button>
-          </div>
+    <nav className="bg-white shadow-md">
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        {/* Navbar principal */}
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
+            <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
+            <span className="text-xl font-bold text-red-700 hover:text-red-600 hidden sm:inline">{brandName}</span>
+          </Link>
 
           {/* Desktop Search Bar */}
-          <div className="relative hidden md:flex w-full max-w-sm mx-2">
+          <div className="relative hidden md:flex w-full max-w-md mx-4">
             <input
               type="search"
               placeholder="Buscar eventos, academias, usuarios..."
@@ -486,37 +427,37 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-4">
             <nav>
-              <ul className="flex space-x-4">
+              <ul className="flex space-x-2">
                 {filteredLinks.map((link) => (
                   <li key={link.href}>
                     {link.label === "Logout" ? (
                       <button
                         onClick={handleSignOut}
-                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
+                        className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                       >
-                        <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">
+                        <link.icon className="w-4 h-4" />
+                        <span className="hidden xl:block">
                           {link.label}
                         </span>
                       </button>
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
+                        className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
                           ${pathname.includes(link.href)
                             ? "bg-red-100 text-red-700 font-bold"
                             : "hover:bg-gray-100 hover:text-black text-red-700"
                           }`}
                         onClick={handleLinkClick}
                       >
-                        <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">
+                        <link.icon className="w-4 h-4" />
+                        <span className="hidden xl:block">
                           {link.label}
                         </span>
                       </Link>
@@ -527,32 +468,96 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </nav>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          {/* Mobile Actions */}
+          <div className="flex items-center space-x-2 md:hidden">
+            {/* Search Button */}
+            <button
+              onClick={() => setShowMobileSearch(!showMobileSearch)}
+              className="text-red-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            
+            {/* Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 hover:text-gray-200 focus:outline-none"
+              className="text-red-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
+        </div>
 
-          {/* Mobile Menu */}
-          <div
-            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mt-3 ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-              }`}
-          >
-            <ul className="space-y-4 px-2 pb-4 pt-2 bg-white rounded-lg shadow-md">
+        {/* Mobile Search Bar */}
+        <div className={`md:hidden transition-all duration-300 ease-in-out ${
+          showMobileSearch ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 overflow-hidden'
+        }`}>
+          <div className="relative">
+            <div className="flex items-center bg-gray-100 rounded-lg">
+              <div className="flex items-center flex-grow px-3 py-2">
+                <Search className="h-5 w-5 text-gray-500 mr-2" />
+                <input
+                  type="search"
+                  placeholder="Encuentra eventos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchSubmit();
+                    }
+                  }}
+                  className="bg-transparent border-none focus:ring-0 outline-none w-full text-sm"
+                />
+              </div>
+              <button
+                onClick={handleSearchSubmit}
+                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-r-lg transition-colors duration-200"
+                aria-label="Buscar"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Mobile Search Dropdown */}
+            {filteredResults.length > 0 && showMobileSearch && (
+              <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto border border-gray-200">
+                {filteredResults.map((result) => (
+                  <Link
+                    key={`${result.type}-${result.id}`}
+                    href={result.href}
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-100 text-sm border-b last:border-b-0"
+                    onClick={() => {
+                      handleLinkClick();
+                      setShowMobileSearch(false);
+                    }}
+                  >
+                    <div className="flex items-center space-x-2 mb-1">
+                      {result.type === 'event' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Evento</span>}
+                      {result.type === 'academy' && <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academia</span>}
+                      {result.type === 'user' && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Usuario</span>}
+                    </div>
+                    <div className="text-sm text-gray-900">{result.displayText}</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isMenuOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+        }`}>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <ul className="space-y-2">
               {filteredLinks.map((link) => {
                 const isActive = pathname.includes(link.href);
 
                 const handleClick = async () => {
                   setIsMenuOpen(false);
+                  setShowMobileSearch(false);
                   handleLinkClick();
                   if (link.label === "Logout") {
                     await handleSignOut();
@@ -564,8 +569,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     {link.label === "Logout" ? (
                       <button
                         onClick={handleClick}
-                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-200 w-full text-left
+                          ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-white hover:shadow-sm text-red-700"}`}
                       >
                         <link.icon className="w-5 h-5" />
                         <span>{link.label}</span>
@@ -573,8 +578,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-200
+                          ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-white hover:shadow-sm text-red-700"}`}
                         onClick={handleClick}
                       >
                         <link.icon className="w-5 h-5" />
