@@ -7,6 +7,7 @@ import { Ticket } from '../../types/ticketType';
 import { Participant } from '../../types/participantType';
 import { User } from '../../types/userType';
 import { CustomEvent } from '../../types/eventType';
+import { Academy } from '../../types/academyType';
 
 export interface RegistrationItem {
   id: string;
@@ -70,10 +71,9 @@ const useMyRegistrations = (userId: string) => {
           );
 
           if (!hasParticipant) {
-            const registrationItem = await processTicket(ticket);
-            if (registrationItem) {
-              allRegistrations.push(registrationItem);
-            }
+            // AQUÍ ESTÁ EL CAMBIO: Procesar cada entry que incluya al usuario
+            const registrationItems = await processTicketEntries(ticket, userId);
+            allRegistrations.push(...registrationItems);
           }
         }
 
@@ -102,58 +102,117 @@ const useMyRegistrations = (userId: string) => {
     fetchRegistrations();
   }, [userId]);
 
-  const processTicket = async (ticket: Ticket): Promise<RegistrationItem | null> => {
+  // Función auxiliar para obtener nombres de academias
+  const getAcademyNames = async (academyIds: string[]): Promise<string[]> => {
+    if (!academyIds || academyIds.length === 0) {
+      return ['Libre']; // Si no hay academias, es libre
+    }
+
     try {
-      // Obtener evento
-      const eventDoc = await getDoc(doc(db, 'eventos', ticket.eventId));
-      if (!eventDoc.exists()) return null;
-      const eventData = eventDoc.data() as CustomEvent;
-      
-      // Obtener nombres de participantes
-      const participantNames = await Promise.all(
-        ticket.usersId.map(async (uid) => {
-          const userDoc = await getDoc(doc(db, 'users', uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
-            return `${userData.firstName} ${userData.lastName}`;
+      const academyNames = await Promise.all(
+        academyIds.map(async (academyId) => {
+          // Si el ID está vacío, nulo o undefined, directamente retornar "Libre"
+          if (!academyId || academyId.trim() === '') {
+            return 'Libre';
           }
-          return 'Usuario desconocido';
+
+          try {
+            const academyDoc = await getDoc(doc(db, 'academias', academyId));
+            
+            if (academyDoc.exists()) {
+              const academyData = academyDoc.data() as Academy;
+              
+              // Verificar si tiene el campo name
+              if (academyData.name) {
+                return academyData.name;
+              } else {
+                return 'Libre'; // Academia sin nombre = Libre
+              }
+            } else {
+              return 'Libre'; // Academia no encontrada = Libre
+            }
+          } catch (individualError) {
+            console.error('Error al obtener academia:', academyId, individualError);
+            return 'Libre'; // Error al cargar = Libre
+          }
         })
       );
-
-      const now = new Date();
-      const expirationDate = ticket.expirationDate.toDate();
-      const canCancel = ticket.status === 'Pendiente' && expirationDate > now;
-
-      const result = {
-        id: ticket.id,
-        type: 'ticket' as const,
-        status: ticket.status === 'Pagado' ? 'Confirmada' as const : 
-               ticket.status === 'Anulado' ? 'Anulado' as const : 'Pendiente' as const,
-        eventName: eventData.name,
-        eventDate: eventData.startDate.toDate(),
-        category: ticket.category,
-        level: ticket.level,
-        amount: ticket.totalAmount,
-        registrationDate: ticket.registrationDate.toDate(),
-        expirationDate: expirationDate,
-        paymentDate: ticket.paymentDate?.toDate(),
-        participants: participantNames,
-        academies: ticket.academiesName,
-        location: eventData.location.placeName,
-        canCancel,
-        ticketId: ticket.id,
-        eventId: ticket.eventId,
-        eventImage: eventData.smallImage
-      };
-      
-      return result;
+      return academyNames;
     } catch (error) {
-      console.error('Error processing ticket:', error);
-      return null;
+      console.error('Error general getting academy names:', error);
+      return academyIds.map(() => 'Libre'); // Error general = Libre
     }
   };
 
+  // NUEVA FUNCIÓN: Procesar entries del ticket
+  const processTicketEntries = async (ticket: Ticket, userId: string): Promise<RegistrationItem[]> => {
+    try {
+      // Obtener evento
+      const eventDoc = await getDoc(doc(db, 'eventos', ticket.eventId));
+      if (!eventDoc.exists()) return [];
+      const eventData = eventDoc.data() as CustomEvent;
+
+      const registrationItems: RegistrationItem[] = [];
+
+      // Procesar solo las entries que incluyan al usuario actual
+      for (let i = 0; i < ticket.entries.length; i++) {
+        const entry = ticket.entries[i];
+        
+        // Solo procesar si esta entry incluye al usuario actual
+        if (entry.usersId.includes(userId)) {
+          // Obtener nombres de participantes de ESTA entry específica
+          const participantNames = await Promise.all(
+            entry.usersId.map(async (uid) => {
+              const userDoc = await getDoc(doc(db, 'users', uid));
+              if (userDoc.exists()) {
+                const userData = userDoc.data() as User;
+                return `${userData.firstName} ${userData.lastName}`;
+              }
+              return 'Usuario desconocido';
+            })
+          );
+
+          // Obtener nombres de academias de ESTA entry específica
+          const academyNames = await getAcademyNames(entry.academiesId);
+
+          const now = new Date();
+          const expirationDate = ticket.expirationDate.toDate();
+          const canCancel = ticket.status === 'Pendiente' && expirationDate > now;
+
+          const registrationItem: RegistrationItem = {
+            id: `${ticket.id}-entry-${i}`, // ID único para cada entry
+            type: 'ticket',
+            status: ticket.status === 'Pagado' ? 'Confirmada' : 
+                   ticket.status === 'Anulado' ? 'Anulado' : 'Pendiente',
+            eventName: eventData.name,
+            eventDate: eventData.startDate.toDate(),
+            category: entry.category, // Categoría específica de esta entry
+            level: entry.level,       // Nivel específico de esta entry
+            amount: entry.amount,     // Monto específico de esta entry
+            registrationDate: ticket.registrationDate.toDate(),
+            expirationDate: expirationDate,
+            paymentDate: ticket.paymentDate?.toDate(),
+            participants: participantNames, // Solo los participantes de esta entry
+            academies: academyNames,        // Solo las academias de esta entry
+            location: eventData.location.placeName,
+            canCancel,
+            ticketId: ticket.id,
+            eventId: ticket.eventId,
+            eventImage: eventData.smallImage
+          };
+
+          registrationItems.push(registrationItem);
+        }
+      }
+
+      return registrationItems;
+    } catch (error) {
+      console.error('Error processing ticket entries:', error);
+      return [];
+    }
+  };
+
+  // La función processParticipant se mantiene igual
   const processParticipant = async (participant: Participant): Promise<RegistrationItem | null> => {
     try {
       // Obtener evento
@@ -182,6 +241,28 @@ const useMyRegistrations = (userId: string) => {
         })
       );
 
+      // Obtener nombres de academias
+      let academyNames: string[] = ['Libre']; // Default
+      
+      // Si el participant tiene su propio academiesId, usarlo
+      if (participant.academiesId && participant.academiesId.length > 0) {
+        academyNames = await getAcademyNames(participant.academiesId);
+      }
+      // Si no, intentar usar los datos del ticket
+      else if (ticketData?.academiesName && ticketData.academiesName.length > 0) {
+        academyNames = ticketData.academiesName;
+      }
+      // Si el ticket tiene academiesId en lugar de academiesName
+      else if (ticketData?.entries) {
+        // Buscar la entry que corresponde a este participant
+        const matchingEntry = ticketData.entries.find(entry => 
+          entry.usersId.some(uid => participant.usersId.includes(uid))
+        );
+        if (matchingEntry && matchingEntry.academiesId.length > 0) {
+          academyNames = await getAcademyNames(matchingEntry.academiesId);
+        }
+      }
+
       const result = {
         id: participant.id,
         type: 'participant' as const,
@@ -194,7 +275,7 @@ const useMyRegistrations = (userId: string) => {
         registrationDate: participant.createdAt.toDate(),
         paymentDate: ticketData?.paymentDate?.toDate(),
         participants: participantNames,
-        academies: ticketData?.academiesName || [],
+        academies: academyNames,
         location: eventData.location.placeName,
         canCancel: false,
         participantCode: participant.code,
@@ -212,9 +293,7 @@ const useMyRegistrations = (userId: string) => {
 
   const refetch = () => {
     if (userId) {
-      // Re-ejecutar el efecto
       setLoading(true);
-      // El useEffect se encargará de hacer el fetch nuevamente
     }
   };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search } from "lucide-react";
+import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import useAcademies from "@/app/hooks/useAcademies";
@@ -16,6 +16,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   const { academies } = useAcademies();
   const { users } = useUsers();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredResults, setFilteredResults] = useState([]);
   const [showMobileSearch, setShowMobileSearch] = useState(false); // Nueva estado para mostrar/ocultar búsqueda
@@ -29,7 +30,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
   // Reset the menu state when pathname changes
   useEffect(() => {
     setIsMenuOpen(false);
-    setShowMobileSearch(false); // También resetear la búsqueda
+    setShowMobileSearch(false);
+    setShowUserMenu(false);
   }, [pathname]);
 
   // Mantener el término de búsqueda sincronizado con la URL en la página de resultados
@@ -433,43 +435,113 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Desktop Menu */}
+          {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-4">
             <nav>
-              <ul className="flex space-x-2">
-                {filteredLinks.map((link) => (
-                  <li key={link.href}>
-                    {link.label === "Logout" ? (
-                      <button
-                        onClick={handleSignOut}
-                        className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
-                          }`}
-                      >
-                        <link.icon className="w-4 h-4" />
-                        <span className="hidden xl:block">
-                          {link.label}
-                        </span>
-                      </button>
-                    ) : (
-                      <Link
-                        href={link.href}
-                        className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
-                          }`}
-                        onClick={handleLinkClick}
-                      >
-                        <link.icon className="w-4 h-4" />
-                        <span className="hidden xl:block">
-                          {link.label}
-                        </span>
-                      </Link>
+              <ul className="flex space-x-2 items-center">
+                {/* Calendario */}
+                <li>
+                  <Link
+                    href="/calendario"
+                    className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
+            ${pathname === "/calendario"
+                        ? "bg-red-100 text-red-700 font-bold"
+                        : "hover:bg-gray-100 hover:text-black text-red-700"
+                      }`}
+                    onClick={handleLinkClick}
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden xl:block">Calendario</span>
+                  </Link>
+                </li>
+
+                {/* Eventos (solo si es staff o organizer) */}
+                {(isStaffOfAnyEvent || user?.roleId === "organizer") && (
+                  <li>
+                    <Link
+                      href="/organize"
+                      className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
+              ${pathname.includes("/organize")
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                        }`}
+                      onClick={handleLinkClick}
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span className="hidden xl:block">Eventos</span>
+                    </Link>
+                  </li>
+                )}
+
+                {/* Menú de usuario */}
+                {user ? (
+                  <li className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm hover:bg-gray-100 text-red-700"
+                    >
+                      <User className="w-4 h-4" />
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+
+                    {/* Dropdown del usuario */}
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                        <ul className="py-1">
+                          <li>
+                            <Link
+                              href={`/user/${user.id}`}
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <User className="w-4 h-4" />
+                              <span>Perfil</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/my-registrations"
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <Ticket className="w-4 h-4" />
+                              <span>Mis Inscripciones</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleSignOut();
+                              }}
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              <LogOutIcon className="w-4 h-4" />
+                              <span>Cerrar Sesión</span>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     )}
                   </li>
-                ))}
+                ) : (
+                  <li>
+                    <Link
+                      href="/login"
+                      className="flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm hover:bg-gray-100 text-red-700"
+                      onClick={handleLinkClick}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span className="hidden xl:block">Iniciar Sesión</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
