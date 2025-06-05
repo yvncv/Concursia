@@ -33,6 +33,11 @@ const AcademyProfileCard: React.FC<Props> = ({ academy, organizer, onEdit }) => 
     return URL.createObjectURL(image);
   };
 
+  // Función para ir al perfil público
+  const handleViewPublicProfile = () => {
+    window.open(`/academy/${academy.id}`, '_blank');
+  };
+
   const coverImageUrl = getImageUrl(academy.coverImage);
   const profileImageUrl = getImageUrl(academy.profileImage);
 
@@ -280,16 +285,10 @@ const AcademyProfileCard: React.FC<Props> = ({ academy, organizer, onEdit }) => 
 
         {/* Botones de acción */}
         <div className="flex gap-2">
-          {onEdit && (
-            <button 
-              onClick={onEdit}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-lg transition-colors duration-200"
-            >
-              <Edit3 className="w-3 h-3" />
-              Editar
-            </button>
-          )}
-          <button className="flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 border border-gray-300 hover:border-gray-400 text-sm py-2 px-3 rounded-lg transition-colors duration-200">
+          <button 
+            onClick={handleViewPublicProfile}
+            className="flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 border border-gray-300 hover:border-gray-400 text-sm py-2 px-3 rounded-lg transition-colors duration-200"
+          >
             <ExternalLink className="w-3 h-3" />
             Ver Público
           </button>

@@ -112,13 +112,6 @@ export const AcademyStatsHeader: React.FC<StatsHeaderProps> = ({
             <p className="text-gray-600 mt-1">Administra {academyName} y las solicitudes de afiliación</p>
           </div>
         </div>
-        
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800 border border-gray-300 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors duration-200">
-            <Eye className="w-4 h-4" />
-            Ver Perfil Público
-          </button>
-        </div>
       </div>
 
       {/* Stats Cards */}

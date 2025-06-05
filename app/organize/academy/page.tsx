@@ -9,6 +9,7 @@ import { useAcademyMembershipManagement } from "@/app/hooks/academy/useAcademyMe
 // Importar los componentes
 import ConfirmModal from "./modals/DesafiliateStudentModal";
 import AcademyProfileCard from "./components/AcademyProfileCard";
+import EditAcademyModal from "./modals/EditAcademyModal"; // 👈 NUEVO IMPORT
 
 import { 
   AcademyStatsHeader, 
@@ -29,17 +30,36 @@ const OrganizeAcademyPage = () => {
     error: removeError,
   } = useAcademyMembershipManagement();
 
-  // Estados locales
+  // Estados locales existentes
   const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(null);
   const [selectedStudentName, setSelectedStudentName] = React.useState<string>("");
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'solicitudes' | 'afiliados'>('solicitudes');
+
+  // 👈 NUEVO ESTADO PARA EL MODAL DE EDICIÓN
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
   // Obtener la academia primero
   const academy = academies.find((a) => a.organizerId === user?.uid);
   
   // Ahora llamar el hook con el academyId (puede ser undefined, el hook lo maneja)
   const { pendingRequests } = useAcademyJoinRequestsForOrganizer(academy?.id);
+
+  // 👈 NUEVA FUNCIÓN PARA MANEJAR LA EDICIÓN DE ACADEMIA
+  const handleEditAcademy = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditSuccess = () => {
+    console.log("Academia actualizada exitosamente");
+    // Aquí podrías recargar los datos si es necesario
+    // fetchAcademies(); // Si tuvieras una función para recargar
+    setIsEditModalOpen(false);
+  };
 
   const handleOpenModal = (studentId: string, studentName: string) => {
     setSelectedStudentId(studentId);
@@ -183,13 +203,14 @@ const OrganizeAcademyPage = () => {
               <AcademyProfileCard 
                 academy={academy} 
                 organizer={organizer}
-                onEdit={() => {}} 
+                onEdit={handleEditAcademy} // 👈 CONECTAR LA FUNCIÓN DE EDICIÓN
               />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Modal de confirmación para desafiliar estudiante - EXISTENTE */}
       <ConfirmModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
@@ -197,6 +218,16 @@ const OrganizeAcademyPage = () => {
         message={`¿Deseas desafiliar a ${selectedStudentName} de tu academia? Esta acción actualizará el historial de membresía y no se puede deshacer.`}
         loading={removingStudent}
       />
+
+      {/* 👈 NUEVO MODAL PARA EDITAR ACADEMIA */}
+      {academy && (
+        <EditAcademyModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          academy={academy}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </>
   );
 };
