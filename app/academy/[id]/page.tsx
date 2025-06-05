@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, use } from 'react';
 import useAcademies from '@/app/hooks/useAcademies';
 import useUser from "@/app/hooks/useUser";
 import useUsers from '@/app/hooks/useUsers';
+import useAcademy from "@/app/hooks/useAcademy";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import AcademyInformation from './components/AcademyInformation';
 import ContactInformation from './components/ContactInformation';
 import LocationInformation from './components/LocationInformation';
+import AcademyJoinRequestButton from './components/AcademyJoinRequestButton';
 
 export default function AcademyPage({ params }: { params: Promise<{ id: string }> }) {
   const { academies, loadingAcademies } = useAcademies();
@@ -28,6 +30,10 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
   
   // Obtener estudiantes de esta academia
   const students = users.filter(u => u.marinera?.academyId === foundAcademy?.name);
+
+  // Verificar si el usuario actual ya pertenece a una academia
+  const currentUserData = users.find(u => u.id === user?.uid);
+  const userAlreadyHasAcademy = Boolean(currentUserData?.marinera?.academyId);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -100,58 +106,74 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
 
         {/* Academy Header Info */}
         <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="flex items-end space-x-6">
-            {/* Profile Image */}
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
-                {foundAcademy.profileImage ? (
-                  <Image
-                    src={typeof foundAcademy.profileImage === 'string'
-                      ? foundAcademy.profileImage
-                      : URL.createObjectURL(foundAcademy.profileImage as File)}
-                    alt="Logo de la academia"
-                    width={128}
-                    height={128}
-                    className="object-cover w-full h-full"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <Building2 className="w-12 h-12 text-gray-400" />
+          <div className="flex items-end justify-between">
+            <div className="flex items-end space-x-6">
+              {/* Profile Image */}
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+                  {foundAcademy.profileImage ? (
+                    <Image
+                      src={typeof foundAcademy.profileImage === 'string'
+                        ? foundAcademy.profileImage
+                        : URL.createObjectURL(foundAcademy.profileImage as File)}
+                      alt="Logo de la academia"
+                      width={128}
+                      height={128}
+                      className="object-cover w-full h-full"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <Building2 className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                  
+                  {canEdit && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                      <LucideImage className="text-white w-6 h-6" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Academy Info */}
+              <div className="text-white flex-1">
+                <h1 className="text-4xl font-bold mb-2">{capitalizeName(foundAcademy.name)}</h1>
+                <div className="flex items-center space-x-6 text-lg">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>{students.length} estudiantes</span>
                   </div>
-                )}
-                
-                {canEdit && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                    <LucideImage className="text-white w-6 h-6" />
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-5 h-5" />
+                    <span>{foundAcademy.location?.district}, {foundAcademy.location?.department}</span>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Award className="w-5 h-5" />
+                    <span>Danza Marinera</span>
+                  </div>
+                </div>
+                {organizer && (
+                  <p className="mt-2 text-blue-200">
+                    Dirigida por: {organizer.firstName} {organizer.lastName}
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Academy Info */}
-            <div className="text-white flex-1">
-              <h1 className="text-4xl font-bold mb-2">{capitalizeName(foundAcademy.name)}</h1>
-              <div className="flex items-center space-x-6 text-lg">
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
-                  <span>{students.length} estudiantes</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-5 h-5" />
-                  <span>{foundAcademy.location?.district}, {foundAcademy.location?.department}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Award className="w-5 h-5" />
-                  <span>Danza Marinera</span>
-                </div>
+            {/* Join Request Button - Solo visible si no es el organizador */}
+            {!canEdit && (
+              <div className="ml-6">
+                <AcademyJoinRequestButton
+                  academyId={foundAcademy.id!}
+                  academyName={foundAcademy.name}
+                  userId={user?.uid}
+                  userAlreadyHasAcademy={userAlreadyHasAcademy}
+                  userCurrentAcademyId={currentUserData?.marinera?.academyId}
+                  userCurrentAcademyName={currentUserData?.marinera?.academyName}
+                />
               </div>
-              {organizer && (
-                <p className="mt-2 text-blue-200">
-                  Dirigida por: {organizer.firstName} {organizer.lastName}
-                </p>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
