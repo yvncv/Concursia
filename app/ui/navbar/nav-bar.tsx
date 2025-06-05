@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, User, Menu, X, Shield, LogOutIcon, Search } from "lucide-react";
+import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import useAcademies from "@/app/hooks/useAcademies";
@@ -49,6 +49,12 @@ export default function Navbar({ brandName }: { brandName: string }) {
       label: "Calendario",
       icon: Home,
       requiresAuth: false,
+    },
+    {
+      href: "/my-registrations",
+      label: "Mis Inscripciones",
+      icon: Ticket,
+      requiresAuth: true,
     },
     {
       href: "/login",
@@ -478,7 +484,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             >
               <Search className="w-5 h-5" />
             </button>
-            
+
             {/* Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -491,9 +497,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
         </div>
 
         {/* Mobile Search Bar */}
-        <div className={`md:hidden transition-all duration-300 ease-in-out ${
-          showMobileSearch ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 overflow-hidden'
-        }`}>
+        <div className={`md:hidden transition-all duration-300 ease-in-out ${showMobileSearch ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 overflow-hidden'
+          }`}>
           <div className="relative">
             <div className="flex items-center bg-gray-100 rounded-lg">
               <div className="flex items-center flex-grow px-3 py-2">
@@ -519,7 +524,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
                 <Search className="w-4 h-4" />
               </button>
             </div>
-            
+
             {/* Mobile Search Dropdown */}
             {filteredResults.length > 0 && showMobileSearch && (
               <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto border border-gray-200">
@@ -547,9 +552,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isMenuOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
-        }`}>
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+          }`}>
           <div className="bg-gray-50 rounded-lg p-4">
             <ul className="space-y-2">
               {filteredLinks.map((link) => {
