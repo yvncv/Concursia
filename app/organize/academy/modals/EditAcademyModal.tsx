@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  X, 
-  Upload, 
-  MapPin, 
-  Globe, 
-  Facebook, 
-  Instagram, 
-  Youtube, 
+import {
+  X,
+  Upload,
+  MapPin,
+  Globe,
+  Facebook,
+  Instagram,
+  Youtube,
   Music,
   MessageCircle,
   Twitter,
@@ -32,7 +32,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
   onSuccess
 }) => {
   const { editAcademy, loading } = useEditAcademy();
-  
+
   // Estados para los campos del formulario
   const [formData, setFormData] = useState({
     name: "",
@@ -124,15 +124,22 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
     }
   }, [academy, isOpen]);
 
-  const handleInputChange = (field: string, value: string, nestedField?: string, subField?: string) => {
+  const handleInputChange = (
+    field: string,
+    value: string,
+    nestedField?: string,
+    subField?: string
+  ) => {
     setFormData(prev => {
+      const fieldValue = prev[field as keyof typeof prev];
+
       if (nestedField && subField) {
         return {
           ...prev,
           [field]: {
-            ...prev[field as keyof typeof prev],
+            ...(fieldValue as Record<string, any>),
             [nestedField]: {
-              ...(prev[field as keyof typeof prev] as any)[nestedField],
+              ...((fieldValue as Record<string, any>)[nestedField] ?? {}),
               [subField]: value
             }
           }
@@ -141,7 +148,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
         return {
           ...prev,
           [field]: {
-            ...prev[field as keyof typeof prev],
+            ...(fieldValue as Record<string, any>),
             [nestedField]: value
           }
         };
@@ -160,7 +167,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
         ...prev,
         [type]: file
       }));
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreviews(prev => ({
@@ -174,14 +181,14 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       // Preparar los datos para enviar
       const updateData: Partial<Academy> = {
         name: formData.name,
         description: formData.description,
         website: formData.website,
-        email: formData.email.secondary 
+        email: formData.email.secondary
           ? [formData.email.primary, formData.email.secondary]
           : formData.email.primary,
         phoneNumber: formData.phoneNumber.secondary
@@ -229,14 +236,14 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Imagen de Portada
             </label>
-            <div 
+            <div
               className="relative h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => coverImageRef.current?.click()}
             >
               {imagePreviews.coverImage ? (
-                <img 
-                  src={imagePreviews.coverImage} 
-                  alt="Portada" 
+                <img
+                  src={imagePreviews.coverImage}
+                  alt="Portada"
                   className="w-full h-full object-cover rounded-lg"
                 />
               ) : (
@@ -260,14 +267,14 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
               Imagen de Perfil
             </label>
             <div className="flex items-center gap-4">
-              <div 
+              <div
                 className="w-16 h-16 bg-gray-100 border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center"
                 onClick={() => profileImageRef.current?.click()}
               >
                 {imagePreviews.profileImage ? (
-                  <img 
-                    src={imagePreviews.profileImage} 
-                    alt="Perfil" 
+                  <img
+                    src={imagePreviews.profileImage}
+                    alt="Perfil"
                     className="w-full h-full object-cover rounded-full"
                   />
                 ) : (
