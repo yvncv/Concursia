@@ -230,7 +230,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
       console.error("Error al cerrar sesión:", error);
     }
   };
-  
+
   // Loading states
   const loadingMessage = loadingUser ? "Cargando datos..." : null;
 
@@ -256,9 +256,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           <div>
             <Link href="/" className="flex items-center space-x-2">
               <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
-              <span className="text-2xl font-bold text-red-700 hover:text-red-600">
-                {brandName}
-              </span>
+              <span className="text-2xl font-bold text-red-700 hover:text-red-600">{brandName}</span>
             </Link>
           </div>
 
@@ -344,51 +342,15 @@ export default function Navbar({ brandName }: { brandName: string }) {
         </div>
         {/* Menú para Mobile */}
         <div
-          className={`md:hidden bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ${
-            isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`md:hidden bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+            }`}
         >
           <ul className="space-y-4 px-4 pb-4 pt-2">
-            <li>
-              <Link
-                href="/calendario"
-                className="text-gray-600 hover:text-red-700 block"
-              >
-                Calendario de Eventos
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="#eventos"
-                className="text-gray-600 hover:text-red-700 block"
-              >
-                Eventos Recientes
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="#galeria"
-                className="text-gray-600 hover:text-red-700 block"
-              >
-                Galería
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="#acerca"
-                className="text-gray-600 hover:text-red-700 block"
-              >
-                Acerca de
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="#contacto"
-                className="text-gray-600 hover:text-red-700 block"
-              >
-                Contacto
-              </Link>
-            </li>
+            <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario de Eventos</Link></li>
+            <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
+            <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
+            <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
+            <li><Link href="#contacto" className="text-gray-600 hover:text-red-700 block">Contacto</Link></li>
             {user ? (
               <li>
                 <Link
@@ -401,22 +363,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </li>
             ) : (
               <>
-                <li>
-                  <Link
-                    href="/login"
-                    className="text-gray-600 hover:text-red-700 block"
-                  >
-                    Iniciar Sesión
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/register"
-                    className="text-gray-600 hover:text-red-700 block"
-                  >
-                    Registrarse
-                  </Link>
-                </li>
+                <li><Link href="/login" className="text-gray-600 hover:text-red-700 block">Iniciar Sesión</Link></li>
+                <li><Link href="/register" className="text-gray-600 hover:text-red-700 block">Registrarse</Link></li>
               </>
             )}
           </ul>
@@ -426,77 +374,15 @@ export default function Navbar({ brandName }: { brandName: string }) {
   }
 
   return (
-    <nav className="bg-white shadow-md py-3">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex items-center justify-between w-full">
-          {/* Mobile Layout */}
-          <div className="flex items-center justify-between w-full md:w-auto gap-3">
-            {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
-              <img src="/concursia.png" alt="Logo" className="w-12 h-12 sm:w-9 sm:h-9" />
-              <span className="text-2xl font-bold text-red-700 hover:text-red-600 hidden md:inline">{brandName}</span>
-            </Link>
-
-            {/* Search Bar on mobile */}
-            <div className="relative flex-grow mx-2 md:hidden">
-              <div className="flex items-center bg-gray-100 rounded-full">
-                <div className="flex items-center flex-grow px-3 py-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <input
-                    type="search"
-                    placeholder="Encuentra eventos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearchSubmit();
-                      }
-                    }}
-                    className="bg-transparent border-none focus:ring-0 outline-none w-full text-sm"
-                  />
-                </div>
-                <button
-                  onClick={handleSearchSubmit}
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-r-full transition-colors duration-200"
-                  aria-label="Buscar"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-              {/* DROPDOWN PARA MOBILE */}
-              {filteredResults.length > 0 && (
-                <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
-                  {filteredResults.map((result) => (
-                    <li key={`${result.type}-${result.id}`}>
-                      <Link
-                        href={result.href}
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm border-b last:border-b-0"
-                        onClick={handleLinkClick}
-                      >
-                        <div className="flex items-center space-x-2">
-                          {result.type === 'event' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Evento</span>}
-                          {result.type === 'academy' && <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academia</span>}
-                          {result.type === 'user' && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Usuario</span>}
-                        </div>
-                        <div className="mt-1 text-sm">{result.displayText}</div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 p-1 md:hidden"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
-            </button>
-          </div>
+    <nav className="bg-white shadow-md">
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        {/* Navbar principal */}
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
+            <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
+            <span className="text-xl font-bold text-red-700 hover:text-red-600 hidden sm:inline">{brandName}</span>
+          </Link>
 
           {/* Desktop Search Bar */}
           <div className="relative hidden md:flex w-full max-w-md mx-4">

@@ -10,31 +10,26 @@ export default function useAcademies() {
   const [errorAcademies, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAcademias = () => {
-      const q = query(collection(db, "academias"));
+    const q = query(collection(db, "academias"));
 
-      // Usar onSnapshot para escuchar cambios en tiempo real
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const eventsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Academy[];
+    // Usar onSnapshot para escuchar cambios en tiempo real
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const academiesData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Academy[];
 
-        setAcademies(eventsData);
-        setLoading(false);  // Datos cargados
-      }, (err) => {
-        console.error("Error fetching academias", err);
-        setError("Failed to fetch academias");
-        setLoading(false);
-      });
+      setAcademies(academiesData);
+      setLoading(false);  // Datos cargados
+    }, (err) => {
+      console.error("Error fetching academias", err);
+      setError("Failed to fetch academias");
+      setLoading(false);
+    });
 
-      // Limpiar el listener cuando el componente se desmonte
-      return () => unsubscribe();
-    };
-
-    fetchAcademias();
-  }, [academies]); // Solo se ejecuta al montar el componente
-
+    // Limpiar el listener cuando el componente se desmonte
+    return unsubscribe;
+  }, []); // ✅ Array vacío - solo se ejecuta al montar
 
   const saveAcademy = async (academyData: Omit<Academy, 'id'>) => {
     try {
@@ -48,7 +43,6 @@ export default function useAcademies() {
 
   const deleteAcademy = async (id: string) => {
     try {
-      // Importar deleteDoc y doc al inicio del archivo
       const docRef = doc(db, "academias", id);
       await deleteDoc(docRef);
       return true; // Retorna true si se eliminó exitosamente
