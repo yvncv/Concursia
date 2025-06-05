@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import useAcademies from "@/app/hooks/useAcademies";
 import useUser from "@/app/hooks/useUser";
 import useUsers from "@/app/hooks/useUsers";
@@ -37,6 +37,7 @@ const Academies = () => {
       coordinates: { latitude: "", longitude: "" },
     },
     organizerId: "",
+    profileImage: ""
   });
   const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null);
   // Estado para almacenar los nombres de usuario ya cargados
@@ -227,6 +228,7 @@ const Academies = () => {
         coordinates: { latitude: "", longitude: "" },
       },
       organizerId: "",
+      profileImage: ""
     });
     setDialogMode("add");
     setDialogOpen(true);
