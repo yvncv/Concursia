@@ -9,8 +9,20 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TusuyImage from "@/public/TusuyPeru.jpg";
 import Hombre from "@/public/hombre.png";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { Search, User, Image as LucideImage, X, Check, Lightbulb } from "lucide-react";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import {
+  Search,
+  User,
+  Image as LucideImage,
+  X,
+  Check,
+  Lightbulb,
+  CircleCheckBig,
+} from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import ImageCropModal from "./modals/ImageCropModal";
 
@@ -30,21 +42,20 @@ export default function RegisterForm() {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dni, setDni] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [category, setCategory] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [birthDate, setBirthDate] = useState<string>("");
+  const [gender, setGender] = useState<string>("");
   const [step, setStep] = useState(1);
   const [emailExistsError, setEmailExistsError] = useState("");
   const [dniExistsError, setDniExistsError] = useState("");
   const router = useRouter();
 
-
   const [locationData, setLocationData] = useState<LocationData>({
     department: "",
     province: "",
-    district: ""
+    district: "",
   });
 
   const [loadingDni, setLoadingDni] = useState(false);
@@ -55,8 +66,18 @@ export default function RegisterForm() {
   const [croppedImage, setCroppedImage] = useState(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
+  const [apiData, setApiData] = useState<{
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+  } | null>(null);
+  const [isValidated, setIsValidated] = useState(false);
+  const [validationError, setValidationError] = useState("");
+
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateNumber = (telephoneNumber: string) =>
+    /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
 
   useEffect(() => {
     if (birthDate) {
@@ -96,7 +117,9 @@ export default function RegisterForm() {
     if (email && validateEmail(email)) {
       const exists = await checkEmailExistsInFirestore(email);
       if (exists) {
-        setEmailExistsError("Este correo electrónico ya está registrado. Por favor, utiliza otro.");
+        setEmailExistsError(
+          "Este correo electrónico ya está registrado. Por favor, utiliza otro."
+        );
       } else {
         setEmailExistsError("");
       }
@@ -104,16 +127,46 @@ export default function RegisterForm() {
   };
 
   const determineCategory = (birthYear: number) => {
-    if (birthYear >= 2021) setCategory('Baby');
-    else if (birthYear >= 2018) setCategory('Pre-Infante');
-    else if (birthYear >= 2015) setCategory('Infante');
-    else if (birthYear >= 2011) setCategory('Infantil');
-    else if (birthYear >= 2007) setCategory('Junior');
-    else if (birthYear >= 2003) setCategory('Juvenil');
-    else if (birthYear >= 1990) setCategory('Adulto');
-    else if (birthYear >= 1975) setCategory('Senior');
-    else if (birthYear >= 1963) setCategory('Master');
-    else setCategory('Oro');
+    if (birthYear >= 2021) setCategory("Baby");
+    else if (birthYear >= 2018) setCategory("Pre-Infante");
+    else if (birthYear >= 2015) setCategory("Infante");
+    else if (birthYear >= 2011) setCategory("Infantil");
+    else if (birthYear >= 2007) setCategory("Junior");
+    else if (birthYear >= 2003) setCategory("Juvenil");
+    else if (birthYear >= 1990) setCategory("Adulto");
+    else if (birthYear >= 1975) setCategory("Senior");
+    else if (birthYear >= 1963) setCategory("Master");
+    else setCategory("Oro");
+  };
+
+  const capitalizeText = (text: string) => {
+    if (!text) return "";
+
+    // Lista de palabras que no se deben capitalizar (artículos, preposiciones, etc.)
+    const nonCapitalizedWords = [
+      "de",
+      "del",
+      "la",
+      "las",
+      "el",
+      "los",
+      "y",
+      "e",
+      "o",
+      "u",
+    ];
+
+    return text
+      .toLowerCase()
+      .split(" ")
+      .map((word, index) => {
+        // Siempre capitalizar la primera palabra
+        if (index === 0 || !nonCapitalizedWords.includes(word)) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        return word;
+      })
+      .join(" ");
   };
 
   const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
@@ -127,6 +180,15 @@ export default function RegisterForm() {
       setLoading(false);
       return;
     }
+
+    // Validar que la contraseña sea fuerte antes de continuar
+    if (passwordStrength.level !== "Fuerte") {
+      setPasswordError(
+        "La contraseña debe tener al menos 6 caracteres y un número."
+      );
+      return;
+    }
+    setPasswordError(""); // Limpiar errores si todo está bien
     setStep(2);
   };
 
@@ -140,7 +202,9 @@ export default function RegisterForm() {
 
     const dniExists = await checkDniExistsInFirestore(dni);
     if (dniExists) {
-      setDniExistsError("Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión.");
+      setDniExistsError(
+        "Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión."
+      );
       return;
     }
 
@@ -148,29 +212,42 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
-      let profileImageUrl = null;
+      let profileImageUrl = await getDownloadURL(
+        gender == "Masculino"
+          ? storageRef(storage, "users/dafault-male.JPG")
+          : storageRef(storage, "users/dafault-female.JPG")
+      );
       if (croppedImage) {
-        profileImageUrl = await uploadProfileImage(croppedImage, user.uid);
+        profileImageUrl = await uploadProfileImage(croppedImage, user?.uid);
       }
 
-      await setDoc(doc(db, "users", user.uid), {
-        id: user.uid,
+      await setDoc(doc(db, "users", user?.uid), {
+        id: user?.uid,
         roleId: "user",
         dni,
         firstName,
         lastName,
         birthDate: Timestamp.fromDate(new Date(`${birthDate}T00:00:00`)),
         gender,
-        category: category,
+        marinera: {
+          participant: {
+            // campo con informacion del usuario si es participante
+            category: category, // eventos en los que participó
+          }, // id de la academia a la que pertenece // eventos a los que asistió
+        },
         email: [email],
         phoneNumber: [phoneNumber],
         location: {
           department: locationData.department,
           province: locationData.province,
-          district: locationData.district
+          district: locationData.district,
         },
         profileImage: profileImageUrl,
         createdAt: new Date(),
@@ -194,49 +271,56 @@ export default function RegisterForm() {
 
   // Función para manejar la pulsación de Enter en el campo DNI
   const handleDniKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleDniSearch();
     }
   };
 
-  useEffect(() => {
-    if (dni.length === 8) {
-      fetchReniecData(dni);
-    }
-  }, [dni]);
-
   const fetchReniecData = async (dni: string) => {
     setLoadingDni(true);
     setDniError("");
     setDniExistsError("");
+    setIsValidated(false);
+    setValidationError("");
 
     try {
       const dniExists = await checkDniExistsInFirestore(dni);
       if (dniExists) {
-        setDniExistsError("Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión.");
+        setDniExistsError(
+          "Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión."
+        );
         setLoadingDni(false);
         return;
       }
+
       const response = await axios.post(
         "https://api.consultasperu.com/api/v1/query",
         {
-          token: "24068bb2bf38ddc53748557196cf438c54f6d7b227623c99dbad83599d70b505",
+          token:
+            "24068bb2bf38ddc53748557196cf438c54f6d7b227623c99dbad83599d70b505",
           type_document: "dni",
-          document_number: dni
+          document_number: dni,
         }
       );
 
       if (response.data.success && response.data.data) {
-        setFirstName(response.data.data.name);
-        setLastName(response.data.data.surname);
-        setBirthDate(response.data.data.date_of_birth);
-
-        setLocationData({
-          department: response.data.data.department || "",
-          province: response.data.data.province || "",
-          district: response.data.data.district || ""
+        console.log("Datos obtenidos de RENIEC:", response.data.data);
+        // En lugar de establecer los campos directamente, guardamos los datos para validación
+        setApiData({
+          firstName: response.data.data.full_name
+            .split(",")[1]
+            .trim()
+            .toUpperCase(),
+          lastName: response.data.data.full_name
+            .split(",")[0]
+            .trim()
+            .toUpperCase(),
+          birthDate: response.data.data.date_of_birth || "",
         });
+
+        // No actualizamos los campos automáticamente
+        // Los datos serán validados cuando el usuario haga clic en el botón de validación
       } else {
         setDniError("No se encontró el DNI.");
       }
@@ -268,7 +352,7 @@ export default function RegisterForm() {
     if (!croppedImage) {
       setSelectedImage(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -278,7 +362,7 @@ export default function RegisterForm() {
       // Convert base64 to blob if needed
       let imageToUpload = imageFile;
 
-      if (typeof imageFile === 'string' && imageFile.startsWith('data:')) {
+      if (typeof imageFile === "string" && imageFile.startsWith("data:")) {
         // Convert base64 to blob
         const response = await fetch(imageFile);
         imageToUpload = await response.blob();
@@ -299,8 +383,72 @@ export default function RegisterForm() {
       if (error instanceof Error) {
         throw new Error(`Error uploading profile image: ${error.message}`);
       } else {
-        throw new Error("Error uploading profile image: An unknown error occurred");
+        throw new Error(
+          "Error uploading profile image: An unknown error occurred"
+        );
       }
+    }
+  };
+
+  const [passwordStrength, setPasswordStrength] = useState<{
+    level: string;
+    color: string;
+  }>({ level: "", color: "" });
+  const [passwordHint, setPasswordHint] = useState("");
+
+  const evaluatePassword = (pwd: string) => {
+    let level = "";
+    let color = "";
+    let hint = "";
+
+    const hasNumber = /\d/.test(pwd);
+
+    if (pwd.length === 0) {
+      level = "";
+      color = "";
+      hint = "";
+    } else if (pwd.length < 6) {
+      level = "Débil";
+      color = "bg-red-400";
+      hint = "La contraseña debe tener al menos 6 caracteres y un número.";
+    } else if (pwd.length >= 6 && !hasNumber) {
+      level = "Media";
+      color = "bg-yellow-400";
+      hint = "Agrega al menos un número.";
+    } else if (pwd.length >= 6 && hasNumber) {
+      level = "Fuerte";
+      color = "bg-green-500";
+      hint = "";
+    }
+
+    setPasswordStrength({ level, color });
+    setPasswordHint(hint);
+  };
+
+  const validateIdentity = () => {
+    console.log("estoy aqui");
+    if (!apiData) {
+      setValidationError(
+        "Por favor, ingresa primero tu DNI para validar tus datos."
+      );
+      return;
+    }
+    const userFirstName = firstName.trim().toUpperCase();
+    const userLastName = lastName.trim().toUpperCase();
+
+    // Comparamos los datos del usuario con los de la API
+    if (
+      userFirstName === apiData.firstName &&
+      userLastName === apiData.lastName
+    ) {
+      setIsValidated(true);
+      setBirthDate(apiData.birthDate); // Ahora sí establecemos la fecha de nacimiento
+      setValidationError("");
+    } else {
+      setIsValidated(false);
+      setValidationError(
+        "Los datos ingresados no coinciden con los registrados en RENIEC."
+      );
     }
   };
 
@@ -315,7 +463,9 @@ export default function RegisterForm() {
           >
             ← Inicio
           </button>
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Regístrate aquí</h1>
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+            Regístrate aquí
+          </h1>
           <div className="flex justify-center space-x-4 mb-6">
             {[1, 2, 3].map((num) => (
               <button
@@ -336,7 +486,12 @@ export default function RegisterForm() {
             <form onSubmit={handleSubmitStep1} className="space-y-4">
               {error1 && <p className="text-red-500">{error1}</p>}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Correo electrónico
+                </label>
                 <input
                   type="email"
                   id="email"
@@ -347,22 +502,76 @@ export default function RegisterForm() {
                   placeholder="Correo electrónico"
                   required
                 />
-                {emailExistsError && <p className="text-red-500 text-sm mt-1">{emailExistsError}</p>}
+                {emailExistsError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {emailExistsError}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Contraseña
+                </label>
                 <input
                   type="password"
                   id="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    evaluatePassword(e.target.value);
+                  }}
                   className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                   placeholder="Contraseña"
                   required
                 />
+                {/* Indicador de seguridad */}
+                {password && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex-1 h-2 rounded bg-gray-200 overflow-hidden">
+                      <div
+                        className={`h-2 rounded ${passwordStrength.color}`}
+                        style={{
+                          width:
+                            passwordStrength.level === "Fuerte"
+                              ? "100%"
+                              : passwordStrength.level === "Media"
+                              ? "60%"
+                              : passwordStrength.level === "Débil"
+                              ? "30%"
+                              : "0%",
+                        }}
+                      />
+                    </div>
+                    <span
+                      className={`text-sm font-semibold ${
+                        passwordStrength.level === "Fuerte"
+                          ? "text-green-600"
+                          : passwordStrength.level === "Media"
+                          ? "text-yellow-600"
+                          : passwordStrength.level === "Débil"
+                          ? "text-red-600"
+                          : ""
+                      }`}
+                    >
+                      {passwordStrength.level}
+                    </span>
+                  </div>
+                )}
+                {/* Mensaje de ayuda */}
+                {passwordHint && (
+                  <p className="text-xs text-red-500 mt-1">{passwordHint}</p>
+                )}
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Confirmar Contraseña
+                </label>
                 <input
                   type="password"
                   id="confirmPassword"
@@ -377,7 +586,12 @@ export default function RegisterForm() {
               <button
                 type="submit"
                 className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
-                disabled={!email || !password || !confirmPassword}
+                disabled={
+                  !email ||
+                  !password ||
+                  !confirmPassword ||
+                  passwordStrength.level !== "Fuerte"
+                }
               >
                 {loading ? "Cargando..." : "Siguiente"}
               </button>
@@ -392,8 +606,15 @@ export default function RegisterForm() {
           ) : step === 2 ? (
             <form onSubmit={handleSubmitStep2} className="space-y-4">
               {error2 && <p className="text-red-500">{error2}</p>}
+
+              {/* DNI section with search button */}
               <div>
-                <label htmlFor="dni" className="block text-sm font-medium text-gray-700">DNI</label>
+                <label
+                  htmlFor="dni"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  DNI
+                </label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
@@ -406,98 +627,188 @@ export default function RegisterForm() {
                     maxLength={8}
                     required
                   />
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleDniSearch}
                     className="mt-1 flex items-center justify-center w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-colors"
                     aria-label="Buscar DNI"
                   >
-                    <Search size={20} />
-                  </button>
+                    <CircleCheckBig size={20} />
+                  </button> */}
                 </div>
-                {loadingDni && <p className="text-blue-500">Buscando datos...</p>}
+                {loadingDni && (
+                  <p className="text-blue-500">Buscando datos...</p>
+                )}
                 {dniError && <p className="text-red-500">{dniError}</p>}
-                {dniExistsError && <p className="text-red-500">{dniExistsError}</p>}
+                {dniExistsError && (
+                  <p className="text-red-500">{dniExistsError}</p>
+                )}
               </div>
+
+              {/* Ahora los campos son editables */}
               <div className="flex gap-x-2">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Nombre</label>
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Nombre
+                  </label>
                   <input
                     type="text"
                     id="firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Juan"
-                    readOnly
+                    placeholder="Tu nombre"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Apellido(s)</label>
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Apellido(s)
+                  </label>
                   <input
                     type="text"
                     id="lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Perez Prado"
-                    readOnly
+                    placeholder="Tus apellidos"
                     required
                   />
                 </div>
               </div>
-              <div>
-                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
-                <input
-                  type="date"
-                  id="birthDate"
-                  min={`${new Date().getFullYear() - 120}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
-                  max={`${new Date().getFullYear() - 1}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`}
-                  value={birthDate}
-                  readOnly
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                />
-              </div>
 
-              <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Género</label>
-                <select
-                  id="gender"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="w-full mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                >
-                  <option value="">Selecciona tu género</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="contactoTelefono" className="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input
-                  type="tel"
-                  id="contactoTelefono"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                  placeholder="Tu número de contacto"
-                />
-              </div>
+              {/* Botón de validación */}
               <button
                 type="button"
-                onClick={() => setStep(3)}
-                className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
+                onClick={!apiData ? handleDniSearch : validateIdentity}
+                className={`w-full px-4 py-2 ${
+                  !apiData
+                    ? "bg-blue-500 hover:bg-blue-600"
+                    : isValidated
+                    ? "bg-green-500 cursor-not-allowed opacity-75"
+                    : "bg-green-500 hover:bg-green-600"
+                } text-white rounded-md transition-colors`}
+                disabled={
+                  !dni ||
+                  (!apiData && dni.length !== 8) ||
+                  (apiData && (!firstName || !lastName)) ||
+                  isValidated
+                }
               >
-                Siguiente
+                {loadingDni
+                  ? "Consultando DNI..."
+                  : !apiData
+                  ? "Consultar DNI"
+                  : isValidated
+                  ? "Datos validados ✓"
+                  : "Validar datos"}
               </button>
+
+              {validationError && (
+                <p className="text-red-500">{validationError}</p>
+              )}
+              {isValidated && (
+                <p className="text-green-500">
+                  Datos validados correctamente ✓
+                </p>
+              )}
+
+              {/* El resto de los campos solo son accesibles si los datos están validados */}
+              {isValidated && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="birthDate"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Fecha de nacimiento
+                    </label>
+                    <input
+                      type="date"
+                      id="birthDate"
+                      min={`${new Date().getFullYear() - 120}-${(
+                        new Date().getMonth() + 1
+                      )
+                        .toString()
+                        .padStart(2, "0")}-${new Date()
+                        .getDate()
+                        .toString()
+                        .padStart(2, "0")}`}
+                      max={`${new Date().getFullYear() - 1}-${(
+                        new Date().getMonth() + 1
+                      )
+                        .toString()
+                        .padStart(2, "0")}-${new Date()
+                        .getDate()
+                        .toString()
+                        .padStart(2, "0")}`}
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="gender"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Género
+                    </label>
+                    <select
+                      id="gender"
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                    >
+                      <option value="">Selecciona tu género</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="contactoTelefono"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Teléfono
+                    </label>
+                    <input
+                      type="tel"
+                      id="contactoTelefono"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                      placeholder="Tu número de contacto"
+                      maxLength={9}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="w-4/5 mx-auto block mb-0 text-center bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all"
+                    disabled={!gender || !phoneNumber}
+                  >
+                    Siguiente
+                  </button>
+                </>
+              )}
             </form>
           ) : step === 3 ? (
             <form onSubmit={handleSubmitStep2} className="space-y-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Foto de Perfil</h2>
-                <p className="text-gray-600 text-sm">Sube una foto clara para tu perfil</p>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Foto de Perfil
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Sube una foto clara para tu perfil
+                </p>
               </div>
 
               <div className="flex flex-col items-center">
@@ -547,7 +858,9 @@ export default function RegisterForm() {
 
               {/* Guía de foto */}
               <div className="mt-8 bg-gray-50 rounded-xl p-6">
-                <h3 className="text-lg font-medium text-gray-700 mb-3">Guía para foto de perfil</h3>
+                <h3 className="text-lg font-medium text-gray-700 mb-3">
+                  Guía para foto de perfil
+                </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {/* Imagen de guía */}
@@ -557,7 +870,9 @@ export default function RegisterForm() {
                         <Image src={Hombre} alt="Tusuy Perú" className="pt-4" />
                       </div>
                     </div>
-                    <p className="text-center text-sm mt-2 font-medium text-rose-600">Ejemplo ideal</p>
+                    <p className="text-center text-sm mt-2 font-medium text-rose-600">
+                      Ejemplo ideal
+                    </p>
                   </div>
 
                   {/* Instrucciones */}
@@ -598,7 +913,12 @@ export default function RegisterForm() {
           ) : null}
         </div>
         <div className="hidden md:block md:w-1/2">
-          <Image src={TusuyImage} alt="Tusuy Perú" className="w-full h-full object-cover" loader={({ src }) => src} />
+          <Image
+            src={TusuyImage}
+            alt="Tusuy Perú"
+            className="w-full h-full object-cover"
+            loader={({ src }) => src}
+          />
         </div>
       </div>
     </div>

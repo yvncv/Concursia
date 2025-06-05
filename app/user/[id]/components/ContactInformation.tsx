@@ -33,19 +33,25 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         emailSecondary: foundUser.email[1] || '',
         phonePrimary: foundUser.phoneNumber[0] || '',
         phoneSecondary: foundUser.phoneNumber[1] || '',
-        academyId: foundUser.academyId || ''
+        academyId: foundUser.marinera?.academyId || ''
       });
     }
   }, [foundUser]);
 
   useEffect(() => {
+    // Solo verificar cambios si el usuario puede editar
+    if (!canEdit) {
+      setHasChanges(false);
+      return;
+    }
+
     const changed =
       contactInfo.emailSecondary !== (foundUser.email[1] || '') ||
       contactInfo.phonePrimary !== (foundUser.phoneNumber[0] || '') ||
       contactInfo.phoneSecondary !== (foundUser.phoneNumber[1] || '') ||
-      contactInfo.academyId !== (foundUser.academyId || '');
+      contactInfo.academyId !== (foundUser.marinera?.academyId || '');
     setHasChanges(changed);
-  }, [contactInfo, foundUser]);
+  }, [contactInfo, foundUser, canEdit]);
 
   // Handle updating primary email
   const handleChangeEmail = async (e: React.FormEvent) => {
@@ -92,7 +98,7 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         email: [foundUser.email[0], contactInfo.emailSecondary],
         phoneNumber: [contactInfo.phonePrimary, contactInfo.phoneSecondary]
       };
-      if (contactInfo.academyId !== (foundUser.academyId || '')) {
+      if (contactInfo.academyId !== (foundUser.marinera?.academyId || '')) {
         updateData.academyId = contactInfo.academyId;
       }
       await updateDoc(userRef, updateData);
@@ -117,9 +123,21 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
           Información de Contacto
         </h2>
         <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-          Comunicaciones
+          {canEdit ? 'Editable' : 'Solo Lectura'}
         </span>
       </div>
+
+      {/* Privacy notice for visitors */}
+      {!canEdit && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm text-blue-800">Información de contacto pública del usuario</span>
+          </div>
+        </div>
+      )}
 
       {/* Primary Email */}
       <div className="mb-5">
@@ -154,8 +172,8 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         </div>
       </div>
 
-      {/* Email Modal */}
-      {isEmailModalOpen && (
+      {/* Email Modal - Solo para usuarios que pueden editar */}
+      {canEdit && isEmailModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white p-8 rounded-2xl w-96 shadow-xl">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">Actualizar Correo Electrónico</h3>
@@ -217,6 +235,12 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
             <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 flex items-center mb-2">
               <span className="w-2 h-2 bg-blue-400 rounded-full inline-block mr-2"></span>
               {field.label}
+              {!canEdit && (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -228,38 +252,55 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
                 id={field.id}
                 type={field.type}
                 value={(contactInfo as any)[field.id] || ''}
-                onChange={handleInputChange}
+                onChange={canEdit ? handleInputChange : undefined}
                 disabled={!canEdit}
-                placeholder={`Ingresa ${field.label.toLowerCase()}`}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 
+                placeholder={canEdit ? `Ingresa ${field.label.toLowerCase()}` : 'No disponible'}
+                className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-gray-800 
                      focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all outline-none
-                     disabled:bg-gray-100 disabled:text-gray-500"
+                     ${canEdit 
+                       ? 'bg-white hover:shadow-sm' 
+                       : 'bg-gray-50 text-gray-600 cursor-not-allowed'
+                     }`}
               />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Save button */}
-      <div className="mt-8 flex justify-center">
-        <button
-          onClick={handleUpdateContactInfo}
-          disabled={!hasChanges}
-          className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 
-                ${hasChanges
-              ? 'bg-green-600 hover:bg-green-700 shadow-sm hover:shadow'
-              : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
-        >
-          {hasChanges ? (
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Guardar Cambios
-            </span>
-          ) : 'No hay cambios'}
-        </button>
-      </div>
+      {/* Save button - Solo visible para usuarios que pueden editar */}
+      {canEdit && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={handleUpdateContactInfo}
+            disabled={!hasChanges}
+            className={`px-8 py-3 rounded-xl text-white font-medium transition-all duration-200 
+                  ${hasChanges
+                ? 'bg-green-600 hover:bg-green-700 shadow-sm hover:shadow'
+                : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
+          >
+            {hasChanges ? (
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Guardar Cambios
+              </span>
+            ) : 'No hay cambios'}
+          </button>
+        </div>
+      )}
+
+      {/* Information for visitors */}
+      {!canEdit && (
+        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+          <p className="text-sm text-gray-500 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Esta información está en modo de solo lectura
+          </p>
+        </div>
+      )}
     </div>
   );
 };

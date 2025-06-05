@@ -1,0 +1,266 @@
+"use client"
+
+import React, { useState, useEffect, useRef, use } from 'react';
+import useAcademies from '@/app/hooks/useAcademies';
+import useUser from "@/app/hooks/useUser";
+import useUsers from '@/app/hooks/useUsers';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db, storage } from '../../firebase/config';
+import Image from 'next/image';
+import { LucideImage, Building2, Users, Award, MapPin } from 'lucide-react';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import AcademyInformation from './components/AcademyInformation';
+import ContactInformation from './components/ContactInformation';
+import LocationInformation from './components/LocationInformation';
+
+export default function AcademyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { academies, loadingAcademies } = useAcademies();
+  const { users } = useUsers();
+  const { user } = useUser();
+  const { id } = use(params);
+  const foundAcademy = academies.find(a => a.id === id);
+  
+  // Verificar si el usuario actual es el organizador de esta academia
+  const canEdit = Boolean(foundAcademy && user && foundAcademy.organizerId === user?.uid);
+  
+  // Obtener información del organizador
+  const organizer = users.find(u => u.id === foundAcademy?.organizerId);
+  
+  // Obtener estudiantes de esta academia
+  const students = users.filter(u => u.marinera?.academyId === foundAcademy?.name);
+
+  // Image states
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedCoverImage, setCoverImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+
+  const handleSaveProfileImage = async () => {
+    if (!user?.uid || !croppedImage || !foundAcademy?.id) return;
+    try {
+      const res = await fetch(croppedImage);
+      const blob = await res.blob();
+      const imageRef = storageRef(storage, `academies/${foundAcademy.id}/profile`);
+      await uploadBytes(imageRef, blob);
+      const publicUrl = await getDownloadURL(imageRef);
+      await updateDoc(doc(db, 'academies', foundAcademy.id), { profileImage: publicUrl });
+      setCroppedImage(null);
+    } catch (e) {
+      console.error('Error guardando imagen:', e);
+    }
+  };
+
+  const handleSaveCoverImage = async () => {
+    if (!user?.uid || !selectedCoverImage || !foundAcademy?.id) return;
+    try {
+      const res = await fetch(selectedCoverImage);
+      const blob = await res.blob();
+      const imageRef = storageRef(storage, `academies/${foundAcademy.id}/cover`);
+      await uploadBytes(imageRef, blob);
+      const publicUrl = await getDownloadURL(imageRef);
+      await updateDoc(doc(db, 'academies', foundAcademy.id), { coverImage: publicUrl });
+      setCoverImage(null);
+    } catch (e) {
+      console.error('Error guardando imagen de portada:', e);
+    }
+  };
+
+  if (loadingAcademies) return <div className="text-center mt-20">Cargando academia...</div>;
+  if (!foundAcademy) return <div className="text-center mt-20">Academia no encontrada.</div>;
+
+  const capitalizeName = (str: string) => str.replace(/\b\w/g, c => c.toUpperCase());
+
+  return (
+    <main className="flex flex-col min-h-screen bg-gray-50">
+      {/* Cover Image Section */}
+      <div className="relative h-80 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 overflow-hidden">
+        {foundAcademy.coverImage && (
+          <Image
+            src={typeof foundAcademy.coverImage === 'string' 
+              ? foundAcademy.coverImage 
+              : URL.createObjectURL(foundAcademy.coverImage as File)}
+            alt="Portada de la academia"
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        )}
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-40" />
+        
+        {/* Edit Cover Button */}
+        {canEdit && (
+          <button
+            className="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full transition-all duration-200"
+            aria-label="Cambiar imagen de portada"
+          >
+            <LucideImage className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Academy Header Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-8">
+          <div className="flex items-end space-x-6">
+            {/* Profile Image */}
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+                {foundAcademy.profileImage ? (
+                  <Image
+                    src={typeof foundAcademy.profileImage === 'string'
+                      ? foundAcademy.profileImage
+                      : URL.createObjectURL(foundAcademy.profileImage as File)}
+                    alt="Logo de la academia"
+                    width={128}
+                    height={128}
+                    className="object-cover w-full h-full"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <Building2 className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
+                
+                {canEdit && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <LucideImage className="text-white w-6 h-6" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Academy Info */}
+            <div className="text-white flex-1">
+              <h1 className="text-4xl font-bold mb-2">{capitalizeName(foundAcademy.name)}</h1>
+              <div className="flex items-center space-x-6 text-lg">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>{students.length} estudiantes</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-5 h-5" />
+                  <span>{foundAcademy.location?.district}, {foundAcademy.location?.department}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Award className="w-5 h-5" />
+                  <span>Danza Marinera</span>
+                </div>
+              </div>
+              {organizer && (
+                <p className="mt-2 text-blue-200">
+                  Dirigida por: {organizer.firstName} {organizer.lastName}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+                  <p className="text-gray-600">Estudiantes</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <Award className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">5+</p>
+                  <p className="text-gray-600">Años exp.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <Building2 className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">1</p>
+                  <p className="text-gray-600">Sede</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center">
+                <div className="bg-orange-100 p-3 rounded-full">
+                  <MapPin className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">Local</p>
+                  <p className="text-gray-600">Ubicación</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Main Info */}
+            <div className="lg:col-span-2 space-y-8">
+              <AcademyInformation academy={foundAcademy} canEdit={canEdit} organizer={organizer} />
+              <ContactInformation academy={foundAcademy} canEdit={canEdit} />
+              <LocationInformation academy={foundAcademy} canEdit={canEdit} />
+            </div>
+
+            {/* Right Column - Students & Additional Info */}
+            <div className="space-y-8">              
+              {/* Recent Activity */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Nuevo estudiante registrado</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Perfil actualizado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Buttons - Solo visible para organizadores */}
+      {canEdit && (croppedImage || selectedCoverImage) && (
+        <div className="fixed bottom-6 right-6 space-y-3">
+          {croppedImage && (
+            <button
+              onClick={handleSaveProfileImage}
+              className="block w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors"
+            >
+              Guardar Logo
+            </button>
+          )}
+          {selectedCoverImage && (
+            <button
+              onClick={handleSaveCoverImage}
+              className="block w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-lg transition-colors"
+            >
+              Guardar Portada
+            </button>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}

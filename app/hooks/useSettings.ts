@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { db } from "../firebase/config";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { EventSettings } from "../types/settingsType";
+import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import { EventSettings, CustomEvent } from "../types/eventType";
 
 const DEFAULT_SETTINGS: EventSettings = {
-    eventId: "",
-    registration: {
-        grupalCSV: false,
-        individualWeb: false,
-        sameDay: false
+    inscription: {
+        groupEnabled: false,
+        individualEnabled: false,
+        onSiteEnabled: false
     },
     pullCouple: {
         enabled: false,
@@ -31,23 +30,28 @@ const useSettings = (eventId: string) => {
             return;
         }
 
-        const settingsRef = doc(db, "settings", eventId);
+        const eventRef = doc(db, "eventos", eventId);
 
         // Primero intentamos obtener los datos existentes
         const initializeSettings = async () => {
             try {
-                const docSnap = await getDoc(settingsRef);
+                const docSnap = await getDoc(eventRef);
                 
-                if (!docSnap.exists()) {
-                    // Si no existen configuraciones, creamos unas por defecto
-                    const initialSettings = {
-                        ...DEFAULT_SETTINGS,
-                        eventId
-                    };
+                if (docSnap.exists()) {
+                    const event = docSnap.data() as CustomEvent;
                     
-                    await setDoc(settingsRef, initialSettings);
-                    setSettings(initialSettings);
-                    console.log("Configuraciones iniciales creadas para:", eventId);
+                    // Si no tiene settings, iniciamos con los valores por defecto
+                    if (!event.settings) {
+                        await updateDoc(eventRef, {
+                            settings: DEFAULT_SETTINGS
+                        });
+                        setSettings(DEFAULT_SETTINGS);
+                        console.log("Configuraciones iniciales creadas para:", eventId);
+                    } else {
+                        setSettings(event.settings);
+                    }
+                } else {
+                    setError("El evento no existe");
                 }
             } catch (err) {
                 console.error("Error inicializando settings:", err);
@@ -60,12 +64,14 @@ const useSettings = (eventId: string) => {
 
         // Configuramos el listener para cambios en tiempo real
         const unsubscribe = onSnapshot(
-            settingsRef,
+            eventRef,
             (docSnapshot) => {
                 if (docSnapshot.exists()) {
-                    const data = docSnapshot.data() as EventSettings;
-                    setSettings(data);
-                    setError(null);
+                    const event = docSnapshot.data() as CustomEvent;
+                    if (event.settings) {
+                        setSettings(event.settings);
+                        setError(null);
+                    }
                 }
                 setLoading(false);
             },
@@ -85,8 +91,10 @@ const useSettings = (eventId: string) => {
                 throw new Error("Falta el eventId. No se pueden guardar las configuraciones.");
             }
 
-            const settingsRef = doc(db, "settings", eventId);
-            await setDoc(settingsRef, { ...newSettings, eventId }, { merge: true });
+            const eventRef = doc(db, "eventos", eventId);
+            await updateDoc(eventRef, {
+                settings: newSettings
+            });
 
             console.log("Configuraciones guardadas exitosamente");
             return true;
