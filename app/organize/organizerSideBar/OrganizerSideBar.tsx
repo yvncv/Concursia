@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, Dispatch, SetStateAction } from "react";
-import { LayoutDashboard, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  LayoutDashboard,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,7 +16,10 @@ interface OrganizerSideBarProps {
   setIsCollapsed: Dispatch<SetStateAction<boolean>>;
 }
 
-const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsCollapsed }) => {
+const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
+  isCollapsed,
+  setIsCollapsed,
+}) => {
   const pathname = usePathname();
 
   // Auto-colapsar en mobile
@@ -26,18 +35,31 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsC
   }, []);
 
   const enlaces = [
-    { label: "Dashboard", href: "/organize", icon: <LayoutDashboard size={20} /> },
-    { label: "Events", href: "/organize/events", icon: <Calendar size={20} /> },
+    {
+      label: "Dashboard",
+      href: "/organize",
+      icon: <LayoutDashboard size={20} />,
+    },
+    {
+      label: "Events",
+      href: "/organize/events",
+      icon: <Calendar size={20} />,
+    },
   ];
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
   return (
     <>
-
       {/* Sidebar principal */}
-      <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md min-h-screen transition-all duration-300 relative`} >
-        <button onClick={toggleCollapse} className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-gray-600 hover:text-red-600 transition-colors z-10"
+      <aside
+        className={`${
+          isCollapsed ? "w-16" : "w-64"
+        } bg-white shadow-md min-h-screen transition-all duration-300 relative`}
+      >
+        <button
+          onClick={toggleCollapse}
+          className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-gray-600 hover:text-red-600 transition-colors z-10"
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>

@@ -14,7 +14,8 @@ export type User = FirebaseUser & {
   profileImage?: string | File;
   coverImage?: string | File;
   marinera?: {
-    participant?: { // campo con informacion del usuario si es participante
+    participant?: {
+      // campo con informacion del usuario si es participante
       level: string;
       category: string;
       participatedEvents: string[]; // eventos en los que participó

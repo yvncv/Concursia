@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "@/app/firebase/config";
-import { collection, query, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, getDoc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { User } from "../types/userType";
 import { getAuth } from "firebase/auth";
 
@@ -63,5 +63,46 @@ export default function useUsers() {
     }
   };
 
-  return { users, loadingUsers, error, getUserById };
+  const updateUserById = async (user: Partial<User>): Promise<void> => {
+    if (!user.id) {
+      console.error('Invalid user id:', user.id);
+      return;
+    }
+
+    try {
+      const docRef = doc(db, 'users', user.id);
+      await updateDoc(docRef, user);
+      console.log('User updated successfully');
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  }
+
+  const deleteUserById = async (userId: string): Promise<void> => {
+    if (!userId) {
+      console.error('Invalid userId:', userId);
+      return;
+    }
+    try {
+      const docRef = doc(db, 'users', userId);
+      await deleteDoc(docRef);
+      console.log('User deleted successfully');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  }
+
+  const saveUser = async (userData: Omit<User, 'id'>): Promise<void> => {
+    try {
+      const docRef = await addDoc(collection(db, "users"), userData);
+      console.log('User saved successfully with ID:', docRef.id);
+    } catch (error) {
+      console.error('Error saving user:', error);
+      alert('Failed to save user.');
+    }
+  }
+
+
+
+  return { users, loadingUsers, error, getUserById, updateUserById, deleteUserById, saveUser };
 }
