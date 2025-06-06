@@ -109,7 +109,7 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
           <div className="flex items-end justify-between">
             <div className="flex items-end space-x-6">
               {/* Profile Image */}
-              <div className="relative group">
+              <div className="relative group rounded-full">
                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                   {foundAcademy.profileImage ? (
                     <Image
@@ -129,7 +129,7 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
                   )}
                   
                   {canEdit && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <div className="absolute rounded-full inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                       <LucideImage className="text-white w-6 h-6" />
                     </div>
                   )}
