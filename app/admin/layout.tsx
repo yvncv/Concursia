@@ -1,8 +1,12 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import AdminSideBar from './adminSideBar/AdminSideBar';
+import React, { useState, useEffect } from "react";
+import AdminSideBar from "./adminSideBar/AdminSideBar";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
@@ -20,15 +24,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
       <AdminSideBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className="transition-all duration-300 overflow-x-auto flex-1">
-        <div className={`min-w-[1024px] p-6 transition-all duration-300 ${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'}`} >
+        <div
+          className={`transition-all duration-300 ${
+            isCollapsed ? "pl-16" : "pl-64"
+          }`}
+        >
           {children}
         </div>
       </main>
