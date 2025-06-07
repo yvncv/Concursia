@@ -5,9 +5,9 @@ import { CustomEvent } from "@/app/types/eventType";
 import useAcademy from "@/app/hooks/useAcademy";
 import { User } from '@/app/types/userType';
 import useUsers from '@/app/hooks/useUsers';
-import { Timestamp } from "firebase/firestore";
 import useTicket from '@/app/hooks/useTicket';
-import { Ticket, TicketEntry } from "@/app/types/ticketType";
+import useCreateTicket from '@/app/hooks/tickets/useCreateTicket'; // ← NUEVO HOOK
+import { Ticket } from "@/app/types/ticketType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
 
@@ -73,7 +73,6 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: {
     return true;
   };
 
-
   return (
     <div className="justify-center">
       {alertMessage && (
@@ -104,12 +103,11 @@ const CategorySelection = ({ event, onCategorySelect, user, tickets }: {
   );
 };
 
-const EventoInscripcion = ({ event, openModal, user }:
-  {
-    event: CustomEvent,
-    openModal: () => void,
-    user: User
-  }) => {
+const EventoInscripcion = ({ event, openModal, user }: {
+  event: CustomEvent,
+  openModal: () => void,
+  user: User
+}) => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -117,17 +115,20 @@ const EventoInscripcion = ({ event, openModal, user }:
   const [selectedPhone, setSelectedPhone] = useState(user?.phoneNumber?.[0] || "");
   const [selectedAcademy, setSelectedAcademy] = useState<string>('');
   const [selectedAcademyName, setSelectedAcademyName] = useState<string>('');
-  const [coupleSelectedAcademy, setCoupleSelectedAcademy] = useState<string>(''); // Define el estado para la academia de la pareja
+  const [coupleSelectedAcademy, setCoupleSelectedAcademy] = useState<string>('');
   const [coupleSelectedAcademyName, setCoupleSelectedAcademyName] = useState<string>('');
   const [dniPareja, setDniPareja] = useState('');
   const [pareja, setPareja] = useState<User | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
-  const { users } = useUsers();
-  const { saveTicket } = useTicket('');
-  const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
-  const { tickets } = useTicket(event.id); // Obtener los tickets
   const [isCoupleRequired, setIsCoupleRequired] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
+
+  const { users } = useUsers();
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
+  const { tickets } = useTicket(event.id);
+
+  // ← USAR EL NUEVO HOOK
+  const { createTicket, isCreating, error: createError, clearError } = useCreateTicket();
 
   // Función para buscar el usuario por DNI
   const buscarPareja = () => {
@@ -136,101 +137,50 @@ const EventoInscripcion = ({ event, openModal, user }:
     if (parejaEncontrada) {
       if (parejaEncontrada.id === user?.id) {
         setPareja(null);
-        //alert("No puedes inscribirte como tu propia pareja.");
       } else if (parejaEncontrada.gender === user?.gender) {
         setPareja(null);
-        //alert("El usuario con ese DNI es del mismo sexo que usted.");
       } else {
         setPareja(parejaEncontrada);
-        //alert("Pareja encontrada satisfactoriamente.");
       }
     } else {
       setPareja(null);
-      //alert("No se encontró ningún usuario con ese DNI.");
     }
   };
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
-    setIsCoupleRequired(event.dance.levels[category]?.couple || false); // Actualiza el estado de isCoupleRequired usando la nueva estructura
-    setCurrentStep(1); // Avanza al siguiente paso
+    setIsCoupleRequired(event.dance.levels[category]?.couple || false);
+    setCurrentStep(1);
   };
 
   const handleAcademySelect = (academyId: string, academyName: string) => {
-    setSelectedAcademy(academyId); // Guardamos la academia seleccionada
-    setSelectedAcademyName(academyName); // Guardamos el nombre de la academia seleccionada
+    setSelectedAcademy(academyId);
+    setSelectedAcademyName(academyName);
   };
 
   const handleCambiarPareja = () => {
     setPareja(null);
-    setDniPareja('');            // si lo guardas aquí, o bien pásalo al form
+    setDniPareja('');
     setCanProceed(false);
   };
 
   const handleCoupleAcademySelect = (academyId: string, academyName: string) => {
-    setCoupleSelectedAcademy(academyId); // Guardamos la academia seleccionada para la pareja
-    setCoupleSelectedAcademyName(academyName)
+    setCoupleSelectedAcademy(academyId);
+    setCoupleSelectedAcademyName(academyName);
   };
 
-  const handleNext = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 2));
-  };
+  // ← FUNCIÓN PRINCIPAL MODIFICADA
+  const handleNextAndSave = async () => {
+    clearError();
 
-  // Modificar la función handleSave para usar la nueva estructura de Ticket
-  const handleSave = async () => {
-    // Crear la entrada para el ticket
-    const entry: TicketEntry = {
-      usersId: pareja ? [user?.id, pareja.id] : [user?.id],
-      academiesId: pareja ? [selectedAcademy, coupleSelectedAcademy] : [selectedAcademy],
-      category: user?.marinera?.participant?.category,
-      level: selectedCategory,
-      amount: Number(event.dance.levels[selectedCategory]?.price) || 0, // Usar la nueva estructura
-    };
-
-    // Crear fecha de expiración (por ejemplo, 48 horas después)
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 48);
-
-    const ticketData: Omit<Ticket, 'id'> = {
-      status: 'Pendiente',
-      eventId: event.id,
-      registrationDate: Timestamp.fromDate(new Date()),
-      expirationDate: Timestamp.fromDate(expirationDate),
-      inscriptionType: 'Individual',
-      totalAmount: entry.amount,
-      entries: [entry],
-      createdBy: user?.id,
-      level: entry.level,  // Asegúrate de que `entry.level` esté definido correctamente
-      category: entry.category,  // Asegúrate de que `entry.category` esté definido correctamente
-      usersId: pareja ? [user?.id, pareja.id] : [user?.id],  // Asegúrate de que `user?.id` esté definido correctamente
-      academiesName: [selectedAcademyName, coupleSelectedAcademyName],  // Asegúrate de que `event.academyName` esté disponible
-    };
-
-    try {
-      const docRef = await saveTicket(ticketData);
-      if (docRef) {
-        setTicketId(docRef.id);
-      } else {
-        console.error('Error: docRef is undefined');
-        alert('Failed to save ticket.');
-      }
-    } catch (error) {
-      console.error('Error saving ticket:', error);
-      alert('Failed to save ticket.');
-    }
-  };
-
-  const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
-
-  const handleNextAndSave = () => {
+    // Validaciones de pareja si es requerida
     if (event.settings?.pullCouple?.enabled && pareja != null) {
-      // → Validación de género diferente
       if (pareja.gender === user?.gender) {
         alert("La pareja debe ser de género opuesto al tuyo.");
         return;
       }
 
-      alert("Pareja encontrada");
+      const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
 
       const checkAgeDifference = () => {
         const ageDifference = user?.birthDate.toDate().getFullYear() - pareja.birthDate.toDate().getFullYear();
@@ -244,36 +194,71 @@ const EventoInscripcion = ({ event, openModal, user }:
         return categoryDifference <= event.settings.pullCouple.difference;
       };
 
-      if (user?.marinera?.participant?.category === pareja.marinera?.participant?.category) {
-        alert("Las categorías coinciden");
-        handleNext();
-        handleSave();
-      } else {
+      if (user?.marinera?.participant?.category !== pareja.marinera?.participant?.category) {
         if (event.settings.pullCouple.criteria === "Age") {
-          if (checkAgeDifference()) {
-            handleNext();
-            handleSave();
-          } else {
+          if (!checkAgeDifference()) {
             alert("La diferencia de edad no es la correcta");
+            return;
           }
         } else {
-          if (checkCategoryDifference()) {
-            handleNext();
-            handleSave();
-          } else {
+          if (!checkCategoryDifference()) {
             alert("La diferencia de categoría no es la correcta");
+            return;
           }
         }
       }
-    } else {
-      handleNext();
-      handleSave();
     }
+
+    console.log('=== VALORES ANTES DE CREAR TICKET ===');
+    console.log('selectedAcademy:', selectedAcademy);
+    console.log('selectedAcademyName:', selectedAcademyName);
+    console.log('coupleSelectedAcademy:', coupleSelectedAcademy);
+    console.log('coupleSelectedAcademyName:', coupleSelectedAcademyName);
+    console.log('====================================');
+
+    // ← CREAR TICKET CON EL NUEVO HOOK
+    const newTicketId = await createTicket({
+      event,
+      user,
+      pareja,
+      selectedCategory,
+      selectedAcademy,
+      selectedAcademyName,
+      coupleSelectedAcademy,
+      coupleSelectedAcademyName,
+    });
+
+    if (newTicketId) {
+      setTicketId(newTicketId);
+      setCurrentStep(2);
+    }
+    // Si hay error, ya lo maneja el hook automáticamente
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
+
+      {/* Mostrar error si existe */}
+      {createError && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {createError}
+            </div>
+            <button
+              onClick={clearError}
+              className="text-sm underline hover:no-underline"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-2">
         {currentStep === 0 && event && (
           <CategorySelection
@@ -316,28 +301,37 @@ const EventoInscripcion = ({ event, openModal, user }:
         )}
 
         {/* Botones de navegación */}
-        {currentStep == 1 && (
+        {currentStep === 1 && (
           <div className="flex justify-between mt-6">
             <button
               onClick={() => setCurrentStep(s => s - 1)}
               className="px-6 py-2 bg-gray-200 rounded-lg"
+              disabled={isCreating}
             >
               Anterior
             </button>
             <button
-              disabled={!canProceed}
+              disabled={!canProceed || isCreating}
               onClick={handleNextAndSave}
-              className={`px-6 py-2 rounded-lg text-white ${canProceed
-                ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
-                : 'bg-gray-400 cursor-not-allowed'
+              className={`px-6 py-2 rounded-lg text-white flex items-center ${canProceed && !isCreating
+                  ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
+                  : 'bg-gray-400 cursor-not-allowed'
                 }`}
             >
-              Guardar Inscripción
+              {isCreating ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creando...
+                </>
+              ) : (
+                'Guardar Inscripción'
+              )}
             </button>
           </div>
         )}
-
-
       </div>
     </div>
   );
