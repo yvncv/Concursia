@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown } from "lucide-react";
+import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown, BookMarked } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import useAcademies from "@/app/hooks/useAcademies";
@@ -56,6 +56,12 @@ export default function Navbar({ brandName }: { brandName: string }) {
       href: "/my-registrations",
       label: "Mis Inscripciones",
       icon: Ticket,
+      requiresAuth: true,
+    },
+    {
+      href: "/forums",
+      label: "Foro",
+      icon: BookMarked,
       requiresAuth: true,
     },
     {
@@ -515,12 +521,25 @@ export default function Navbar({ brandName }: { brandName: string }) {
                             </Link>
                           </li>
                           <li>
+                            <Link
+                              href="/forums"
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <BookMarked className="w-4 h-4" />
+                              <span>Foros</span>
+                            </Link>
+                          </li>
+                          <li>
                             <button
                               onClick={() => {
                                 setShowUserMenu(false);
                                 handleSignOut();
                               }}
-                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-red-700 hover:bg-red-100 w-full text-left"
                             >
                               <LogOutIcon className="w-4 h-4" />
                               <span>Cerrar Sesión</span>

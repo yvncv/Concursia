@@ -215,7 +215,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-6">
             {/* Profile Image */}
-            <div className="relative group flex-shrink-0">
+            <div className="relative rounded-full group flex-shrink-0">
               <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                 {croppedImage ? (
                   <Image
@@ -238,14 +238,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                  <div className="w-full rounded-full h-full flex items-center justify-center bg-gray-200">
                     <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-400" />
                   </div>
                 )}
 
                 {canEdit && (
                   <div
-                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                    className="absolute rounded-full inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                     onClick={() => setIsChangeImageModalOpen(true)}
                   >
                     <LucideImage className="text-white w-5 h-5 sm:w-6 sm:h-6" />

@@ -23,7 +23,6 @@ export const withRoleProtection = <P extends object>(
       // pase de error o login
       if (
         pathname === "/unauthorized" ||
-        pathname === "/404" ||
         pathname === "/login"
       ) {
         setIsAllowed(true);
@@ -39,8 +38,8 @@ export const withRoleProtection = <P extends object>(
 
       const parts = pathname.split("/").filter(Boolean);
       const isAdminRoute = /^\/admin(?:$|\/)/.test(pathname);
-      const isEventList = parts[0] === "organizer" && parts[1] === "events" && parts.length === 2;
-      const isEventDetail = parts[0] === "organizer" && parts[1] === "events" && parts.length >= 3;
+      const isEventList = parts[0] === "organize" && parts[1] === "events" && parts.length === 2;
+      const isEventDetail = parts[0] === "organize" && parts[1] === "events" && parts.length >= 3;
 
       // 1) /admin
       if (isAdminRoute) {
@@ -77,7 +76,7 @@ export const withRoleProtection = <P extends object>(
         const section = parts[3] || "overview";
         const ev = events.find(e => e.id === eventId);
         if (!ev) {
-          router.replace("/404");
+          router.replace("/unauthorized");
           setChecked(true);
           return;
         }
