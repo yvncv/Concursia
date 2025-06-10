@@ -39,7 +39,7 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
     <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-lg border border-blue-100">
       {/* Header with status badge */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-1 after:bg-blue-500 after:-bottom-2">
+        <h2 className="text-2xl font-semibold text-gray-800 relative after:content-[''] after:absolute after:left-0 after:w-20 after:h-1 after:bg-blue-500 after:-bottom-2">
           Información Personal
         </h2>
         <div className="flex items-center">
@@ -70,7 +70,7 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
           
           return (
             <div key={label} className="mb-4 transition-all duration-200 hover:translate-y-[-2px] group">
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <span className="w-2 h-2 bg-blue-400 rounded-full inline-block mr-2"></span>
                 {label}
                 {label === 'DNI' && (

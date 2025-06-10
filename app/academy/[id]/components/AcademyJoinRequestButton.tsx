@@ -196,7 +196,7 @@ export default function AcademyJoinRequestButton({
   const buttonContent = getButtonContent();
 
   const getButtonClasses = () => {
-    const baseClasses = "flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm";
+    const baseClasses = "flex items-center space-x-2 px-3 py-1 rounded-xl font-medium transition-all duration-200 shadow-sm";
     
     switch (buttonContent.variant) {
       case 'primary':

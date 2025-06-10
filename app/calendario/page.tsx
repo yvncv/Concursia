@@ -43,15 +43,11 @@ export default function TodosEventos() {
           <div className="absolute inset-0">
             <CarruselEvento events={events}/>
           </div>
-          {/* <div className="relative z-1 text-center text-white px-4">
-            <h1 className="text-5xl font-bold mb-4">Vive la Pasión de la Marinera Norteña</h1>
-            <p className="text-xl mb-8">Descubre los mejores eventos y competencias en Perú</p>
-          </div> */}
         </section>
 
         {/* Contenido Principal */}
-        <div className="w-full max-w-[1400px] px-4 md:px-8 mt-12">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
+        <div className="w-full max-w-[1400px] md:px-8 md:mt-12">
+          <div className="bg-white/80 backdrop-blur-sm md:rounded-xl p-3 md:p-6 shadow-lg mb-5 md:mb-8">
             <h1 className="md:text-2xl font-bold text-red-600">
               {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Tusuy Perú"},
               estos son los eventos de la fecha!

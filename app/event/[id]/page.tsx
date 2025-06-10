@@ -180,12 +180,12 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white/80 rounded-xl shadow-sm mb-8">
+      <div className="md:max-w-6xl text-sm md:text-lg md:mx-auto md:px-4 md:py-8">
+        <div className="bg-white/80 md:rounded-xl shadow-sm mb-8">
           <div className="flex border-b">
             {/* Tab de Información - siempre visible para todos */}
             <button
-              className={`flex-1 px-6 py-4 text-center font-medium transition-colors
+              className={`flex-1 p-2 md:px-6 md:py-4 text-center font-medium transition-colors
                 ${activeTab === "informacion"
                   ? "text-yellow-600 border-b-2 border-yellow-600"
                   : "text-gray-500 hover:text-gray-700"}`}
@@ -195,41 +195,49 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             </button>
 
             {/* Tab de Inscripción - visible solo si individualWeb está habilitado */}
-            <button
-              className={`flex-1 px-6 py-4 text-center font-medium transition-colors 
+            <div className="flex flex-col text-center flex-1 p-2 md:px-6 md:py-4 font-medium transition-colors">
+              <button
+                className={`
                 ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed" : ""}
                 ${activeTab === "inscripcion"
-                  ? "text-red-600 border-b-2 border-red-600"
-                  : "text-gray-500 hover:text-gray-700"}`}
-              onClick={() => isIndividualWebEnabled && setActiveTab("inscripcion")}
-              disabled={!isIndividualWebEnabled}
-            >
-              Inscripción
-              {!isIndividualWebEnabled && (
-                <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
-              )}
-            </button>
-
-            {/* Tab de Inscripción de Alumnos - solo visible para organizadores y si grupalCSV está habilitado */}
-            {isOrganizer && (
-              <button
-                className={`flex-1 px-6 py-4 text-center font-medium transition-colors
-                  ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
-                  ${activeTab === "inscripcionAlumnos"
-                    ? "text-blue-600 border-b-2 border-blue-600"
+                    ? "text-red-600 border-b-2 border-red-600"
                     : "text-gray-500 hover:text-gray-700"}`}
-                onClick={() => isGrupalCSVEnabled && setActiveTab("inscripcionAlumnos")}
-                disabled={!isGrupalCSVEnabled}
+                onClick={() => isIndividualWebEnabled && setActiveTab("inscripcion")}
+                disabled={!isIndividualWebEnabled}
               >
-                Inscripción de Alumnos
+                Inscripción
+              </button>
+              <div>
                 {!isGrupalCSVEnabled && (
                   <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
                 )}
-              </button>
+              </div>
+            </div>
+
+            {/* Tab de Inscripción de Alumnos - solo visible para organizadores y si grupalCSV está habilitado */}
+            {isOrganizer && (
+              <div className="flex flex-col text-center flex-1 p-2 md:px-6 md:py-4 font-medium transition-colors">
+                <button
+                  className={`
+                  ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
+                  ${activeTab === "inscripcionAlumnos"
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500 hover:text-gray-700"}`}
+                  onClick={() => isGrupalCSVEnabled && setActiveTab("inscripcionAlumnos")}
+                  disabled={!isGrupalCSVEnabled}
+                >
+                  Inscribir Alumnos
+                </button>
+                <div>
+                  {!isGrupalCSVEnabled && (
+                    <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="p-6">
+          <div className="lg:p-6">
             {activeTab === "informacion" ? (
               <EventoInformacion
                 event={event}

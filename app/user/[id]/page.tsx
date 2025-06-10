@@ -160,7 +160,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       {/* Cover Image Section */}
-      <div className={`relative h-80 overflow-hidden ${foundUser?.gender === 'Masculino'
+      <div className={`relative h-[15rem] md:h-[30rem] bg-gradient-to-r ${foundUser?.gender === 'Masculino'
           ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
           : foundUser?.gender === 'Femenino'
             ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
@@ -184,19 +184,19 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         {/* Edit Cover Button */}
         {canEdit && (
           <button
-            className="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full transition-all duration-200"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 sm:p-3 rounded-full transition-all duration-200"
             aria-label="Cambiar imagen de portada"
           >
-            <LucideImage className="w-5 h-5" />
+            <LucideImage className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         )}
 
         {/* User Header Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="flex items-end space-x-6">
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-2 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-end space-y-2 sm:space-y-0 sm:space-x-6">
             {/* Profile Image */}
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+            <div className="relative group self-center sm:self-auto">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-2 sm:border-4 border-white shadow-lg overflow-hidden bg-white">
                 {croppedImage ? (
                   <Image
                     src={croppedImage}
@@ -219,7 +219,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <UserIcon className="w-12 h-12 text-gray-400" />
+                    <UserIcon className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 text-gray-400" />
                   </div>
                 )}
 
@@ -228,39 +228,39 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                     onClick={() => setIsChangeImageModalOpen(true)}
                   >
-                    <LucideImage className="text-white w-6 h-6" />
+                    <LucideImage className="text-white w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
                 )}
               </div>
             </div>
 
             {/* User Info */}
-            <div className="text-white flex-1">
-              <h1 className="text-4xl font-bold mb-2">
+            <div className="text-white flex-1 text-center sm:text-left">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
                 {capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
               </h1>
-              <div className="flex items-center space-x-6 text-lg">
-                <div className="flex items-center space-x-2">
-                  <Trophy className="w-5 h-5" />
-                  <span>{foundUser.marinera?.participant?.category || 'Participante'}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-6 text-xs sm:text-base md:text-lg">
+                <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
+                  <Trophy className="w-3 h-3 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-base">{foundUser.marinera?.participant?.category || 'Participante'}</span>
                 </div>
                 {age && (
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-5 h-5" />
-                    <span>{age} años</span>
+                  <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
+                    <Calendar className="w-3 h-3 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-base">{age} años</span>
                   </div>
                 )}
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-5 h-5" />
-                  <span>{foundUser.location?.district || 'Ubicación'}, {foundUser.location?.department || 'Perú'}</span>
+                <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
+                  <MapPin className="w-3 h-3 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm md:text-base">{foundUser.location?.district || 'Ubicación'}, {foundUser.location?.department || 'Perú'}</span>
                 </div>
               </div>
-              <div className="mt-2 flex items-center space-x-4">
-                <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+              <div className="mt-1 sm:mt-2 flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+                <span className="bg-white bg-opacity-20 px-2 py-1 sm:px-3 rounded-full text-xs self-center sm:self-auto">
                   {foundUser.roleId?.toUpperCase() || 'USUARIO'}
                 </span>
                 {foundUser.marinera?.academyId && (
-                  <span className="text-blue-200">
+                  <span className="text-blue-200 text-xs sm:text-sm">
                     Academia: {loadingAcademy ? 'Cargando...' : academy?.name || 'No disponible'}
                   </span>
                 )}
@@ -271,84 +271,84 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <div className="flex-1 p-4 sm:p-6 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Trophy className="w-6 h-6 text-blue-600" />
+                <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
+                  <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {foundUser.marinera?.participant?.category || 'N/A'}
                   </p>
-                  <p className="text-gray-600">Categoría</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Categoría</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
-                <div className="bg-green-100 p-3 rounded-full">
-                  <UserIcon className="w-6 h-6 text-green-600" />
+                <div className="bg-green-100 p-2 sm:p-3 rounded-full">
+                  <UserIcon className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {foundUser.gender === 'Masculino' ? 'M' : foundUser.gender === 'Femenino' ? 'F' : '-'}
                   </p>
-                  <p className="text-gray-600">Género</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Género</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <Award className="w-6 h-6 text-purple-600" />
+                <div className="bg-purple-100 p-2 sm:p-3 rounded-full">
+                  <Award className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {foundUser.roleId === 'organizer' ? 'Org.' : foundUser.roleId === 'participant' ? 'Part.' : 'User'}
                   </p>
-                  <p className="text-gray-600">Rol</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Rol</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
               <div className="flex items-center">
-                <div className="bg-orange-100 p-3 rounded-full">
-                  <Calendar className="w-6 h-6 text-orange-600" />
+                <div className="bg-orange-100 p-2 sm:p-3 rounded-full">
+                  <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {age || 'N/A'}
                   </p>
-                  <p className="text-gray-600">Años</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Años</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Left Column - Main Info */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 md:space-y-8">
               <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
               <ContactInformation foundUser={foundUser} canEdit={canEdit} />
               <PlaceInformation foundUser={safeUser} />
             </div>
 
             {/* Right Column - Additional Info */}
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {/* Academy History */}
               <AcademyHistory userId={foundUser.id} />
               
               {/* Activity Status */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Estado</h3>
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Estado</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                     <div className="flex items-center space-x-3">
@@ -373,11 +373,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
       {/* Save Buttons - Solo visible para propietarios */}
       {canEdit && (croppedImage || selectedCoverImage) && (
-        <div className="fixed bottom-6 right-6 space-y-3">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 space-y-3">
           {croppedImage && (
             <button
               onClick={handleSaveProfileImage}
-              className="block w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors"
+              className="block w-full px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base rounded-lg shadow-lg transition-colors"
             >
               Guardar Foto
             </button>
@@ -385,7 +385,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {selectedCoverImage && (
             <button
               onClick={handleSaveCoverImage}
-              className="block w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-lg transition-colors"
+              className="block w-full px-4 py-2 sm:px-6 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm sm:text-base rounded-lg shadow-lg transition-colors"
             >
               Guardar Portada
             </button>
