@@ -5,6 +5,7 @@ export interface Participant {
   id: string; // Autogenerado por Firebase
   code: string; // Codigo en la espalda del participante
   usersId: string[];
+  academiesId: string[];
   eventId: string;
   category: string;
   level: string;

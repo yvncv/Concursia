@@ -23,7 +23,6 @@ export const withRoleProtection = <P extends object>(
       // pase de error o login
       if (
         pathname === "/unauthorized" ||
-        pathname === "/404" ||
         pathname === "/login"
       ) {
         setIsAllowed(true);
@@ -77,7 +76,7 @@ export const withRoleProtection = <P extends object>(
         const section = parts[3] || "overview";
         const ev = events.find(e => e.id === eventId);
         if (!ev) {
-          router.replace("/404");
+          router.replace("/unauthorized");
           setChecked(true);
           return;
         }

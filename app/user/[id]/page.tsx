@@ -7,7 +7,20 @@ import useAcademy from "@/app/hooks/useAcademy";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
-import { LucideImage, User as UserIcon, Trophy, MapPin, Award, Calendar } from 'lucide-react';
+import { 
+  LucideImage, 
+  User as UserIcon, 
+  Trophy, 
+  MapPin, 
+  Award, 
+  Calendar,
+  Building2,
+  ExternalLink,
+  Mail,
+  Phone,
+  Globe,
+  Users
+} from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
 import ChangeProfileImageModal from './modals/ChangeIProfileImageModal';
@@ -115,6 +128,13 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     // child components handle their own submits
+  };
+
+  // Función para ir al perfil de la academia
+  const handleViewAcademyProfile = () => {
+    if (academy?.id) {
+      window.open(`/academy/${academy.id}`, '_blank');
+    }
   };
 
   if (loadingUsers) return <div className="text-center mt-20">Cargando perfil...</div>;
@@ -225,13 +245,46 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
                 {canEdit && (
                   <div
-                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                    className="absolute rounded-full inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                     onClick={() => setIsChangeImageModalOpen(true)}
                   >
                     <LucideImage className="text-white w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
                 )}
               </div>
+
+              {/* Academy Badge - Pequeño ícono debajo de la foto */}
+              {foundUser.marinera?.academyId && academy && !loadingAcademy && (
+                <div 
+                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 cursor-pointer group/academy"
+                  onClick={handleViewAcademyProfile}
+                >
+                  <div className="relative">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full border-3 border-white shadow-lg overflow-hidden bg-white hover:scale-110 transition-transform duration-200">
+                      {academy.profileImage ? (
+                        <Image
+                          src={typeof academy.profileImage === 'string' ? academy.profileImage : ''}
+                          alt={academy.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                          {academy.name?.charAt(0) || "A"}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 sm:px-3 py-1 bg-black bg-opacity-80 text-white text-xs rounded-lg opacity-0 group-hover/academy:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+                      Academia: {academy.name}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-2 border-transparent border-t-black border-t-opacity-80"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* User Info */}

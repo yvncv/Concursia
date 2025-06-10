@@ -47,6 +47,7 @@ const ConfirmTicket: React.FC<ConfirmTicketProps> = ({ isOpen, onClose, ticket }
                 const participantData: Omit<Participant, 'id'> = {
                     code: participantCodes[i] || "", // Código de espalda si fue proporcionado
                     usersId: entry.usersId,
+                    academiesId: entry.academiesId,
                     eventId: ticket.eventId,
                     category: entry.category,
                     level: entry.level,
