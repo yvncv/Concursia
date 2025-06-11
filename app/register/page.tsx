@@ -402,23 +402,26 @@ export default function RegisterForm() {
     let hint = "";
 
     const hasNumber = /\d/.test(pwd);
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
 
     if (pwd.length === 0) {
       level = "";
       color = "";
       hint = "";
-    } else if (pwd.length < 6) {
+    } else if (pwd.length < 8 || !hasNumber || !hasUpperCase || !hasLowerCase) {
       level = "Débil";
-      color = "bg-red-400";
-      hint = "La contraseña debe tener al menos 6 caracteres y un número.";
-    } else if (pwd.length >= 6 && !hasNumber) {
+      color = "text-red-400";
+      hint = "Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
+    } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && !hasSpecialChar) {
       level = "Media";
-      color = "bg-yellow-400";
-      hint = "Agrega al menos un número.";
-    } else if (pwd.length >= 6 && hasNumber) {
+      color = "text-yellow-400";
+      hint = "Agrega al menos un carácter especial para mayor seguridad.";
+    } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && hasSpecialChar) {
       level = "Fuerte";
-      color = "bg-green-500";
-      hint = "";
+      color = "text-green-500";
+      hint = "¡Contraseña fuerte!";
     }
 
     setPasswordStrength({ level, color });
@@ -562,7 +565,7 @@ export default function RegisterForm() {
                 )}
                 {/* Mensaje de ayuda */}
                 {passwordHint && (
-                  <p className="text-xs text-red-500 mt-1">{passwordHint}</p>
+                  <p className={`text-xs ${passwordStrength.color} mt-1`}>{passwordHint}</p>
                 )}
               </div>
               <div>
