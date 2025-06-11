@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, Dispatch, SetStateAction } from "react";
-import { LayoutDashboard, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Calendar, ChevronLeft, ChevronRight, Building2 as Academy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import useUser from "@/app/hooks/useUser";
 
 interface OrganizerSideBarProps {
   isCollapsed: boolean;
@@ -12,6 +13,7 @@ interface OrganizerSideBarProps {
 
 const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const pathname = usePathname();
+  const { user } = useUser();
 
   // Auto-colapsar en mobile
   useEffect(() => {
@@ -27,7 +29,8 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsC
 
   const enlaces = [
     { label: "Dashboard", href: "/organize", icon: <LayoutDashboard size={20} /> },
-    { label: "Events", href: "/organize/events", icon: <Calendar size={20} /> },
+    { label: "Academia", href: "/organize/academy", icon: <Academy size={20} /> },
+    { label: "Eventos", href: "/organize/events", icon: <Calendar size={20} /> },
   ];
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
@@ -44,7 +47,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({ isCollapsed, setIsC
 
         <div className="p-4">
           {!isCollapsed && (
-            <h1 className="text-xl font-bold text-red-700 mb-6">Organizador</h1>
+            <h1 className="text-xl font-bold text-red-700 mb-6">{user?.roleId === "organizer" ? "Organizador" : "Staff"}</h1>
           )}
           <nav>
             <ul className="space-y-2">

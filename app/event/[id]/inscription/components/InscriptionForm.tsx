@@ -1,19 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { User } from '@/app/types/userType';
 import useAcademies from '@/app/hooks/useAcademies';
+import useAcademy from '@/app/hooks/useAcademy';
 
 const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName }: { onAcademySelect: (academyId: string, academyName: string) => void, initialAcademyId: string, initialAcademyName: string }) => {
   const { academies, loadingAcademies, errorAcademies } = useAcademies();
+  const { academy, loadingAcademy } = useAcademy(initialAcademyId);
   const [selectedAcademyName, setSelectedAcademyName] = useState<string>(initialAcademyName || 'Libre');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   useEffect(() => {
-    if (initialAcademyId && initialAcademyId !== '') {
-      onAcademySelect(initialAcademyId, initialAcademyName);
+    if (academy && academy.name) {
+      setSelectedAcademyName(academy.name);
+    } else if (initialAcademyName) {
+      setSelectedAcademyName(initialAcademyName);
     }
-  }, [initialAcademyId, initialAcademyName, onAcademySelect]);
+  }, [academy, initialAcademyName]);
+
+  useEffect(() => {
+    if (initialAcademyId && initialAcademyId !== '') {
+      const academyName = academy?.name || initialAcademyName || 'Libre';
+      onAcademySelect(initialAcademyId, academyName);
+    }
+  }, [initialAcademyId, initialAcademyName, academy, onAcademySelect]);
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
@@ -69,7 +80,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
       <label htmlFor="academyId" className="block text-sm font-medium text-white mb-2">
         Academia
       </label>
-      {loadingAcademies ? (
+      {loadingAcademies || loadingAcademy ? (
         <div className="mt-1 flex items-center justify-center px-4 py-4 rounded-2xl bg-gray-200 text-gray-600">
           <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -351,7 +362,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
               <AcademySelector
                 onAcademySelect={handleAcademySelect}
                 initialAcademyId={user?.marinera?.academyId || ''}
-                initialAcademyName={user?.academyName || 'Libre'} />
+                initialAcademyName="Libre" />
             </div>
           </div>
         </div>
@@ -487,7 +498,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
                       <AcademySelector
                         onAcademySelect={handleCoupleAcademySelect}
                         initialAcademyId={pareja.marinera?.academyId || ''}
-                        initialAcademyName={pareja.academyName || 'Libre'} />
+                        initialAcademyName="Libre" />
                     </div>
                   </div>
                 </>

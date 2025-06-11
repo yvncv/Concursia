@@ -51,13 +51,16 @@ export enum CompetitionPhase {
   FINAL         = "Final"
 }
 
+export type Gender = "Mujeres" | "Varones" | "Mixto";
+
+// Nueva interfaz para los items del cronograma con fases
 export interface ScheduleItem {
   id: string;
-  levelId: string;
-  levelName: string;
+  levelId: string; // ID del nivel/modalidad
   category: string;
-  phase: CompetitionPhase;
-  participantsCount?: number;
+  gender?: Gender;
+  phase: CompetitionPhase; // Fase de la competencia
+  participantsCount?: number; // Opcional: cantidad de participantes
   order: number;
   estimatedTime: number;
   day?: number;

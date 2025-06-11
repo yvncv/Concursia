@@ -21,10 +21,10 @@ const WizardSteps = ({ currentStep }: { currentStep: number }) => {
 
   return (
     <div className="w-full py-4">
-      <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center justify-center md:mb-3 text-center">
         {steps.map((step, index) => (
           <div key={index} className="flex items-center">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 
+            <div className={`flex sm:ml-4 items-center justify-center w-6 h-6 rounded-full border-2 
               ${currentStep >= index
                 ? 'border-red-600 bg-red-600 text-white'
                 : 'border-gray-300 text-gray-300'
@@ -274,7 +274,7 @@ const EventoInscripcion = ({ event, openModal, user }:
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <WizardSteps currentStep={currentStep} />
-      <div className="mt-2">
+      <div className="md:mt-2">
         {currentStep === 0 && event && (
           <CategorySelection
             event={event}
@@ -317,7 +317,7 @@ const EventoInscripcion = ({ event, openModal, user }:
 
         {/* Botones de navegación */}
         {currentStep == 1 && (
-          <div className="flex justify-between mt-6">
+          <div className="flex justify-between py-6">
             <button
               onClick={() => setCurrentStep(s => s - 1)}
               className="px-6 py-2 bg-gray-200 rounded-lg"

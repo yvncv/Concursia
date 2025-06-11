@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Calendar, Clock, MapPin } from "lucide-react";
+import { BadgeCheck, Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
 import { CustomEvent } from "../../types/eventType";
 
 export default function EventComponent({ event }: { event: CustomEvent }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   const formatDate = (date: Date): string => {
@@ -53,89 +55,167 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
   return (
     <div
       ref={elementRef}
-      className={`text-xs bg-white/95 md:text-bas relative flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer w-full max-w-[300px] mx-auto hover:shadow-lg hover:scale-[1.02] group`}
+      className={`relative flex flex-col bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden cursor-pointer 
+        w-full max-w-[165px] sm:max-w-[190px] md:max-w-[220px] lg:max-w-[240px] xl:max-w-[260px] mx-auto 
+        transition-all duration-500 ease-out hover:shadow-3xl hover:scale-[1.05] group 
+        border border-white/20 transform ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+      }`}
+      style={{ minHeight: '320px' }}
     >
-      <div className="relative w-full h-[90px] sm:h-48 md:h-56 overflow-hidden flex justify-center items-center">
-        {/* Fondo borroso */}
+      {/* Header con imagen mejorada */}
+      <div className="relative w-full h-32 sm:h-36 md:h-40 lg:h-44 xl:h-48 overflow-hidden rounded-t-3xl flex-shrink-0">
+        {/* Fondo borroso con gradiente */}
         {event.smallImage && (
           <div className="absolute inset-0 z-0">
             <Image
               src={event.smallImage}
-              className="w-full h-full object-cover blur-sm scale-110 transition-transform duration-500 ease-in-out group-hover:scale-125"
+              className="w-full h-full object-cover blur-md scale-110 transition-all duration-700 ease-out group-hover:scale-125"
               alt={`Fondo de ${event.name}`}
               fill
               priority={false}
               loader={({ src }) => src}
             />
-            {/* Opcional: Overlay oscuro */}
-            <div className="absolute inset-0 bg-black/30 z-10" />
+            {/* Gradiente overlay vibrante */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/30 via-red-500/20 to-purple-500/30 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-10" />
           </div>
         )}
 
-        {/* Imagen principal más pequeña y con fondo visible */}
-        <div className="relative w-full h-[90px] sm:h-48 md:h-56 z-5 flex items-center justify-center">
+        {/* Imagen principal con marco flotante */}
+        <div className="relative w-full h-full z-20 flex items-center justify-center pb-2 sm:pb-3">
           {event.smallImage && (
-            <div className="w-[90%] h-[90%] relative">
+            <div className="w-[85%] h-[75%] relative group/image">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 rounded-2xl backdrop-blur-sm border border-white/40 shadow-2xl" />
               <Image
                 src={event.smallImage}
-                className="w-full h-full object-cover rounded-md shadow-lg transition-transform duration-500 group-hover:scale-110"
+                className={`w-full h-full object-cover rounded-2xl shadow-2xl transition-all duration-700 group-hover/image:scale-105 ${
+                  isImageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
                 alt={event.name}
                 fill
                 priority={false}
                 loader={({ src }) => src}
+                onLoad={() => setIsImageLoaded(true)}
               />
+              {/* Shimmer effect */}
+              {!isImageLoaded && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/40 to-white/20 animate-pulse rounded-2xl" />
+              )}
+              
+              {/* Overlay de brillo en hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/10 to-white/0 opacity-0 group-hover/image:opacity-100 transition-opacity duration-500 rounded-2xl" />
             </div>
           )}
         </div>
+
+        {/* Botón de favorito flotante */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLiked(!isLiked);
+          }}
+          className="absolute top-2 right-2 z-30 p-1.5 sm:p-2 bg-white/95 backdrop-blur-md rounded-full shadow-xl border border-white/50 transition-all duration-300 hover:scale-110 hover:bg-white active:scale-95"
+        >
+          <Heart 
+            className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${
+              isLiked ? 'text-red-500 fill-red-500 scale-110' : 'text-gray-400 hover:text-red-400'
+            }`} 
+          />
+        </button>
+
+        {/* Badge de tipo de evento mejorado */}
+        <div className="absolute bottom-0 left-0 right-0 z-25">
+          <div className="bg-gradient-to-r from-red-500 via-orange-500 to-red-500 text-white py-1 sm:py-1.5 px-2 text-center relative overflow-hidden">
+            <span className="relative font-bold text-[10px] sm:text-xs tracking-wider uppercase drop-shadow-sm">
+              {event.eventType}
+            </span>
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400" />
+          </div>
+        </div>
       </div>
 
-      <div className="justify-center flex items-center text-white bg-red-600 md:py-1.5 text-sm font-medium">
-        {event.eventType}
-      </div>
-
-      {/* animación de visibilidad */}
-      <div
-        className={`p-4 space-y-1 md:space-y-3 transition-opacity duration-500 ease-in-out ${isVisible ? "opacity-100 visible" : "opacity-0 invisible"
-          }`}
+      {/* Contenido principal compacto */}
+      <div className={`flex-1 p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gradient-to-br from-white to-gray-50/50 transition-all duration-700 ease-out flex flex-col ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
       >
-        <h5 className="text-sm md:text-xl font-bold truncate text-red-600">
-          {event.name}
-        </h5>
+        {/* Título con gradiente */}
+        <div>
+          <h5 className="text-xs sm:text-sm md:text-base font-bold bg-gradient-to-r from-red-600 via-orange-500 to-red-600 bg-clip-text text-transparent leading-tight line-clamp-2">
+            {event.name}
+          </h5>
+          <div className="w-6 sm:w-8 h-0.5 bg-gradient-to-r from-red-500 via-orange-400 to-red-400 rounded-full mt-1" />
+        </div>
 
-        <p className="text-gray-600 test-sm md:text-md line-clamp-1">{event.description}</p>
-
-        <div className="md:space-y-2 space-y-0">
-          <div className="flex items-center gap-2 text-gray-600">
-            <Calendar className="text-red-500 w-4 flex-shrink-0" />
-            <span className="truncate">
+        {/* Información detallada compacta */}
+        <div className="space-y-1.5 sm:space-y-2 flex-1">
+          {/* Fecha */}
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100/80 hover:shadow-md transition-all duration-300">
+            <div className="p-1 bg-gradient-to-br from-red-100 to-red-200 rounded-lg shadow-sm">
+              <Calendar className="text-red-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </div>
+            <span className="text-gray-700 font-medium text-[10px] sm:text-xs flex-1 truncate">
               {formatDate(event.startDate.toDate())}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="text-green-500 w-4 flex-shrink-0" />
-            <span className="truncate">{formattedStartTime}</span>
+          {/* Hora */}
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100/80 hover:shadow-md transition-all duration-300">
+            <div className="p-1 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg shadow-sm">
+              <Clock className="text-emerald-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </div>
+            <span className="text-gray-700 font-medium text-[10px] sm:text-xs">
+              {formattedStartTime}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-600">
-            <MapPin className="text-blue-500 w-4 flex-shrink-0" />
-            <span className="truncate">{event.location.placeName}</span>
+          {/* Ubicación */}
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-purple-50 to-cyan-50 rounded-xl border border-purple-100/80 hover:shadow-md transition-all duration-300">
+            <div className="p-1 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg shadow-sm">
+              <MapPin className="text-purple-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </div>
+            <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
+              {event.location.placeName}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-600">
-            <BadgeCheck className="text-purple-500 w-4 flex-shrink-0" />
-            <span className="truncate">{event.academyName}</span>
+          {/* Academia */}
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-red-50 to-violet-50 rounded-xl border border-red-100/80 hover:shadow-md transition-all duration-300">
+            <div className="p-1 bg-gradient-to-br from-red-100 to-red-200 rounded-lg shadow-sm">
+              <BadgeCheck className="text-red-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </div>
+            <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
+              {event.academyName}
+            </span>
           </div>
         </div>
 
-        <Link
-          href={`/event/${event.id}`}
-          className="block w-full mt-auto text-center bg-gradient-to-r from-red-500 to-red-600 text-white py-1 md:py-2 md:px-4 rounded-lg font-medium transition-all duration-300 hover:shadow-md hover:from-red-600 hover:to-red-700 active:scale-[0.98]"
-        >
-          Más información
-        </Link>
+        {/* Botón CTA mejorado */}
+        <div className="mt-auto">
+          <Link
+            href={`/event/${event.id}`}
+            className="group/btn relative block w-full text-center bg-gradient-to-r from-red-500 via-orange-500 to-red-500 text-white py-1.5 sm:py-2 rounded-xl font-bold text-[10px] sm:text-xs transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 overflow-hidden"
+          >
+            <div className="relative flex items-center justify-center gap-1 z-10">
+              <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover/btn:rotate-12 transition-transform duration-300" />
+              <span className="tracking-wide drop-shadow-sm">Ver más</span>
+            </div>
+            
+            {/* Efecto de brillo en hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover/btn:translate-x-[100%]" />
+            
+            {/* Borde superior decorativo */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400" />
+          </Link>
+        </div>
       </div>
-    </div>
 
+      {/* Efectos de hover mejorados */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl" />
+      
+      {/* Borde animado colorido */}
+      <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 blur-sm" />
+    </div>
   );
 }

@@ -6,10 +6,10 @@ import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { EventSettings, CustomEvent } from "../types/eventType";
 
 const DEFAULT_SETTINGS: EventSettings = {
-    registration: {
-        grupalCSV: false,
-        individualWeb: false,
-        sameDay: false
+    inscription: {
+        groupEnabled: false,
+        individualEnabled: false,
+        onSiteEnabled: false
     },
     pullCouple: {
         enabled: false,

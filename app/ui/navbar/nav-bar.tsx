@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, User, Menu, X, Shield, LogOutIcon } from "lucide-react";
+import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown, BookMarked } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
+import useAcademies from "@/app/hooks/useAcademies";
+import useUsers from "@/app/hooks/useUsers";
 import { CustomEvent } from '@/app/types/eventType';
 import { useRouter } from "next/navigation";
 import { auth } from "@/app/firebase/config";
@@ -11,9 +13,13 @@ import { auth } from "@/app/firebase/config";
 export default function Navbar({ brandName }: { brandName: string }) {
   const { user, loadingUser } = useUser();
   const { events } = useEvents();
+  const { academies } = useAcademies();
+  const { users } = useUsers();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredEvents, setFilteredEvents] = useState<CustomEvent[]>([]);
+  const [filteredResults, setFilteredResults] = useState([]);
+  const [showMobileSearch, setShowMobileSearch] = useState(false); // Nueva estado para mostrar/ocultar búsqueda
   const pathname = usePathname();
   const router = useRouter();
 
@@ -24,6 +30,19 @@ export default function Navbar({ brandName }: { brandName: string }) {
   // Reset the menu state when pathname changes
   useEffect(() => {
     setIsMenuOpen(false);
+    setShowMobileSearch(false);
+    setShowUserMenu(false);
+  }, [pathname]);
+
+  // Mantener el término de búsqueda sincronizado con la URL en la página de resultados
+  useEffect(() => {
+    if (pathname === '/search-results') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryParam = urlParams.get('query');
+      if (queryParam && queryParam !== searchTerm) {
+        setSearchTerm(queryParam);
+      }
+    }
   }, [pathname]);
 
   const enlaces = [
@@ -32,6 +51,18 @@ export default function Navbar({ brandName }: { brandName: string }) {
       label: "Calendario",
       icon: Home,
       requiresAuth: false,
+    },
+    {
+      href: "/my-registrations",
+      label: "Mis Inscripciones",
+      icon: Ticket,
+      requiresAuth: true,
+    },
+    {
+      href: "/forums",
+      label: "Foro",
+      icon: BookMarked,
+      requiresAuth: true,
     },
     {
       href: "/login",
@@ -90,7 +121,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
     },
   ];
 
-  if (isStaffOfAnyEvent && !enlaces.some(e => e.href === "/organize/")) {
+  if (isStaffOfAnyEvent && user.roleId !== "organizer" && !enlaces.some(e => e.href === "/organize/")) {
     enlaces.unshift({
       href: "/organize/",
       label: "Eventos",
@@ -100,7 +131,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
   }
 
   const filteredLinks = enlaces.filter((link) => {
-    if (link.label === "Logout" && user) return true; // Always show logout if user exists
+    if (link.label === "Logout" && user) return true;
     if (link.href === "/login" && user) return false;
     if (link.requiresAuth) {
       if (!user) return false;
@@ -109,27 +140,94 @@ export default function Navbar({ brandName }: { brandName: string }) {
     return true;
   });
 
+  // Búsqueda completa
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredEvents([]);
+      setFilteredResults([]);
       return;
     }
 
-    const results = events.filter((event) => {
-      const lowerSearchTerm = searchTerm.toLowerCase();
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    // Filtrar eventos
+    const filteredEvents = events.filter((event) => {
+      const name = typeof event.name === 'string' ? event.name.toLowerCase() : '';
+      const eventType = typeof event.eventType === 'string' ? event.eventType.toLowerCase() : '';
+      const placeName = typeof event.location?.placeName === 'string' ? event.location.placeName.toLowerCase() : '';
+
       return (
-        event.name.toLowerCase().includes(lowerSearchTerm) ||
-        event.eventType?.toLowerCase().includes(lowerSearchTerm) ||
-        event.location?.placeName?.toLowerCase().includes(lowerSearchTerm)
+        name.includes(lowerSearchTerm) ||
+        eventType.includes(lowerSearchTerm) ||
+        placeName.includes(lowerSearchTerm)
       );
+    }).map(event => {
+      const capitalize = (text: string | undefined) =>
+        text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : '';
+
+      const eventType = event.eventType || '';
+      const name = event.name || '';
+      const showEventType = !name.toLowerCase().startsWith(eventType.toLowerCase());
+
+      return {
+        ...event,
+        type: 'event',
+        displayText: `${showEventType ? `${eventType} ` : ''}${name} - ${capitalize(event.location?.district)}${event.location?.department ? `, ${capitalize(event.location.department)}` : ''}`,
+        href: `/event/${event.id}`
+      };
     });
 
-    setFilteredEvents(results);
-  }, [searchTerm, events]);
+    // Filtrar academias
+    const filteredAcademies = academies.filter((academy) => {
+      const name = typeof academy.name === 'string' ? academy.name.toLowerCase() : '';
+      return name.includes(lowerSearchTerm);
+    }).map(academy => ({
+      ...academy,
+      type: 'academy',
+      displayText: `${academy.name || ''} - ${academy.location?.district || ''}, ${academy.location?.department || ''}`,
+      href: `/academy/${academy.id}`
+    }));
+
+    // Filtrar usuarios
+    const filteredUsers = users.filter((user) => {
+      const firstName = typeof user.firstName === 'string' ? user.firstName.toLowerCase() : '';
+      const lastName = typeof user.lastName === 'string' ? user.lastName.toLowerCase() : '';
+      const category = user.marinera?.participant?.category?.toLowerCase() ?? '';
+
+      return (
+        `${firstName} ${lastName}`.includes(lowerSearchTerm) ||
+        category.includes(lowerSearchTerm)
+      );
+    }).map(user => {
+      const capitalize = (text: string | undefined) =>
+        text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : '';
+
+      return {
+        ...user,
+        type: 'user',
+        displayText: `${user.firstName} ${user.lastName} - ${user.marinera?.participant?.category ?? ''} - ${capitalize(user.location?.department)}`,
+        href: `/user/${user.id}`
+      };
+    });
+
+    // Combinar todos los resultados y limitar a 10 para el dropdown
+    const allResults = [...filteredEvents, ...filteredAcademies, ...filteredUsers];
+    setFilteredResults(allResults.slice(0, 10));
+  }, [searchTerm, events, academies, users]);
 
   const handleLinkClick = () => {
-    setSearchTerm("");
-    setFilteredEvents([]);
+    // Solo limpiar si no estamos en la página de resultados
+    if (pathname !== '/search-results') {
+      setSearchTerm("");
+    }
+    setFilteredResults([]);
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchTerm.trim() !== "") {
+      router.push(`/search-results?query=${encodeURIComponent(searchTerm)}`);
+      setFilteredResults([]); // Cerrar dropdown
+      setShowMobileSearch(false); // Cerrar búsqueda mobile
+    }
   };
 
   const handleSignOut = async () => {
@@ -250,7 +348,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </button>
           </div>
         </div>
-        {/* Menú para Mobile - Añadida transición suave */}
+        {/* Menú para Mobile */}
         <div
           className={`md:hidden bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
             }`}
@@ -284,83 +382,57 @@ export default function Navbar({ brandName }: { brandName: string }) {
   }
 
   return (
-    <nav className="bg-white shadow-md py-3">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex items-center justify-between w-full">
-          {/* Mobile Layout - Compact design similar to example */}
-          <div className="flex items-center justify-between w-full md:w-auto gap-3">
-            {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
-              <img src="/concursia.png" alt="Logo" className="w-12 h-12 sm:w-9 sm:h-9" />
-              <span className="text-2xl font-bold text-red-700 hover:text-red-600 hidden md:inline">{brandName}</span>
-            </Link>
+    <nav className="bg-white shadow-md">
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        {/* Navbar principal */}
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
+            <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
+            <span className="text-xl font-bold text-red-700 hover:text-red-600 hidden sm:inline">{brandName}</span>
+          </Link>
 
-            {/* Search Bar on mobile - styled like the example */}
-            <div className="relative flex-grow mx-2 md:hidden">
-              <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="search"
-                  placeholder="Encuentra eventos, lugares..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-transparent border-none focus:ring-0 outline-none w-full text-sm"
-                />
-              </div>
-              {filteredEvents.length > 0 && (
-                <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg">
-                  {filteredEvents.map((event) => (
-                    <li key={event.id}>
-                      <Link
-                        href={`/event/${event.id}`}
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm"
-                        onClick={handleLinkClick}
-                      >
-                        {event.eventType} {event.name} - {event.location.district}, {event.location.department}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 p-1 md:hidden"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
-            </button>
-          </div>
           {/* Desktop Search Bar */}
-          <div className="relative hidden md:block w-full max-w-sm mx-2">
+          <div className="relative hidden md:flex w-full max-w-md mx-4">
             <input
               type="search"
-              placeholder="Buscar eventos..."
+              placeholder="Buscar eventos, academias, usuarios..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && searchTerm.trim() !== "") {
-                  router.push(`/search-results?query=${encodeURIComponent(searchTerm)}`);
-                  setSearchTerm("");
+                if (e.key === "Enter") {
+                  handleSearchSubmit();
                 }
               }}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full rounded-l-lg border border-r-0 border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
             />
-            {filteredEvents.length > 0 && (
-              <ul className="absolute left-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg">
-                {filteredEvents.map((event) => (
-                  <li key={event.id}>
+            <button
+              onClick={handleSearchSubmit}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-r-lg border border-red-600 transition-colors duration-200 flex items-center justify-center"
+              aria-label="Buscar"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            {/* DROPDOWN PARA DESKTOP */}
+            {filteredResults.length > 0 && (
+              <ul className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg bg-white shadow-lg max-h-80 overflow-y-auto">
+                {filteredResults.map((result) => (
+                  <li key={`${result.type}-${result.id}`}>
                     <Link
-                      href={`/event/${event.id}`}
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      href={result.href}
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-100 border-b last:border-b-0"
                       onClick={handleLinkClick}
                     >
-                      {event.eventType} {event.name} - {event.location.district}
-                      , {event.location.department}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            {result.type === 'event' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Evento</span>}
+                            {result.type === 'academy' && <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academia</span>}
+                            {result.type === 'user' && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Usuario</span>}
+                          </div>
+                          <div className="text-sm">{result.displayText}</div>
+                        </div>
+                      </div>
                     </Link>
                   </li>
                 ))}
@@ -369,72 +441,218 @@ export default function Navbar({ brandName }: { brandName: string }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-8">
+          {/* Desktop Menu */}
+          <div className="hidden lg:flex items-center space-x-4">
             <nav>
-              <ul className="flex space-x-4">
-                {filteredLinks.map((link) => (
-                  <li key={link.href}>
-                    {link.label === "Logout" ? (
-                      <button
-                        onClick={handleSignOut}
-                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
-                          }`}
-                      >
-                        <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">
-                          {link.label}
-                        </span>
-                      </button>
-                    ) : (
-                      <Link
-                        href={link.href}
-                        className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
-                          ${pathname.includes(link.href)
-                            ? "bg-red-100 text-red-700 font-bold"
-                            : "hover:bg-gray-100 hover:text-black text-red-700"
-                          }`}
-                        onClick={handleLinkClick}
-                      >
-                        <link.icon className="w-5 h-5" />
-                        <span className="hidden md:block truncate">
-                          {link.label}
-                        </span>
-                      </Link>
+              <ul className="flex space-x-2 items-center">
+                {/* Calendario */}
+                <li>
+                  <Link
+                    href="/calendario"
+                    className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
+            ${pathname === "/calendario"
+                        ? "bg-red-100 text-red-700 font-bold"
+                        : "hover:bg-gray-100 hover:text-black text-red-700"
+                      }`}
+                    onClick={handleLinkClick}
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden xl:block">Calendario</span>
+                  </Link>
+                </li>
+
+                {/* Eventos (solo si es staff o organizer) */}
+                {(isStaffOfAnyEvent || user?.roleId === "organizer") && (
+                  <li>
+                    <Link
+                      href="/organize"
+                      className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
+              ${pathname.includes("/organize")
+                          ? "bg-red-100 text-red-700 font-bold"
+                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                        }`}
+                      onClick={handleLinkClick}
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span className="hidden xl:block">Eventos</span>
+                    </Link>
+                  </li>
+                )}
+
+                {/* Menú de usuario */}
+                {user ? (
+                  <li className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm hover:bg-gray-100 text-red-700"
+                    >
+                      <User className="w-4 h-4" />
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+
+                    {/* Dropdown del usuario */}
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                        <ul className="py-1">
+                          <li>
+                            <Link
+                              href={`/user/${user.id}`}
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <User className="w-4 h-4" />
+                              <span>Perfil</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/my-registrations"
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <Ticket className="w-4 h-4" />
+                              <span>Mis Inscripciones</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/forums"
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleLinkClick();
+                              }}
+                            >
+                              <BookMarked className="w-4 h-4" />
+                              <span>Foros</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                handleSignOut();
+                              }}
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-red-700 hover:bg-red-100 w-full text-left"
+                            >
+                              <LogOutIcon className="w-4 h-4" />
+                              <span>Cerrar Sesión</span>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     )}
                   </li>
-                ))}
+                ) : (
+                  <li>
+                    <Link
+                      href="/login"
+                      className="flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm hover:bg-gray-100 text-red-700"
+                      onClick={handleLinkClick}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span className="hidden xl:block">Iniciar Sesión</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+
+          {/* Mobile Actions */}
+          <div className="flex items-center space-x-2 md:hidden">
+            {/* Search Button */}
+            <button
+              onClick={() => setShowMobileSearch(!showMobileSearch)}
+              className="text-red-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 hover:text-gray-200 focus:outline-none"
+              className="text-red-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
+        </div>
 
-          {/* Mobile Menu - Transition and content */}
-          <div
-            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mt-3 ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-              }`}
-          >
-            <ul className="space-y-4 px-2 pb-4 pt-2 bg-white rounded-lg shadow-md">
+        {/* Mobile Search Bar */}
+        <div className={`md:hidden transition-all duration-300 ease-in-out ${showMobileSearch ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 overflow-hidden'
+          }`}>
+          <div className="relative">
+            <div className="flex items-center bg-gray-100 rounded-lg">
+              <div className="flex items-center flex-grow px-3 py-2">
+                <Search className="h-5 w-5 text-gray-500 mr-2" />
+                <input
+                  type="search"
+                  placeholder="Encuentra eventos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchSubmit();
+                    }
+                  }}
+                  className="bg-transparent border-none focus:ring-0 outline-none w-full text-sm"
+                />
+              </div>
+              <button
+                onClick={handleSearchSubmit}
+                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-r-lg transition-colors duration-200"
+                aria-label="Buscar"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mobile Search Dropdown */}
+            {filteredResults.length > 0 && showMobileSearch && (
+              <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto border border-gray-200">
+                {filteredResults.map((result) => (
+                  <Link
+                    key={`${result.type}-${result.id}`}
+                    href={result.href}
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-100 text-sm border-b last:border-b-0"
+                    onClick={() => {
+                      handleLinkClick();
+                      setShowMobileSearch(false);
+                    }}
+                  >
+                    <div className="flex items-center space-x-2 mb-1">
+                      {result.type === 'event' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Evento</span>}
+                      {result.type === 'academy' && <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academia</span>}
+                      {result.type === 'user' && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Usuario</span>}
+                    </div>
+                    <div className="text-sm text-gray-900">{result.displayText}</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+          }`}>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <ul className="space-y-2">
               {filteredLinks.map((link) => {
                 const isActive = pathname.includes(link.href);
 
                 const handleClick = async () => {
                   setIsMenuOpen(false);
+                  setShowMobileSearch(false);
                   handleLinkClick();
                   if (link.label === "Logout") {
                     await handleSignOut();
@@ -446,8 +664,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     {link.label === "Logout" ? (
                       <button
                         onClick={handleClick}
-                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-200 w-full text-left
+                          ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-white hover:shadow-sm text-red-700"}`}
                       >
                         <link.icon className="w-5 h-5" />
                         <span>{link.label}</span>
@@ -455,8 +673,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     ) : (
                       <Link
                         href={link.href}
-                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors duration-200 
-              ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-gray-100 hover:text-black text-red-700"}`}
+                        className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-200
+                          ${isActive ? "bg-red-100 text-red-700 font-bold" : "hover:bg-white hover:shadow-sm text-red-700"}`}
                         onClick={handleClick}
                       >
                         <link.icon className="w-5 h-5" />
@@ -468,7 +686,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
               })}
             </ul>
           </div>
-
         </div>
       </div>
     </nav>
