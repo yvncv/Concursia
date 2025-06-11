@@ -400,6 +400,7 @@ export default function RegisterForm() {
     let level = "";
     let color = "";
     let hint = "";
+    let bg = "";
 
     const hasNumber = /\d/.test(pwd);
     const hasUpperCase = /[A-Z]/.test(pwd);
@@ -409,18 +410,22 @@ export default function RegisterForm() {
     if (pwd.length === 0) {
       level = "";
       color = "";
+      bg = "";
       hint = "";
     } else if (pwd.length < 8 || !hasNumber || !hasUpperCase || !hasLowerCase) {
       level = "Débil";
       color = "text-red-400";
+      bg = "bg-red-400";
       hint = "Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
     } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && !hasSpecialChar) {
       level = "Media";
       color = "text-yellow-400";
+      bg = "bg-yellow-400";
       hint = "Agrega al menos un carácter especial para mayor seguridad.";
     } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && hasSpecialChar) {
       level = "Fuerte";
       color = "text-green-500";
+      bg = "bg-green-500";
       hint = "¡Contraseña fuerte!";
     }
 
@@ -535,7 +540,7 @@ export default function RegisterForm() {
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 h-2 rounded bg-gray-200 overflow-hidden">
                       <div
-                        className={`h-2 rounded ${passwordStrength.color}`}
+                        className={`h-2 rounded ${passwordStrength.bg}`}
                         style={{
                           width:
                             passwordStrength.level === "Fuerte"
