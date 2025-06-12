@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import ImageCropModal from "./modals/ImageCropModal";
+import TermsModal from "../ui/terms-and-conditions/TermsModal";
 
 interface LocationData {
   department?: string;
@@ -53,6 +54,8 @@ export default function RegisterForm() {
   const [dniExistsError, setDniExistsError] = useState("");
   const [dniConsultado, setDniConsultado] = useState(false);
   const [dniConsultadoValue, setDniConsultadoValue] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const router = useRouter();
 
   const [locationData, setLocationData] = useState<LocationData>({
@@ -220,6 +223,12 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
+      if (!acceptedTerms) {
+        alert('Debes aceptar los términos y condiciones para continuar');
+        return;
+      }
+      // Tu lógica de registro aquí
+      console.log('Procesando registro...');
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -939,7 +948,27 @@ export default function RegisterForm() {
                   </div>
                 </div>
               </div>
-
+              {/* Checkbox de términos y condiciones */}
+              <div className="flex items-start space-x-3 mt-6 mb-4">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600 leading-5">
+                  Acepto los{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  >
+                    términos y condiciones
+                  </button>
+                  {' '}del servicio
+                </label>
+              </div>
               {/* Botones de navegación */}
               <div className="flex justify-between mt-8">
                 <button
@@ -950,6 +979,11 @@ export default function RegisterForm() {
                   {loading ? "Cargando..." : "Registrarse"}
                 </button>
               </div>
+              {/* Modal de términos y condiciones */}
+              <TermsModal
+                isOpen={showTermsModal}
+                onClose={() => setShowTermsModal(false)}
+              />
             </form>
           ) : null}
         </div>
