@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import ImageCropModal from "./modals/ImageCropModal";
+import TermsModal from "../ui/terms-and-conditions/TermsModal";
 
 interface LocationData {
   department?: string;
@@ -53,6 +54,9 @@ export default function RegisterForm() {
   const [dniExistsError, setDniExistsError] = useState("");
   const [dniConsultado, setDniConsultado] = useState(false);
   const [dniConsultadoValue, setDniConsultadoValue] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
   const [locationData, setLocationData] = useState<LocationData>({
@@ -220,6 +224,12 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
+      if (!acceptedTerms) {
+        alert('Debes aceptar los términos y condiciones para continuar');
+        return;
+      }
+      // Tu lógica de registro aquí
+      console.log('Procesando registro...');
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -939,7 +949,82 @@ export default function RegisterForm() {
                   </div>
                 </div>
               </div>
+              {/* Checkbox de términos y condiciones */}
+              <div className="flex items-start space-x-4 mt-6 mb-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200 transition-all duration-300 hover:shadow-md">
+                {/* Custom Checkbox */}
+                <div className="relative mt-1">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className={`flex items-center justify-center w-5 h-5 rounded cursor-pointer transition-all duration-300 ${acceptedTerms
+                        ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg scale-110'
+                        : 'bg-white border-2 border-orange-300 hover:border-orange-400 hover:shadow-md'
+                      }`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                  >
+                    {acceptedTerms && (
+                      <svg
+                        className="w-3 h-3 text-white animate-pulse"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                  </label>
+                </div>
 
+                {/* Label with Terms Link */}
+                <div className="flex-1">
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-gray-700 leading-relaxed cursor-pointer select-none"
+                  >
+                    Acepto los{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className={`font-semibold underline decoration-2 underline-offset-2 transition-all duration-300 ${isHovered || acceptedTerms
+                          ? 'text-red-600 decoration-red-400 hover:decoration-red-600'
+                          : 'text-orange-600 decoration-orange-400 hover:decoration-orange-600'
+                        } hover:scale-105 hover:text-red-700`}
+                      onMouseEnter={() => setIsHovered(true)}
+                      onMouseLeave={() => setIsHovered(false)}
+                    >
+                      términos y condiciones
+                    </button>
+                    {' '}del servicio
+                  </label>
+
+                  {/* Subtle animation indicator */}
+                  {!acceptedTerms && (
+                    <div className="mt-1 text-xs text-orange-600 opacity-70 animate-pulse">
+                      ⚠️ Requerido para continuar
+                    </div>
+                  )}
+
+                  {acceptedTerms && (
+                    <div className="mt-1 text-xs text-green-600 flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                      ✅ Términos aceptados
+                    </div>
+                  )}
+                </div>
+              </div>
               {/* Botones de navegación */}
               <div className="flex justify-between mt-8">
                 <button
@@ -950,6 +1035,11 @@ export default function RegisterForm() {
                   {loading ? "Cargando..." : "Registrarse"}
                 </button>
               </div>
+              {/* Modal de términos y condiciones */}
+              <TermsModal
+                isOpen={showTermsModal}
+                onClose={() => setShowTermsModal(false)}
+              />
             </form>
           ) : null}
         </div>
