@@ -49,7 +49,10 @@ export default function RegisterForm() {
   const [gender, setGender] = useState<string>("");
   const [step, setStep] = useState(1);
   const [emailExistsError, setEmailExistsError] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
   const [dniExistsError, setDniExistsError] = useState("");
+  const [dniConsultado, setDniConsultado] = useState(false);
+  const [dniConsultadoValue, setDniConsultadoValue] = useState("");
   const router = useRouter();
 
   const [locationData, setLocationData] = useState<LocationData>({
@@ -70,6 +73,7 @@ export default function RegisterForm() {
     firstName: string;
     lastName: string;
     birthDate: string;
+    gender: string;
   } | null>(null);
   const [isValidated, setIsValidated] = useState(false);
   const [validationError, setValidationError] = useState("");
@@ -113,18 +117,22 @@ export default function RegisterForm() {
     }
   };
 
-  const handleEmailBlur = async () => {
-    if (email && validateEmail(email)) {
-      const exists = await checkEmailExistsInFirestore(email);
-      if (exists) {
-        setEmailExistsError(
-          "Este correo electrónico ya está registrado. Por favor, utiliza otro."
-        );
-      } else {
-        setEmailExistsError("");
+  useEffect(() => {
+    const handleEmailBlur = async () => {
+      if (email && validateEmail(email)) {
+        const exists = await checkEmailExistsInFirestore(email);
+        if (exists) {
+          setEmailExistsError("Este correo electrónico ya está registrado. Por favor, utiliza otro.");
+          setEmailExists(true);
+        } else {
+          setEmailExistsError("");
+          setEmailExists(false);
+        }
       }
-    }
-  };
+    };
+
+    handleEmailBlur();
+  }, [email]);
 
   const determineCategory = (birthYear: number) => {
     if (birthYear >= 2021) setCategory("Baby");
@@ -317,11 +325,16 @@ export default function RegisterForm() {
             .trim()
             .toUpperCase(),
           birthDate: response.data.data.date_of_birth || "",
+          gender: response.data.data.gender,
         });
+        setDniConsultado(true);
+        setDniConsultadoValue(dni);
 
         // No actualizamos los campos automáticamente
         // Los datos serán validados cuando el usuario haga clic en el botón de validación
       } else {
+        setDniConsultado(false);
+        setDniConsultadoValue("");
         setDniError("No se encontró el DNI.");
       }
     } catch (error) {
@@ -393,7 +406,8 @@ export default function RegisterForm() {
   const [passwordStrength, setPasswordStrength] = useState<{
     level: string;
     color: string;
-  }>({ level: "", color: "" });
+    bg: string;
+  }>({ level: "", color: "", bg: "" });
   const [passwordHint, setPasswordHint] = useState("");
 
   const evaluatePassword = (pwd: string) => {
@@ -414,51 +428,65 @@ export default function RegisterForm() {
       hint = "";
     } else if (pwd.length < 8 || !hasNumber || !hasUpperCase || !hasLowerCase) {
       level = "Débil";
-      color = "text-red-400";
+      color = "text-red-700";
       bg = "bg-red-400";
       hint = "Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
     } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && !hasSpecialChar) {
       level = "Media";
-      color = "text-yellow-400";
+      color = "text-yellow-700";
       bg = "bg-yellow-400";
       hint = "Agrega al menos un carácter especial para mayor seguridad.";
     } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && hasSpecialChar) {
       level = "Fuerte";
-      color = "text-green-500";
+      color = "text-green-700";
       bg = "bg-green-500";
       hint = "¡Contraseña fuerte!";
     }
 
-    setPasswordStrength({ level, color });
+    setPasswordStrength({ level, color, bg });
     setPasswordHint(hint);
   };
 
   const validateIdentity = () => {
-    console.log("estoy aqui");
     if (!apiData) {
-      setValidationError(
-        "Por favor, ingresa primero tu DNI para validar tus datos."
-      );
+      setValidationError("Por favor, ingresa primero tu DNI para validar tus datos.");
       return;
     }
+
+    if (dni !== dniConsultadoValue) {
+      setIsValidated(false);
+      setValidationError("El DNI ingresado ha sido modificado. Vuelve a consultar los datos.");
+      return;
+    }
+
     const userFirstName = firstName.trim().toUpperCase();
     const userLastName = lastName.trim().toUpperCase();
 
-    // Comparamos los datos del usuario con los de la API
     if (
       userFirstName === apiData.firstName &&
       userLastName === apiData.lastName
     ) {
       setIsValidated(true);
-      setBirthDate(apiData.birthDate); // Ahora sí establecemos la fecha de nacimiento
+      setDniConsultado(true);
+      setBirthDate(apiData.birthDate);
+      setGender(apiData.gender);
       setValidationError("");
     } else {
       setIsValidated(false);
-      setValidationError(
-        "Los datos ingresados no coinciden con los registrados en RENIEC."
-      );
+      setDniConsultado(true);
+      setValidationError("Los datos ingresados no coinciden con los registrados en RENIEC.");
     }
   };
+
+  const handleDniClean = () => {
+    setApiData(null);
+    setIsValidated(false);
+    setDniConsultado(false);
+    setDniConsultadoValue("");
+    setDniError("");
+    setValidationError("");
+    setDni("");
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-8">
@@ -505,8 +533,7 @@ export default function RegisterForm() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onBlur={handleEmailBlur}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className={`w-full border-1 ${email != "" && validateEmail(email) && (!emailExistsError ? "border-green-500 shadow-[0_0_10px_#22c55e]" : "border-red-500 shadow-[0_0_10px_#ef4444]")} mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
                   placeholder="Correo electrónico"
                   required
                 />
@@ -531,7 +558,7 @@ export default function RegisterForm() {
                     setPassword(e.target.value);
                     evaluatePassword(e.target.value);
                   }}
-                  className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className={`w-full border-1 ${password != "" && (passwordStrength.level === "Fuerte" ? "text-green-700 shadow-[0_0_10px_#22c55e]" : passwordStrength.level === "Media" ? "text-yellow-700 shadow-[0_0_10px_#facc14]" : "text-red-700 shadow-[0_0_10px_#ef4444]")} mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
                   placeholder="Contraseña"
                   required
                 />
@@ -546,23 +573,22 @@ export default function RegisterForm() {
                             passwordStrength.level === "Fuerte"
                               ? "100%"
                               : passwordStrength.level === "Media"
-                              ? "60%"
-                              : passwordStrength.level === "Débil"
-                              ? "30%"
-                              : "0%",
+                                ? "60%"
+                                : passwordStrength.level === "Débil"
+                                  ? "30%"
+                                  : "0%",
                         }}
                       />
                     </div>
                     <span
-                      className={`text-sm font-semibold ${
-                        passwordStrength.level === "Fuerte"
-                          ? "text-green-600"
-                          : passwordStrength.level === "Media"
+                      className={`text-sm font-semibold ${passwordStrength.level === "Fuerte"
+                        ? "text-green-600"
+                        : passwordStrength.level === "Media"
                           ? "text-yellow-600"
                           : passwordStrength.level === "Débil"
-                          ? "text-red-600"
-                          : ""
-                      }`}
+                            ? "text-red-600"
+                            : ""
+                        }`}
                     >
                       {passwordStrength.level}
                     </span>
@@ -585,7 +611,7 @@ export default function RegisterForm() {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                  className={`w-full border-1 ${confirmPassword != "" && (passwordStrength.level === "Fuerte" && confirmPassword === password ? "text-green-500 shadow-[0_0_10px_#22c55e]" : "text-red-500 shadow-[0_0_10px_#ef4444]")} mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
                   placeholder="Confirmar Contraseña"
                   required
                 />
@@ -598,6 +624,7 @@ export default function RegisterForm() {
                   !email ||
                   !password ||
                   !confirmPassword ||
+                  emailExists ||
                   passwordStrength.level !== "Fuerte"
                 }
               >
@@ -628,6 +655,7 @@ export default function RegisterForm() {
                     type="text"
                     id="dni"
                     value={dni}
+                    disabled={dniConsultado || isValidated}
                     onChange={(e) => setDni(e.target.value)}
                     onKeyPress={handleDniKeyPress}
                     className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
@@ -635,73 +663,78 @@ export default function RegisterForm() {
                     maxLength={8}
                     required
                   />
-                  {/* <button
+                  <button
                     type="button"
-                    onClick={handleDniSearch}
+                    onClick={handleDniClean}
                     className="mt-1 flex items-center justify-center w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-colors"
                     aria-label="Buscar DNI"
                   >
-                    <CircleCheckBig size={20} />
-                  </button> */}
+                    <X size={20} />
+                  </button>
                 </div>
                 {loadingDni && (
-                  <p className="text-blue-500">Buscando datos...</p>
+                  <p className="text-gray-500 text-center mt-1">Buscando datos...</p>
                 )}
-                {dniError && <p className="text-red-500">{dniError}</p>}
+                {dniError && <p className="text-red-500 text-center mt-1">{dniError}</p>}
                 {dniExistsError && (
-                  <p className="text-red-500">{dniExistsError}</p>
+                  <p className="text-red-500 text-center mt-1">{dniExistsError}</p>
                 )}
               </div>
 
               {/* Ahora los campos son editables */}
-              <div className="flex gap-x-2">
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Tu nombre"
-                    required
-                  />
+              <div className={apiData == null ? "hidden" : ""}>
+
+                <div className="flex gap-x-2">
+                  <div>
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      value={capitalizeText(firstName)}
+                      disabled={!apiData || isValidated}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                      placeholder="Tu nombre"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Apellido(s)
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      value={capitalizeText(lastName)}
+                      disabled={!apiData || isValidated}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
+                      placeholder="Tus apellidos"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Apellido(s)
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
-                    placeholder="Tus apellidos"
-                    required
-                  />
-                </div>
+                <p className="text-gray-700 text-sm justify-center align-middle text-center mt-1">*Por favor, ingrese nombres y apellidos completos*</p>
               </div>
 
               {/* Botón de validación */}
               <button
                 type="button"
                 onClick={!apiData ? handleDniSearch : validateIdentity}
-                className={`w-full px-4 py-2 ${
-                  !apiData
-                    ? "bg-blue-500 hover:bg-blue-600"
-                    : isValidated
+                className={`w-full px-4 py-2 ${!apiData
+                  ? "bg-red-500 hover:bg-red-600"
+                  : isValidated
                     ? "bg-green-500 cursor-not-allowed opacity-75"
                     : "bg-green-500 hover:bg-green-600"
-                } text-white rounded-md transition-colors`}
+                  } text-white rounded-md transition-colors`}
                 disabled={
                   !dni ||
                   (!apiData && dni.length !== 8) ||
@@ -712,17 +745,17 @@ export default function RegisterForm() {
                 {loadingDni
                   ? "Consultando DNI..."
                   : !apiData
-                  ? "Consultar DNI"
-                  : isValidated
-                  ? "Datos validados ✓"
-                  : "Validar datos"}
+                    ? "Consultar DNI"
+                    : isValidated
+                      ? "Datos validados ✓"
+                      : "Validar datos"}
               </button>
 
               {validationError && (
-                <p className="text-red-500">{validationError}</p>
+                <p className="text-red-500 text-sm text-center">{validationError}</p>
               )}
               {isValidated && (
-                <p className="text-green-500">
+                <p className="text-green-500 text-sm text-center">
                   Datos validados correctamente ✓
                 </p>
               )}
@@ -745,17 +778,17 @@ export default function RegisterForm() {
                       )
                         .toString()
                         .padStart(2, "0")}-${new Date()
-                        .getDate()
-                        .toString()
-                        .padStart(2, "0")}`}
+                          .getDate()
+                          .toString()
+                          .padStart(2, "0")}`}
                       max={`${new Date().getFullYear() - 1}-${(
                         new Date().getMonth() + 1
                       )
                         .toString()
                         .padStart(2, "0")}-${new Date()
-                        .getDate()
-                        .toString()
-                        .padStart(2, "0")}`}
+                          .getDate()
+                          .toString()
+                          .padStart(2, "0")}`}
                       value={birthDate}
                       onChange={(e) => setBirthDate(e.target.value)}
                       className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
