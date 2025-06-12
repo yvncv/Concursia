@@ -26,61 +26,51 @@ const TermsModal = ({ isOpen, onClose }) => {
             <section>
               <h3 className="text-lg font-semibold mb-3 text-orange-700">1. Aceptación de los Términos</h3>
               <p>
-                Al acceder y utilizar este servicio, usted acepta estar sujeto a estos términos y condiciones de uso. 
-                Si no está de acuerdo con alguno de estos términos, no debe utilizar este servicio.
+                Al registrarse en este sistema, usted acepta los términos descritos a continuación, en particular
+                sobre el uso de su número de Documento Nacional de Identidad (DNI) para fines de verificación
+                en el contexto de concursos de Marinera Norteña.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">2. Descripción del Servicio</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">2. Uso del DNI y Autenticación</h3>
               <p>
-                Nuestro servicio proporciona una plataforma para [descripción de tu servicio]. 
-                Nos reservamos el derecho de modificar o discontinuar el servicio en cualquier momento.
+                Su DNI será utilizado únicamente con fines de autenticación e identificación dentro del sistema
+                para garantizar la transparencia del proceso de inscripción, validación y participación en los
+                eventos organizados.
               </p>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">3. Registro de Usuario</h3>
               <p>
-                Para utilizar ciertas funciones del servicio, debe registrarse y crear una cuenta. 
-                Usted es responsable de mantener la confidencialidad de su información de cuenta y 
-                de todas las actividades que ocurran bajo su cuenta.
+                El número de DNI solo será visible para usted como usuario registrado y para el personal
+                autorizado del evento (organizador o staff).
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">4. Uso Aceptable</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">3. Protección de Datos</h3>
               <p>
-                Usted se compromete a utilizar el servicio únicamente para fines legales y de acuerdo con estos términos. 
-                No debe utilizar el servicio para:
+                Toda información personal, incluyendo su DNI, se almacenará de forma segura y no será compartida
+                con terceros bajo ninguna circunstancia, salvo requerimiento legal.
               </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                <li>Actividades ilegales o fraudulentas</li>
-                <li>Violación de derechos de propiedad intelectual</li>
-                <li>Distribución de contenido ofensivo o dañino</li>
-                <li>Interferir con el funcionamiento del servicio</li>
-              </ul>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">5. Privacidad</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">4. Registro y Responsabilidad</h3>
               <p>
-                Su privacidad es importante para nosotros. Nuestra Política de Privacidad explica cómo 
-                recopilamos, utilizamos y protegemos su información personal cuando utiliza nuestro servicio.
+                Al registrarse, usted declara que los datos proporcionados son verídicos. Es su responsabilidad
+                mantener actualizada su información personal.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">6. Limitación de Responsabilidad</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">5. Derechos del Usuario</h3>
               <p>
-                En la medida máxima permitida por la ley, no seremos responsables de ningún daño indirecto, 
-                incidental, especial, consecuente o punitivo, incluyendo pero no limitado a pérdida de beneficios, 
-                datos o uso.
+                Usted puede solicitar en cualquier momento la eliminación de su cuenta y datos personales,
+                incluyendo su DNI, a través de nuestros canales oficiales de soporte.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">7. Modificaciones</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">6. Modificaciones</h3>
               <p>
                 Nos reservamos el derecho de modificar estos términos en cualquier momento. 
                 Las modificaciones entrarán en vigor inmediatamente después de su publicación en el sitio web.
@@ -88,10 +78,10 @@ const TermsModal = ({ isOpen, onClose }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">8. Contacto</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">7. Contacto</h3>
               <p>
-                Si tiene alguna pregunta sobre estos términos y condiciones, puede contactarnos a través de 
-                nuestros canales de soporte oficiales.
+                Si tiene preguntas sobre el uso de su información o los términos de este servicio, puede contactarnos
+                a través del correo o canal oficial del organizador del evento.
               </p>
             </section>
           </div>
