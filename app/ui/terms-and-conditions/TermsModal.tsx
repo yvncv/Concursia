@@ -5,16 +5,18 @@ const TermsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl border border-orange-100">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">Términos y Condiciones</h2>
+        <div className="flex justify-between items-center p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-red-50">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            Términos y Condiciones
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-orange-100 rounded-full transition-all duration-200 hover:scale-110"
           >
-            <X size={24} className="text-gray-600" />
+            <X size={24} className="text-orange-600" />
           </button>
         </div>
 
@@ -22,7 +24,7 @@ const TermsModal = ({ isOpen, onClose }) => {
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="space-y-6 text-gray-700">
             <section>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">1. Aceptación de los Términos</h3>
+              <h3 className="text-lg font-semibold mb-3 text-orange-700">1. Aceptación de los Términos</h3>
               <p>
                 Al acceder y utilizar este servicio, usted acepta estar sujeto a estos términos y condiciones de uso. 
                 Si no está de acuerdo con alguno de estos términos, no debe utilizar este servicio.
@@ -96,10 +98,10 @@ const TermsModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t bg-gray-50">
+        <div className="p-6 border-t border-orange-100 bg-gradient-to-r from-orange-50 to-red-50">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl hover:shadow-lg transition-all"
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-6 rounded-xl hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 transform hover:scale-105 font-medium"
           >
             Entendido
           </button>
