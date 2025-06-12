@@ -30,14 +30,15 @@ export default function RegisterForm() {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dni, setDni] = useState("");
-  const [firstName, setFirstName] = useState<string>('');  
-  const [lastName, setLastName] = useState<string>('');  
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
   const [category, setCategory] = useState("");
-  const [birthDate, setBirthDate] = useState<string>('');  
-  const [gender, setGender] = useState<string>('');  
+  const [birthDate, setBirthDate] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
   const [step, setStep] = useState(1);
   const [emailExistsError, setEmailExistsError] = useState("");
   const [dniExistsError, setDniExistsError] = useState("");
+  const [loadingImage, setLoadingImage] = useState(false);
   const router = useRouter();
 
 
@@ -117,23 +118,23 @@ export default function RegisterForm() {
   };
 
   const capitalizeText = (text: string) => {
-  if (!text) return '';
-  
-  // Lista de palabras que no se deben capitalizar (artículos, preposiciones, etc.)
-  const nonCapitalizedWords = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u'];
-  
-  return text
-    .toLowerCase()
-    .split(' ')
-    .map((word, index) => {
-      // Siempre capitalizar la primera palabra
-      if (index === 0 || !nonCapitalizedWords.includes(word)) {
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      }
-      return word;
-    })
-    .join(' ');
-};
+    if (!text) return '';
+
+    // Lista de palabras que no se deben capitalizar (artículos, preposiciones, etc.)
+    const nonCapitalizedWords = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u'];
+
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map((word, index) => {
+        // Siempre capitalizar la primera palabra
+        if (index === 0 || !nonCapitalizedWords.includes(word)) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        return word;
+      })
+      .join(' ');
+  };
 
   const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -270,13 +271,40 @@ export default function RegisterForm() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // Añade esta línea
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(imageUrl);
-      setIsModalOpen(true);
+
+      // Validaciones
+      if (!validateImageType(file)) {
+        alert('Por favor selecciona una imagen válida (JPG, PNG, WEBP)');
+        return;
+      }
+
+      if (!validateFileSize(file, 10)) { // Máximo 10MB
+        alert('La imagen es demasiado grande. Por favor selecciona una imagen menor a 10MB');
+        return;
+      }
+
+      try {
+        setLoadingImage(true);
+
+        // Redimensionar si es necesario
+        const optimizedFile = await resizeImage(file, 1024, 1024);
+
+        // Crear URL para el modal
+        const imageUrl = URL.createObjectURL(optimizedFile);
+        setSelectedImage(imageUrl);
+        setIsModalOpen(true);
+
+      } catch (error) {
+        console.error('Error procesando imagen:', error);
+        alert('Error al procesar la imagen. Por favor intenta con otra.');
+      } finally {
+        setLoadingImage(false);
+      }
     }
   };
 
@@ -294,6 +322,50 @@ export default function RegisterForm() {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  const validateImageType = (file: File): boolean => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    return allowedTypes.includes(file.type);
+  };
+
+  const validateFileSize = (file: File, maxSizeMB: number): boolean => {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    return file.size <= maxSizeBytes;
+  };
+
+  const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new window.Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const resizedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(resizedFile);
+          }
+        }, 'image/jpeg', 0.85);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   const uploadProfileImage = async (imageFile: any, userId: any) => {
@@ -547,7 +619,7 @@ export default function RegisterForm() {
                   className="cursor-pointer bg-rose-100 hover:bg-rose-200 text-rose-600 py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
                 >
                   <LucideImage size={20} className="text-rose-600" />
-                  Seleccionar foto
+                  {loadingImage ? 'Procesando...' : 'Seleccionar foto'}
                 </label>
                 <input
                   type="file"

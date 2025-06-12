@@ -82,11 +82,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`p-2 rounded-lg transition-colors ${
-          currentPage === 1
+        className={`p-2 rounded-lg transition-colors ${currentPage === 1
             ? 'text-gray-400 cursor-not-allowed'
             : 'text-gray-700 hover:bg-gray-100'
-        }`}
+          }`}
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
@@ -98,11 +97,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           ) : (
             <button
               onClick={() => onPageChange(number as number)}
-              className={`min-w-[40px] h-10 rounded-lg transition-colors ${
-                currentPage === number
+              className={`min-w-[40px] h-10 rounded-lg transition-colors ${currentPage === number
                   ? 'bg-blue-600 text-white font-medium'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               {number}
             </button>
@@ -113,11 +111,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`p-2 rounded-lg transition-colors ${
-          currentPage === totalPages
+        className={`p-2 rounded-lg transition-colors ${currentPage === totalPages
             ? 'text-gray-400 cursor-not-allowed'
             : 'text-gray-700 hover:bg-gray-100'
-        }`}
+          }`}
       >
         <ChevronRight className="w-5 h-5" />
       </button>
@@ -190,15 +187,28 @@ const TicketCard: React.FC<TicketCardProps> = ({
             <span className="text-sm font-medium text-gray-700">Academia(s)</span>
           </div>
           <div className="text-sm">
-            {entry.academiesId && entry.academiesId.length > 0 ? (
-              entry.academiesId.map((academyId, idx) => (
-                <div key={idx}>
-                  {academyNames[academyId] || "Academia no encontrada"}
-                </div>
-              ))
-            ) : (
-              <span className="text-gray-500">Sin academia</span>
-            )}
+            {(() => {
+              // Prioridad 1: academiesName (academias nuevas)
+              if (entry.academiesName && entry.academiesName.length > 0) {
+                return entry.academiesName
+                  .filter(name => name && name.trim() !== '')
+                  .map((name, idx) => <div key={idx}>{name}</div>);
+              }
+
+              // Prioridad 2: academiesId (academias existentes)
+              if (entry.academiesId && entry.academiesId.length > 0) {
+                return entry.academiesId
+                  .filter(id => id && id.trim() !== '')
+                  .map((academyId, idx) => (
+                    <div key={idx}>
+                      {academyNames[academyId] || "Academia no encontrada"}
+                    </div>
+                  ));
+              }
+
+              // Default: Libre
+              return <span className="text-gray-500">Libre</span>;
+            })()}
           </div>
         </div>
 
@@ -471,10 +481,23 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         const modalityMatch = modalities.length === 0 || modalities.includes(entry.level);
         const categoryMatch = categories.length === 0 || categories.includes(entry.category);
 
-        const academyMatch = academies.length === 0 || (entry.academiesId && entry.academiesId.some(academyId => {
-          const academyName = academyNames[academyId];
-          return academyName && academies.includes(academyName);
-        }));
+        const academyMatch = academies.length === 0 || (() => {
+          // Buscar en academiesName primero
+          if (entry.academiesName && entry.academiesName.length > 0) {
+            return entry.academiesName.some(name => academies.includes(name));
+          }
+
+          // Buscar en academiesId como fallback
+          if (entry.academiesId && entry.academiesId.length > 0) {
+            return entry.academiesId.some(academyId => {
+              const academyName = academyNames[academyId];
+              return academyName && academies.includes(academyName);
+            });
+          }
+
+          // Si no hay academias, incluir "Libre" en el filtro
+          return academies.includes("Libre");
+        })();
 
         return modalityMatch && categoryMatch && academyMatch;
       });
@@ -630,7 +653,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                   onConfirm={() => handleConfirmTicket(ticket)}
                 />
               ))}
-              
+
               {/* Pagination Information */}
               <div className="text-center text-sm text-gray-600 mt-4">
                 Mostrando {indexOfFirstTicket + 1} - {Math.min(indexOfLastTicket, filteredTickets.length)} de {filteredTickets.length} tickets
@@ -662,8 +685,8 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                 <div>
                   <p className="text-sm text-gray-600">Estado</p>
                   <p className={`font-medium ${selectedTicket.status === 'Pagado' ? 'text-green-600' :
-                      selectedTicket.status === 'Pendiente' ? 'text-yellow-600' :
-                        'text-red-600'
+                    selectedTicket.status === 'Pendiente' ? 'text-yellow-600' :
+                      'text-red-600'
                     }`}>{selectedTicket.status}</p>
                 </div>
                 <div>
@@ -698,10 +721,25 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                       <div>
                         <p className="text-sm text-gray-600">Academia(s)</p>
                         <div>
-                          {entry.academiesId && entry.academiesId.length > 0
-                            ? entry.academiesId.map(id => academyNames[id] || "Academia no encontrada").join(", ")
-                            : "Sin academia"
-                          }
+                          {(() => {
+                            // Prioridad 1: academiesName (academias nuevas)
+                            if (entry.academiesName && entry.academiesName.length > 0) {
+                              return entry.academiesName
+                                .filter(name => name && name.trim() !== '')
+                                .join(", ") || "Libre";
+                            }
+
+                            // Prioridad 2: academiesId (academias existentes)
+                            if (entry.academiesId && entry.academiesId.length > 0) {
+                              return entry.academiesId
+                                .filter(id => id && id.trim() !== '')
+                                .map(id => academyNames[id] || "Academia no encontrada")
+                                .join(", ");
+                            }
+
+                            // Default: Libre
+                            return "Libre";
+                          })()}
                         </div>
                       </div>
                       <div>

@@ -172,8 +172,8 @@ const EventModal: React.FC<EventModalProps> = ({
         updateEventData('details', initialEventData.details);
         updateEventData('location', initialEventData.location);
         updateEventData('dance', initialEventData.dance);
-        updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '' });
-        updateEventData('settings', initialEventData.settings); // Añadimos el reseteo de settings
+        updateEventData('images', { ...initialEventData.images, smallImage: '', bannerImage: '', smallImagePreview: '', bannerImagePreview: ''});
+        updateEventData('settings', initialEventData.settings);
     };
 
     const handleSave = () => {
