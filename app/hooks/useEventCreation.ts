@@ -3,18 +3,22 @@ import { useState, useEffect } from "react";
 import { db, storage } from "@/app/firebase/config";
 import { setDoc, doc, Timestamp, getDoc } from "firebase/firestore";
 import useUser from "@/app/hooks/useUser";
+import { useGlobalLevels } from "@/app/hooks/useGlobalLevels";
+import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { 
-  EventFormData, 
-  CustomEvent, 
-  LevelData, 
-  EventSettings, 
+import {
+  EventFormData,
+  CustomEvent,
+  LevelData,
+  EventSettings,
   LevelConfig,
   ScheduleItem,
   CompetitionPhase,
   Gender
 } from '@/app/types/eventType';
 import { User } from "@/app/types/userType";
+import { ModalityLevel } from '@/app/types/levelsType';
+import { CategoryLevel } from '@/app/types/categoriesType';
 import { v4 as uuidv4 } from 'uuid';
 
 interface EventCreationHandler {
@@ -22,6 +26,9 @@ interface EventCreationHandler {
   updateEvent: (eventData: EventFormData, user: User, eventId: string) => Promise<{ success: boolean; message: string }>;
   loading: boolean;
   error: string | null;
+  clearError: () => void;
+  globalConfigLoading: boolean;
+  globalConfigError: string | null;
 }
 
 export const useEventCreation = (): EventCreationHandler => {
@@ -30,7 +37,26 @@ export const useEventCreation = (): EventCreationHandler => {
   const [error, setError] = useState<string | null>(null);
   const [academyName, setAcademyName] = useState<string>("");
 
-  // Configuración predeterminada para cada modalidad (level)
+  // 🔥 Hooks globales - Firebase como ÚNICA fuente de verdad
+  const {
+    levels: availableModalities,
+    isCouple,
+    getPhases,
+    isGenderSeparated,
+    loading: levelsLoading,
+    error: levelsError
+  } = useGlobalLevels();
+
+  const {
+    categorias: availableCategories,
+    loading: categoriesLoading,
+    error: categoriesError
+  } = useGlobalCategories();
+
+  const globalConfigLoading = levelsLoading || categoriesLoading;
+  const globalConfigError = levelsError?.message || categoriesError?.message || null;
+
+  // 🔧 Configuración básica del evento (solo estructura, no datos de modalidades)
   const DEFAULT_LEVEL_CONFIG: LevelConfig = {
     blocks: 1,
     tracksPerBlock: 4,
@@ -38,7 +64,6 @@ export const useEventCreation = (): EventCreationHandler => {
     notes: ""
   };
 
-  // Configuraciones por defecto del evento
   const DEFAULT_SETTINGS: EventSettings = {
     inscription: {
       groupEnabled: false,
@@ -51,12 +76,12 @@ export const useEventCreation = (): EventCreationHandler => {
       difference: 0
     },
     phases: {
-      semifinalThreshold: 12, // Si hay más de 12 participantes, habrá semifinal
-      finalParticipantsCount: 6, // 6 participantes pasan a la final
+      semifinalThreshold: 12,
+      finalParticipantsCount: 6,
       timePerParticipant: {
-        [CompetitionPhase.ELIMINATORIA]: 3, // 3 minutos por participante en eliminatorias
-        [CompetitionPhase.SEMIFINAL]: 4,    // 4 minutos por participante en semifinales
-        [CompetitionPhase.FINAL]: 5         // 5 minutos por participante en finales
+        [CompetitionPhase.ELIMINATORIA]: 3,
+        [CompetitionPhase.SEMIFINAL]: 4,
+        [CompetitionPhase.FINAL]: 5
       }
     },
     schedule: {
@@ -66,142 +91,127 @@ export const useEventCreation = (): EventCreationHandler => {
     }
   };
 
-  // Función para generar los ítems del schedule basados en las modalidades y categorías
-  const generateScheduleItems = (
-    levels: { [key: string]: LevelData }
-  ): ScheduleItem[] => {
+  // 🎯 Generador de schedule 100% dinámico
+  const generateScheduleItems = (levels: { [key: string]: LevelData }): ScheduleItem[] => {
+    if (availableModalities.length === 0) {
+      console.error("No se pueden generar items de schedule: modalidades no cargadas desde Firebase");
+      return [];
+    }
+
     const scheduleItems: ScheduleItem[] = [];
     let orderCounter = 1;
 
-    // Procesamos primero el Seriado (tanda única = final)
-    if (levels["Seriado"] && levels["Seriado"].selected) {
-      const seriadoCategories = levels["Seriado"].categories || [];
-      
-      // Seriado Mujeres
-      seriadoCategories.forEach(category => {
-        scheduleItems.push({
-          id: uuidv4(),
-          levelId: "Seriado",
-          category: category,
-          gender: "Mujeres",
-          phase: CompetitionPhase.FINAL, // Seriado es siempre final (tanda única)
-          order: orderCounter++,
-          estimatedTime: 15 // Aproximadamente 15 minutos por categoría
-        });
-      });
-      
-      // Seriado Varones
-      seriadoCategories.forEach(category => {
-        scheduleItems.push({
-          id: uuidv4(),
-          levelId: "Seriado",
-          category: category,
-          gender: "Varones",
-          phase: CompetitionPhase.FINAL, // Seriado es siempre final (tanda única)
-          order: orderCounter++,
-          estimatedTime: 15 // Aproximadamente 15 minutos por categoría
-        });
-      });
-    }
+    availableModalities.forEach(modalityName => {
+      const levelData = levels[modalityName];
+      if (!levelData?.selected) return;
 
-    // Procesamos Individual (con eliminatorias, semifinales y finales)
-    if (levels["Individual"] && levels["Individual"].selected) {
-      const individualCategories = levels["Individual"].categories || [];
-      
-      // Procesamos las fases para Mujeres
-      ["Mujeres", "Varones"].forEach((gender) => {
-        // Eliminatorias
-        individualCategories.forEach(category => {
-          scheduleItems.push({
-            id: uuidv4(),
-            levelId: "Individual",
-            category: category,
-            gender: gender as Gender,
-            phase: CompetitionPhase.ELIMINATORIA,
-            order: orderCounter++,
-            estimatedTime: 20 // Aproximadamente 20 minutos por categoría en eliminatorias
-          });
-        });
-        
-        // Semifinales
-        individualCategories.forEach(category => {
-          scheduleItems.push({
-            id: uuidv4(),
-            levelId: "Individual",
-            category: category,
-            gender: gender as Gender,
-            phase: CompetitionPhase.SEMIFINAL,
-            order: orderCounter++,
-            estimatedTime: 15 // Aproximadamente 15 minutos por categoría en semifinales
-          });
-        });
-        
-        // Finales
-        individualCategories.forEach(category => {
-          scheduleItems.push({
-            id: uuidv4(),
-            levelId: "Individual",
-            category: category,
-            gender: gender as Gender,
-            phase: CompetitionPhase.FINAL,
-            order: orderCounter++,
-            estimatedTime: 10 // Aproximadamente 10 minutos por categoría en finales
-          });
-        });
-      });
-    }
-
-    // Procesamos el resto de modalidades (Novel Novel, Novel Abierto, etc.)
-    Object.entries(levels).forEach(([levelId, levelData]) => {
-      // Saltamos Seriado e Individual que ya fueron procesados
-      if (levelId === "Seriado" || levelId === "Individual" || !levelData.selected) {
-        return;
-      }
-      
       const categories = levelData.categories || [];
-      
-      // Para estas modalidades, no separamos por género (son mixtas)
-      // Eliminatorias
-      categories.forEach(category => {
-        scheduleItems.push({
-          id: uuidv4(),
-          levelId: levelId,
-          category: category,
-          gender: "Mixto",
-          phase: CompetitionPhase.ELIMINATORIA,
-          order: orderCounter++,
-          estimatedTime: 20 // Aproximadamente 20 minutos por categoría en eliminatorias
-        });
-      });
-      
-      // Semifinales
-      categories.forEach(category => {
-        scheduleItems.push({
-          id: uuidv4(),
-          levelId: levelId,
-          category: category,
-          gender: "Mixto",
-          phase: CompetitionPhase.SEMIFINAL,
-          order: orderCounter++,
-          estimatedTime: 15 // Aproximadamente 15 minutos por categoría en semifinales
-        });
-      });
-      
-      // Finales
-      categories.forEach(category => {
-        scheduleItems.push({
-          id: uuidv4(),
-          levelId: levelId,
-          category: category,
-          gender: "Mixto",
-          phase: CompetitionPhase.FINAL,
-          order: orderCounter++,
-          estimatedTime: 10 // Aproximadamente 10 minutos por categoría en finales
+      if (categories.length === 0) return;
+
+      const modalityPhases = getPhases(modalityName);
+      const isGenderSeparatedModality = isGenderSeparated(modalityName);
+
+      const genders: Gender[] = isGenderSeparatedModality
+        ? ["Mujeres", "Varones"]
+        : ["Mixto"];
+
+      modalityPhases.forEach(phase => {
+        genders.forEach(gender => {
+          categories.forEach(category => {
+            scheduleItems.push({
+              id: uuidv4(),
+              levelId: modalityName,
+              category: category,
+              gender: gender,
+              phase: phase,
+              order: orderCounter++,
+              estimatedTime: getEstimatedTime(phase)
+            });
+          });
         });
       });
     });
 
     return scheduleItems;
+  };
+
+  const getEstimatedTime = (phase: CompetitionPhase): number => {
+    switch (phase) {
+      case CompetitionPhase.ELIMINATORIA:
+        return 20;
+      case CompetitionPhase.SEMIFINAL:
+        return 15;
+      case CompetitionPhase.FINAL:
+        return 10;
+      default:
+        return 15;
+    }
+  };
+
+  // ✅ Validación estricta basada SOLO en Firebase
+  const validateEventData = (eventData: EventFormData): string | null => {
+    // 🚨 Primero verificar que la configuración global esté cargada
+    if (globalConfigLoading) {
+      return "Esperando carga de configuración global...";
+    }
+
+    if (globalConfigError) {
+      return `Error en configuración global: ${globalConfigError}`;
+    }
+
+    if (availableModalities.length === 0) {
+      return "No hay modalidades disponibles. Verifica la configuración en Firebase.";
+    }
+
+    if (availableCategories.length === 0) {
+      return "No hay categorías disponibles. Verifica la configuración en Firebase.";
+    }
+
+    // Validaciones básicas
+    if (!eventData.general.name?.trim()) {
+      return "El nombre del evento es requerido";
+    }
+
+    if (!eventData.dates.startDate || !eventData.dates.endDate) {
+      return "Las fechas de inicio y fin son requeridas";
+    }
+
+    if (eventData.dates.startDate.toMillis() >= eventData.dates.endDate.toMillis()) {
+      return "La fecha de inicio debe ser anterior a la fecha de fin";
+    }
+
+    // 🛡️ Validación estricta contra Firebase
+    const selectedLevels = Object.entries(eventData.dance.levels)
+      .filter(([_, levelData]) => levelData.selected);
+
+    if (selectedLevels.length === 0) {
+      return "Debe seleccionar al menos una modalidad";
+    }
+
+    for (const [levelId, levelData] of selectedLevels) {
+      // Validar modalidad existe en Firebase
+      if (!availableModalities.includes(levelId as ModalityLevel)) {
+        return `Modalidad "${levelId}" no existe en la configuración de Firebase`;
+      }
+
+      // Validar categorías existen en Firebase
+      if (levelData.categories && levelData.categories.length > 0) {
+        const invalidCategories = levelData.categories
+          .filter(category => !availableCategories.includes(category as CategoryLevel));
+
+        if (invalidCategories.length > 0) {
+          return `Categorías no válidas en ${levelId}: ${invalidCategories.join(', ')}`;
+        }
+      } else {
+        return `La modalidad "${levelId}" debe tener al menos una categoría`;
+      }
+    }
+
+    return null;
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   const uploadImage = async (image: File, eventId: string, type: 'banner' | 'small'): Promise<string> => {
@@ -213,37 +223,36 @@ export const useEventCreation = (): EventCreationHandler => {
       return await getDownloadURL(storageRef);
     } catch (error) {
       console.error(`Error al subir ${type} imagen:`, error);
-      if (error instanceof Error) {
-        throw new Error(`Error al subir la imagen ${type}: ${error.message}`);
-      } else {
-        throw new Error(`Error desconocido al subir la imagen ${type}`);
-      }
+      throw new Error(`Error al subir la imagen ${type}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
   useEffect(() => {
     const fetchAcademyName = async () => {
-      if (user && (user?.marinera?.academyId)) {
-        const academyRef = doc(db, "academias", (user?.marinera?.academyId));
+      if (!user?.marinera?.academyId) return;
+
+      try {
+        const academyRef = doc(db, "academias", user.marinera.academyId);
         const academySnap = await getDoc(academyRef);
+
         if (academySnap.exists()) {
           setAcademyName(academySnap.data().name);
-        } else {
-          console.error("Academia no encontrada");
         }
+      } catch (error) {
+        console.error("Error fetching academy name:", error);
+        setError("Error al cargar información de la academia");
       }
     };
 
-    const fetchData = async () => {
-      await fetchAcademyName();
-    };
-
-    fetchData().catch(error => {
-      console.error("Error fetching data:", error);
-    });
+    fetchAcademyName();
   }, [user]);
 
-  const processEventData = async (eventData: EventFormData, user: User, eventId: string, academyName: string, uploadImage: (image: File, eventId: string, type: 'banner' | 'small') => Promise<string>): Promise<CustomEvent> => {
+  const processEventData = async (
+    eventData: EventFormData,
+    user: User,
+    eventId: string,
+    academyName: string
+  ): Promise<CustomEvent> => {
     let smallImageUrl = eventData.images.smallImage as string;
     let bannerImageUrl = eventData.images.bannerImage as string;
 
@@ -255,30 +264,25 @@ export const useEventCreation = (): EventCreationHandler => {
       bannerImageUrl = await uploadImage(eventData.images.bannerImage, eventId, 'banner');
     }
 
-    // Process levels including their categories and add default config
-    const processedLevels: { 
-      [key: string]: LevelData 
-    } = {};
-    
+    const processedLevels: { [key: string]: LevelData } = {};
+
     Object.entries(eventData.dance.levels).forEach(([level, data]) => {
       if (data.selected) {
-        processedLevels[level] = { 
+        processedLevels[level] = {
           categories: data.categories || [],
           price: Number(data.price),
           couple: data.couple,
           selected: true,
-          config: data.config || DEFAULT_LEVEL_CONFIG // Añadimos config por defecto
+          config: data.config || DEFAULT_LEVEL_CONFIG
         };
       }
     });
 
-    // Aseguramos que tenemos settings establecidos
     const settings = {
       ...DEFAULT_SETTINGS,
       ...eventData.settings
     };
-    
-    // Generamos los items del schedule si no existen
+
     if (!settings.schedule || !settings.schedule.items || settings.schedule.items.length === 0) {
       settings.schedule = {
         ...DEFAULT_SETTINGS.schedule,
@@ -299,21 +303,19 @@ export const useEventCreation = (): EventCreationHandler => {
       smallImage: smallImageUrl,
       bannerImage: bannerImageUrl,
       location: {
+        street: eventData.location.street,
+        district: eventData.location.district,
+        province: eventData.location.province,
+        department: eventData.location.department,
+        placeName: eventData.location.placeName,
         coordinates: {
           latitude: eventData.location.latitude,
           longitude: eventData.location.longitude,
         },
-        department: eventData.location.department,
-        province: eventData.location.province,
-        district: eventData.location.district,
-        placeName: eventData.location.placeName,
-        street: eventData.location.street,
       },
       eventType: eventData.details.eventType,
       capacity: eventData.details.capacity,
-      dance: {
-        levels: processedLevels,
-      },
+      dance: { levels: processedLevels },
       settings: settings,
       createdBy: user.uid,
       lastUpdatedBy: user.uid,
@@ -323,95 +325,92 @@ export const useEventCreation = (): EventCreationHandler => {
   };
 
   const createEvent = async (eventData: EventFormData, user: User): Promise<{ success: boolean; message: string }> => {
-    setLoading(true);
-    setError(null);
-
     if (!user) {
       const errorMessage = "Usuario no autenticado";
       setError(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
+      return { success: false, message: errorMessage };
     }
+
+    const validationError = validateEventData(eventData);
+    if (validationError) {
+      setError(validationError);
+      return { success: false, message: validationError };
+    }
+
+    setLoading(true);
+    setError(null);
 
     try {
       const eventId = new Date().getTime().toString();
-      const event = await processEventData(eventData, user, eventId, academyName, uploadImage);
+      const event = await processEventData(eventData, user, eventId, academyName);
 
       await setDoc(doc(db, "eventos", eventId), event);
 
-      return {
-        success: true,
-        message: "Evento creado exitosamente"
-      };
+      return { success: true, message: "Evento creado exitosamente" };
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error desconocido al crear el evento";
       setError(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
+      return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
   const updateEvent = async (eventData: EventFormData, user: User, eventId: string): Promise<{ success: boolean; message: string }> => {
-    setLoading(true);
-    setError(null);
-
     if (!user) {
       const errorMessage = "Usuario no autenticado";
       setError(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
+      return { success: false, message: errorMessage };
     }
 
+    const validationError = validateEventData(eventData);
+    if (validationError) {
+      setError(validationError);
+      return { success: false, message: validationError };
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      // Para actualización, necesitamos primero obtener el evento actual
       const eventDocRef = doc(db, "eventos", eventId);
       const eventDocSnap = await getDoc(eventDocRef);
-      
+
       if (!eventDocSnap.exists()) {
         throw new Error("El evento no existe");
       }
-      
+
       const currentEvent = eventDocSnap.data() as CustomEvent;
-      
-      // Procesar los nuevos datos del evento
-      const updatedEvent = await processEventData(eventData, user, eventId, academyName, uploadImage);
-      
-      // Preservar el schedule existente si ya existe, a menos que sea explícitamente actualizado
-      if (currentEvent.settings?.schedule?.items?.length > 0 && 
-          (!eventData.settings?.schedule || !eventData.settings.schedule.items)) {
+      const updatedEvent = await processEventData(eventData, user, eventId, academyName);
+
+      if (currentEvent.settings?.schedule?.items?.length > 0 &&
+        (!eventData.settings?.schedule || !eventData.settings.schedule.items)) {
         updatedEvent.settings.schedule = currentEvent.settings.schedule;
       }
-      
-      // Actualizar la fecha de última modificación
+
       updatedEvent.updatedAt = Timestamp.now();
 
       await setDoc(doc(db, "eventos", eventId), updatedEvent, { merge: true });
 
-      return {
-        success: true,
-        message: "Evento actualizado exitosamente"
-      };
+      return { success: true, message: "Evento actualizado exitosamente" };
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error desconocido al actualizar el evento";
       setError(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
+      return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  return { createEvent, updateEvent, loading, error };
+  return {
+    createEvent,
+    updateEvent,
+    loading,
+    error,
+    clearError,
+    globalConfigLoading,
+    globalConfigError
+  };
 };

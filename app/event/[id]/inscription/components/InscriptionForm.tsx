@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { User } from '@/app/types/userType';
 import useAcademies from '@/app/hooks/useAcademies';
 import useAcademy from '@/app/hooks/useAcademy';
@@ -11,6 +11,8 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
   const [isNewAcademy, setIsNewAcademy] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
 
+  const hasManualSelection = useRef(false);
+
   useEffect(() => {
     if (academy && academy.name) {
       setSelectedAcademyName(academy.name);
@@ -19,8 +21,9 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
     }
   }, [academy, initialAcademyName]);
 
+  // ← MODIFICAR: Solo ejecutar si no hay selección manual
   useEffect(() => {
-    if (initialAcademyId && initialAcademyId !== '') {
+    if (initialAcademyId && initialAcademyId !== '' && !hasManualSelection.current) {
       const academyName = academy?.name || initialAcademyName || 'Libre';
       onAcademySelect(initialAcademyId, academyName);
     }
@@ -38,6 +41,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
 
   const handleAcademySelect = (academyId: string, academyName: string) => {
     console.log("Academia seleccionada manualmente:", academyId);
+    hasManualSelection.current = true; // ← MARCAR que hubo selección manual
     setSelectedAcademyName(academyName);
     setSearchQuery('');
     setIsNewAcademy(false);
@@ -45,19 +49,23 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
     onAcademySelect(academyId, academyName);
   };
 
+  // ← CORREGIR: Usar formattedAcademyName en lugar de academyName
   const handleSaveNewAcademy = (academyName: string) => {
     const formattedAcademyName = searchQuery
       .replace(/\s+/g, ' ')
       .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
+
+    hasManualSelection.current = true; // ← MARCAR que hubo selección manual
     setSelectedAcademyName(formattedAcademyName);
     setSearchQuery('');
     setIsNewAcademy(false);
     setShowDropdown(false);
-    onAcademySelect('', academyName);
+    onAcademySelect('', formattedAcademyName); // ← CORREGIDO: usar formattedAcademyName
   };
 
   const handleResetAcademy = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    hasManualSelection.current = true; // ← MARCAR que hubo selección manual
     setSelectedAcademyName('Libre');
     setSearchQuery('');
     setIsNewAcademy(false);
@@ -135,7 +143,10 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
           </div>
 
           {showDropdown && searchQuery && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto">
+            <div
+              className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto"
+              onMouseDown={(e) => e.preventDefault()}
+            >
               {filteredAcademies.length > 0 ? (
                 filteredAcademies.map(academy => (
                   <div
@@ -154,6 +165,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
                   <div
                     className="flex items-center text-red-600 font-medium cursor-pointer"
                     onClick={() => handleNewAcademy(true)}
+                    onMouseDown={(e) => e.preventDefault()}
                   >
                     <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -235,9 +247,9 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-gradient-to-br from-red-600 to-red-900 rounded-3xl shadow-xl overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-gradient-to-br from-red-600 to-red-900 rounded-3xl shadow-xl">
       {/* Encabezado */}
-      <div className="bg-black bg-opacity-30 p-6">
+      <div className="bg-black bg-opacity-30 p-6 rounded-t-3xl">
         <h2 className="text-2xl font-bold text-white flex items-center">
           <svg className="h-8 w-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

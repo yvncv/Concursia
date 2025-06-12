@@ -12,23 +12,30 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleConfirmCrop = useCallback(async (e: React.MouseEvent) => {
-    // Prevenir cualquier comportamiento por defecto
     e.preventDefault();
     e.stopPropagation();
-    
+    setIsProcessing(true);
+
     try {
       if (!croppedAreaPixels) return;
-      
+
       const croppedImage = await getCroppedImg(image, croppedAreaPixels);
-      onConfirm(croppedImage);
+
+      // COMPRIMIR A MÁXIMO 80KB
+      const optimizedImage = await compressImageTo80KB(croppedImage);
+
+      onConfirm(optimizedImage);
     } catch (e) {
-      console.error('Error al recortar la imagen:', e);
+      console.error('Error al procesar la imagen:', e);
+    } finally {
+      setIsProcessing(false);
     }
   }, [croppedAreaPixels, image, onConfirm]);
 
@@ -40,7 +47,6 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
 
   if (!isOpen) return null;
 
-  // Detener la propagación de eventos para evitar que lleguen al formulario padre
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -49,7 +55,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleModalClick}>
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Recortar imagen de perfil</h2>
-        
+
         <div className="relative w-full h-64 bg-gray-100 rounded-lg mb-4">
           <Cropper
             image={image}
@@ -62,7 +68,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
             cropShape="round"
           />
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Zoom
@@ -77,21 +83,30 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
             className="w-full"
           />
         </div>
-        
+
+        {/* Información de optimización */}
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-700">
+            📸 Tu imagen será optimizada automáticamente a máximo 80KB
+          </p>
+        </div>
+
         <div className="flex justify-end space-x-2">
           <button
-            type="button" // Añadido type="button" explícitamente
+            type="button"
             onClick={handleCloseModal}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            disabled={isProcessing}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
-            type="button" // Añadido type="button" explícitamente
+            type="button"
             onClick={handleConfirmCrop}
-            className="px-4 py-2 bg-rose-500 text-white rounded hover:bg-rose-600"
+            disabled={isProcessing}
+            className="px-4 py-2 bg-rose-500 text-white rounded hover:bg-rose-600 disabled:opacity-50"
           >
-            Confirmar
+            {isProcessing ? 'Optimizando...' : 'Confirmar'}
           </button>
         </div>
       </div>
@@ -99,7 +114,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
   );
 };
 
-// Funciones auxiliares para el recorte de imágenes
+// Función para crear imagen
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -108,6 +123,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     image.src = url;
   });
 
+// Función para recortar imagen
 const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<string> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -117,8 +133,10 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<string> 
     throw new Error('No se pudo obtener el contexto del canvas');
   }
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Tamaño fijo para perfiles
+  const outputSize = 400;
+  canvas.width = outputSize;
+  canvas.height = outputSize;
 
   ctx.drawImage(
     image,
@@ -128,11 +146,49 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<string> 
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    outputSize,
+    outputSize
   );
 
-  return canvas.toDataURL('image/jpeg');
+  return canvas.toDataURL('image/jpeg', 0.9);
+};
+
+// FUNCIÓN PRINCIPAL: Comprimir a máximo 80KB
+const compressImageTo80KB = async (base64: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+
+      // Tamaño para perfiles: 400x400
+      const size = 400;
+      canvas.width = size;
+      canvas.height = size;
+
+      ctx.drawImage(img, 0, 0, size, size);
+
+      // Función para comprimir hasta 80KB máximo
+      const compress = (quality: number): string => {
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        const sizeKB = Math.round((compressed.length * 3 / 4) / 1024);
+
+        // Si es menor a 80KB o la calidad es muy baja, retornar
+        if (sizeKB <= 80 || quality <= 0.3) {
+          console.log(`✅ Imagen optimizada: ${sizeKB}KB con calidad ${Math.round(quality * 100)}%`);
+          return compressed;
+        }
+
+        // Reducir calidad gradualmente
+        return compress(quality - 0.05);
+      };
+
+      resolve(compress(0.9)); // Comenzar con 90% de calidad
+    };
+
+    img.src = base64;
+  });
 };
 
 export default ImageCropperModal;

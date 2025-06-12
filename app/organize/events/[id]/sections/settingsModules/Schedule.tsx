@@ -4,22 +4,24 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/app/firebase/config"
-import type { CustomEvent, ScheduleItem } from "@/app/types/eventType"
+import type { CustomEvent, ScheduleItem, Gender } from "@/app/types/eventType"
 import { CompetitionPhase } from "@/app/types/eventType"
-import { 
-  GripVertical, 
-  Save, 
-  Clock, 
-  AlertCircle, 
-  Calendar, 
-  Timer, 
+import {
+  GripVertical,
+  Save,
+  Clock,
+  AlertCircle,
+  Calendar,
+  Timer,
   Flag,
   Award,
   Users,
   Filter,
   Check,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  User,
+  UserCheck
 } from "lucide-react"
 
 interface ScheduleProps {
@@ -56,6 +58,40 @@ const getPhaseColor = (phase: string) => {
   }
 }
 
+// Función para obtener el color y configuración del género
+const getGenderDisplay = (gender: Gender) => {
+  switch (gender) {
+    case "Varones":
+      return {
+        bg: "bg-blue-100",
+        text: "text-blue-800",
+        icon: <User className="h-3 w-3" />,
+        label: "Masculino"
+      }
+    case "Mujeres":
+      return {
+        bg: "bg-pink-100",
+        text: "text-pink-800",
+        icon: <UserCheck className="h-3 w-3" />,
+        label: "Femenino"
+      }
+    case "Mixto":
+    default:
+      return null // No mostrar badge para Mixto
+  }
+}
+
+// Función para verificar si debe mostrar el badge de género
+const shouldShowGenderBadge = (item: ScheduleItem): boolean => {
+  const isIndividualOrSeriado =
+    item.levelId.toLowerCase() === 'individual' ||
+    item.levelId.toLowerCase() === 'seriado'
+
+  const hasRelevantGender = item.gender && item.gender !== "Mixto"
+
+  return isIndividualOrSeriado && hasRelevantGender
+}
+
 // Componente para renderizar el icono de la fase
 const PhaseIcon = ({ phase }: { phase: string }) => {
   switch (phase) {
@@ -80,6 +116,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
   const [filters, setFilters] = useState({
     levelId: "all",
     phase: "all",
+    gender: "all",
     searchTerm: ""
   })
   const [expandedFilters, setExpandedFilters] = useState(false)
@@ -87,10 +124,10 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
   // Cargar los items del cronograma desde el evento
   useEffect(() => {
     console.log("Cargando datos del evento:", event)
-    
+
     if (event.settings?.schedule?.items && Array.isArray(event.settings.schedule.items)) {
       console.log("Items del schedule encontrados:", event.settings.schedule.items)
-      
+
       // Ordenar los items por el campo order
       const sortedItems = [...event.settings.schedule.items].sort((a, b) => a.order - b.order)
       setScheduleItems(sortedItems)
@@ -105,28 +142,73 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
   // Filtrar los items cuando cambien los filtros
   useEffect(() => {
     let results = [...scheduleItems]
-    
+
     // Filtrar por nivel (modalidad)
     if (filters.levelId !== "all") {
       results = results.filter(item => item.levelId === filters.levelId)
     }
-    
+
     // Filtrar por fase
     if (filters.phase !== "all") {
       results = results.filter(item => item.phase === filters.phase)
     }
-    
+
+    // Filtrar por género
+    if (filters.gender !== "all") {
+      results = results.filter(item => {
+        if (!item.gender) return false
+        return item.gender === filters.gender
+      })
+    }
+
     // Filtrar por término de búsqueda
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase()
-      results = results.filter(item => 
-        item.levelId.toLowerCase().includes(searchLower) || 
-        item.category.toLowerCase().includes(searchLower)
+      results = results.filter(item =>
+        item.levelId.toLowerCase().includes(searchLower) ||
+        item.category.toLowerCase().includes(searchLower) ||
+        (item.gender && item.gender.toLowerCase().includes(searchLower))
       )
     }
-    
+
     setFilteredItems(results)
   }, [filters, scheduleItems])
+
+  // Obtener niveles únicos para el filtro
+  const getUniqueLevels = (): { id: string, name: string }[] => {
+    const uniqueLevels = new Map<string, string>()
+
+    scheduleItems.forEach(item => {
+      uniqueLevels.set(item.levelId, item.levelId.charAt(0).toUpperCase() + item.levelId.slice(1))
+    })
+
+    return Array.from(uniqueLevels).map(([id, name]) => ({ id, name }))
+  }
+
+  // Obtener géneros únicos para el filtro (solo Varones y Mujeres)
+  const getUniqueGenders = (): { id: string, name: string }[] => {
+    const uniqueGenders = new Set<Gender>()
+
+    scheduleItems.forEach(item => {
+      if (item.gender && (item.gender === "Varones" || item.gender === "Mujeres")) {
+        const isIndividualOrSeriado =
+          item.levelId.toLowerCase() === 'individual' ||
+          item.levelId.toLowerCase() === 'seriado'
+
+        if (isIndividualOrSeriado) {
+          uniqueGenders.add(item.gender)
+        }
+      }
+    })
+
+    return Array.from(uniqueGenders).map(gender => ({
+      id: gender,
+      name: gender === "Varones" ? "Masculino" : "Femenino"
+    }))
+  }
+
+  // Verificar si hay items con información de género relevante
+  const hasGenderInfo = scheduleItems.some(item => shouldShowGenderBadge(item))
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index)
@@ -150,7 +232,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault()
-    
+
     if (draggedItem === null || draggedItem === dropIndex) {
       setDraggedOverItem(null)
       return
@@ -160,26 +242,26 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
     const draggedItemData = filteredItems[draggedItem]
     const originalDraggedIndex = scheduleItems.findIndex(item => item.id === draggedItemData.id)
     const originalDropIndex = scheduleItems.findIndex(item => item.id === filteredItems[dropIndex].id)
-    
+
     // Crear una copia del array original
     const newItems = [...scheduleItems]
-    
+
     // Remover el item arrastrado
     newItems.splice(originalDraggedIndex, 1)
-    
+
     // Insertar en la nueva posición
     if (originalDraggedIndex < originalDropIndex) {
       newItems.splice(originalDropIndex - 1, 0, draggedItemData)
     } else {
       newItems.splice(originalDropIndex, 0, draggedItemData)
     }
-    
+
     // Actualizar el orden
     const reorderedItems = newItems.map((item, index) => ({
       ...item,
       order: index
     }))
-    
+
     setScheduleItems(reorderedItems)
     setDraggedItem(null)
     setDraggedOverItem(null)
@@ -191,23 +273,22 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
       console.error("No se puede guardar: ID de evento no disponible")
       return
     }
-    
+
     setIsSaving(true)
-    
+
     try {
       const eventRef = doc(db, "eventos", event.id)
-      
+
       await updateDoc(eventRef, {
         "settings.schedule.items": scheduleItems,
         "settings.schedule.lastUpdated": Timestamp.now(),
         "updatedAt": Timestamp.now()
       })
-      
+
       console.log("Cronograma guardado exitosamente")
       setHasChanges(false)
     } catch (error) {
       console.error("Error al guardar el cronograma:", error)
-      // Aquí podrías mostrar un mensaje de error
     } finally {
       setIsSaving(false)
     }
@@ -238,17 +319,6 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
       default:
         return phase
     }
-  }
-
-  // Función para obtener niveles únicos para el filtro
-  const getUniqueLevels = (): { id: string, name: string }[] => {
-    const uniqueLevels = new Map<string, string>()
-    
-    scheduleItems.forEach(item => {
-      uniqueLevels.set(item.levelId, item.levelId.charAt(0).toUpperCase() + item.levelId.slice(1))
-    })
-    
-    return Array.from(uniqueLevels).map(([id, name]) => ({ id, name }))
   }
 
   // No hay items configurados
@@ -288,14 +358,14 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
       {/* Filtros */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <button 
+          <button
             className="flex items-center justify-between w-full text-left"
             onClick={() => setExpandedFilters(!expandedFilters)}
           >
             <div className="flex items-center">
               <Filter className="h-5 w-5 text-gray-500 mr-2" />
               <span className="font-medium text-gray-700">Filtros</span>
-              {(filters.levelId !== "all" || filters.phase !== "all" || filters.searchTerm) && (
+              {(filters.levelId !== "all" || filters.phase !== "all" || filters.gender !== "all" || filters.searchTerm) && (
                 <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
                   Activo
                 </span>
@@ -308,15 +378,15 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
             )}
           </button>
         </div>
-        
+
         {expandedFilters && (
           <div className="p-4 bg-gray-50">
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${hasGenderInfo ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Modalidad</label>
                 <select
                   value={filters.levelId}
-                  onChange={(e) => setFilters({...filters, levelId: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, levelId: e.target.value })}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="all">Todas las modalidades</option>
@@ -327,12 +397,12 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fase</label>
                 <select
                   value={filters.phase}
-                  onChange={(e) => setFilters({...filters, phase: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="all">Todas las fases</option>
@@ -341,26 +411,44 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
                   <option value={CompetitionPhase.FINAL}>Final</option>
                 </select>
               </div>
-              
+
+              {hasGenderInfo && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Género</label>
+                  <select
+                    value={filters.gender}
+                    onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="all">Todos los géneros</option>
+                    {getUniqueGenders().map((gender) => (
+                      <option key={gender.id} value={gender.id}>
+                        {gender.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
                 <input
                   type="text"
                   value={filters.searchTerm}
-                  onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
                   placeholder="Buscar por nombre..."
                   className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
-            
+
             <div className="mt-3 flex justify-between">
               <div className="text-sm text-gray-600">
                 Mostrando {filteredItems.length} de {scheduleItems.length} items
               </div>
-              {(filters.levelId !== "all" || filters.phase !== "all" || filters.searchTerm) && (
+              {(filters.levelId !== "all" || filters.phase !== "all" || filters.gender !== "all" || filters.searchTerm) && (
                 <button
-                  onClick={() => setFilters({ levelId: "all", phase: "all", searchTerm: "" })}
+                  onClick={() => setFilters({ levelId: "all", phase: "all", gender: "all", searchTerm: "" })}
                   className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
                 >
                   <Check className="h-4 w-4 mr-1" />
@@ -375,14 +463,15 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
       <div className="max-h-[600px] overflow-y-auto pr-2 space-y-2">
         {filteredItems.map((item, index) => {
           const phaseColors = getPhaseColor(item.phase)
-          
+          const genderDisplay = item.gender ? getGenderDisplay(item.gender) : null
+
           return (
             <div key={item.id}>
               {/* Indicador de drop */}
               {draggedOverItem === index && draggedItem !== index && (
                 <div className="h-1 bg-blue-400 rounded-full my-2 animate-pulse" />
               )}
-              
+
               <div
                 draggable
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -390,17 +479,16 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
                 onDragLeave={handleDragLeave}
                 onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, index)}
-                className={`bg-white border rounded-lg p-4 cursor-move transition-all transform ${
-                  draggedItem === index 
-                    ? "opacity-50 scale-95 rotate-1" 
+                className={`bg-white border rounded-lg p-4 cursor-move transition-all transform ${draggedItem === index
+                    ? "opacity-50 scale-95 rotate-1"
                     : draggedOverItem === index && draggedItem !== index
-                    ? "border-blue-400 shadow-lg"
-                    : "hover:shadow-md border-gray-200"
-                }`}
+                      ? "border-blue-400 shadow-lg"
+                      : "hover:shadow-md border-gray-200"
+                  }`}
               >
                 <div className="flex items-center">
                   <GripVertical className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                  
+
                   <div className="flex-1 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full text-sm font-bold">
@@ -411,14 +499,27 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
                           <span className="font-medium text-gray-900">
                             {item.levelId.charAt(0).toUpperCase() + item.levelId.slice(1)}
                           </span>
-                          
+
                           <span className="text-gray-500">•</span>
-                          
+
                           <span className="text-gray-700">
                             {item.category}
                           </span>
-                          
-                          <span 
+
+                          {/* Mostrar badge de género solo si corresponde */}
+                          {shouldShowGenderBadge(item) && genderDisplay && (
+                            <>
+                              <span className="text-gray-500">•</span>
+                              <span
+                                className={`${genderDisplay.bg} ${genderDisplay.text} px-2 py-0.5 rounded-md text-sm font-medium flex items-center`}
+                              >
+                                {genderDisplay.icon}
+                                <span className="ml-1">{genderDisplay.label}</span>
+                              </span>
+                            </>
+                          )}
+
+                          <span
                             className={`${phaseColors.bg} ${phaseColors.text} px-2 py-0.5 rounded-md text-sm font-medium flex items-center`}
                           >
                             <PhaseIcon phase={item.phase} />
@@ -431,7 +532,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-sm text-gray-500 font-medium">
                       {formatTime(
                         filteredItems.slice(0, index).reduce((sum, item) => sum + (item.estimatedTime || 0), 0)
@@ -443,7 +544,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
             </div>
           )
         })}
-        
+
         {/* Indicador final de drop */}
         {draggedOverItem === filteredItems.length && (
           <div className="h-1 bg-blue-400 rounded-full my-2 animate-pulse" />
@@ -458,7 +559,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
           </div>
           <p className="text-sm text-blue-700">Total de actos programados</p>
         </div>
-        
+
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-green-900">Modalidades</h3>
@@ -468,7 +569,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
           </div>
           <p className="text-sm text-green-700">Niveles incluidos</p>
         </div>
-        
+
         <div className="bg-amber-50 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-amber-900">Categorías</h3>
@@ -478,7 +579,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
           </div>
           <p className="text-sm text-amber-700">Categorías distintas</p>
         </div>
-        
+
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-purple-900">Duración</h3>
@@ -488,7 +589,7 @@ const Schedule: React.FC<ScheduleProps> = ({ event }) => {
         </div>
       </div>
 
-      {/* Botones de acción - Movidos al final como en el componente General */}
+      {/* Botones de acción */}
       {hasChanges && (
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex justify-end gap-3">

@@ -1,17 +1,17 @@
 // hooks/useGlobalCategories.ts
 import { useState, useEffect } from "react";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { CategoryLevel, DEFAULT_CATEGORIAS } from "../types/categoriesType";
+import { CategoryLevel } from "../types/categoriesType";
 
 interface CategoriesHookResult {
   categorias: CategoryLevel[];
-  categoriasPorNivel: CategoryLevel[]; // Añadimos este para mantener compatibilidad
+  categoriasPorNivel: CategoryLevel[]; // Alias para compatibilidad
   loading: boolean;
   error: Error | null;
 }
 
 export function useGlobalCategories(): CategoriesHookResult {
-  const [categorias, setCategorias] = useState<CategoryLevel[]>(DEFAULT_CATEGORIAS);
+  const [categorias, setCategorias] = useState<CategoryLevel[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
@@ -19,34 +19,43 @@ export function useGlobalCategories(): CategoriesHookResult {
     const fetchCategorias = async (): Promise<void> => {
       try {
         setLoading(true);
+        setError(null);
+        
         const db = getFirestore();
         const categoriasRef = doc(db, "globalSettings", "categories");
         const categoriasSnap = await getDoc(categoriasRef);
         
         if (categoriasSnap.exists()) {
           const data = categoriasSnap.data();
-          // Verificamos que el campo existe y procesamos los datos
+          
           if (data.categoriesByLevel) {
-            let categoriasArray: CategoryLevel[];
+            const categoriesData = data.categoriesByLevel;
             
-            if (Array.isArray(data.categoriesByLevel)) {
-              // Si ya es un array, lo usamos directamente
-              categoriasArray = data.categoriesByLevel;
-            } else {
-              // Si es un objeto indexado, lo convertimos a array
-              categoriasArray = Object.values(data.categoriesByLevel);
-            }
+            // Convertir objeto indexado a array
+            const categoriasArray: CategoryLevel[] = [];
+            
+            Object.values(categoriesData).forEach(categoryName => {
+              if (typeof categoryName === 'string') {
+                categoriasArray.push(categoryName as CategoryLevel);
+              }
+            });
             
             setCategorias(categoriasArray);
+            
           } else {
-            console.warn("El campo categoriesByLevel no existe en el documento categories, usando valores por defecto");
+            throw new Error("Campo categoriesByLevel no encontrado en el documento");
           }
         } else {
-          console.warn("No se encontraron categorías en Firebase, usando valores por defecto");
+          throw new Error("Documento categories no encontrado en globalSettings");
         }
+        
       } catch (err) {
-        console.error("Error al cargar categorías: ", err);
+        console.error("❌ Error al cargar categorías desde Firebase:", err);
         setError(err instanceof Error ? err : new Error('Error desconocido'));
+        
+        // En caso de error, dejar array vacío
+        setCategorias([]);
+        
       } finally {
         setLoading(false);
       }
@@ -55,10 +64,9 @@ export function useGlobalCategories(): CategoriesHookResult {
     fetchCategorias();
   }, []);
   
-  // Retornamos ambas propiedades para mantener compatibilidad
   return { 
     categorias, 
-    categoriasPorNivel: categorias, // Alias para mantener compatibilidad
+    categoriasPorNivel: categorias, // Alias para compatibilidad
     loading, 
     error 
   };

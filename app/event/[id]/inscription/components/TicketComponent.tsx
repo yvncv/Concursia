@@ -140,7 +140,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   <>
                     <p><span className="font-medium">Nombre:</span> {user?.firstName} {user?.lastName}</p>
                     <p><span className="font-medium">DNI:</span> {user?.dni}</p>
-                    <p><span className="font-medium">Categoría:</span> {user?.category}</p>
+                    <p><span className="font-medium">Categoría:</span> {user?.marinera.participant.category}</p>
                     {user?.level && <p><span className="font-medium">Nivel:</span> {user?.level}</p>}
                   </>
                 )}
@@ -241,7 +241,9 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <a
-                    href={`tel:${academy.phoneNumber.replace(/\s+/g, '')}`}
+                    href={`tel:${(Array.isArray(academy.phoneNumber)
+                      ? academy.phoneNumber[0]
+                      : academy.phoneNumber)?.replace(/\s+/g, '') || ''}`}
                     className="flex items-center justify-center bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +253,9 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   </a>
 
                   <a
-                    href={`https://wa.me/${academy.phoneNumber.replace(/\s+/g, '')}`}
+                    href={`https://wa.me/${(Array.isArray(academy.phoneNumber)
+                      ? academy.phoneNumber[0]
+                      : academy.phoneNumber)?.replace(/\s+/g, '') || ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
@@ -284,7 +288,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
 
       {/* Botones de acción */}
       <div className="w-[90%] md:w-[85%] lg:w-[90%] flex flex-col sm:flex-row justify-center gap-4 mt-6">
-        <Link href="/dashboard/events" passHref>
+        <Link href="/my-registrations" passHref>
           <div className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
