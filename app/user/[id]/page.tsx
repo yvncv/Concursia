@@ -452,6 +452,16 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         onClose={() => setIsChangeImageModalOpen(false)}
         onFileSelect={handleFileSelect}
         onDelete={handleDeleteProfilePicture}
+        currentImage={
+          croppedImage || 
+          (typeof foundUser.profileImage === 'string' 
+            ? foundUser.profileImage 
+            : foundUser.profileImage 
+              ? URL.createObjectURL(foundUser.profileImage as File)
+              : null
+          )
+        }
+        userName={capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
       />
       {selectedImage && (
         <ImageCropModal

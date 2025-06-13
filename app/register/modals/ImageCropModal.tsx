@@ -84,13 +84,6 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, isOpen, on
           />
         </div>
 
-        {/* Información de optimización */}
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-700">
-            📸 Tu imagen será optimizada automáticamente a máximo 80KB
-          </p>
-        </div>
-
         <div className="flex justify-end space-x-2">
           <button
             type="button"

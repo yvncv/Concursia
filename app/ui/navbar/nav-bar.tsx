@@ -263,8 +263,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
-              <span className="text-2xl font-bold text-red-700 hover:text-red-600">{brandName}</span>
+              <img src="/concursia-texto.png" alt="Logo" className="h-8" />
             </Link>
           </div>
 
@@ -388,8 +387,16 @@ export default function Navbar({ brandName }: { brandName: string }) {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center gap-2" onClick={handleLinkClick}>
-            <img src="/concursia.png" alt="Logo" className="w-8 h-8" />
-            <span className="text-xl font-bold text-red-700 hover:text-red-600 hidden sm:inline">{brandName}</span>
+            <img
+              src="/concursia.png"
+              alt="Logo ícono"
+              className="w-8 h-8 sm:hidden"
+            />
+            <img
+              src="/concursia-texto.png"
+              alt="Logo con texto"
+              className="h-8 hidden sm:block"
+            />
           </Link>
 
           {/* Desktop Search Bar */}
