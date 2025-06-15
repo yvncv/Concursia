@@ -68,7 +68,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     // Si isEventOrganizer no se proporciona, lo calculamos comparando IDs
     const isOrganizer = isEventOrganizer !== undefined ?
         isEventOrganizer :
-        (user?.id && event.organizerId === user?.id);
+        (user?.id && event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId));
 
     // Determine if inscription types are enabled based on settings
     // IMPORTANTE: Priorizar los valores recibidos por props, que vienen de useSettings()

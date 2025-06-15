@@ -81,7 +81,7 @@ export const withRoleProtection = <P extends object>(
           return;
         }
         // organizador global del evento
-        if (user?.roleId === "organizer" || ev.organizerId === user?.id) {
+        if (user?.roleId === "organizer" || ev.organizerId === user?.id || (user?.roleId == "organizer" && ev.academyId === user?.marinera?.academyId)) {
           setIsAllowed(true);
           setChecked(true);
           return;
