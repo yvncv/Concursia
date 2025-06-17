@@ -161,11 +161,11 @@ const Events: React.FC = () => {
 
   if (loadingMessage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-xl shadow-lg max-w-sm w-full">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-600" />
-            <span className="animate-pulse text-red-600 text-lg font-medium">
+            <span className="animate-pulse text-red-600 text-base sm:text-lg font-medium">
               {loadingMessage}
             </span>
           </div>
@@ -287,15 +287,16 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen overflow-hidden">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white min-w-screen">
+    <>
+    <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800 dark:text-white">
         Gestión de Eventos
       </h1>
 
       {/* Sección de búsqueda y filtros */}
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <div className="flex-1 relative">
+        <div className="flex flex-col gap-3 sm:gap-4 mb-4">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
             </div>
@@ -304,27 +305,29 @@ const Events: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar eventos..."
-              className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
             >
-              <Filter size={20} />
-              {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+              <Filter size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">{showFilters ? "Ocultar filtros" : "Mostrar filtros"}</span>
+              <span className="sm:hidden">Filtros</span>
             </button>
 
             {
               (user?.roleId == "organizer") && (
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
                 >
-                  <Plus size={20} />
-                  Crear Evento
+                  <Plus size={18} className="sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Crear Evento</span>
+                  <span className="sm:hidden">Crear</span>
                 </button>
               )
             }
@@ -334,15 +337,15 @@ const Events: React.FC = () => {
         {/* Filtros adicionales (expandibles) */}
         {showFilters && (
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 transition-all">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Estado
                 </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                 >
                   <option value="all">Todos</option>
                   <option value="active">Activo</option>
@@ -350,14 +353,14 @@ const Events: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tipo de Evento
                 </label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                 >
                   <option value="all">Todos</option>
                   {eventTypes.map(type => (
@@ -366,46 +369,49 @@ const Events: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Desde
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="date"
                     value={startDateFilter}
                     onChange={(e) => setStartDateFilter(e.target.value)}
-                    className="pl-10 w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="pl-10 w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Hasta
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="date"
                     value={endDateFilter}
                     onChange={(e) => setEndDateFilter(e.target.value)}
-                    className="pl-10 w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="pl-10 w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-end">
+              <div className="sm:col-span-2 lg:col-span-1 xl:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 opacity-0 select-none">
+                  Acción
+                </label>
                 <button
                   onClick={resetFilters}
-                  className="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
                 >
-                  <X size={18} />
+                  <X size={16} />
                   Limpiar filtros
                 </button>
               </div>
@@ -415,7 +421,7 @@ const Events: React.FC = () => {
       </div>
 
       {/* Resultados de la búsqueda y filtros */}
-      <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      <div className="mb-2 text-sm text-gray-600 dark:text-gray-400 px-1">
         Mostrando {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''}
         {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || startDateFilter || endDateFilter) && ' con los filtros aplicados'}
       </div>
@@ -427,7 +433,7 @@ const Events: React.FC = () => {
       ) : error ? (
         <p className="text-red-500 dark:text-red-400">Error: {error}</p>
       ) : filteredEvents.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 sm:p-8 text-center">
           <p className="text-gray-500 dark:text-gray-400 mb-4">No se encontraron eventos con los criterios de búsqueda actuales.</p>
           {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || startDateFilter || endDateFilter) && (
             <button
@@ -440,102 +446,200 @@ const Events: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden m-4">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                  {["Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Tipo", "Estado", "Acciones"].map((header) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600 text-center"
-                    >
-                      {header}
-                    </th>
+        <>
+          {/* Vista de tabla para pantallas grandes */}
+          <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    {["Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Tipo", "Estado", "Acciones"].map((header) => (
+                      <th
+                        key={header}
+                        className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b dark:border-gray-600 text-center"
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y dark:divide-gray-700">
+                  {filteredEvents.map((event) => (
+                    <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-left">
+                        <Link
+                          href={`/organize/events/${event.id}`}
+                          className="hover:text-red-600 transition-colors"
+                        >
+                          {event.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300 text-left">
+                        {event.description.length > 50
+                          ? `${event.description.substring(0, 50)}...`
+                          : event.description}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                        {new Date(event.startDate.toDate()).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                        {new Date(event.endDate.toDate()).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                        {event.eventType}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${event.status === "active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                            }`}
+                        >
+                          {event.status === "active" ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 mx-auto">
+                        <div className="flex justify-center space-x-2 items-center align-middle">
+                          <Link
+                            className="text-pink-500 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors"
+                            title="Verificar"
+                            href={`/organize/events/${event.id}`}
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                          </Link>
+                          <button
+                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                            title="Visualizar"
+                            onClick={() => handleEvent(event, "view")}
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          {
+                            (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent"))) && (
+                              <button
+                                className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
+                                title="Editar"
+                                onClick={() => handleEvent(event, "edit")}
+                              >
+                                <FilePenLine className="w-5 h-5" />
+                              </button>
+                            )
+                          }
+                          {
+                            (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent"))) && (
+                              <button
+                                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                                title="Eliminar"
+                                onClick={() => handleDeleteEvent(event)}
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            )
+                          }
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y dark:divide-gray-700">
-                {filteredEvents.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-left">
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Vista de tarjetas para pantallas medianas y pequeñas */}
+          <div className="lg:hidden space-y-4">
+            {filteredEvents.map((event) => (
+              <div key={event.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6">
+                <div className="flex flex-col space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
                       <Link
                         href={`/organize/events/${event.id}`}
-                        className="hover:text-red-600 transition-colors"
+                        className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white hover:text-red-600 transition-colors block truncate"
                       >
                         {event.name}
                       </Link>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300 text-left">
-                      {event.description.length > 50
-                        ? `${event.description.substring(0, 50)}...`
-                        : event.description}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                      {new Date(event.startDate.toDate()).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                      {new Date(event.endDate.toDate()).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                      {event.eventType}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${event.status === "active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                          }`}
-                      >
-                        {event.status === "active" ? "Activo" : "Inactivo"}
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mt-1 line-clamp-2">
+                        {event.description}
+                      </p>
+                    </div>
+                    <span
+                      className={`ml-3 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${event.status === "active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                        }`}
+                    >
+                      {event.status === "active" ? "Activo" : "Inactivo"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Inicio:</span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {new Date(event.startDate.toDate()).toLocaleDateString()}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 mx-auto">
-                      <div className="flex justify-center space-x-2">
-                        <Link
-                          className="text-pink-500 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors"
-                          title="Verificar"
-                          href={`/organize/events/${event.id}`}
-                        >
-                          <CheckCircle className="w-5 h-5" />
-                        </Link>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Fin:</span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {new Date(event.endDate.toDate()).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Tipo:</span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {event.eventType}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t dark:border-gray-700 justify-center">
+                    <Link
+                      className="flex items-center gap-1 px-3 py-2 text-pink-500 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/20 rounded-lg transition-colors text-sm"
+                      title="Verificar"
+                      href={`/organize/events/${event.id}`}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Verificar</span>
+                    </Link>
+                    <button
+                      className="flex items-center gap-1 px-3 py-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors text-sm"
+                      title="Visualizar"
+                      onClick={() => handleEvent(event, "view")}
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden sm:inline">Ver</span>
+                    </button>
+                    {
+                      (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent"))) && (
                         <button
-                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                          title="Visualizar"
-                          onClick={() => handleEvent(event, "view")}
+                          className="flex items-center gap-1 px-3 py-2 text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors text-sm"
+                          title="Editar"
+                          onClick={() => handleEvent(event, "edit")}
                         >
-                          <Eye className="w-5 h-5" />
+                          <FilePenLine className="w-4 h-4" />
+                          <span className="hidden sm:inline">Editar</span>
                         </button>
-                        {
-                          (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("editevent"))) && (
-                            <button
-                              className="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors"
-                              title="Editar"
-                              onClick={() => handleEvent(event, "edit")}
-                            >
-                              <FilePenLine className="w-5 h-5" />
-                            </button>
-                          )
-                        }
-                        {
-                          (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent"))) && (
-                            <button
-                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                              title="Eliminar"
-                              onClick={() => handleDeleteEvent(event)}
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          )
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      )
+                    }
+                    {
+                      (event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId) || event.staff?.find(s => s.userId === user?.id && s.permissions.includes("deleteevent"))) && (
+                        <button
+                          className="flex items-center gap-1 px-3 py-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
+                          title="Eliminar"
+                          onClick={() => handleDeleteEvent(event)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Eliminar</span>
+                        </button>
+                      )
+                    }
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </>
       )}
       <EventModal
         isOpen={isCreateModalOpen || isViewModalOpen}
@@ -564,6 +668,7 @@ const Events: React.FC = () => {
       {creatingEvent && <p className="text-gray-600">Creando evento...</p>}
       {createError && <p className="text-red-600">Error: {createError}</p>}
     </div>
+    </>
   );
 };
 
