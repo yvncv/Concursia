@@ -16,9 +16,8 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
   const infoItems = [];
   
   // Solo mostrar DNI si el usuario puede editar (es decir, es su propio perfil)
-  if (canEdit) {
     infoItems.push({ label: 'DNI', value: foundUser.dni || 'N/A' });
-  }
+  
   
   // Siempre mostrar estos campos
   infoItems.push(
