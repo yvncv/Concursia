@@ -8,6 +8,7 @@ import EventSidebar from './eventSideBar/EventSideBar';
 import { CustomEvent } from '@/app/types/eventType';
 
 import Overview from './sections/Overview';
+import Live from './sections/Live';
 import Tickets from './sections/Tickets';
 import Participants from './sections/Participants';
 import EventStaff from './sections/EventStaff';
@@ -18,6 +19,7 @@ import Settings from './sections/Settings';
 
 import {
   LayoutDashboard,
+  CircleDot,
   Ticket,
   Users,
   UserCog,
@@ -31,6 +33,7 @@ import {
 // Maestro de secciones
 const ALL_SECTIONS = [
   { id: 'overview', name: 'Visión General', component: Overview, icon: <LayoutDashboard size={18} /> },
+  { id: 'live', name: 'En vivo', component: Live, icon: <CircleDot size={18} /> },
   { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
   { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
   { id: 'eventstaff', name: 'Personal', component: EventStaff, icon: <UserCog size={18} /> },
