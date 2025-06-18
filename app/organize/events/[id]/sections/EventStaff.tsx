@@ -5,10 +5,12 @@ import useUsers from '@/app/hooks/useUsers';
 import { CustomEvent } from '@/app/types/eventType';
 import { User } from '@/app/types/userType';
 import InfoUser from '@/app/ui/info-user/InfoUser';
-import { 
-  X, AlertCircle, Search, UserPlus, Edit, Trash2, 
+import {
+  X, AlertCircle, Search, UserPlus, Edit, Trash2,
   Save, XCircle, Eye, Info, CheckCircle2
 } from 'lucide-react';
+import { decryptValue } from '@/app/utils/encryption';
+import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
 
 const SECTIONS = [
   { id: 'overview', name: 'Visión General', description: 'Ver información general del evento' },
@@ -81,36 +83,45 @@ export default function EventStaff({ event }: EventStaffProps) {
   }, [event.id, showNotification]);
 
   // Verificar DNI para buscar usuario
-  const handleDniCheck = () => {
+  const handleDniCheck = async () => {
     const sanitizedDni = dniInput.trim();
+
     if (!/^\d{8}$/.test(sanitizedDni)) {
       showNotification('error', 'Ingrese un DNI válido de 8 dígitos');
       return;
     }
-    
-    const user = users.find(u => u.dni === sanitizedDni);
-    if (!user) {
-      showNotification('error', 'Usuario no encontrado con este DNI');
-      return;
-    }
-    
-    // Verificar si el usuario ya está en el staff
-    const existingEntry = staffEntries.find(e => e.userId === user?.id);
-    if (existingEntry) {
-      setNewUser(user);
-      setNewPermissions(existingEntry.permissions);
-      showNotification('success', 'Usuario ya forma parte del personal. Puede editar sus permisos.');
-    } else {
-      setNewUser(user);
-      setNewPermissions(['overview']); // Asignar permiso básico por defecto
+
+    try {
+      const user = await findUserByHashedDni(sanitizedDni);
+
+      if (!user) {
+        showNotification('error', 'Usuario no encontrado con este DNI');
+        return;
+      }
+
+      const existingEntry = staffEntries.find(e => e.userId === user.id);
+
+      if (existingEntry) {
+        setNewUser(user);
+        setNewPermissions(existingEntry.permissions);
+        showNotification('success', 'Usuario ya forma parte del personal. Puede editar sus permisos.');
+      } else {
+        setNewUser(user);
+        setNewPermissions(['overview']);
+        showNotification('success', 'Usuario encontrado. Puede asignarle permisos.');
+      }
+    } catch (error) {
+      console.error("Error al buscar usuario por DNI:", error);
+      showNotification('error', 'Error al buscar el usuario. Intente nuevamente.');
     }
   };
 
+
   // Alternar permisos para nuevo personal
   const toggleNewPermission = (perm: string) => {
-    setNewPermissions(prev => 
-      prev.includes(perm) 
-        ? prev.filter(p => p !== perm) 
+    setNewPermissions(prev =>
+      prev.includes(perm)
+        ? prev.filter(p => p !== perm)
         : [...prev, perm]
     );
   };
@@ -128,34 +139,34 @@ export default function EventStaff({ event }: EventStaffProps) {
   // Agregar o actualizar miembro del personal
   const handleAdd = async () => {
     if (!newUser) return;
-    
+
     if (newPermissions.length === 0) {
       showNotification('error', 'Seleccione al menos un permiso');
       return;
     }
-    
+
     const exists = staffEntries.find(e => e.userId === newUser.id);
     let updated: StaffEntry[];
-    
+
     if (exists) {
       updated = staffEntries.map(e =>
-        e.userId === newUser.id 
-          ? { ...e, permissions: newPermissions } 
+        e.userId === newUser.id
+          ? { ...e, permissions: newPermissions }
           : e
       );
       showNotification('success', `Permisos actualizados para ${newUser.firstName} ${newUser.lastName}`);
     } else {
       updated = [
-        ...staffEntries, 
-        { 
-          userId: newUser.id, 
-          permissions: newPermissions, 
-          user: newUser 
+        ...staffEntries,
+        {
+          userId: newUser.id,
+          permissions: newPermissions,
+          user: newUser
         }
       ];
       showNotification('success', `${newUser.firstName} ${newUser.lastName} añadido al personal`);
     }
-    
+
     setStaffEntries(updated);
     setDniInput('');
     setNewUser(null);
@@ -171,9 +182,9 @@ export default function EventStaff({ event }: EventStaffProps) {
 
   // Alternar permisos durante edición
   const toggleEditPermission = (perm: string) => {
-    setEditPermissions(prev => 
-      prev.includes(perm) 
-        ? prev.filter(p => p !== perm) 
+    setEditPermissions(prev =>
+      prev.includes(perm)
+        ? prev.filter(p => p !== perm)
         : [...prev, perm]
     );
   };
@@ -181,18 +192,18 @@ export default function EventStaff({ event }: EventStaffProps) {
   // Guardar edición de permisos
   const saveEdit = async () => {
     if (!editingUserId) return;
-    
+
     if (editPermissions.length === 0) {
       showNotification('error', 'Debe asignar al menos un permiso');
       return;
     }
-    
+
     const updated = staffEntries.map(e =>
-      e.userId === editingUserId 
-        ? { ...e, permissions: editPermissions } 
+      e.userId === editingUserId
+        ? { ...e, permissions: editPermissions }
         : e
     );
-    
+
     setStaffEntries(updated);
     setEditingUserId(null);
     setEditPermissions([]);
@@ -209,11 +220,11 @@ export default function EventStaff({ event }: EventStaffProps) {
   const handleRemove = async (userId: string) => {
     const member = staffEntries.find(e => e.userId === userId);
     const updated = staffEntries.filter(e => e.userId !== userId);
-    
+
     setStaffEntries(updated);
     await syncFirestore(updated);
     setDeleteConfirmation(null);
-    
+
     if (member?.user) {
       showNotification('success', `${member.user?.firstName} ${member.user?.lastName} eliminado del personal`);
     }
@@ -221,16 +232,16 @@ export default function EventStaff({ event }: EventStaffProps) {
 
   // Abrir modal de información de usuario
   const openUserModal = (user?: User) => {
-    if (user) { 
-      setModalUser(user); 
-      setShowModal(true); 
+    if (user) {
+      setModalUser(user);
+      setShowModal(true);
     }
   };
 
   // Cerrar modal de información de usuario
-  const closeUserModal = () => { 
-    setShowModal(false); 
-    setModalUser(null); 
+  const closeUserModal = () => {
+    setShowModal(false);
+    setModalUser(null);
   };
 
   // Filtrar entradas de personal
@@ -250,10 +261,9 @@ export default function EventStaff({ event }: EventStaffProps) {
 
       {/* Notificaciones */}
       {notification && (
-        <div className={`mb-6 p-3 rounded-md flex items-center gap-2 ${
-          notification.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
-                                           'bg-red-50 text-red-700 border border-red-200'
-        }`}>
+        <div className={`mb-6 p-3 rounded-md flex items-center gap-2 ${notification.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+            'bg-red-50 text-red-700 border border-red-200'
+          }`}>
           {notification.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           <span>{notification.message}</span>
         </div>
@@ -265,7 +275,7 @@ export default function EventStaff({ event }: EventStaffProps) {
           <UserPlus size={20} />
           Añadir nuevo personal
         </h3>
-        
+
         <div className="flex gap-4 items-center">
           <div className="relative flex-1">
             <input
@@ -278,12 +288,11 @@ export default function EventStaff({ event }: EventStaffProps) {
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
-          <button 
-            onClick={handleDniCheck} 
-            disabled={loading || !dniInput.trim()} 
-            className={`px-4 py-2 rounded-md text-white font-medium transition-colors ${
-              loading || !dniInput.trim() ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+          <button
+            onClick={handleDniCheck}
+            disabled={loading || !dniInput.trim()}
+            className={`px-4 py-2 rounded-md text-white font-medium transition-colors ${loading || !dniInput.trim() ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              }`}
           >
             Verificar
           </button>
@@ -294,9 +303,9 @@ export default function EventStaff({ event }: EventStaffProps) {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <p className="font-medium text-gray-800">{newUser.firstName} {newUser.lastName}</p>
-                <p className="text-sm text-gray-500">DNI: {newUser.dni}</p>
+                <p className="text-sm text-gray-500">DNI: {decryptValue(newUser.dni)}</p>
               </div>
-              <button 
+              <button
                 onClick={() => openUserModal(newUser)}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
@@ -305,31 +314,30 @@ export default function EventStaff({ event }: EventStaffProps) {
             </div>
 
             <p className="mb-3 font-medium text-gray-700">Asignar permisos:</p>
-            
+
             <div className="flex gap-2 mb-3">
-              <button 
+              <button
                 onClick={assignAllPermissions}
                 className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700"
               >
                 Seleccionar todos
               </button>
-              <button 
+              <button
                 onClick={clearAllPermissions}
                 className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700"
               >
                 Deseleccionar todos
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               {SECTIONS.map(sec => (
-                <div 
-                  key={sec.id} 
-                  className={`border rounded-md p-3 cursor-pointer transition-all ${
-                    newPermissions.includes(sec.id) 
-                      ? 'bg-blue-50 border-blue-300' 
+                <div
+                  key={sec.id}
+                  className={`border rounded-md p-3 cursor-pointer transition-all ${newPermissions.includes(sec.id)
+                      ? 'bg-blue-50 border-blue-300'
                       : 'bg-white border-gray-200 hover:bg-gray-50'
-                  }`}
+                    }`}
                   onClick={() => toggleNewPermission(sec.id)}
                 >
                   <div className="flex items-center gap-2">
@@ -340,7 +348,7 @@ export default function EventStaff({ event }: EventStaffProps) {
                       className="w-4 h-4 accent-blue-600"
                       id={`new-${sec.id}`}
                     />
-                    <label 
+                    <label
                       htmlFor={`new-${sec.id}`}
                       className="font-medium text-gray-800 cursor-pointer select-none"
                     >
@@ -351,16 +359,15 @@ export default function EventStaff({ event }: EventStaffProps) {
                 </div>
               ))}
             </div>
-            
+
             <div className="flex justify-end">
-              <button 
-                onClick={handleAdd} 
-                disabled={loading || newPermissions.length === 0} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-white font-medium transition-colors ${
-                  loading || newPermissions.length === 0 
-                    ? 'bg-green-300 cursor-not-allowed' 
+              <button
+                onClick={handleAdd}
+                disabled={loading || newPermissions.length === 0}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-white font-medium transition-colors ${loading || newPermissions.length === 0
+                    ? 'bg-green-300 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700'
-                }`}
+                  }`}
               >
                 {loading ? 'Procesando...' : <><UserPlus size={18} /> Asignar permisos</>}
               </button>
@@ -373,7 +380,7 @@ export default function EventStaff({ event }: EventStaffProps) {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-800">Personal Actual</h3>
-          
+
           {staffEntries.length > 0 && (
             <div className="relative">
               <input
@@ -387,7 +394,7 @@ export default function EventStaff({ event }: EventStaffProps) {
             </div>
           )}
         </div>
-        
+
         {staffEntries.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center text-gray-500">
             No hay personal asignado a este evento.
@@ -406,13 +413,13 @@ export default function EventStaff({ event }: EventStaffProps) {
                       <div className="flex justify-between items-center">
                         <h4 className="font-medium">{entry.user?.firstName} {entry.user?.lastName}</h4>
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={saveEdit}
                             className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-colors"
                           >
                             <Save size={16} /> Guardar
                           </button>
-                          <button 
+                          <button
                             onClick={cancelEdit}
                             className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
                           >
@@ -420,16 +427,15 @@ export default function EventStaff({ event }: EventStaffProps) {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                         {SECTIONS.map(sec => (
-                          <div 
-                            key={sec.id} 
-                            className={`border rounded p-2 cursor-pointer transition-all ${
-                              editPermissions.includes(sec.id) 
-                                ? 'bg-blue-50 border-blue-300' 
+                          <div
+                            key={sec.id}
+                            className={`border rounded p-2 cursor-pointer transition-all ${editPermissions.includes(sec.id)
+                                ? 'bg-blue-50 border-blue-300'
                                 : 'bg-white border-gray-200 hover:bg-gray-50'
-                            }`}
+                              }`}
                             onClick={() => toggleEditPermission(sec.id)}
                           >
                             <div className="flex items-center gap-2">
@@ -440,7 +446,7 @@ export default function EventStaff({ event }: EventStaffProps) {
                                 className="w-4 h-4 accent-blue-600"
                                 id={`edit-${entry.userId}-${sec.id}`}
                               />
-                              <label 
+                              <label
                                 htmlFor={`edit-${entry.userId}-${sec.id}`}
                                 className="text-sm font-medium cursor-pointer select-none"
                               >
@@ -457,8 +463,8 @@ export default function EventStaff({ event }: EventStaffProps) {
                         <h4 className="font-medium text-gray-800">{entry.user?.firstName} {entry.user?.lastName}</h4>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {entry.permissions.map(pid => (
-                            <span 
-                              key={pid} 
+                            <span
+                              key={pid}
                               className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-100"
                             >
                               {SECTIONS.find(s => s.id === pid)?.name || pid}
@@ -467,22 +473,22 @@ export default function EventStaff({ event }: EventStaffProps) {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button 
-                          onClick={() => openUserModal(entry.user)} 
+                        <button
+                          onClick={() => openUserModal(entry.user)}
                           className="flex items-center gap-1 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
                           title="Ver información de usuario"
                         >
                           <Eye size={16} /> Ver
                         </button>
-                        <button 
-                          onClick={() => startEdit(entry)} 
+                        <button
+                          onClick={() => startEdit(entry)}
                           className="flex items-center gap-1 px-3 py-1 border border-blue-300 text-blue-700 rounded-md text-sm hover:bg-blue-50 transition-colors"
                           title="Editar permisos"
                         >
                           <Edit size={16} /> Editar
                         </button>
-                        <button 
-                          onClick={() => setDeleteConfirmation(entry.userId)} 
+                        <button
+                          onClick={() => setDeleteConfirmation(entry.userId)}
                           className="flex items-center gap-1 px-3 py-1 border border-red-300 text-red-700 rounded-md text-sm hover:bg-red-50 transition-colors"
                           title="Eliminar del personal"
                         >
@@ -504,7 +510,7 @@ export default function EventStaff({ event }: EventStaffProps) {
           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-medium">Información del usuario</h3>
-              <button 
+              <button
                 onClick={closeUserModal}
                 className="p-1 rounded-full hover:bg-gray-100 transition-colors"
               >
@@ -513,32 +519,31 @@ export default function EventStaff({ event }: EventStaffProps) {
             </div>
             <div className="p-4">
               {modalUser && <InfoUser users={modalUser} title="" />}
-              
+
               {/* Sección de permisos del usuario */}
               {modalUser && (
                 <div className="mt-6 border-t pt-4">
                   <h4 className="text-md font-medium mb-3">Permisos asignados</h4>
-                  
+
                   {(() => {
                     const staffEntry = staffEntries.find(e => e.userId === modalUser.id);
-                    
+
                     if (!staffEntry || staffEntry.permissions.length === 0) {
                       return (
                         <p className="text-gray-500 italic">Este usuario no tiene permisos asignados.</p>
                       );
                     }
-                    
+
                     return (
                       <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
                         <div className="grid grid-cols-2 gap-2">
                           {SECTIONS.map(section => {
                             const hasPermission = staffEntry.permissions.includes(section.id);
                             return (
-                              <div 
-                                key={section.id} 
-                                className={`flex items-center p-2 rounded ${
-                                  hasPermission ? 'text-blue-700' : 'text-gray-400'
-                                }`}
+                              <div
+                                key={section.id}
+                                className={`flex items-center p-2 rounded ${hasPermission ? 'text-blue-700' : 'text-gray-400'
+                                  }`}
                               >
                                 {hasPermission ? (
                                   <CheckCircle2 size={16} className="mr-2 flex-shrink-0" />
@@ -579,13 +584,13 @@ export default function EventStaff({ event }: EventStaffProps) {
                 } del personal?
               </p>
               <div className="flex gap-4 justify-center">
-                <button 
+                <button
                   onClick={() => setDeleteConfirmation(null)}
                   className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={() => handleRemove(deleteConfirmation)}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >

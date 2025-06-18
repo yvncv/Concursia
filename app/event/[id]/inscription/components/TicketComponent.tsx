@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { decryptValue } from '@/app/utils/encryption'
 const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal }) => {
   return (
     <div className="w-full flex flex-col items-center justify-start pt-6 sm:pt-10 pb-8 min-h-screen bg-gray-50">
@@ -139,7 +140,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                 {user && (
                   <>
                     <p><span className="font-medium">Nombre:</span> {user?.firstName} {user?.lastName}</p>
-                    <p><span className="font-medium">DNI:</span> {user?.dni}</p>
+                    <p><span className="font-medium">DNI:</span> {decryptValue(user?.dni)}</p>
                     <p><span className="font-medium">Categoría:</span> {user?.marinera.participant.category}</p>
                     {user?.level && <p><span className="font-medium">Nivel:</span> {user?.level}</p>}
                   </>

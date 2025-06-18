@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle, Trash2, ArrowRight } from "lucide-react";
+import { decryptValue } from "@/app/utils/encryption";
 
 // Definición de tipos
 interface EventSettings {
@@ -117,7 +118,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
                     <td className="px-3 py-3 whitespace-nowrap text-sm">
                       <div>
                         <p className="font-medium text-gray-800">{inscripcion.participante.nombre}</p>
-                        <p className="text-xs text-gray-500">DNI: {inscripcion.participante.dni}</p>
+                        <p className="text-xs text-gray-500">DNI: {decryptValue(inscripcion.participante.dni)}</p>
                         <p className="text-xs text-gray-500">{inscripcion.participante.academyName}</p>
                       </div>
                     </td>
@@ -125,7 +126,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
                       {inscripcion.pareja ? (
                         <div>
                           <p className="font-medium text-gray-800">{inscripcion.pareja.nombre}</p>
-                          <p className="text-xs text-gray-500">DNI: {inscripcion.pareja.dni}</p>
+                          <p className="text-xs text-gray-500">DNI: {decryptValue(inscripcion.pareja.dni)}</p>
                           <p className="text-xs text-gray-500">{inscripcion.pareja.academyName}</p>
                         </div>
                       ) : (

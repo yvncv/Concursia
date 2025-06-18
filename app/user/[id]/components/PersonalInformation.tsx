@@ -1,5 +1,6 @@
 import React from 'react';
 import { User } from '@/app/types/userType';
+import { decryptValue } from '@/app/utils/encryption';
 
 interface Props {
   foundUser: User;
@@ -16,8 +17,9 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
   const infoItems = [];
   
   // Solo mostrar DNI si el usuario puede editar (es decir, es su propio perfil)
-    infoItems.push({ label: 'DNI', value: foundUser.dni || 'N/A' });
-  
+  if (canEdit) {
+    infoItems.push({ label: 'DNI', value: decryptValue(foundUser.dni) || 'N/A' });
+  }
   
   // Siempre mostrar estos campos
   infoItems.push(

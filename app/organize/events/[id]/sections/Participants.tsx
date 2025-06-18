@@ -23,6 +23,7 @@ import {
     UserCircle
 } from "lucide-react";
 import InfoUser from '@/app/ui/info-user/InfoUser';
+import { decryptValue } from '@/app/utils/encryption';
 
 interface ParticipantsProps {
     event: CustomEvent;
@@ -449,7 +450,7 @@ const Participants: React.FC<ParticipantsProps> = ({ event }) => {
                                                             <div className="flex items-center gap-2">
                                                                 <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
                                                                 <span className="text-sm">
-                                                                    {user?.dni} - {user?.firstName} {user?.lastName}
+                                                                    {decryptValue(user?.dni)} - {user?.firstName} {user?.lastName}
                                                                 </span>
                                                             </div>
                                                         </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { User } from '@/app/types/userType';
 import useAcademies from '@/app/hooks/useAcademies';
 import useAcademy from '@/app/hooks/useAcademy';
+import { decryptValue } from '@/app/utils/encryption';
 
 const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName }: { onAcademySelect: (academyId: string, academyName: string) => void, initialAcademyId: string, initialAcademyName: string }) => {
   const { academies, loadingAcademies, errorAcademies } = useAcademies();
@@ -275,7 +276,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
               <h4 className="text-lg text-white mb-3 font-medium">Información Personal</h4>
               <div className="space-y-4">
                 {[
-                  { id: 'dni', label: 'DNI', value: user?.dni, icon: 'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2' },
+                  { id: 'dni', label: 'DNI', value: decryptValue(user?.dni), icon: 'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2' },
                   { id: 'firstName', label: 'Nombres', value: user?.firstName, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
                   { id: 'lastName', label: 'Apellido(s)', value: user?.lastName, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
                   { id: 'birthDate', label: 'Fecha de Nacimiento', value: user?.birthDate.toDate().toISOString().split('T')[0], icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },

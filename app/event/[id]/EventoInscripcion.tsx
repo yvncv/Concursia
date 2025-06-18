@@ -10,6 +10,7 @@ import useCreateTicket from '@/app/hooks/tickets/useCreateTicket';
 import { Ticket } from "@/app/types/ticketType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
+import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -131,20 +132,27 @@ const EventoInscripcion = ({ event, openModal, user }: {
   const { createTicket, isCreating, error: createError, clearError } = useCreateTicket();
 
   // Función para buscar el usuario por DNI
-  const buscarPareja = () => {
-    const parejaEncontrada = users.find((usuario) => usuario.dni === dniPareja);
+  const buscarPareja = async () => {
+    const parejaEncontrada = await findUserByHashedDni(dniPareja);
 
-    if (parejaEncontrada) {
-      if (parejaEncontrada.id === user?.id) {
-        setPareja(null);
-      } else if (parejaEncontrada.gender === user?.gender) {
-        setPareja(null);
-      } else {
-        setPareja(parejaEncontrada);
-      }
-    } else {
+    if (!parejaEncontrada) {
       setPareja(null);
+      return;
     }
+
+    if (parejaEncontrada.id === user?.id) {
+      alert("No puedes ser tu propia pareja.");
+      setPareja(null);
+      return;
+    }
+
+    if (parejaEncontrada.gender === user?.gender) {
+      alert("La pareja debe tener un género diferente.");
+      setPareja(null);
+      return;
+    }
+
+    setPareja(parejaEncontrada);
   };
 
   const handleCategorySelect = (category: string) => {
@@ -293,8 +301,8 @@ const EventoInscripcion = ({ event, openModal, user }: {
               disabled={!canProceed || isCreating}
               onClick={handleNextAndSave}
               className={`px-6 py-2 rounded-lg text-white flex items-center ${canProceed && !isCreating
-                  ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
-                  : 'bg-gray-400 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
+                : 'bg-gray-400 cursor-not-allowed'
                 }`}
             >
               {isCreating ? (
