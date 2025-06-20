@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertTriangle, Shield } from "lucide-react";
 import { User } from "@/app/types/userType";
 import { useDNIValidation } from "@/app/hooks/useDNIValidation";
 
@@ -21,7 +21,7 @@ interface Step2Props {
 }
 
 export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
-  // Hook para validación de DNI
+  // Hook para validación de DNI con nuevas funcionalidades
   const {
     dni,
     loading: loadingDni,
@@ -30,10 +30,14 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     apiData,
     isValidated,
     validationError,
+    retryCount,
+    isManualMode,
+    canEnableManualMode,
     setDni,
     searchDNI,
     validateIdentity,
     cleanDNI,
+    enableManualMode,
     handleKeyPress: handleDniKeyPress
   } = useDNIValidation();
 
@@ -47,6 +51,10 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Nuevo estado para la declaración jurada
+  const [acceptDataResponsibility, setAcceptDataResponsibility] = useState(false);
+  const [showDataResponsibilityModal, setShowDataResponsibilityModal] = useState(false);
+
   const [locationData, setLocationData] = useState<User['location']>({
     department: "",
     province: "",
@@ -55,6 +63,12 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
 
   // Validaciones
   const validateNumber = (telephoneNumber: string) => /^(9\d{8}|[1-8]\d{7})$/.test(telephoneNumber);
+  
+  // Validar que tenga al menos dos apellidos
+  const validateLastNames = (lastName: string) => {
+    const apellidos = lastName.trim().split(/\s+/);
+    return apellidos.length >= 2 && apellidos.every(apellido => apellido.length > 0);
+  };
 
   // Determinar categoría basada en edad actual
   const determineCategory = (birthDate: string) => {
@@ -62,22 +76,20 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     
-    // Ajustar si el cumpleaños no ha pasado este año
     const monthDiff = today.getMonth() - birth.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
     
-    // Categorías basadas en edad actual
-    if (age <= 2) return "Baby";           // 0-2 años
-    else if (age <= 6) return "Pre-Infante";    // 3-6 años
-    else if (age <= 9) return "Infante";        // 7-9 años
-    else if (age <= 13) return "Infantil";      // 10-13 años
-    else if (age <= 17) return "Junior";        // 14-17 años
-    else if (age <= 34) return "Juvenil";       // 18-34 años
-    else if (age <= 49) return "Adulto";        // 35-49 años
-    else if (age <= 61) return "Senior";        // 50-61 años
-    else return "Master";                       // 62+ años
+    if (age <= 2) return "Baby";
+    else if (age <= 6) return "Pre-Infante";
+    else if (age <= 9) return "Infante";
+    else if (age <= 13) return "Infantil";
+    else if (age <= 17) return "Junior";
+    else if (age <= 34) return "Juvenil";
+    else if (age <= 49) return "Adulto";
+    else if (age <= 61) return "Senior";
+    else return "Master";
   };
 
   // Capitalizar texto
@@ -105,13 +117,12 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     }
   }, [birthDate]);
 
-  // Auto-rellenar datos cuando se valida la identidad
+  // Auto-rellenar datos cuando se valida la identidad (solo en modo automático)
   useEffect(() => {
-    if (isValidated && apiData) {
+    if (isValidated && apiData && !isManualMode) {
       setBirthDate(apiData.birthDate);
       setGender(apiData.gender);
       
-      // Actualizar ubicación con datos de RENIEC (solo si existe)
       if (apiData.location) {
         setLocationData({
           department: apiData.location.department || "",
@@ -120,7 +131,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
         });
       }
     }
-  }, [isValidated, apiData]);
+  }, [isValidated, apiData, isManualMode]);
 
   const handleValidateIdentity = () => {
     validateIdentity(firstName, lastName);
@@ -132,12 +143,17 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     setLastName("");
     setBirthDate("");
     setGender("");
-    // Limpiar también la ubicación
+    setAcceptDataResponsibility(false);
     setLocationData({
       department: "",
       province: "",
       district: "",
     });
+  };
+
+  const handleEnableManualMode = () => {
+    enableManualMode();
+    setAcceptDataResponsibility(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -154,9 +170,20 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       return;
     }
 
+    // Validar apellidos antes de continuar
+    if (!validateLastNames(lastName)) {
+      setError("Debes ingresar al menos dos apellidos (paterno y materno).");
+      return;
+    }
+
+    // Verificar declaración jurada solo en modo manual
+    if (isManualMode && !acceptDataResponsibility) {
+      setError("Debes aceptar la declaración de veracidad de datos para continuar.");
+      return;
+    }
+
     setLoading(true);
 
-    // Simular delay para UX
     setTimeout(() => {
       onNext({
         dni,
@@ -181,7 +208,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-red-500 text-center">{error}</p>}
 
-        {/* DNI section with search button */}
+        {/* DNI section */}
         <div>
           <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
             DNI
@@ -208,12 +235,51 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
               <X size={20} />
             </button>
           </div>
+          
           {loadingDni && (
-            <p className="text-gray-500 text-center mt-1">Buscando datos...</p>
+            <p className="text-gray-500 text-center mt-1">
+              Consultando DNI... {retryCount > 0 && `(Intento ${retryCount + 1})`}
+            </p>
           )}
-          {dniError && <p className="text-red-500 text-center mt-1">{dniError}</p>}
+          
+          {dniError && (
+            <div className="mt-2">
+              <p className="text-red-500 text-center">{dniError}</p>
+              {canEnableManualMode && (
+                <div className="mt-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="text-yellow-600 mt-0.5" size={20} />
+                    <div>
+                      <p className="text-sm text-yellow-800 mb-2">
+                        No pudimos validar tu DNI automáticamente. Puedes continuar ingresando tus datos manualmente.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleEnableManualMode}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                      >
+                        Continuar manualmente
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
           {dniExistsError && (
             <p className="text-red-500 text-center mt-1">{dniExistsError}</p>
+          )}
+
+          {isManualMode && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Shield className="text-blue-600" size={16} />
+                <p className="text-sm text-blue-800">
+                  Modo manual activado - Ingresa tus datos manualmente
+                </p>
+              </div>
+            </div>
           )}
         </div>
 
@@ -222,13 +288,13 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
           <div className="flex gap-x-2">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                Nombre
+                Nombre(s)
               </label>
               <input
                 type="text"
                 id="firstName"
                 value={capitalizeText(firstName)}
-                disabled={!apiData || isValidated}
+                disabled={!apiData || (isValidated && !isManualMode)}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none disabled:opacity-50"
                 placeholder="Tu nombre"
@@ -237,22 +303,22 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                Apellido(s)
+                Apellidos
               </label>
               <input
                 type="text"
                 id="lastName"
                 value={capitalizeText(lastName)}
-                disabled={!apiData || isValidated}
+                disabled={!apiData || (isValidated && !isManualMode)}
                 onChange={(e) => setLastName(e.target.value)}
                 className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none disabled:opacity-50"
-                placeholder="Tus apellidos"
+                placeholder="Apellido paterno y materno"
                 required
               />
             </div>
           </div>
           <p className="text-gray-700 text-sm justify-center align-middle text-center mt-1">
-            *Por favor, ingrese nombres y apellidos completos*
+            *Ingrese nombre completo y ambos apellidos (paterno y materno)*
           </p>
         </div>
 
@@ -291,6 +357,8 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
             Datos validados correctamente ✓
           </p>
         )}
+
+
 
         {/* El resto de los campos solo son accesibles si los datos están validados */}
         {isValidated && (
@@ -362,6 +430,27 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
               />
             </div>
 
+            {/* Declaración jurada para modo manual - al final */}
+            {isManualMode && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="dataResponsibility"
+                    checked={acceptDataResponsibility}
+                    onChange={(e) => setAcceptDataResponsibility(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="dataResponsibility" className="text-sm text-amber-800 cursor-pointer">
+                      <strong>Declaro que los datos proporcionados son verdaderos.</strong><br />
+                      Entiendo las consecuencias legales de proporcionar información falsa.
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Botones de navegación */}
             <div className="flex justify-between mt-8">
               <button
@@ -375,7 +464,12 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
               <button
                 type="submit"
                 className="w-1/2 bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!gender || !phoneNumber || loading}
+                disabled={
+                  !gender || 
+                  !phoneNumber || 
+                  loading || 
+                  (isManualMode && !acceptDataResponsibility)
+                }
               >
                 {loading ? "Cargando..." : "Siguiente"}
               </button>

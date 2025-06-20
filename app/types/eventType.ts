@@ -143,6 +143,8 @@ export interface CustomEvent {
   description: string;
   startDate: Timestamp;
   endDate: Timestamp;
+  realStartTime?: Timestamp;
+  realEndTime?: Timestamp;
   academyId?: string;
   academyName: string;
   organizerId: string;

@@ -28,12 +28,19 @@ interface UseDNIValidationReturn {
   validationError: string;
   consultedDNI: string;
   
+  // Nuevos estados para reintentos y modo manual
+  retryCount: number;
+  isManualMode: boolean;
+  canEnableManualMode: boolean;
+  
   // Funciones
   setDni: (dni: string) => void;
   searchDNI: () => Promise<void>;
   validateIdentity: (firstName: string, lastName: string) => void;
   cleanDNI: () => void;
   handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  enableManualMode: () => void;
+  resetRetries: () => void;
 }
 
 export const useDNIValidation = (): UseDNIValidationReturn => {
@@ -45,12 +52,16 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
   const [isValidated, setIsValidated] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [consultedDNI, setConsultedDNI] = useState("");
+  
+  // Nuevos estados para el sistema de reintentos
+  const [retryCount, setRetryCount] = useState(0);
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [canEnableManualMode, setCanEnableManualMode] = useState(false);
 
   // Capitalizar texto para ubicaciones
   const capitalizeLocation = (text: string): string => {
     if (!text) return '';
 
-    // Palabras que no se capitalizan (artículos, preposiciones, conjunciones)
     const nonCapitalizedWords = [
       'de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u', 
       'al', 'con', 'en', 'por', 'para', 'sin', 'sobre', 'bajo'
@@ -60,7 +71,6 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       .toLowerCase()
       .split(' ')
       .map((word, index) => {
-        // Siempre capitalizar la primera palabra
         if (index === 0 || !nonCapitalizedWords.includes(word)) {
           return word.charAt(0).toUpperCase() + word.slice(1);
         }
@@ -68,6 +78,7 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       })
       .join(' ');
   };
+
   const checkDniExistsInFirestore = async (dniToCheck: string): Promise<boolean> => {
     try {
       const usersRef = collection(db, "users");
@@ -80,9 +91,10 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     }
   };
 
-  // Consultar datos en RENIEC
+  // Consultar datos en RENIEC con sistema de reintentos
   const fetchReniecData = async (dniToSearch: string): Promise<void> => {
     setLoading(true);
+    // Solo limpiar errores, no el retryCount
     setError("");
     setExistsError("");
     setIsValidated(false);
@@ -132,17 +144,38 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
           location: capitalizedLocation
         });
         setConsultedDNI(dniToSearch);
+        // Resetear contadores en caso de éxito
+        setRetryCount(0);
+        setCanEnableManualMode(false);
       } else {
-        setApiData(null);
-        setConsultedDNI("");
-        setError("No se encontró el DNI.");
+        // Manejar el caso de DNI no encontrado
+        handleDNINotFound();
       }
     } catch (error) {
       console.error("Error al consultar DNI:", error);
-      setError("Error al consultar el DNI.");
+      handleDNINotFound();
     } finally {
       setLoading(false);
     }
+  };
+
+  // Manejar caso de DNI no encontrado con sistema de reintentos
+  const handleDNINotFound = (): void => {
+    setRetryCount(prevCount => {
+      const newRetryCount = prevCount + 1;
+      
+      if (newRetryCount >= 2) {
+        setError("No se encontró el DNI después de varios intentos.");
+        setCanEnableManualMode(true);
+      } else {
+        setError(`No se encontró el DNI. Intento ${newRetryCount} de 2.`);
+      }
+      
+      return newRetryCount;
+    });
+    
+    setApiData(null);
+    setConsultedDNI("");
   };
 
   // Buscar DNI (función pública)
@@ -154,7 +187,34 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     }
   }, [dni]);
 
-  // Validar identidad comparando datos ingresados vs RENIEC
+  // Habilitar modo manual
+  const enableManualMode = useCallback((): void => {
+    setIsManualMode(true);
+    setApiData({
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      gender: "",
+      location: {
+        department: "",
+        province: "",
+        district: "",
+        ubigeo: "",
+      }
+    });
+    setConsultedDNI(dni);
+    setError("");
+    setCanEnableManualMode(false);
+  }, [dni]);
+
+  // Resetear reintentos
+  const resetRetries = useCallback((): void => {
+    setRetryCount(0);
+    setCanEnableManualMode(false);
+    setIsManualMode(false);
+  }, []);
+
+  // Validar identidad comparando datos ingresados vs RENIEC (o modo manual)
   const validateIdentity = useCallback((firstName: string, lastName: string): void => {
     if (!apiData) {
       setValidationError("Por favor, ingresa primero tu DNI para validar tus datos.");
@@ -167,6 +227,19 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       return;
     }
 
+    // En modo manual, solo verificar que los campos no estén vacíos
+    if (isManualMode) {
+      if (firstName.trim() && lastName.trim()) {
+        setIsValidated(true);
+        setValidationError("");
+      } else {
+        setIsValidated(false);
+        setValidationError("Por favor, ingresa tu nombre y apellido completos.");
+      }
+      return;
+    }
+
+    // Validación normal con datos de RENIEC
     const userFirstName = firstName.trim().toUpperCase();
     const userLastName = lastName.trim().toUpperCase();
 
@@ -177,7 +250,7 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       setIsValidated(false);
       setValidationError("Los datos ingresados no coinciden con los registrados en RENIEC.");
     }
-  }, [apiData, dni, consultedDNI]);
+  }, [apiData, dni, consultedDNI, isManualMode]);
 
   // Limpiar todos los datos
   const cleanDNI = useCallback((): void => {
@@ -188,6 +261,9 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     setError("");
     setExistsError("");
     setValidationError("");
+    setRetryCount(0);
+    setCanEnableManualMode(false);
+    setIsManualMode(false);
   }, []);
 
   // Manejar Enter en el input
@@ -199,7 +275,7 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
   }, [searchDNI]);
 
   return {
-    // Estados
+    // Estados originales
     dni,
     loading,
     error,
@@ -209,11 +285,20 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     validationError,
     consultedDNI,
     
-    // Funciones
+    // Nuevos estados
+    retryCount,
+    isManualMode,
+    canEnableManualMode,
+    
+    // Funciones originales
     setDni,
     searchDNI,
     validateIdentity,
     cleanDNI,
     handleKeyPress,
+    
+    // Nuevas funciones
+    enableManualMode,
+    resetRetries,
   };
 };
