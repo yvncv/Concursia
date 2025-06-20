@@ -2,6 +2,7 @@ import React from "react";
 import { CheckCircle, Printer, RefreshCcw, MapPin } from "lucide-react";
 import { User } from "@/app/types/userType";
 import { DocumentData } from "firebase/firestore";
+import { decryptValue } from "@/app/utils/encryption";
 
 // Definición de tipos
 interface EventSettings {
@@ -211,13 +212,13 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm">
                       <p className="font-medium text-gray-800">{inscripcion.participante.nombre}</p>
-                      <p className="text-xs text-gray-500">DNI: {inscripcion.participante.dni}</p>
+                      <p className="text-xs text-gray-500">DNI: {decryptValue(inscripcion.participante.dni)}</p>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm">
                       {inscripcion.pareja ? (
                         <>
                           <p className="font-medium text-gray-800">{inscripcion.pareja.nombre}</p>
-                          <p className="text-xs text-gray-500">DNI: {inscripcion.pareja.dni}</p>
+                          <p className="text-xs text-gray-500">DNI: {decryptValue(inscripcion.pareja.dni)}</p>
                         </>
                       ) : (
                         <span className="text-gray-400">-</span>

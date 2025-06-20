@@ -28,6 +28,7 @@ import PersonalInformation from './components/PersonalInformation';
 import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
+import { decryptValue } from '@/app/utils/encryption';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();

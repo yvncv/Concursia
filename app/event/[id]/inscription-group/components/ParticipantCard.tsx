@@ -1,6 +1,7 @@
 import React from "react";
 import { User, Mail, Calendar, Award, UserCheck } from "lucide-react";
 import { Timestamp } from "firebase/firestore";
+import { decryptValue } from "@/app/utils/encryption";
 
 interface Participant {
   id: string;
@@ -51,7 +52,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, calcular
         </p>
         <p className="flex items-center text-gray-700">
           <Mail className={`w-3.5 h-3.5 mr-1 ${iconColor}`} />
-          DNI: {participant.dni}
+          DNI: {decryptValue(participant.dni)}
         </p>
       </div>
     </div>

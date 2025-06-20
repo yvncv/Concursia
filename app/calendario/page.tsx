@@ -56,8 +56,8 @@ export default function TodosEventos() {
         <div className="w-full max-w-[1400px] md:px-8 md:mt-12">
           <div className="bg-white/80 backdrop-blur-sm md:rounded-xl p-3 md:p-6 shadow-lg mb-5 md:mb-8">
             <h1 className="md:text-2xl font-bold text-red-600">
-              {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Tusuy Perú"},
-              estos son los eventos con inscripciones abiertas!
+              {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Concursia"},
+              estos son los eventos de la fecha!
             </h1>
           </div>
 

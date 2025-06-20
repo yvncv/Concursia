@@ -7,7 +7,7 @@ import { auth, db, storage } from "@/app/firebase/config";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import TusuyImage from "@/public/concursia-fondo.png";
+import MarineraImage from "@/public/concursia-fondo.png";
 import toast from 'react-hot-toast';
 import {
   ref as storageRef,
@@ -15,6 +15,8 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { User } from "@/app/types/userType";
+import { encryptValue } from "../utils/encryption";
+import { hashDni } from "../utils/hash";
 
 // Import steps
 import Step1BasicInfo from "./steps/Step1BasicInfo";
@@ -130,7 +132,8 @@ export default function RegisterPage() {
       await setDoc(doc(db, "users", user.uid), {
         id: user.uid,
         roleId: "user",
-        dni: completeData.dni,
+        dni: encryptValue(completeData.dni),
+        dniHash: hashDni(completeData.dni),
         firstName: completeData.firstName,
         lastName: completeData.lastName,
         birthDate: Timestamp.fromDate(new Date(`${completeData.birthDate}T00:00:00`)),
@@ -153,7 +156,7 @@ export default function RegisterPage() {
 
       // Dismiss loading toast y mostrar éxito
       toast.dismiss(loadingToast);
-      toast.success('¡Registro completado exitosamente! Bienvenido a Tusuy Perú', {
+      toast.success('¡Registro completado exitosamente! Bienvenido a Concursia', {
         duration: 5000,
         icon: '🎉',
       });
@@ -248,8 +251,8 @@ export default function RegisterPage() {
         {/* Imagen lateral */}
         <div className="hidden md:block md:w-1/2">
           <Image
-            src={TusuyImage}
-            alt="Tusuy Perú"
+            src={MarineraImage}
+            alt="Marinera"
             className="w-full h-full object-cover"
             loader={({ src }) => src}
           />

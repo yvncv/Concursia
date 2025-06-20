@@ -27,6 +27,7 @@ import DeleteTicket from "@/app/organize/events/[id]/sections/ticketsModules/del
 import ConfirmTicket from "@/app/organize/events/[id]/sections/ticketsModules/confirmTicket";
 import FilterModal, { FilterOptions } from "@/app/organize/events/[id]/sections/ticketsModules/modals/FilterModal";
 import useAcademies from "@/app/hooks/useAcademies";
+import { decryptValue } from "@/app/utils/encryption";
 
 interface TicketsProps {
   event: CustomEvent;
@@ -750,7 +751,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
                             return user ? (
                               <div key={userId} className="flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-                                <span className="text-sm">{user?.dni} - {user?.firstName} {user?.lastName}</span>
+                                <span className="text-sm">{decryptValue(user?.dni)} - {user?.firstName} {user?.lastName}</span>
                               </div>
                             ) : (
                               <span key={userId} className="text-sm text-gray-500">Usuario no encontrado</span>
