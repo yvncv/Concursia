@@ -3,6 +3,8 @@ import { CustomEvent } from '@/app/types/eventType';
 import { Users, Clock, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LiveContestRunning } from './LiveModules/LiveContestRunning';
+import useEventParticipants from '@/app/hooks/useEventParticipants';
+import { startContestWithEventData } from '@/app/services/startContestService';
 
 interface LiveProps {
     event: CustomEvent;
@@ -10,9 +12,20 @@ interface LiveProps {
 
 const Live: React.FC<LiveProps> = ({ event }) => {
     const [isContestRunning, setIsContestRunning] = useState(false);
+    const [isStartingContest, setIsStartingContest] = useState(false); // ✨ NUEVO
     const [currentPage, setCurrentPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const itemsPerPage = 4;
+
+    // Hook para obtener participantes del evento
+    const {
+        totalParticipants,
+        modalityData,
+        loadingParticipants,
+        error,
+        getParticipantCount,
+        getUniqueLevels
+    } = useEventParticipants(event.id);
 
     // Si el concurso está corriendo, mostrar la página de concurso en vivo
     if (isContestRunning) {
@@ -26,13 +39,7 @@ const Live: React.FC<LiveProps> = ({ event }) => {
 
     // Datos del evento
     const scheduleItems = event.settings?.schedule?.items || [];
-    const totalParticipants = Object.values(event.participants || {}).reduce((total, levelParticipants) => {
-        return total + Object.values(levelParticipants).reduce((levelTotal, categoryData) => {
-            return levelTotal + categoryData.count;
-        }, 0);
-    }, 0);
-
-    const uniqueLevels = [...new Set(scheduleItems.map(item => item.levelId))];
+    const uniqueLevels = getUniqueLevels();
     const totalEstimatedTime = scheduleItems.reduce((total, item) => total + (item.estimatedTime || 0), 0);
 
     // Formatear tiempo
@@ -140,51 +147,106 @@ const Live: React.FC<LiveProps> = ({ event }) => {
 
     // Función para mostrar el modal de confirmación
     const showStartContestModal = () => {
+        // ✨ NUEVA VALIDACIÓN: Solo permitir si hay participantes y no está en proceso
+        if (totalParticipants === 0) {
+            toast.error('No se puede iniciar el concurso sin participantes', {
+                duration: 3000,
+                position: 'top-center',
+            });
+            return;
+        }
+
+        if (event.status !== 'pendiente') {
+            toast.error('El evento no está en estado pendiente', {
+                duration: 3000,
+                position: 'top-center',
+            });
+            return;
+        }
+
         setShowModal(true);
     };
 
-    // Función para manejar el inicio del concurso
-    const handleStartContest = () => {
-        setShowModal(false);
-        setIsContestRunning(true);
-        
-        // Mostrar toast de éxito
-        toast.success('¡Concurso iniciado exitosamente!', {
-            duration: 3000,
-            position: 'top-center',
-        });
-        
-        // Aquí podrías hacer una llamada a la API para actualizar el estado del concurso
-        // updateContestStatus(event.id, 'active');
+    // ✨ FUNCIÓN ACTUALIZADA para manejar el inicio del concurso
+    const handleStartContest = async () => {
+        try {
+            setIsStartingContest(true);
+            setShowModal(false);
+            
+            // Mostrar toast de inicio
+            toast.loading('Iniciando concurso...', {
+                id: 'starting-contest',
+                duration: Infinity,
+            });
+
+            // Ejecutar el inicio del concurso
+            await startContestWithEventData(event.id);
+            
+            // Ocultar toast de loading y mostrar éxito
+            toast.dismiss('starting-contest');
+            toast.success('¡Concurso iniciado exitosamente!', {
+                duration: 3000,
+                position: 'top-center',
+            });
+            
+            // Cambiar a la vista de concurso en vivo
+            setIsContestRunning(true);
+            
+        } catch (error) {
+            console.error('Error al iniciar concurso:', error);
+            
+            // Ocultar toast de loading y mostrar error
+            toast.dismiss('starting-contest');
+            toast.error('Error al iniciar el concurso. Inténtalo de nuevo.', {
+                duration: 5000,
+                position: 'top-center',
+            });
+        } finally {
+            setIsStartingContest(false);
+        }
     };
 
     const handleCancelStart = () => {
         setShowModal(false);
     };
 
-    // Datos para el gráfico circular (simulado con CSS)
-    const modalityData = uniqueLevels.map(levelId => {
-        const levelParticipants = Object.values(event.participants?.[levelId] || {}).reduce((sum, cat) => sum + cat.count, 0);
-        const percentage = totalParticipants > 0 ? (levelParticipants / totalParticipants) * 100 : 0;
-        return {
-            name: levelId,
-            count: levelParticipants,
-            percentage: Math.round(percentage) || 0
-        };
-    });
+    // Mostrar loading mientras se cargan los participantes
+    if (loadingParticipants) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando participantes del evento...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Mostrar error si hay problemas cargando participantes
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-center">
+                    <div className="text-red-500 mr-3">⚠️</div>
+                    <div>
+                        <h3 className="text-red-800 font-medium">Error al cargar participantes</h3>
+                        <p className="text-red-600 text-sm mt-1">{error}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
-            {/* Modal de confirmación CORREGIDO */}
+            {/* Modal de confirmación */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    {/* Overlay con blur mejorado */}
                     <div 
                         className="absolute inset-0 bg-black/60 backdrop-blur-md"
                         onClick={handleCancelStart}
                     ></div>
                     
-                    {/* Modal centrado correctamente */}
                     <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 animate-in zoom-in-95">
                         <div className="p-8">
                             <div className="text-center">
@@ -200,15 +262,29 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                                     ¿Estás seguro que deseas iniciar el concurso? Esta acción no se puede deshacer.
                                 </p>
                                 <div className="flex justify-center space-x-4">
+                                    {/* ✨ BOTÓN ACEPTAR ACTUALIZADO */}
                                     <button
                                         onClick={handleStartContest}
-                                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 min-w-[100px]"
+                                        disabled={isStartingContest}
+                                        className={`px-6 py-3 rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 min-w-[100px] ${
+                                            isStartingContest
+                                                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                                : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+                                        }`}
                                     >
-                                        Aceptar
+                                        {isStartingContest ? (
+                                            <div className="flex items-center justify-center">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Iniciando...
+                                            </div>
+                                        ) : (
+                                            'Aceptar'
+                                        )}
                                     </button>
                                     <button
                                         onClick={handleCancelStart}
-                                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-w-[100px]"
+                                        disabled={isStartingContest}
+                                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Cancelar
                                     </button>
@@ -229,30 +305,62 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                         </div>
                         <h1 className="text-2xl font-bold text-gray-800">{event.name || 'Concurso en vivo'}</h1>
                     </div>
+                    {/* ✨ BOTÓN INICIAR CONCURSO ACTUALIZADO */}
                     <button 
                         onClick={showStartContestModal}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        disabled={isStartingContest || totalParticipants === 0 || event.status !== 'pendiente'}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                            isStartingContest || totalParticipants === 0 || event.status !== 'pendiente'
+                                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                        title={
+                            totalParticipants === 0 
+                                ? 'No hay participantes registrados'
+                                : event.status !== 'pendiente'
+                                ? 'El evento no está en estado pendiente'
+                                : 'Iniciar concurso'
+                        }
                     >
-                        Iniciar Concurso
+                        {isStartingContest ? (
+                            <div className="flex items-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Iniciando...
+                            </div>
+                        ) : (
+                            'Iniciar Concurso'
+                        )}
                     </button>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                         <span className="text-gray-600">Lugar:</span>
-                        <div className="font-medium">Coliseo Miguel Grau</div>
+                        <div className="font-medium">{event.location?.placeName || 'No especificado'}</div>
                     </div>
                     <div>
                         <span className="text-gray-600">Fecha Programada:</span>
-                        <div className="font-medium">15/06/2025</div>
+                        <div className="font-medium">
+                            {event.startDate?.toDate().toLocaleDateString('es-ES') || 'No especificada'}
+                        </div>
                     </div>
                     <div>
                         <span className="text-gray-600">Ubicación:</span>
-                        <div className="font-medium">San Juan de Lurigancho, Lima, Perú</div>
+                        <div className="font-medium">
+                            {event.location ? 
+                                `${event.location.district}, ${event.location.province}, ${event.location.department}` : 
+                                'No especificada'
+                            }
+                        </div>
                     </div>
                     <div>
                         <span className="text-gray-600">Hora Programada:</span>
-                        <div className="font-medium">9 a.m.</div>
+                        <div className="font-medium">
+                            {event.startDate?.toDate().toLocaleTimeString('es-ES', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            }) || 'No especificada'}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,7 +402,7 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                         <div className="relative w-48 h-48">
                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                 {modalityData.length > 0 && totalParticipants > 0 ? modalityData.map((item, index) => {
-                                    const colors = ['#ef4444', '#22c55e', '#3b82f6']; // rojo, verde, azul
+                                    const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6']; // más colores
                                     const circumference = 2 * Math.PI * 40;
                                     const strokeDasharray = (item.percentage / 100) * circumference;
                                     const previousPercentages = modalityData.slice(0, index).reduce((sum, prev) => sum + (prev.percentage || 0), 0);
@@ -307,7 +415,7 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                                             cy="50"
                                             r="40"
                                             fill="none"
-                                            stroke={colors[index] || '#6b7280'}
+                                            stroke={colors[index % colors.length] || '#6b7280'}
                                             strokeWidth="8"
                                             strokeDasharray={`${strokeDasharray || 0} ${circumference}`}
                                             strokeDashoffset={strokeDashoffset}
@@ -337,11 +445,11 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                     {/* Leyenda */}
                     <div className="space-y-2">
                         {modalityData.length > 0 ? modalityData.map((item, index) => {
-                            const colors = ['bg-red-500', 'bg-green-500', 'bg-blue-500'];
+                            const colors = ['bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500', 'bg-purple-500'];
                             return (
                                 <div key={item.name} className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <div className={`w-3 h-3 rounded-full mr-2 ${colors[index] || 'bg-gray-400'}`}></div>
+                                        <div className={`w-3 h-3 rounded-full mr-2 ${colors[index % colors.length] || 'bg-gray-400'}`}></div>
                                         <span className="text-sm text-gray-700 capitalize">{item.name}</span>
                                     </div>
                                     <div className="text-sm font-medium text-gray-800">
@@ -375,7 +483,7 @@ const Live: React.FC<LiveProps> = ({ event }) => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {currentItems.map((item, index) => {
-                                    const categoryParticipants = event.participants?.[item.levelId]?.[item.category]?.count || 0;
+                                    const categoryParticipants = getParticipantCount(item.levelId, item.category);
                                     const globalIndex = startIndex + index + 1;
                                     return (
                                         <tr key={item.id} className="hover:bg-gray-50">

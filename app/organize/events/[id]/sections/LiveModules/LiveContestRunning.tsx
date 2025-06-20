@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Play, Pause, SkipForward, Clock, Users, Calendar, FileText, BarChart3, Settings, Printer, MoreHorizontal } from 'lucide-react';
 import { CustomEvent } from '@/app/types/eventType';
+import useEventParticipants from '@/app/hooks/useEventParticipants';
 
 interface LiveContestRunningProps {
     event: CustomEvent;
@@ -12,13 +13,16 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
     const [isRunning, setIsRunning] = useState(true);
     const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
+    const {
+        totalParticipants,
+        participantStats,
+        getParticipantCount,
+        loadingParticipants,
+        error
+    } = useEventParticipants(event.id);
+
     // Obtener datos del evento
     const scheduleItems = event.settings?.schedule?.items || [];
-    const totalParticipants = Object.values(event.participants || {}).reduce((total, levelParticipants) => {
-        return total + Object.values(levelParticipants).reduce((levelTotal, categoryData) => {
-            return levelTotal + categoryData.count;
-        }, 0);
-    }, 0);
 
     // Temporizador
     useEffect(() => {
@@ -55,10 +59,64 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         }
     };
 
-    // Obtener participantes para el item actual
+    // ✨ FUNCIÓN ACTUALIZADA PARA OBTENER PARTICIPANTES REALES
     const getCurrentParticipants = (item: any) => {
-        return event.participants?.[item.levelId]?.[item.category]?.count || 0;
+        return getParticipantCount(item.levelId, item.category);
     };
+
+    // ✨ MOSTRAR LOADING MIENTRAS SE CARGAN PARTICIPANTES
+    if (loadingParticipants) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-4">
+                        <button 
+                            onClick={onBack}
+                            className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        >
+                            <ArrowLeft className="h-5 w-5 text-gray-600" />
+                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                    </div>
+                </div>
+                
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Cargando datos del concurso...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-4">
+                        <button 
+                            onClick={onBack}
+                            className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        >
+                            <ArrowLeft className="h-5 w-5 text-gray-600" />
+                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                    </div>
+                </div>
+                
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="flex items-center">
+                        <div className="text-red-500 mr-3">⚠️</div>
+                        <div>
+                            <h3 className="text-red-800 font-medium">Error al cargar datos del concurso</h3>
+                            <p className="text-red-600 text-sm mt-1">{error}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -71,13 +129,19 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                     >
                         <ArrowLeft className="h-5 w-5 text-gray-600" />
                     </button>
-                    <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                        <p className="text-sm text-gray-600">{event.name}</p>
+                    </div>
                 </div>
                 
                 <div className="text-right">
                     <div className="text-sm text-gray-600 mb-1">Tiempo:</div>
                     <div className="text-xl font-mono font-bold text-gray-800">
                         {formatTime(currentTime)}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-2">
+                        {totalParticipants} participantes totales
                     </div>
                 </div>
             </div>
@@ -92,6 +156,10 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                             </h3>
                             <p className="text-blue-600 capitalize">
                                 {scheduleItems[currentItemIndex]?.levelId}
+                            </p>
+                            {/* ✨ AGREGAR INFORMACIÓN DE FASE */}
+                            <p className="text-sm text-blue-500">
+                                Fase: {scheduleItems[currentItemIndex]?.phase || 'Final'}
                             </p>
                         </div>
                         <div className="text-right">
@@ -112,49 +180,62 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 
                 <div className="p-6">
                     <div className="space-y-3">
-                        {scheduleItems.length > 0 ? scheduleItems.map((item, index) => (
-                            <div
-                                key={item.id}
-                                className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                                    index === currentItemIndex
-                                        ? 'bg-green-50 border-green-200 shadow-sm'
-                                        : index < currentItemIndex
-                                        ? 'bg-gray-50 border-gray-200 opacity-60'
-                                        : 'bg-white border-gray-200 hover:bg-gray-50'
-                                }`}
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <div className={`w-3 h-3 rounded-full ${
+                        {scheduleItems.length > 0 ? scheduleItems.map((item, index) => {
+                            const participantsCount = getCurrentParticipants(item);
+                            
+                            return (
+                                <div
+                                    key={item.id}
+                                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
                                         index === currentItemIndex
-                                            ? 'bg-green-500 animate-pulse'
+                                            ? 'bg-green-50 border-green-200 shadow-sm'
                                             : index < currentItemIndex
-                                            ? 'bg-gray-400'
-                                            : 'bg-gray-300'
-                                    }`}></div>
-                                    <div>
-                                        <div className={`font-medium ${
-                                            index === currentItemIndex ? 'text-green-800' : 'text-gray-700'
-                                        }`}>
-                                            {item.category}
-                                        </div>
-                                        <div className="text-sm text-gray-500 capitalize">
-                                            {item.levelId} • {getCurrentParticipants(item)} participantes • {item.estimatedTime || 0} min
+                                            ? 'bg-gray-50 border-gray-200 opacity-60'
+                                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className={`w-3 h-3 rounded-full ${
+                                            index === currentItemIndex
+                                                ? 'bg-green-500 animate-pulse'
+                                                : index < currentItemIndex
+                                                ? 'bg-gray-400'
+                                                : 'bg-gray-300'
+                                        }`}></div>
+                                        <div>
+                                            <div className={`font-medium ${
+                                                index === currentItemIndex ? 'text-green-800' : 'text-gray-700'
+                                            }`}>
+                                                {item.category}
+                                            </div>
+                                            <div className="text-sm text-gray-500 capitalize">
+                                                {item.levelId} • {participantsCount} participantes • {item.estimatedTime || 0} min
+                                                {/* ✨ AGREGAR FASE Y GÉNERO SI ESTÁ DISPONIBLE */}
+                                                {item.phase && ` • ${item.phase}`}
+                                                {item.gender && ` • ${item.gender}`}
+                                            </div>
+                                            {/* ✨ MOSTRAR ALERTA SI NO HAY PARTICIPANTES */}
+                                            {participantsCount === 0 && (
+                                                <div className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded mt-1 inline-block">
+                                                    ⚠️ Sin participantes registrados
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
+                                    
+                                    <button 
+                                        className={`p-2 rounded-full transition-colors ${
+                                            index === currentItemIndex
+                                                ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                                : 'bg-gray-100 text-gray-400'
+                                        }`}
+                                        disabled={index !== currentItemIndex}
+                                    >
+                                        <Play className="h-4 w-4" />
+                                    </button>
                                 </div>
-                                
-                                <button 
-                                    className={`p-2 rounded-full transition-colors ${
-                                        index === currentItemIndex
-                                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                            : 'bg-gray-100 text-gray-400'
-                                    }`}
-                                    disabled={index !== currentItemIndex}
-                                >
-                                    <Play className="h-4 w-4" />
-                                </button>
-                            </div>
-                        )) : (
+                            );
+                        }) : (
                             <div className="text-center py-8 text-gray-500">
                                 <p>No hay elementos en el cronograma</p>
                             </div>
@@ -217,6 +298,25 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                             </div>
                         </div>
                     )}
+
+                    {/* ✨ NUEVA SECCIÓN: RESUMEN DE PARTICIPANTES POR MODALIDAD */}
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-3">Resumen de participantes</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {Object.entries(participantStats).map(([level, categories]) => {
+                                const levelTotal = Object.values(categories).reduce((sum, cat) => sum + cat.count, 0);
+                                return (
+                                    <div key={level} className="bg-gray-50 rounded-lg p-3">
+                                        <div className="font-medium text-gray-700 capitalize text-sm">{level}</div>
+                                        <div className="text-lg font-bold text-gray-800">{levelTotal}</div>
+                                        <div className="text-xs text-gray-500">
+                                            {Object.keys(categories).length} categoría{Object.keys(categories).length !== 1 ? 's' : ''}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
