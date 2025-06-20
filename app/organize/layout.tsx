@@ -44,7 +44,7 @@ export default function OrganizerLayout({
       />
       <main className="transition-all duration-300 overflow-x-auto flex-1">
         <div
-          className={`p-6 transition-all duration-300 ${
+          className={`transition-all duration-300 ${
             isCollapsed ? "w-[calc(100vw-4rem)]" : "w-[calc(100vw-16rem)]"
           }`}
         >

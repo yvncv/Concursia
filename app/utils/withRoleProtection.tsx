@@ -38,8 +38,8 @@ export const withRoleProtection = <P extends object>(
 
       const parts = pathname.split("/").filter(Boolean);
       const isAdminRoute = /^\/admin(?:$|\/)/.test(pathname);
-      const isEventList = parts[0] === "organize" && parts[1] === "events" && parts.length === 2;
-      const isEventDetail = parts[0] === "organize" && parts[1] === "events" && parts.length >= 3;
+      const isEventList = parts[0] === "organize";
+      const isEventDetail = parts[0] === "organize";
 
       // 1) /admin
       if (isAdminRoute) {
@@ -81,7 +81,7 @@ export const withRoleProtection = <P extends object>(
           return;
         }
         // organizador global del evento
-        if (user?.roleId === "organizer" || ev.organizerId === user?.id) {
+        if (user?.roleId === "organizer" || ev.organizerId === user?.id || (user?.roleId == "organizer" && ev.academyId === user?.marinera?.academyId)) {
           setIsAllowed(true);
           setChecked(true);
           return;
