@@ -32,8 +32,15 @@ export default function TodosEventos() {
 
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-  const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
-  const activeEvents = currentEvents.filter(event => event.status === 'active' || event.status === 'live');
+  
+  // Filtrar TODOS los eventos que tengan inscripciones habilitadas (no solo los de la página actual)
+  const allEventsWithRegistrationEnabled = events.filter(event => 
+    event.settings?.inscription?.groupEnabled === true || 
+    event.settings?.inscription?.individualEnabled === true
+  );
+  
+  // Aplicar paginación a los eventos filtrados
+  const currentEvents = allEventsWithRegistrationEnabled.slice(indexOfFirstEvent, indexOfLastEvent);
 
   return (
       <main className="flex flex-col items-center min-h-screen text-center">
@@ -41,7 +48,7 @@ export default function TodosEventos() {
         <section className="relative h-[200px] sm:h-[450px] flex items-center justify-center w-full">
           {/* Carrusel de ancho completo */}
           <div className="absolute inset-0">
-            <CarruselEvento events={events}/>
+            <CarruselEvento events={allEventsWithRegistrationEnabled}/>
           </div>
         </section>
 
@@ -56,10 +63,10 @@ export default function TodosEventos() {
 
           {/* Grid de Eventos */}
           <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
-              {activeEvents.length > 0 ? (
+              {currentEvents.length > 0 ? (
                   <div
                       className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
-                    {activeEvents.map((event) => (
+                    {currentEvents.map((event) => (
                         <div
                             key={event.id}
                             className="transform transition-all duration-300 hover:scale-[1.02]"
@@ -71,17 +78,17 @@ export default function TodosEventos() {
               ) : (
                   <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg text-center">
                     <p className="text-gray-600 text-lg">
-                      No hay eventos disponibles en este momento.
+                      No hay eventos con inscripciones abiertas en este momento.
                     </p>
                   </div>
               )}
           </div>
 
         {/* Paginación */}
-        {events.length > 0 && (
+        {allEventsWithRegistrationEnabled.length > 0 && (
             <div className="flex justify-center py-4">
               <Pagination
-                  totalItems={events.length}
+                  totalItems={allEventsWithRegistrationEnabled.length}
                   itemsPerPage={eventsPerPage}
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}

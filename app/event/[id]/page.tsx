@@ -208,7 +208,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 Inscripción
               </button>
               <div>
-                {!isGrupalCSVEnabled && (
+                {!isIndividualWebEnabled && (
                   <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
                 )}
               </div>

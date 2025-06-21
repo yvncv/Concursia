@@ -166,7 +166,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
     return (
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-        <span className="text-sm">{user?.dni} - {user?.firstName} {user?.lastName}</span>
+        <span className="text-sm">{decryptValue(user?.dni)} - {user?.firstName} {user?.lastName}</span>
       </div>
     );
   };
