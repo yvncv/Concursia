@@ -11,7 +11,17 @@ import {
 } from 'lucide-react';
 import { decryptValue } from '@/app/utils/encryption';
 import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
-import { ALL_SECTIONS } from '../layout';
+
+const ALL_SECTIONS = [
+  { id: 'overview', name: 'Visión General', description: 'Ver información general del evento' },
+  { id: 'tickets', name: 'Entradas', description: 'Gestionar entradas y registros' },
+  { id: 'participants', name: 'Participantes', description: 'Administrar participantes' },
+  { id: 'eventstaff', name: 'Personal', description: 'Gestionar personal y permisos' },
+  { id: 'schedule', name: 'Horario', description: 'Administrar programación y agenda' },
+  { id: 'statistics', name: 'Estadísticas', description: 'Ver datos y análisis' },
+  { id: 'messages', name: 'Mensajes', description: 'Gestionar comunicaciones' },
+  { id: 'settings', name: 'Configuración', description: 'Cambiar configuración del evento' }
+];
 
 interface StaffEntry {
   userId: string;
