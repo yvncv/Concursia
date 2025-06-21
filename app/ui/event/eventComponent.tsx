@@ -110,7 +110,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
         {/* Indicador de en vivo flotante */}
         {
           event.status == "live" && (
-            <div className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-2 sm:right-2 md:top-3 md:right-3 z-30 flex items-center gap-1 xs:gap-1.5 sm:gap-2">
+            <div className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-2 sm:right-2 lg:top-3 lg:right-3 z-30 flex items-center gap-1 xs:gap-1.5 sm:gap-2">
               {/* Indicador de EN VIVO */}
               <div 
                 className="relative group"
@@ -126,12 +126,12 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
                 )}
 
                 {/* Contenedor principal */}
-                <div className="relative bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 xs:px-2 xs:py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 rounded-full shadow-md sm:shadow-lg border border-white/30 sm:border-2 sm:border-white/20 backdrop-blur-sm sm:backdrop-blur-md">
+                <div className="relative bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 xs:px-2 xs:py-0.5 sm:px-2.5 sm:py-1 lg:px-3 lg:py-1.5 rounded-full shadow-md sm:shadow-lg border border-white/30 sm:border-2 sm:border-white/20 backdrop-blur-sm sm:backdrop-blur-md">
                   {/* Animación de pulso de fondo */}
                   <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-20"></div>
 
                   {/* Contenido */}
-                  <div className="relative flex items-center gap-0.5 xs:gap-1 sm:gap-1.5">
+                  <div className="relative flex items-center gap-0.5 xs:gap-1 lg:gap-1.5">
                     {/* Punto animado */}
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                     
