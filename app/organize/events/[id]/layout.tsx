@@ -8,44 +8,8 @@ import EventSidebar from './eventSideBar/EventSideBar';
 import { CustomEvent } from '@/app/types/eventType';
 
 import Overview from './sections/Overview';
-import Live from './sections/Live';
-import Tickets from './sections/Tickets';
-import Participants from './sections/Participants';
-import EventStaff from './sections/EventStaff';
-import Schedule from './sections/Schedule';
-import Statistics from './sections/Statistics';
-import Messages from './sections/Messages';
-import Settings from './sections/Settings';
-import Judge from './sections/Judge';
 
-import {
-  LayoutDashboard,
-  CircleDot,
-  Ticket,
-  Users,
-  UserCog,
-  CalendarDays,
-  BarChart2,
-  MessageSquare,
-  Settings as SettingsIcon,
-  Trophy
-} from "lucide-react";
-
-
-// Maestro de secciones
-export const ALL_SECTIONS = [
-  { id: 'overview', name: 'Visión General', component: Overview, icon: <LayoutDashboard size={18} /> },
-  { id: 'live', name: 'En vivo', component: Live, icon: <CircleDot size={18} /> },
-  { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
-  { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
-  { id: 'eventstaff', name: 'Staff', component: EventStaff, icon: <UserCog size={18} /> },
-  { id: 'schedule', name: 'Horario', component: Schedule, icon: <CalendarDays size={18} /> },
-  { id: 'statistics', name: 'Estadísticas', component: Statistics, icon: <BarChart2 size={18} /> },
-  { id: 'messages', name: 'Mensajes', component: Messages, icon: <MessageSquare size={18} /> },
-  { id: 'judge', name: 'Jurado', component: Judge, icon: <Trophy size={18} /> },
-  { id: 'settings', name: 'Configuración', component: Settings, icon: <SettingsIcon size={18} /> },
-];
-
+import { ALL_SECTIONS_COMPONENT } from './sections/sectionsMap';
 
 export default function EventLayout() {
   const { id } = useParams();
@@ -53,22 +17,24 @@ export default function EventLayout() {
   const { user } = useUser();
   const [currentEvent, setCurrentEvent] = useState<CustomEvent | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const myEntry = useMemo(
-    () => currentEvent?.staff?.find(s => s.userId === user?.id) ?? null,
-    [currentEvent?.staff, user?.id]
-  );
+  const myEntry = useMemo(() => {
+    if (!user?.id || !currentEvent?.staff) return null;
+    return currentEvent.staff.find(s => s.userId === user.id) ?? null;
+  }, [currentEvent?.staff, user?.id]);
   const myPerms = myEntry?.permissions || [];
 
   // Secciones permitidas
   const allowedSections = useMemo(() => {
-    if (user?.roleId === "organizer") return ALL_SECTIONS;
-    return ALL_SECTIONS.filter(sec =>
+    if (user?.roleId === "organizer") return ALL_SECTIONS_COMPONENT;
+    return ALL_SECTIONS_COMPONENT.filter(sec =>
       sec.id === 'overview' || myPerms.includes(sec.id)
     );
   }, [user?.roleId, myPerms]);
 
   // Sección activa
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(
+    allowedSections?.[0]?.id ?? null
+  );
   useEffect(() => {
     if (!activeSection && allowedSections?.length > 0) {
       setActiveSection(allowedSections[0].id);
@@ -90,7 +56,11 @@ export default function EventLayout() {
 
 
   // Obtener componente activo
-  const ActiveComponent = ALL_SECTIONS.find(s => s.id === activeSection)?.component || Overview;
+  const ActiveComponent = allowedSections.find(s => s.id === activeSection)?.component || Overview;
+
+  if (!allowedSections.length) {
+    return <div className="p-6">No tienes permisos para ver este evento.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">

@@ -9,7 +9,7 @@ import { findUserByDni } from "./findUserByDni";
 export default function AdminDniEncrypter() {
   const [status, setStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [operation, setOperation] = useState<"encrypt" | "decrypt" | null>(null);
+  const [operation, setOperation] = useState<"encrypt" | "decrypt" | "hash" | null>(null);
 
   const handleEncrypt = async () => {
     setIsLoading(true);
