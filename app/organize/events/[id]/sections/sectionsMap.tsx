@@ -26,7 +26,9 @@ import {
 // Maestro de secciones
 export const ALL_SECTIONS_COMPONENT = [
   { id: 'overview', name: 'Visión General', component: Overview, icon: <LayoutDashboard size={18} /> },
+
   { id: 'live', name: 'En vivo', component: Live, icon: <CircleDot size={18} /> },
+  
   { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
   { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
   { id: 'eventstaff', name: 'Staff', component: EventStaff, icon: <UserCog size={18} /> },

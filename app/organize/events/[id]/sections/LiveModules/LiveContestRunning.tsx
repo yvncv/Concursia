@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Play, Pause, SkipForward, Clock, Users, Calendar, FileText, BarChart3, Settings, Printer, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Play, Eye, Pause, SkipForward, Clock, Users, Calendar, FileText, BarChart3, Settings, Printer, MoreHorizontal } from 'lucide-react';
 import { CustomEvent } from '@/app/types/eventType';
 import useEventParticipants from '@/app/hooks/useEventParticipants';
 import { TandasConfirmationModal } from './modals/TandasConfirmationModal';
 import { TandaExecutionView } from './TandaExecutionView';
-import { generateAndPrepareTandas, confirmAndSaveTandas } from '@/app/services/generateTandasService';
+import { generateAndPrepareTandas, confirmAndSaveTandas, checkIfTandasExist } from '@/app/services/generateTandasService';
 import { Tanda } from '@/app/types/tandaType';
 import { Participant } from '@/app/types/participantType';
+import { db } from '@/app/firebase/config';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface LiveContestRunningProps {
     event: CustomEvent;
@@ -20,13 +22,14 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
     const [currentTime, setCurrentTime] = useState(0);
     const [isRunning, setIsRunning] = useState(true);
     const [currentItemIndex, setCurrentItemIndex] = useState(0);
-    
+
     // Estados para el modal de tandas
     const [showTandasModal, setShowTandasModal] = useState(false);
     const [generatedTandas, setGeneratedTandas] = useState<Tanda[]>([]);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [isGeneratingTandas, setIsGeneratingTandas] = useState(false);
     const [isConfirmingTandas, setIsConfirmingTandas] = useState(false);
+    const [existingTandasIds, setExistingTandasIds] = useState<string[]>([]);
 
     // Estados para la vista de ejecución
     const [viewState, setViewState] = useState<ViewState>('schedule');
@@ -53,6 +56,22 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
 
     // Obtener datos del evento
     const scheduleItems = event.settings?.schedule?.items || [];
+
+    useEffect(() => {
+        const checkAll = async () => {
+            const ids: string[] = [];
+
+            for (const item of scheduleItems) {
+                const id = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
+                const exist = await checkIfTandasExist(event.id, id, item.phase || 'Final');
+                if (exist) ids.push(item.id);
+            }
+
+            setExistingTandasIds(ids);
+        };
+
+        checkAll();
+    }, [scheduleItems]);
 
     // Temporizador
     useEffect(() => {
@@ -103,8 +122,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             setIsGeneratingTandas(true);
             setSelectedItem(item);
 
-            // Obtener participantes para esta categoría/género específico
-            const participants = item.gender 
+            const participants = item.gender
                 ? getParticipantsByGender(item.levelId, item.category, item.gender)
                 : getParticipantsByCategory(item.levelId, item.category);
 
@@ -113,24 +131,46 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 return;
             }
 
-            // Generar ID del LiveCompetition
             const liveCompetitionId = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
             const phase = item.phase || 'Final';
 
-            // Generar tandas
-            const tandas = await generateAndPrepareTandas(
-                event.id,
-                liveCompetitionId,
-                phase,
-                participants
-            );
+            const exist = await checkIfTandasExist(event.id, liveCompetitionId, phase);
 
+            let tandas: Tanda[] = [];
+
+            if (exist) {
+                const snapshot = await getDocs(collection(
+                    db,
+                    'eventos',
+                    event.id,
+                    'liveCompetition',
+                    liveCompetitionId,
+                    'tandas'
+                ));
+                tandas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tanda));
+
+                // 🔁 Ir directamente a la vista de ejecución
+                setExecutionData({
+                    level: item.levelId,
+                    category: item.category,
+                    gender: item.gender || 'Mixto',
+                    tandas,
+                    participants
+                });
+
+                setCurrentTandaIndex(0);
+                setViewState('execution');
+                return;
+            }
+
+            // Si no existen, generar y mostrar en modal
+            tandas = await generateAndPrepareTandas(event.id, liveCompetitionId, phase, participants);
             setGeneratedTandas(tandas);
             setShowTandasModal(true);
 
         } catch (error) {
-            console.error('Error generando tandas:', error);
-            alert(`Error al generar tandas: ${error.message || error}`);
+            console.error('Error:', error);
+            alert(`Error al procesar tandas: ${error.message || error}`);
         } finally {
             setIsGeneratingTandas(false);
         }
@@ -155,7 +195,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             );
 
             // Obtener participantes para la ejecución
-            const participants = selectedItem.gender 
+            const participants = selectedItem.gender
                 ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
                 : getParticipantsByCategory(selectedItem.levelId, selectedItem.category);
 
@@ -233,7 +273,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             <div className="space-y-6">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center space-x-4">
-                        <button 
+                        <button
                             onClick={onBack}
                             className="p-2 hover:bg-gray-100 rounded transition-colors"
                         >
@@ -242,7 +282,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                         <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -259,7 +299,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             <div className="space-y-6">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center space-x-4">
-                        <button 
+                        <button
                             onClick={onBack}
                             className="p-2 hover:bg-gray-100 rounded transition-colors"
                         >
@@ -268,7 +308,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                         <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
                     </div>
                 </div>
-                
+
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                     <div className="flex items-center">
                         <div className="text-red-500 mr-3">⚠️</div>
@@ -287,18 +327,12 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             {/* Header con título y temporizador */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-4">
-                    <button 
-                        onClick={onBack}
-                        className="p-2 hover:bg-gray-100 rounded transition-colors"
-                    >
-                        <ArrowLeft className="h-5 w-5 text-gray-600" />
-                    </button>
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
                         <p className="text-sm text-gray-600">{event.name}</p>
                     </div>
                 </div>
-                
+
                 <div className="text-right">
                     <div className="text-sm text-gray-600 mb-1">Tiempo:</div>
                     <div className="text-xl font-mono font-bold text-gray-800">
@@ -341,35 +375,32 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-800">Cronograma</h3>
                 </div>
-                
+
                 <div className="p-6">
                     <div className="space-y-3">
                         {scheduleItems.length > 0 ? scheduleItems.map((item, index) => {
                             const participantsCount = getCurrentParticipants(item);
-                            
+
                             return (
                                 <div
                                     key={item.id}
-                                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                                        index === currentItemIndex
-                                            ? 'bg-green-50 border-green-200 shadow-sm'
-                                            : index < currentItemIndex
+                                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${index === currentItemIndex
+                                        ? 'bg-green-50 border-green-200 shadow-sm'
+                                        : index < currentItemIndex
                                             ? 'bg-gray-50 border-gray-200 opacity-60'
                                             : 'bg-white border-gray-200 hover:bg-gray-50'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center space-x-4">
-                                        <div className={`w-3 h-3 rounded-full ${
-                                            index === currentItemIndex
-                                                ? 'bg-green-500 animate-pulse'
-                                                : index < currentItemIndex
+                                        <div className={`w-3 h-3 rounded-full ${index === currentItemIndex
+                                            ? 'bg-green-500 animate-pulse'
+                                            : index < currentItemIndex
                                                 ? 'bg-gray-400'
                                                 : 'bg-gray-300'
-                                        }`}></div>
+                                            }`}></div>
                                         <div>
-                                            <div className={`font-medium ${
-                                                index === currentItemIndex ? 'text-green-800' : 'text-gray-700'
-                                            }`}>
+                                            <div className={`font-medium ${index === currentItemIndex ? 'text-green-800' : 'text-gray-700'
+                                                }`}>
                                                 {item.category}
                                             </div>
                                             <div className="text-sm text-gray-500 capitalize">
@@ -384,18 +415,19 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                                             )}
                                         </div>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={() => handlePlayClick(item, index)}
                                         disabled={participantsCount === 0 || isGeneratingTandas}
-                                        className={`p-2 rounded-full transition-colors ${
-                                            participantsCount > 0 && !isGeneratingTandas
+                                        className={`p-2 rounded-full transition-colors ${participantsCount > 0 && !isGeneratingTandas
                                                 ? 'bg-green-100 text-green-600 hover:bg-green-200'
                                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
+                                            }`}
                                     >
                                         {isGeneratingTandas && selectedItem?.id === item.id ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                        ) : existingTandasIds.includes(item.id) ? (
+                                            <Eye className="h-4 w-4" />
                                         ) : (
                                             <Play className="h-4 w-4" />
                                         )}
@@ -420,19 +452,18 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                                 <ArrowLeft className="h-5 w-5" />
                                 <span>Anterior</span>
                             </button>
-                            
+
                             <button
                                 onClick={handlePlayPause}
-                                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                                    isRunning
-                                        ? 'bg-red-600 text-white hover:bg-red-700'
-                                        : 'bg-green-600 text-white hover:bg-green-700'
-                                }`}
+                                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${isRunning
+                                    ? 'bg-red-600 text-white hover:bg-red-700'
+                                    : 'bg-green-600 text-white hover:bg-green-700'
+                                    }`}
                             >
                                 {isRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                                 <span>{isRunning ? 'Pausar' : 'Continuar'}</span>
                             </button>
-                            
+
                             <button
                                 onClick={handleNext}
                                 disabled={currentItemIndex === scheduleItems.length - 1}
@@ -455,9 +486,9 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                                     } minutos
                                 </span>
                             </div>
-                            
+
                             <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                <div 
+                                <div
                                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${((currentItemIndex + 1) / scheduleItems.length) * 100}%` }}
                                 ></div>
@@ -473,9 +504,9 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                                 const levelTotal = Object.values(categories).reduce((sum, categoryData) => {
                                     return sum + Object.values(categoryData).reduce((genderSum, genderData) => genderSum + genderData.count, 0);
                                 }, 0);
-                                
+
                                 const categoryCount = Object.keys(categories).length;
-                                
+
                                 return (
                                     <div key={level} className="bg-gray-50 rounded-lg p-3">
                                         <div className="font-medium text-gray-700 capitalize text-sm">{level}</div>
@@ -525,7 +556,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 onConfirm={handleConfirmTandas}
                 tandas={generatedTandas}
                 allParticipants={selectedItem ? (
-                    selectedItem.gender 
+                    selectedItem.gender
                         ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
                         : getParticipantsByCategory(selectedItem.levelId, selectedItem.category)
                 ) : []}
