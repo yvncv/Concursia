@@ -20,6 +20,7 @@ const ALL_SECTIONS = [
   { id: 'schedule', name: 'Horario', description: 'Administrar programación y agenda' },
   { id: 'statistics', name: 'Estadísticas', description: 'Ver datos y análisis' },
   { id: 'messages', name: 'Mensajes', description: 'Gestionar comunicaciones' },
+  { id: 'judge', name: 'Jurado', description: 'Calificar danzas' },
   { id: 'settings', name: 'Configuración', description: 'Cambiar configuración del evento' }
 ];
 
