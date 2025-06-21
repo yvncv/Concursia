@@ -22,11 +22,14 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
     }
   }, [academy, initialAcademyName]);
 
-  // ← MODIFICAR: Solo ejecutar si no hay selección manual
   useEffect(() => {
-    if (initialAcademyId && initialAcademyId !== '' && !hasManualSelection.current) {
-      const academyName = academy?.name || initialAcademyName || 'Libre';
-      onAcademySelect(initialAcademyId, academyName);
+    if (!hasManualSelection.current) {
+      if (initialAcademyId === '') {
+        onAcademySelect('', initialAcademyName || 'Libre');
+      } else if (initialAcademyId) {
+        const academyName = academy?.name || initialAcademyName || 'Libre';
+        onAcademySelect(initialAcademyId, academyName);
+      }
     }
   }, [initialAcademyId, initialAcademyName, academy, onAcademySelect]);
 
@@ -66,7 +69,7 @@ const AcademySelector = ({ onAcademySelect, initialAcademyId, initialAcademyName
 
   const handleResetAcademy = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    hasManualSelection.current = true; // ← MARCAR que hubo selección manual
+    hasManualSelection.current = true;
     setSelectedAcademyName('Libre');
     setSearchQuery('');
     setIsNewAcademy(false);

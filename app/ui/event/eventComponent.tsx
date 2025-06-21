@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Calendar, Clock, MapPin, Star, Heart } from "lucide-react";
+import { BadgeCheck, Calendar, Clock, MapPin, Star, Radio, Wifi } from "lucide-react";
 import { CustomEvent } from "../../types/eventType";
 
 export default function EventComponent({ event }: { event: CustomEvent }) {
   const [isVisible, setIsVisible] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   const formatDate = (date: Date): string => {
@@ -58,9 +58,8 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
       className={`relative flex flex-col bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden cursor-pointer 
         w-full max-w-[165px] sm:max-w-[190px] md:max-w-[220px] lg:max-w-[240px] xl:max-w-[260px] mx-auto 
         transition-all duration-500 ease-out hover:shadow-3xl hover:scale-[1.05] group 
-        border border-white/20 transform ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      }`}
+        border border-white/20 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        }`}
       style={{ minHeight: '320px' }}
     >
       {/* Header con imagen mejorada */}
@@ -89,9 +88,8 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
               <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 rounded-2xl backdrop-blur-sm border border-white/40 shadow-2xl" />
               <Image
                 src={event.smallImage}
-                className={`w-full h-full object-cover rounded-2xl shadow-2xl transition-all duration-700 group-hover/image:scale-105 ${
-                  isImageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`w-full h-full object-cover rounded-2xl shadow-2xl transition-all duration-700 group-hover/image:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
                 alt={event.name}
                 fill
                 priority={false}
@@ -102,27 +100,56 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
               {!isImageLoaded && (
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/40 to-white/20 animate-pulse rounded-2xl" />
               )}
-              
+
               {/* Overlay de brillo en hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/10 to-white/0 opacity-0 group-hover/image:opacity-100 transition-opacity duration-500 rounded-2xl" />
             </div>
           )}
         </div>
 
-        {/* Botón de favorito flotante */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
-          className="absolute top-2 right-2 z-30 p-1.5 sm:p-2 bg-white/95 backdrop-blur-md rounded-full shadow-xl border border-white/50 transition-all duration-300 hover:scale-110 hover:bg-white active:scale-95"
-        >
-          <Heart 
-            className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${
-              isLiked ? 'text-red-500 fill-red-500 scale-110' : 'text-gray-400 hover:text-red-400'
-            }`} 
-          />
-        </button>
+        {/* Indicador de en vivo flotante */}
+        {
+          event.status == "live" && (
+            <div className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-2 sm:right-2 md:top-3 md:right-3 z-30 flex items-center gap-1 xs:gap-1.5 sm:gap-2">
+              {/* Indicador de EN VIVO */}
+              <div 
+                className="relative group"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                {/* Tooltip - Solo visible en pantallas medianas y grandes */}
+                {showTooltip && (
+                  <div className="hidden md:block absolute -top-10 lg:-top-12 right-0 bg-black/90 text-white text-xs px-2 py-1 lg:px-3 lg:py-1.5 rounded-md lg:rounded-lg backdrop-blur-md whitespace-nowrap">
+                    Evento en vivo
+                    <div className="absolute top-full right-2 w-0 h-0 border-l-2 border-r-2 border-t-2 lg:border-l-4 lg:border-r-4 lg:border-t-4 border-transparent border-t-black/90"></div>
+                  </div>
+                )}
+
+                {/* Contenedor principal */}
+                <div className="relative bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 xs:px-2 xs:py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 rounded-full shadow-md sm:shadow-lg border border-white/30 sm:border-2 sm:border-white/20 backdrop-blur-sm sm:backdrop-blur-md">
+                  {/* Animación de pulso de fondo */}
+                  <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-20"></div>
+
+                  {/* Contenido */}
+                  <div className="relative flex items-center gap-0.5 xs:gap-1 sm:gap-1.5">
+                    {/* Punto animado */}
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    
+                    {/* Texto */}
+                    <span className="text-xs xs:text-xs sm:text-xs md:text-sm font-bold tracking-wide">
+                      <span className="hidden xs:inline">EN VIVO</span>
+                      <span className="xs:hidden">EN VIVO</span>
+                    </span>
+                    
+                    {/* Icono - Solo visible en pantallas pequeñas y medianas */}
+                    <Wifi className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:hidden" />
+                    <Radio className="hidden md:block w-3 h-3 lg:w-4 lg:h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
 
         {/* Badge de tipo de evento mejorado */}
         <div className="absolute bottom-0 left-0 right-0 z-25">
@@ -136,8 +163,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
       </div>
 
       {/* Contenido principal compacto */}
-      <div className={`flex-1 p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gradient-to-br from-white to-gray-50/50 transition-all duration-700 ease-out flex flex-col ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      <div className={`flex-1 p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gradient-to-br from-white to-gray-50/50 transition-all duration-700 ease-out flex flex-col ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         }`}
       >
         {/* Título con gradiente */}
@@ -165,7 +191,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
             <div className="p-1 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg shadow-sm">
               <Clock className="text-emerald-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </div>
-            <span className="text-gray-700 font-medium text-[10px] sm:text-xs">
+            <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
               {formattedStartTime}
             </span>
           </div>
@@ -201,10 +227,10 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
               <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover/btn:rotate-12 transition-transform duration-300" />
               <span className="tracking-wide drop-shadow-sm">Ver más</span>
             </div>
-            
+
             {/* Efecto de brillo en hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover/btn:translate-x-[100%]" />
-            
+
             {/* Borde superior decorativo */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400" />
           </Link>
@@ -213,7 +239,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
 
       {/* Efectos de hover mejorados */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl" />
-      
+
       {/* Borde animado colorido */}
       <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 blur-sm" />
     </div>

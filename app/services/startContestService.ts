@@ -226,12 +226,12 @@ export const startContestWithEventData = async (eventId: string): Promise<void> 
 
     // 6. Cambiar estado del evento DESPUÉS de crear todo
     await updateDoc(eventRef, {
-      status: 'activo',
+      status: 'live',
       realStartTime: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
 
-    console.log('✅ Estado del evento actualizado a "activo" con realStartTime');
+    console.log('✅ Estado del evento actualizado a "live" con realStartTime');
 
     console.log('🎉 Concurso iniciado exitosamente');
 
