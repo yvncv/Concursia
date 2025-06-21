@@ -63,7 +63,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
           ${
             sidebarState === "hidden"
               ? "-translate-x-full"
-              : sidebarState === "collapsed"
+              : sidebarState === "expanded"
               ? "w-16 sm:w-20"
               : "w-64 sm:w-72"
           }
@@ -73,14 +73,14 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
       >
         {/* Header del sidebar */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
-          {sidebarState === "expanded" && (
+          {sidebarState === "collapsed" && (
             <h1 className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-400 truncate">
               {user?.roleId === "organizer" ? "Organizador" : "Staff"}
             </h1>
           )}
           
           {/* Botón de cerrar (X) - visible en mobile cuando está expandido */}
-          {isMobile && sidebarState === "expanded" && (
+          {isMobile && sidebarState === "collapsed" && (
             <button
               onClick={closeSidebar}
               className="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
@@ -96,7 +96,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
             onClick={toggleSidebar}
             className="absolute -right-3 top-6 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors z-50"
           >
-            {sidebarState === "collapsed" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {sidebarState === "expanded" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         )}
 
@@ -118,25 +118,25 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
                         ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold shadow-sm"
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                     } ${
-                      sidebarState === "collapsed" 
+                      sidebarState === "expanded" 
                         ? "justify-center" 
                         : "justify-start"
                     }`}
-                    title={sidebarState === "collapsed" ? item.label : ""}
+                    title={sidebarState === "expanded" ? item.label : ""}
                   >
                     <div className={`flex-shrink-0 transition-transform duration-200 ${
-                      sidebarState === "collapsed" ? "" : "group-hover:scale-110"
+                      sidebarState === "expanded" ? "" : "group-hover:scale-110"
                     }`}>
                       {item.icon}
                     </div>
-                    {sidebarState === "expanded" && (
+                    {sidebarState === "collapsed" && (
                       <span className="ml-3 text-sm sm:text-base font-medium truncate">
                         {item.label}
                       </span>
                     )}
                     
                     {/* Indicador activo para estado collapsed */}
-                    {sidebarState === "collapsed" && pathname === item.href && (
+                    {sidebarState === "expanded" && pathname === item.href && (
                       <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-red-600 dark:bg-red-400 rounded-r"></div>
                     )}
                   </Link>
@@ -147,7 +147,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
         </div>
 
         {/* Footer del sidebar (opcional) */}
-        {sidebarState === "expanded" && (
+        {sidebarState === "collapsed" && (
           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
               {user?.firstName || "Usuario"}

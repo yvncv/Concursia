@@ -8,7 +8,7 @@ type SidebarState = "hidden" | "collapsed" | "expanded";
 
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarState, setSidebarState] = useState<SidebarState>("expanded");
+  const [sidebarState, setSidebarState] = useState<SidebarState>("collapsed");
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,9 +36,9 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
     
     switch (sidebarState) {
       case "collapsed":
-        return `${baseClasses} ml-16`;
-      case "expanded":
         return `${baseClasses} ml-0`;
+      case "expanded":
+        return `${baseClasses} ml-16`;
       case "hidden":
         return `${baseClasses} ml-0`;
       default:
