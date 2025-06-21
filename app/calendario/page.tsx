@@ -33,7 +33,7 @@ export default function TodosEventos() {
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
-  const activeEvents = currentEvents.filter(event => event.status === 'active');
+  const activeEvents = currentEvents.filter(event => event.status === 'active' || event.status === 'live');
 
   return (
       <main className="flex flex-col items-center min-h-screen text-center">
