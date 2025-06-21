@@ -1,5 +1,5 @@
 "use client";
-import { encryptAllDnisIfNeeded } from "../utils/encryptDnis";
+import { encryptAllDnisIfNeeded } from "../utils/encryptAllDnisIfNeeded";
 import { decryptAllDnis } from "../utils/decryptAllDnis";
 import { hashAllDnis } from "../utils/hashAllDnis";
 import { useState } from "react";
