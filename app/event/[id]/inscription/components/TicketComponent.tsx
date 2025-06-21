@@ -111,7 +111,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
         {/* Panel de confirmación de inscripción */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
-            <h3 className="text-xl font-bold text-white">Confirmación de inscripción</h3>
+            <h3 className="text-lg font-bold text-white">Confirmación de inscripción</h3>
           </div>
 
           <div className="p-6">
@@ -170,7 +170,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
       {/* Panel de contacto con la academia */}
       <div className="w-[90%] md:w-[85%] lg:w-[90%] bg-white rounded-xl shadow-md overflow-hidden mb-10">
         <div className="bg-gradient-to-tr from-orange-500 to-red-600 px-6 py-4">
-          <h3 className="text-xl font-bold text-white flex items-center">
+          <h3 className="text-lg font-bold text-white flex items-center">
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
             </svg>
@@ -198,7 +198,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   </span>
                   <div>
                     <p className="font-medium">Academia:</p>
-                    <p className="text-lg">{academy.name}</p>
+                    <p className="text-md">{academy.name}</p>
                   </div>
                 </div>
 
@@ -228,18 +228,20 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                     <p>{academy.location.department}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-3 p-2">
-                  <span className="flex-shrink-0 text-orange-500 w-6 h-6">
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 text-orange-500 w-6 h-6 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </span>
-                  <p className="text-xl">Tel. de contacto: {academy.phoneNumber[0]}, {academy.phoneNumber[1]}</p>
+                  <div>
+                    <p className="font-medium">Tel. de contacto:</p>
+                    <p className="font-medium">{academy.phoneNumber[0]}, {academy.phoneNumber[1]}</p>
+                  </div>
                 </div>
+              </div>
 
+              <div className="flex flex-col space-y-4">
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <a
                     href={`tel:${(Array.isArray(academy.phoneNumber)
