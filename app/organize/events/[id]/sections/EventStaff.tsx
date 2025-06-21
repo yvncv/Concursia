@@ -11,17 +11,7 @@ import {
 } from 'lucide-react';
 import { decryptValue } from '@/app/utils/encryption';
 import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
-
-const SECTIONS = [
-  { id: 'overview', name: 'Visión General', description: 'Ver información general del evento' },
-  { id: 'tickets', name: 'Entradas', description: 'Gestionar entradas y registros' },
-  { id: 'participants', name: 'Participantes', description: 'Administrar participantes' },
-  { id: 'eventstaff', name: 'Personal', description: 'Gestionar personal y permisos' },
-  { id: 'schedule', name: 'Horario', description: 'Administrar programación y agenda' },
-  { id: 'statistics', name: 'Estadísticas', description: 'Ver datos y análisis' },
-  { id: 'messages', name: 'Mensajes', description: 'Gestionar comunicaciones' },
-  { id: 'settings', name: 'Configuración', description: 'Cambiar configuración del evento' }
-];
+import { ALL_SECTIONS } from '../layout';
 
 interface StaffEntry {
   userId: string;
@@ -128,7 +118,7 @@ export default function EventStaff({ event }: EventStaffProps) {
 
   // Asignar todos los permisos
   const assignAllPermissions = () => {
-    setNewPermissions(SECTIONS.map(s => s.id));
+    setNewPermissions(ALL_SECTIONS.map(s => s.id));
   };
 
   // Quitar todos los permisos
@@ -331,7 +321,7 @@ export default function EventStaff({ event }: EventStaffProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-              {SECTIONS.map(sec => (
+              {ALL_SECTIONS.map(sec => (
                 <div
                   key={sec.id}
                   className={`border rounded-md p-3 cursor-pointer transition-all ${newPermissions.includes(sec.id)
@@ -429,7 +419,7 @@ export default function EventStaff({ event }: EventStaffProps) {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                        {SECTIONS.map(sec => (
+                        {ALL_SECTIONS.map(sec => (
                           <div
                             key={sec.id}
                             className={`border rounded p-2 cursor-pointer transition-all ${editPermissions.includes(sec.id)
@@ -467,7 +457,7 @@ export default function EventStaff({ event }: EventStaffProps) {
                               key={pid}
                               className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-100"
                             >
-                              {SECTIONS.find(s => s.id === pid)?.name || pid}
+                              {ALL_SECTIONS.find(s => s.id === pid)?.name || pid}
                             </span>
                           ))}
                         </div>
@@ -537,7 +527,7 @@ export default function EventStaff({ event }: EventStaffProps) {
                     return (
                       <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
                         <div className="grid grid-cols-2 gap-2">
-                          {SECTIONS.map(section => {
+                          {ALL_SECTIONS.map(section => {
                             const hasPermission = staffEntry.permissions.includes(section.id);
                             return (
                               <div

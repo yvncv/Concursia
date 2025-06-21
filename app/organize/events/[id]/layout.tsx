@@ -16,6 +16,7 @@ import Schedule from './sections/Schedule';
 import Statistics from './sections/Statistics';
 import Messages from './sections/Messages';
 import Settings from './sections/Settings';
+import Judge from './sections/Judge';
 
 import {
   LayoutDashboard,
@@ -26,20 +27,22 @@ import {
   CalendarDays,
   BarChart2,
   MessageSquare,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Trophy
 } from "lucide-react";
 
 
 // Maestro de secciones
-const ALL_SECTIONS = [
+export const ALL_SECTIONS = [
   { id: 'overview', name: 'Visión General', component: Overview, icon: <LayoutDashboard size={18} /> },
   { id: 'live', name: 'En vivo', component: Live, icon: <CircleDot size={18} /> },
   { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
   { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
-  { id: 'eventstaff', name: 'Personal', component: EventStaff, icon: <UserCog size={18} /> },
+  { id: 'eventstaff', name: 'Staff', component: EventStaff, icon: <UserCog size={18} /> },
   { id: 'schedule', name: 'Horario', component: Schedule, icon: <CalendarDays size={18} /> },
   { id: 'statistics', name: 'Estadísticas', component: Statistics, icon: <BarChart2 size={18} /> },
   { id: 'messages', name: 'Mensajes', component: Messages, icon: <MessageSquare size={18} /> },
+  { id: 'judge', name: 'Jurado', component: Judge, icon: <Trophy size={18} /> },
   { id: 'settings', name: 'Configuración', component: Settings, icon: <SettingsIcon size={18} /> },
 ];
 
