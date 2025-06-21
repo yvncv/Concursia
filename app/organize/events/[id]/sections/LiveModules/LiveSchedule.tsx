@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { LiveContestRunning } from './LiveContestRunning';
 import useEventParticipants from '@/app/hooks/useEventParticipants';
 import { startContestWithEventData } from '@/app/services/startContestService';
+import useLiveCompetitions from '@/app/hooks/useLiveCompetition';
 
 interface LiveProps {
     event: CustomEvent;
@@ -16,6 +17,7 @@ const LiveSchedule: React.FC<LiveProps> = ({ event, onContestStart }) => {
     const [isStartingContest, setIsStartingContest] = useState(false); // ✨ NUEVO
     const [currentPage, setCurrentPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
+    const { liveCompetitions } = useLiveCompetitions(event.id)
     const itemsPerPage = 4;
 
     // Hook para obtener participantes del evento
@@ -148,23 +150,44 @@ const LiveSchedule: React.FC<LiveProps> = ({ event, onContestStart }) => {
 
     // Función para mostrar el modal de confirmación
     const showStartContestModal = () => {
-        // ✨ NUEVA VALIDACIÓN: Solo permitir si hay participantes y no está en proceso
+        // Validación: sin participantes
         if (totalParticipants === 0) {
             toast.error('No se puede iniciar el concurso sin participantes', {
-                duration: 3000,
-                position: 'top-center',
+            duration: 3000,
+            position: 'top-center',
             });
             return;
         }
 
+        // Validación: evento ya en estado live
+        if (event.status === 'live') {
+            toast.error('El concurso ya está en curso', {
+            duration: 3000,
+            position: 'top-center',
+            });
+            return;
+        }
+
+        // Validación: evento no está pendiente
         if (event.status !== 'pendiente') {
             toast.error('El evento no está en estado pendiente', {
-                duration: 3000,
-                position: 'top-center',
+            duration: 3000,
+            position: 'top-center',
             });
             return;
         }
 
+        // Validación: ya existen tandas generadas en Firestore
+        const alreadyStarted = liveCompetitions.length > 0;
+        if (alreadyStarted) {
+            toast.error('Este evento ya tiene competencias en vivo generadas', {
+            duration: 3000,
+            position: 'top-center',
+            });
+            return;
+        }
+
+        // Todo ok, mostrar modal
         setShowModal(true);
     };
 
@@ -310,27 +333,35 @@ const LiveSchedule: React.FC<LiveProps> = ({ event, onContestStart }) => {
                     {/* ✨ BOTÓN INICIAR CONCURSO ACTUALIZADO */}
                     <button 
                         onClick={showStartContestModal}
-                        disabled={isStartingContest || totalParticipants === 0 || event.status !== 'pendiente'}
+                        disabled={
+                            isStartingContest || 
+                            totalParticipants === 0 || 
+                            (event.status !== 'pendiente' && event.status !== 'live') // Permitir también si ya está en vivo (opcional)
+                        }
                         className={`px-4 py-2 rounded-lg transition-colors ${
-                            isStartingContest || totalParticipants === 0 || event.status !== 'pendiente'
-                                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                                : 'bg-green-600 text-white hover:bg-green-700'
+                            isStartingContest || 
+                            totalParticipants === 0 || 
+                            (event.status !== 'pendiente' && event.status !== 'live')
+                            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                            : 'bg-green-600 text-white hover:bg-green-700'
                         }`}
                         title={
                             totalParticipants === 0 
-                                ? 'No hay participantes registrados'
-                                : event.status !== 'pendiente'
-                                ? 'El evento no está en estado pendiente'
-                                : 'Iniciar concurso'
+                            ? 'No hay participantes registrados'
+                            : event.status === 'live'
+                            ? 'El concurso ya está en vivo'
+                            : event.status !== 'pendiente'
+                            ? 'El evento no puede ser iniciado en este estado'
+                            : 'Iniciar concurso'
                         }
-                    >
+                        >
                         {isStartingContest ? (
                             <div className="flex items-center">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Iniciando...
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Iniciando...
                             </div>
                         ) : (
-                            'Iniciar Concurso'
+                            event.status === 'live' ? 'Ver concurso en vivo' : 'Iniciar Concurso'
                         )}
                     </button>
                 </div>

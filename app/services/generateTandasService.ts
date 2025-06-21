@@ -96,7 +96,8 @@ export const generateTandas = async (
         index: tandaIndex,
         phase: currentPhase,
         blocks: tandasBlocks,
-        status: 'pendiente'
+        status: 'pendiente',
+        liveCompetitionId,
       };
       
       tandas.push(tanda);

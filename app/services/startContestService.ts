@@ -13,6 +13,7 @@ import {
 import { db } from '../firebase/config'; // Ajustar según tu configuración
 import { CustomEvent } from '@/app/types/eventType';
 import { Participant } from '@/app/types/participantType';
+import { generateTandas, saveTandasToFirestore } from './generateTandasService';
 import { LiveCompetition, LiveCompetitionCreate, CompetitionPhase } from '@/app/types/liveCompetitionType';
 
 interface ParticipantsByCategory {
@@ -217,6 +218,29 @@ export const startContestWithEventData = async (eventId: string): Promise<void> 
 
     // 5. Crear documentos LiveCompetition
     await createLiveCompetitionDocuments(eventId, participantsByCategory, eventData);
+    
+    const liveCompetitionsSnapshot = await getDocs(collection(db, 'eventos', eventId, 'liveCompetition'));
+
+    const userDocs = await getDocs(collection(db, 'users'));
+    const eventUsers = Object.fromEntries(userDocs.docs.map(doc => [doc.id, doc.data()]));
+
+    for (const docSnap of liveCompetitionsSnapshot.docs) {
+      const liveCompetitionId = docSnap.id;
+      const liveData = docSnap.data();
+      const { level, category, gender } = liveData;
+
+      const participantsFiltered = participants.filter(
+        p => p.level === level && p.category === category && (
+          gender === 'Mixto' || p.usersId.length === 2 ||
+          (gender === 'Mujeres' && p.usersId.length === 1 && eventUsers[p.usersId[0]]?.gender === 'Femenino') ||
+          (gender === 'Varones' && p.usersId.length === 1 && eventUsers[p.usersId[0]]?.gender === 'Masculino')
+        )
+      );
+
+      const tandas = await generateTandas(eventId, liveCompetitionId, participantsFiltered);
+
+      await saveTandasToFirestore(eventId, liveCompetitionId, liveData.currentPhase, tandas);
+    }
 
     // 6. Cambiar estado del evento
     await updateDoc(eventRef, {

@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LiveContestRunning } from './LiveModules/LiveContestRunning';
 import LiveSchedule from './LiveModules/LiveSchedule';
 
 const Live = ({ event, onBack }) => {
   const [viewState, setViewState] = useState('schedule');
   const [contestStarted, setContestStarted] = useState(false);
+
+  // ✅ Detectar si el evento ya está en estado "live"
+  useEffect(() => {
+    if (event?.status === 'live') {
+      setContestStarted(true);
+    }
+  }, [event?.status]);
 
   return (
     <div className="w-full">
@@ -25,12 +32,12 @@ const Live = ({ event, onBack }) => {
 
         <button
           onClick={() => setViewState('execution')}
-          disabled={!contestStarted} // 👈 evita acceso si no ha iniciado
+          disabled={!contestStarted}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             viewState === 'execution'
               ? 'bg-red-600 text-white'
               : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          } ${!contestStarted ? 'opacity-50 cursor-not-allowed' : ''}`} // 👈 estilizado cuando está deshabilitado
+          } ${!contestStarted ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Ejecución
         </button>
@@ -43,7 +50,7 @@ const Live = ({ event, onBack }) => {
             event={event}
             onContestStart={(started) => {
               setContestStarted(started);
-              if (started) setViewState('execution'); // 👈 cambia al tab automáticamente si inició
+              if (started) setViewState('execution');
             }}
           />
         )}

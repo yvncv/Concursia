@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Users, Clock, Play, Settings } from 'lucide-react';
 import { CustomEvent } from '@/app/types/eventType';
 import { Tanda } from '@/app/types/tandaType';
 import { Participant } from '@/app/types/participantType';
 import { useParticipantsWithUsers, getParticipantDisplayName, getParticipantImages } from '@/app/hooks/useParticipantsWithUsers';
+import { JudgeSelectionModal } from './modals/JudgesSelectionModal';
+import { BlockInTanda } from '@/app/types/blockInTandaType';
+import JudgeAvatar from './components/JudgeAvatar';
+import useUsers from '@/app/hooks/useUsers';
+import { User } from '@/app/types/userType';
+import useLiveCompetitions from '@/app/hooks/useLiveCompetition';
 
 interface TandaExecutionViewProps {
   event: CustomEvent;
@@ -122,6 +128,22 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [showJudgeModal, setShowJudgeModal] = useState(false);
+  const [tempBlocks, setTempBlocks] = useState<BlockInTanda[]>([]);
+  const [currentTandaState, setcurrentTandaStateState] = useState<Tanda>(currentTanda);
+  const { users } = useUsers();
+  const {liveCompetitions} = useLiveCompetitions(event.id);
+  const usersMap = useMemo(() => {
+    const map: Record<string, User> = {};
+    users.forEach(user => {
+      map[user.id] = user;
+    });
+    return map;
+  }, [users]);
+
+  useEffect(() => {
+    setcurrentTandaStateState(currentTanda);
+  }, [currentTanda]);
 
   // Temporizador para la tanda
   useEffect(() => {
@@ -146,31 +168,28 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
 
   // Verificar si un bloque tiene jurados asignados
   const hasJudges = (blockIndex: number): boolean => {
-    const block = currentTanda.blocks[blockIndex];
+    const block = currentTandaState.blocks[blockIndex];
     return block && block.judgeIds && block.judgeIds.length > 0;
   };
 
   // Obtener el total de participantes en la tanda
-  const totalParticipants = currentTanda.blocks.reduce(
+  const totalParticipants = currentTandaState.blocks.reduce(
     (total, block) => total + block.participants.length, 
     0
   );
 
-  // Componente para mostrar un jurado
-  const JudgeAvatar = ({ judgeIndex, judgeName = "Antonio Banderas" }: { judgeIndex: number, judgeName?: string }) => (
-    <div className="flex flex-col items-center space-y-2">
-      <div className="text-xs font-medium text-gray-700">Jurado</div>
-      <div className="w-12 h-12 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center overflow-hidden">
-        {/* Imagen placeholder del jurado */}
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <Users className="w-5 h-5 text-gray-500" />
-        </div>
-      </div>
-      <div className="text-xs font-medium text-gray-700 text-center max-w-[80px] leading-tight">
-        {judgeName}
-      </div>
-    </div>
-  );
+  function getAvailableJudges(event: CustomEvent): { userId: string }[] {
+    return (event.staff || []).filter(member =>
+      member.permissions.includes('judge') // solo jurados
+    );
+  }
+
+  const handleAssignJudges = (blocks: BlockInTanda[]) => {
+    setTempBlocks(blocks);
+    setShowJudgeModal(true);
+  };
+
+  const liveCompetition = liveCompetitions.find(c => c.id === currentTandaState.liveCompetitionId);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -219,7 +238,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
             </div>
             <div>
               <div className="text-sm opacity-90 mb-1">Tanda N°:</div>
-              <div className="font-bold text-lg">{currentTanda.index + 1}</div>
+              <div className="font-bold text-lg">{currentTandaState.index + 1}</div>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-white/20">
@@ -230,7 +249,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4" />
-                <span className="text-sm">Fase: {currentTanda.phase}</span>
+                <span className="text-sm">Fase: {currentTandaState.phase}</span>
               </div>
             </div>
           </div>
@@ -238,7 +257,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
 
         {/* Grid de pistas - NUEVO DISEÑO COMO LAS IMÁGENES */}
         <div className="space-y-8">
-          {currentTanda.blocks.length === 1 ? (
+          {currentTandaState.blocks.length === 1 ? (
             /* DISEÑO HORIZONTAL - UN SOLO BLOQUE (como imagen 1) */
             <div className="bg-white rounded-xl shadow-lg p-6 relative">
               {/* Estado de jurados del bloque */}
@@ -252,19 +271,37 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                       </div>
                       <div className="text-sm text-gray-600">
                         {hasJudges(0) 
-                          ? `${currentTanda.blocks[0].judgeIds.length} jurados seleccionados`
+                          ? `${currentTandaState.blocks[0].judgeIds.length} jurados seleccionados`
                           : 'Sin jurados asignados'
                         }
                       </div>
                     </div>
                   </div>
                   
-                  {!hasJudges(0) && (
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                      <Settings className="w-4 h-4" />
-                      <span>Seleccionar Jurados</span>
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => handleAssignJudges(currentTandaState.blocks)} 
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Seleccionar Jurados</span>
+                  </button>
+
+                  <JudgeSelectionModal
+                    open={showJudgeModal}
+                    onClose={() => setShowJudgeModal(false)}
+                    eventId={event.id}
+                    liveCompetitionId={currentTandaState.liveCompetitionId}
+                    tandaId={currentTandaState.id} // o tanda.id si lo tienes disponible
+                    eventStaff={event.staff || []}
+                    tandaBlocks={currentTandaState.blocks}
+                    onConfirm={(updatedBlocks) => {
+                      setcurrentTandaStateState(prev => ({
+                        ...prev,
+                        blocks: updatedBlocks,
+                      }));
+                      setShowJudgeModal(false);
+                    }}
+                  />
                   
                   {hasJudges(0) && (
                     <div className="flex items-center space-x-2 text-green-600">
@@ -281,9 +318,19 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                 {hasJudges(0) && (
                   <div className="flex justify-center">
                     <div className="flex space-x-8">
-                      {currentTanda.blocks[0].judgeIds.slice(0, 3).map((judgeId, index) => (
-                        <JudgeAvatar key={`judge-top-${index}`} judgeIndex={index + 1} />
-                      ))}
+                      {currentTandaState.blocks[0].judgeIds.slice(0, 3).map((judgeId, index) => {
+                        const user = usersMap[judgeId];
+                        if (!user) return null; // Aún no se ha cargado ese usuario
+
+                        return (
+                          <JudgeAvatar
+                            key={judgeId}
+                            userId={judgeId}
+                            usersMap={usersMap}
+                            judgeIndex={index}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -292,9 +339,9 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                 <div className="border-4 border-black rounded-2xl bg-yellow-100 p-6">
                   {/* Headers de pistas */}
                   <div className="grid gap-4 mb-4" style={{ 
-                    gridTemplateColumns: `repeat(${currentTanda.blocks[0].participants.length}, 1fr)` 
+                    gridTemplateColumns: `repeat(${currentTandaState.blocks[0].participants.length}, 1fr)` 
                   }}>
-                    {currentTanda.blocks[0].participants.map((_, pistaIndex) => (
+                    {currentTandaState.blocks[0].participants.map((_, pistaIndex) => (
                       <div key={`header-${pistaIndex}`} className="text-center">
                         <div className="bg-pink-400 text-white py-2 px-4 rounded-lg text-sm font-bold">
                           PISTA {pistaIndex + 1}
@@ -305,9 +352,9 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
 
                   {/* Participantes en pistas */}
                   <div className="grid gap-4" style={{ 
-                    gridTemplateColumns: `repeat(${currentTanda.blocks[0].participants.length}, 1fr)` 
+                    gridTemplateColumns: `repeat(${currentTandaState.blocks[0].participants.length}, 1fr)` 
                   }}>
-                    {currentTanda.blocks[0].participants.map((tandaParticipant, pistaIndex) => (
+                    {currentTandaState.blocks[0].participants.map((tandaParticipant, pistaIndex) => (
                       <div key={tandaParticipant.participantId} 
                            className={`relative ${!hasJudges(0) ? 'opacity-50' : ''}`}>
                         {/* Líneas divisorias verticales */}
@@ -325,21 +372,31 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                 </div>
 
                 {/* Jurados inferiores */}
-                {hasJudges(0) && currentTanda.blocks[0].judgeIds.length > 3 && (
-                  <div className="flex justify-center">
-                    <div className="flex space-x-8">
-                      {currentTanda.blocks[0].judgeIds.slice(3, 5).map((judgeId, index) => (
-                        <JudgeAvatar key={`judge-bottom-${index}`} judgeIndex={index + 4} />
-                      ))}
+                {hasJudges(0) && (
+                    <div className="flex justify-center">
+                      <div className="flex space-x-8">
+                        {currentTandaState.blocks[0].judgeIds.slice(0, 3).map((judgeId, index) => {
+                          const user = usersMap[judgeId];
+                          if (!user) return null; // Aún no se ha cargado ese usuario
+
+                          return (
+                            <JudgeAvatar
+                              key={judgeId}
+                              userId={judgeId}
+                              usersMap={usersMap}
+                              judgeIndex={index}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
           ) : (
             /* DISEÑO VERTICAL - MÚLTIPLES BLOQUES (como imagen 2) */
-            <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${Math.min(currentTanda.blocks.length, 3)}, 1fr)` }}>
-              {currentTanda.blocks.map((block, blockIndex) => (
+            <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${Math.min(currentTandaState.blocks.length, 3)}, 1fr)` }}>
+              {currentTandaState.blocks.map((block, blockIndex) => (
                 <div key={blockIndex} className="bg-white rounded-xl shadow-lg p-4 relative">
                   {/* Estado de jurados del bloque */}
                   <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -441,9 +498,9 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleStartPause}
-                disabled={currentTanda.blocks.some((_, index) => !hasJudges(index))}
+                disabled={currentTandaState.blocks.some((_, index) => !hasJudges(index))}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                  currentTanda.blocks.some((_, index) => !hasJudges(index))
+                  currentTandaState.blocks.some((_, index) => !hasJudges(index))
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : isRunning
                     ? 'bg-red-600 text-white hover:bg-red-700'
@@ -468,7 +525,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
           </div>
 
           {/* Indicador de estado */}
-          {currentTanda.blocks.some((_, index) => !hasJudges(index)) && (
+          {currentTandaState.blocks.some((_, index) => !hasJudges(index)) && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center">
                 <div className="text-yellow-600 mr-3">⚠️</div>

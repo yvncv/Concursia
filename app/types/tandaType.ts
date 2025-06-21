@@ -12,6 +12,7 @@ export interface Tanda {
   status: "pendiente" | "en_proceso" | "finalizada"; // Estado actual de la tanda
   startTime?: Timestamp;              // Hora real de inicio de la tanda
   endTime?: Timestamp;                // Hora real de finalización
+  liveCompetitionId: string;          // id del live competition
 
   /**
    * Solo se utiliza en modalidad SERIADO.
