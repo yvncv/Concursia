@@ -12,6 +12,7 @@ interface JudgeSelectionModalProps {
   eventStaff: { userId: string; permissions: string[] }[];
   tandaBlocks: BlockInTanda[];
   onConfirm: (updatedBlocks: BlockInTanda[]) => void;
+  judgesCount: number; // 👈 Nuevo prop
 }
 
 export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
@@ -23,20 +24,30 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
   eventStaff,
   tandaBlocks,
   onConfirm,
+  judgesCount,
 }) => {
   const judges = eventStaff.filter(member => member.permissions.includes('judge'));
   const judgeIds = judges.map(j => j.userId);
   const { users, loadingUsers } = useUsers(judgeIds);
   const usersMap = Object.fromEntries(users.map(user => [user.id, user]));
 
+  const alreadyAssignedJudgeIds = new Set(
+    tandaBlocks.flatMap(block => block.judgeIds || [])
+  );
+  
   const [selectedJudges, setSelectedJudges] = useState<string[]>([]);
 
   const toggleJudge = (userId: string) => {
-    setSelectedJudges(prev =>
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+    if (alreadyAssignedJudgeIds.has(userId)) return;
+    setSelectedJudges(prev => {
+      const isSelected = prev.includes(userId);
+      if (isSelected) {
+        return prev.filter(id => id !== userId);
+      } else {
+        if (prev.length >= judgesCount) return prev;
+        return [...prev, userId];
+      }
+    });
   };
 
   const handleConfirm = async () => {
@@ -47,17 +58,13 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
 
     try {
       await updateTandaBlocks(eventId, liveCompetitionId, tandaId, updatedBlocks);
-      onConfirm(updatedBlocks); // actualiza el estado en el componente padre
-      onClose(); // cierra el modal
-      
+      onConfirm(updatedBlocks);
+      onClose();
     } catch (error) {
       alert("Error al guardar los jurados. Intenta nuevamente.");
       console.error(error);
     }
-    console.log("eventId:", eventId);
-console.log("liveCompetitionId:", liveCompetitionId);
-console.log("tandaId:", tandaId);
-  }; 
+  };
 
   if (!open) return null;
 
@@ -75,59 +82,68 @@ console.log("tandaId:", tandaId);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
-        {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Asignar Jurados
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
+            <h2 className="text-xl font-semibold text-gray-900">Asignar Jurados</h2>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Selecciona los jurados para todos los bloques
-          </p>
+          <p className="text-sm text-gray-700 mt-1">Selecciona hasta {judgesCount} jurado(s) para todos los bloques</p>
+          <div className="text-xs mt-1 space-y-1">
+            <p className="font-semibold text-gray-700">Notas importantes:</p>
+            <ul className="list-disc list-inside space-y-1 text-gray-700">
+              <li>
+                Los usuarios con <span className="font-medium text-red-500">check</span> y <span className="font-medium text-red-500">punto rojo</span> ya han sido asignados previamente.
+              </li>
+              <li>
+                Se pueden deseleccionar y volver a asignar (esté seguro de realizar cualquier cambio).
+              </li>
+              <li>
+                Si seleccionas jurados nuevos y <span className="font-medium text-red-500">cierras sin guardar</span>, las selecciones se conservarán al reabrir.
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* Content */}
         <div className="px-6 py-4">
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {judges.length > 0 ? (
               judges.map(judge => {
                 const user = usersMap[judge.userId];
+                const isAlreadyAssigned = alreadyAssignedJudgeIds.has(judge.userId);
+                const isSelected = selectedJudges.includes(judge.userId);
+                const isChecked = isAlreadyAssigned || isSelected;
+                const disabled = (!isSelected && selectedJudges.length >= judgesCount);
+
                 return (
                   <label
                     key={judge.userId}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
+                    className={`flex items-center gap-3 p-1 rounded-lg transition-colors group cursor-pointer ${
+                      disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                    }`}
                   >
-                    {/* Custom Checkbox */}
                     <div className="relative">
                       <input
-                        type="checkbox"
-                        checked={selectedJudges.includes(judge.userId)}
-                        onChange={() => toggleJudge(judge.userId)}
-                        className="sr-only"
-                      />
+                      type="checkbox"
+                      disabled={disabled}
+                      checked={isChecked}
+                      onChange={() => toggleJudge(judge.userId)}
+                      className="sr-only"
+                    />
                       <div className={`w-5 h-5 rounded border-2 transition-all ${
-                        selectedJudges.includes(judge.userId)
-                          ? 'bg-red-600 border-red-600'
-                          : 'border-gray-300 group-hover:border-red-300'
+                        isChecked && isAlreadyAssigned
+                          ?'bg-red-600 border-red-600' :
+                        isChecked ?
+                          'bg-gray-400 border-gray-300 group-hover:border-red-300' :
+                          "group-hover:border-red-300"
                       }`}>
-                        {selectedJudges.includes(judge.userId) && (
+                        {(isChecked) && (
                           <svg className="w-3 h-3 text-white absolute top-0.5 left-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
@@ -135,13 +151,11 @@ console.log("tandaId:", tandaId);
                       </div>
                     </div>
 
-                    {/* Judge Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
                           <span className="text-white text-sm font-medium">
-                            {user?.firstName?.charAt(0)}
-                            {user?.lastName?.charAt(0)}
+                            {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                           </span>
                         </div>
                         <span className="font-medium text-gray-900">
@@ -150,9 +164,7 @@ console.log("tandaId:", tandaId);
                       </div>
                     </div>
 
-                    {selectedJudges.includes(judge.userId) && (
-                      <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                    )}
+                    {isAlreadyAssigned && <div className="w-2 h-2 bg-red-600 rounded-full" />}
                   </label>
                 );
               })
@@ -169,16 +181,12 @@ console.log("tandaId:", tandaId);
           </div>
         </div>
 
-        {/* Selected count */}
-        {selectedJudges.length > 0 && (
-          <div className="px-6 py-2 bg-red-50 border-t border-red-100">
-            <p className="text-sm text-red-700">
-              {selectedJudges.length} jurado{selectedJudges.length !== 1 ? 's' : ''} seleccionado{selectedJudges.length !== 1 ? 's' : ''}
-            </p>
+        {selectedJudges.length >= judgesCount && (
+          <div className="px-6 text-sm text-red-600 font-medium">
+            Has alcanzado el máximo de jurados permitidos.
           </div>
         )}
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
           <button
             onClick={onClose}
