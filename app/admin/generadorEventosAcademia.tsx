@@ -90,39 +90,40 @@ export const generarEventoPorAcademia = (
           Final: 5,
         },
       },
+      schedule: {
+        dayCount: 1,
+        items: [
+          {
+            id: faker.string.uuid(),
+            category: "Junior",
+            levelId: "Seriado",
+            day: 1,
+            order: 1,
+            phase: CompetitionPhase.FINAL,
+            estimatedTime: 0,
+          },
+          {
+            id: faker.string.uuid(),
+            category: "Juvenil",
+            levelId: "Seriado",
+            day: 1,
+            order: 2,
+            phase: CompetitionPhase.FINAL,
+            estimatedTime: 0,
+          },
+          {
+            id: faker.string.uuid(),
+            category: "Adulto",
+            levelId: "Seriado",
+            day: 1,
+            order: 3,
+            phase: CompetitionPhase.FINAL,
+            estimatedTime: 0,
+          },
+        ],
+      },
     },
-    schedule: {
-      dayCount: 1,
-      items: [
-        {
-          id: faker.string.uuid(),
-          category: "Junior",
-          levelId: "Seriado",
-          day: 1,
-          order: 1,
-          phase: "Final",
-          estimatedTime: 0,
-        },
-        {
-          id: faker.string.uuid(),
-          category: "Juvenil",
-          levelId: "Seriado",
-          day: 1,
-          order: 2,
-          phase: "Final",
-          estimatedTime: 0,
-        },
-        {
-          id: faker.string.uuid(),
-          category: "Adulto",
-          levelId: "Seriado",
-          day: 1,
-          order: 3,
-          phase: "Final",
-          estimatedTime: 0,
-        },
-      ],
-    },
+
   };
 };
 

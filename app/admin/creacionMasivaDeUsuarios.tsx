@@ -60,10 +60,10 @@ function generateRandomUser(
       )
     ),
     gender,
-    email: [email],
-    phoneNumber: [
-      "9" + Math.floor(10000000 + Math.random() * 90000000).toString(),
-    ],
+    // email: email,
+    // phoneNumber: [
+    //   "9" + Math.floor(10000000 + Math.random() * 90000000).toString(),
+    // ],
     profileImage: "",
     coverImage: "",
     marinera: academy

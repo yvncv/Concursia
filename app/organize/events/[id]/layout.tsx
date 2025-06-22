@@ -58,6 +58,10 @@ export default function EventLayout() {
   // Obtener componente activo
   const ActiveComponent = allowedSections.find(s => s.id === activeSection)?.component || Overview;
 
+  const onBack = () => {
+    setActiveSection("overview"); // o lo que tenga sentido en tu flujo
+  };
+
   if (!allowedSections.length) {
     return <div className="p-6">No tienes permisos para ver este evento.</div>;
   }
@@ -75,7 +79,7 @@ export default function EventLayout() {
         />
         <main className="flex-1 overflow-x-auto transition-all duration-300">
           <div className={`${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'} p-6 min-w-[1024px]`}>
-            <ActiveComponent event={currentEvent} />
+            <ActiveComponent event={currentEvent} onBack={onBack} />
           </div>
         </main>
       </div>

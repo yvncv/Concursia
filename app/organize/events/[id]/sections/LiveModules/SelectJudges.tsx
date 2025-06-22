@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
 import { CustomEvent } from "@/app/types/eventType";
 import { BlockInTanda } from "@/app/types/blockInTandaType";
 import { Tanda } from "@/app/types/tandaType";
+import { User } from "@/app/types/userType";
 import Image from "next/image";
 import clsx from "clsx";
 
@@ -25,17 +26,38 @@ export default function AsignarJurados({
   onUpdate,
 }: Props) {
   const [bloques, setBloques] = useState<BlockInTanda[]>(tanda.blocks || []);
+  const [jurados, setJurados] = useState<User[]>([]);
 
-  const juradosDisponibles =
-    event.staff?.filter((s) => s.permissions.includes("live")) || [];
+  // 1. Cargar jurados con datos reales
+  useEffect(() => {
+    const cargarJurados = async () => {
+      const conPermisoLive = event.staff?.filter((s) =>
+        s.permissions.includes("live")
+      ) || [];
 
+      const juradosConDatos: User[] = [];
+
+      for (const s of conPermisoLive) {
+        const docRef = doc(db, "users", s.userId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          juradosConDatos.push({ ...(snap.data() as User), id: s.userId });
+        }
+      }
+
+      setJurados(juradosConDatos);
+    };
+
+    cargarJurados();
+  }, [event.staff]);
+
+  // 2. Asignar o desasignar jurado a bloque
   const handleToggleJurado = (blockIndex: number, userId: string) => {
     setBloques((prev) =>
       prev.map((block) => {
         if (block.blockIndex !== blockIndex) return block;
         const judgeIds = block.judgeIds || [];
-        const exists = judgeIds.includes(userId);
-        const updatedIds = exists
+        const updatedIds = judgeIds.includes(userId)
           ? judgeIds.filter((id) => id !== userId)
           : [...judgeIds, userId];
         return { ...block, judgeIds: updatedIds };
@@ -43,6 +65,7 @@ export default function AsignarJurados({
     );
   };
 
+  // 3. Guardar cambios
   const handleGuardar = async () => {
     try {
       const tandaRef = doc(
@@ -67,7 +90,7 @@ export default function AsignarJurados({
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">
-        Asignar Jurados a la Tanda #{tanda.tandaIndex + 1}
+        Asignar Jurados a la Tanda #{tanda.index + 1}
       </h2>
 
       {bloques.map((block) => (
@@ -78,12 +101,12 @@ export default function AsignarJurados({
           <p className="font-medium mb-2">Bloque #{block.blockIndex + 1}</p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {juradosDisponibles.map((j) => {
-              const selected = block.judgeIds?.includes(j.userId);
+            {jurados.map((j) => {
+              const selected = block.judgeIds?.includes(j.id);
               return (
                 <button
-                  key={j.userId}
-                  onClick={() => handleToggleJurado(block.blockIndex, j.userId)}
+                  key={j.id}
+                  onClick={() => handleToggleJurado(block.blockIndex, j.id)}
                   className={clsx(
                     "flex flex-col items-center p-3 rounded border cursor-pointer transition hover:shadow",
                     selected
@@ -93,8 +116,12 @@ export default function AsignarJurados({
                 >
                   <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
                     <Image
-                      src={j.profileImage || "/avatar-placeholder.png"}
-                      alt={j.firstName || j.userId}
+                      src={
+                        typeof j.profileImage === "string"
+                          ? j.profileImage
+                          : "/avatar-placeholder.png"
+                      }
+                      alt={j.firstName || j.id}
                       width={64}
                       height={64}
                       className="object-cover"
