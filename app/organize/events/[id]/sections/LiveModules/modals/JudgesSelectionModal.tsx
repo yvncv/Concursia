@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlockInTanda } from '@/app/types/blockInTandaType';
 import useUsers from '@/app/hooks/useUsers';
 import { updateTandaBlocks } from '@/app/services/updateTandaBlocks';
@@ -12,7 +12,7 @@ interface JudgeSelectionModalProps {
   eventStaff: { userId: string; permissions: string[] }[];
   tandaBlocks: BlockInTanda[];
   onConfirm: (updatedBlocks: BlockInTanda[]) => void;
-  judgesCount: number; // 👈 Nuevo prop
+  judgesCount: number;
 }
 
 export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
@@ -34,20 +34,26 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
   const alreadyAssignedJudgeIds = new Set(
     tandaBlocks.flatMap(block => block.judgeIds || [])
   );
-  
+
   const [selectedJudges, setSelectedJudges] = useState<string[]>([]);
 
+  useEffect(() => {
+    if (open) {
+      const assigned = tandaBlocks.flatMap(block => block.judgeIds || []);
+      const unique = Array.from(new Set(assigned));
+      setSelectedJudges(unique);
+    }
+  }, [open, tandaBlocks]);
+
   const toggleJudge = (userId: string) => {
-    if (alreadyAssignedJudgeIds.has(userId)) return;
-    setSelectedJudges(prev => {
-      const isSelected = prev.includes(userId);
-      if (isSelected) {
-        return prev.filter(id => id !== userId);
-      } else {
-        if (prev.length >= judgesCount) return prev;
-        return [...prev, userId];
-      }
-    });
+    const isSelected = selectedJudges.includes(userId);
+    if (isSelected && alreadyAssignedJudgeIds.has(userId)) {
+      const confirmRemove = confirm("Este jurado ya estaba asignado previamente. ¿Deseas quitarlo?");
+      if (!confirmRemove) return;
+    }
+    setSelectedJudges(prev =>
+      isSelected ? prev.filter(id => id !== userId) : (prev.length >= judgesCount ? prev : [...prev, userId])
+    );
   };
 
   const handleConfirm = async () => {
@@ -66,6 +72,16 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    const currentIds = tandaBlocks.flatMap(b => b.judgeIds || []);
+    const original = Array.from(new Set(currentIds)).sort().join(',');
+    const current = [...selectedJudges].sort().join(',');
+    if (current !== original) {
+      if (!confirm('¿Salir sin guardar los cambios realizados en la asignación de jurados?')) return;
+    }
+    onClose();
+  };
+
   if (!open) return null;
 
   if (loadingUsers) {
@@ -82,13 +98,13 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={handleClose} />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Asignar Jurados</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -118,31 +134,28 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
                 const user = usersMap[judge.userId];
                 const isAlreadyAssigned = alreadyAssignedJudgeIds.has(judge.userId);
                 const isSelected = selectedJudges.includes(judge.userId);
-                const isChecked = isAlreadyAssigned || isSelected;
+                const isChecked = isSelected;
                 const disabled = (!isSelected && selectedJudges.length >= judgesCount);
 
                 return (
                   <label
                     key={judge.userId}
-                    className={`flex items-center gap-3 p-1 rounded-lg transition-colors group cursor-pointer ${
-                      disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center gap-3 p-1 rounded-lg transition-colors group cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
                   >
                     <div className="relative">
                       <input
-                      type="checkbox"
-                      disabled={disabled}
-                      checked={isChecked}
-                      onChange={() => toggleJudge(judge.userId)}
-                      className="sr-only"
-                    />
-                      <div className={`w-5 h-5 rounded border-2 transition-all ${
-                        isChecked && isAlreadyAssigned
-                          ?'bg-red-600 border-red-600' :
+                        type="checkbox"
+                        disabled={disabled}
+                        checked={isChecked}
+                        onChange={() => toggleJudge(judge.userId)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded border-2 transition-all ${isChecked && isAlreadyAssigned
+                        ? 'bg-red-600 border-red-600' :
                         isChecked ?
                           'bg-gray-400 border-gray-300 group-hover:border-red-300' :
                           "group-hover:border-red-300"
-                      }`}>
+                        }`}>
                         {(isChecked) && (
                           <svg className="w-3 h-3 text-white absolute top-0.5 left-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -189,7 +202,7 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
 
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
           >
             Cancelar
@@ -197,11 +210,7 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
           <button
             onClick={handleConfirm}
             disabled={selectedJudges.length === 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              selectedJudges.length === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105'
-            }`}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${selectedJudges.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105'}`}
           >
             Asignar a todos los bloques
           </button>

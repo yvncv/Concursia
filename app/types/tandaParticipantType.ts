@@ -14,6 +14,6 @@ export interface TandaParticipant {
  */
 export interface JudgeScore {
   judgeId: string;                    // userId del jurado que emitió el puntaje
-  score: 3 | 4 | 5;                   // Puntaje otorgado
+  score: 3 | 4 | 5 | 0 | 1 | 2 | null;                   // Puntaje otorgado
   timestamp?: Timestamp;             // Fecha/hora en que se emitió el puntaje
 }

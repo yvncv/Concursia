@@ -5,6 +5,11 @@ import { hashAllDnis } from "../utils/hashAllDnis";
 import { useState } from "react";
 import { Shield, ShieldCheck, Lock, Unlock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { findUserByDni } from "./findUserByDni";
+import CreacionMasivaDeUsuarios from "./creacionMasivaDeUsuarios";
+import CrearAcademiaForm from "./crearAcademia";
+import GeneradorAcademias from "./generadorAcademias";
+import GeneradorEventosPorAcademia from "./generadorEventosAcademia";
+import GeneradorTickets from "./generadorTickets";
 
 export default function AdminDniEncrypter() {
   const [status, setStatus] = useState<string>("");
@@ -302,6 +307,10 @@ export default function AdminDniEncrypter() {
           </div>
         </div>
       </div>
+      <CreacionMasivaDeUsuarios />
+      <GeneradorAcademias />
+      <GeneradorEventosPorAcademia />
+      <GeneradorTickets />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import JudgeAvatar from './components/JudgeAvatar';
 import useUsers from '@/app/hooks/useUsers';
 import { User } from '@/app/types/userType';
 import useLiveCompetitions from '@/app/hooks/useLiveCompetition';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/app/firebase/config';
 
 interface TandaExecutionViewProps {
   event: CustomEvent;
@@ -130,7 +132,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   const [isRunning, setIsRunning] = useState(false);
   const [showJudgeModal, setShowJudgeModal] = useState(false);
   const [tempBlocks, setTempBlocks] = useState<BlockInTanda[]>([]);
-  const [currentTandaState, setcurrentTandaStateState] = useState<Tanda>(currentTanda);
+  const [currentTandaState, setcurrentTandaState] = useState<Tanda>(currentTanda);
   const { users } = useUsers();
   const { liveCompetitions } = useLiveCompetitions(event.id);
   const usersMap = useMemo(() => {
@@ -142,7 +144,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   }, [users]);
 
   useEffect(() => {
-    setcurrentTandaStateState(currentTanda);
+    setcurrentTandaState(currentTanda);
   }, [currentTanda]);
 
   // Temporizador para la tanda
@@ -162,8 +164,36 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const setActualCurrentTandaIndex = async () => {
+    const liveCompetition = liveCompetitions.find(
+      (c) => c.category === category && c.level === level && c.gender === gender
+    );
+
+    if (!liveCompetition) {
+      console.error("No se encontró la competencia activa correspondiente.");
+      return;
+    }
+
+    try {
+      const compRef = doc(
+        db,
+        "eventos",
+        event.id,
+        "liveCompetition",
+        liveCompetition.id
+      );
+      await updateDoc(compRef, {
+        currentTandaIndex: currentTanda.index,
+      });
+      console.log("✔ currentTandaIndex actualizado en Firestore");
+    } catch (error) {
+      console.error("❌ Error al actualizar el índice de la tanda:", error);
+    }
+  };
+
   const handleStartPause = () => {
     setIsRunning(!isRunning);
+    setActualCurrentTandaIndex();
   };
 
   // Verificar si un bloque tiene jurados asignados
@@ -491,6 +521,24 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
           )}
         </div>
       </div>
+      {showJudgeModal && (
+        <JudgeSelectionModal
+          open={showJudgeModal}
+          onClose={() => setShowJudgeModal(false)}
+          eventId={event.id}
+          tandaId={currentTandaState.id}
+          liveCompetitionId={`${level}_${category}_${gender}`}
+          eventStaff={event.staff || []}
+          tandaBlocks={tempBlocks}
+          onConfirm={(updatedBlocks) => {
+            setcurrentTandaState(prev => ({
+              ...prev,
+              blocks: updatedBlocks
+            }));
+          }}
+          judgesCount={3}
+        />
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { generateAndPrepareTandas, confirmAndSaveTandas, checkIfTandasExist } fr
 import { Tanda } from '@/app/types/tandaType';
 import { Participant } from '@/app/types/participantType';
 import { db } from '@/app/firebase/config';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore';
 
 interface LiveContestRunningProps {
     event: CustomEvent;
@@ -134,28 +134,23 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             const liveCompetitionId = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
             const phase = item.phase || 'Final';
 
-            const exist = await checkIfTandasExist(event.id, liveCompetitionId, phase);
+            // ⚠️ Si ya existen tandas, simplemente las cargamos desde Firestore
+            if (existingTandasIds.includes(item.id)) {
+                const snapshot = await getDocs(
+                    collection(db, `eventos/${event.id}/liveCompetition/${liveCompetitionId}/tandas`)
+                );
 
-            let tandas: Tanda[] = [];
+                const tandas: Tanda[] = snapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id
+                })) as Tanda[];
 
-            if (exist) {
-                const snapshot = await getDocs(collection(
-                    db,
-                    'eventos',
-                    event.id,
-                    'liveCompetition',
-                    liveCompetitionId,
-                    'tandas'
-                ));
-                tandas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tanda));
-
-                // 🔁 Ir directamente a la vista de ejecución
                 setExecutionData({
                     level: item.levelId,
                     category: item.category,
                     gender: item.gender || 'Mixto',
                     tandas,
-                    participants
+                    participants,
                 });
 
                 setCurrentTandaIndex(0);
@@ -163,18 +158,41 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 return;
             }
 
-            // Si no existen, generar y mostrar en modal
-            tandas = await generateAndPrepareTandas(event.id, liveCompetitionId, phase, participants);
+            // 🧱 Asegurar que el documento LiveCompetition existe
+            const liveCompDocRef = doc(db, 'eventos', event.id, 'liveCompetition', liveCompetitionId);
+            const docSnap = await getDoc(liveCompDocRef);
+            if (!docSnap.exists()) {
+                await setDoc(liveCompDocRef, {
+                    eventId: event.id,
+                    level: item.levelId,
+                    category: item.category,
+                    gender: item.gender || 'Mixto',
+                    phase,
+                    createdAt: serverTimestamp(),
+                    status: 'pending',
+                });
+            }
+
+            // 🌀 Generar nuevas tandas
+            const tandas = await generateAndPrepareTandas(
+                event.id,
+                liveCompetitionId,
+                phase,
+                participants
+            );
+
             setGeneratedTandas(tandas);
             setShowTandasModal(true);
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error generando o cargando tandas:', error);
             alert(`Error al procesar tandas: ${error.message || error}`);
         } finally {
             setIsGeneratingTandas(false);
         }
     };
+
+
 
     // Función para confirmar las tandas
     const handleConfirmTandas = async () => {
@@ -420,8 +438,8 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                                         onClick={() => handlePlayClick(item, index)}
                                         disabled={participantsCount === 0 || isGeneratingTandas}
                                         className={`p-2 rounded-full transition-colors ${participantsCount > 0 && !isGeneratingTandas
-                                                ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             }`}
                                     >
                                         {isGeneratingTandas && selectedItem?.id === item.id ? (
