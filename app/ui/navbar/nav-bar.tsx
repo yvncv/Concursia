@@ -259,7 +259,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
 
   if (pathname === "/") {
     return (
-      <header className="bg-white shadow-md">
+      <header className="bg-white shadow-lg border-b border-gray-100">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
           <div>
             <Link href="/" className="flex items-center space-x-2">
@@ -269,21 +269,21 @@ export default function Navbar({ brandName }: { brandName: string }) {
 
           {/* Menú en Desktop */}
           <nav className="hidden md:block">
-            <ul className="flex space-x-4 items-center">
+            <ul className="flex space-x-6 items-center">
               {enlaces_landing.map((enlace, index) => (
                 <li key={index}>
                   {enlace.label === "Calendario" ? (
                     <Link
                       href={enlace.href}
-                      className={`flex flex-row space-x-2 py-1 px-2 rounded-lg transition-colors duration-200
+                      className={`flex flex-row items-center space-x-2 py-2 px-4 rounded-lg transition-colors duration-200 font-medium
                     ${pathname.includes(enlace.href)
-                          ? "bg-red-100 text-red-700 font-bold"
-                          : "hover:bg-gray-100 hover:text-black text-red-700"
+                          ? "bg-red-600 text-white shadow-md"
+                          : "bg-red-50 text-red-700 hover:bg-red-100"
                         }`}
                       onClick={handleLinkClick}
                     >
                       <enlace.icon className="w-5 h-5" />
-                      <span className="hidden md:block truncate">
+                      <span className="hidden md:block">
                         {enlace.label}
                       </span>
                     </Link>
@@ -291,11 +291,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
                     <div className="relative group">
                       <Link
                         href={enlace.href}
-                        className="text-gray-600 hover:text-red-700"
+                        className="text-gray-700 hover:text-red-700 font-medium transition-colors duration-200 py-2"
                       >
                         {enlace.label}
                       </Link>
-                      <span className="group-hover:w-full group-hover:opacity-100 opacity-0 duration-300 transition-all ease-in-out absolute bottom-0 left-0 w-[2px] h-[2px] bg-red-700"></span>
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-700 group-hover:w-full transition-all duration-300 ease-out"></span>
                     </div>
                   )}
                 </li>
@@ -308,7 +308,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
             {user ? (
               <Link
                 href={`/user/${user?.id}`}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors duration-200 shadow-sm"
               >
                 <User className="w-5 h-5" />
               </Link>
@@ -316,14 +316,14 @@ export default function Navbar({ brandName }: { brandName: string }) {
               <>
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-4 py-2 border rounded-lg text-sm text-gray-800 hover:text-black hover:border-gray-400 transition"
+                  className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:text-red-700 hover:border-red-300 hover:bg-red-50 transition-colors duration-200 font-medium"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Iniciar Sesión</span>
                 </Link>
                 <Link
                   href="/register"
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition"
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors duration-200 font-medium shadow-sm"
                 >
                   <User className="w-4 h-4" />
                   <span>Registrarse</span>
@@ -336,7 +336,7 @@ export default function Navbar({ brandName }: { brandName: string }) {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-red-700 hover:text-gray-200 focus:outline-none transition-colors duration-300"
+              className="text-red-700 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded-md p-1 transition-colors duration-200"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -347,33 +347,84 @@ export default function Navbar({ brandName }: { brandName: string }) {
             </button>
           </div>
         </div>
+
         {/* Menú para Mobile */}
-        <div
-          className={`md:hidden bg-white shadow-md overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-            }`}
-        >
-          <ul className="space-y-4 px-4 pb-4 pt-2">
-            <li><Link href="/calendario" className="text-gray-600 hover:text-red-700 block">Calendario de Eventos</Link></li>
-            <li><Link href="#eventos" className="text-gray-600 hover:text-red-700 block">Eventos Recientes</Link></li>
-            <li><Link href="#galeria" className="text-gray-600 hover:text-red-700 block">Galería</Link></li>
-            <li><Link href="#acerca" className="text-gray-600 hover:text-red-700 block">Acerca de</Link></li>
-            <li><Link href="#contacto" className="text-gray-600 hover:text-red-700 block">Contacto</Link></li>
-            {user ? (
-              <li>
+        <div className={`md:hidden bg-white border-t border-gray-100 transition-all duration-300 ease-in-out ${
+          isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+        }`}>
+          <ul className="space-y-1 px-4 pb-4 pt-3">
+            <li>
+              <Link 
+                href="/calendario" 
+                className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                <span>📅</span>
+                <span>Calendario de Eventos</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="#eventos" 
+                className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                <span>🎉</span>
+                <span>Eventos Recientes</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="#galeria" 
+                className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                <span>🖼️</span>
+                <span>Galería</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="#acerca" 
+                className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                <span>ℹ️</span>
+                <span>Acerca de</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="#contacto" 
+                className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+                <span>📞</span>
+                <span>Contacto</span>
+              </Link>
+            </li>
+            
+            <li className="pt-3 border-t border-gray-100 mt-3">
+              {user ? (
                 <Link
                   href={`/user/${user?.id}`}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-red-700 block"
+                  className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
                 >
                   <User className="w-5 h-5" />
                   <span>Perfil</span>
                 </Link>
-              </li>
-            ) : (
-              <>
-                <li><Link href="/login" className="text-gray-600 hover:text-red-700 block">Iniciar Sesión</Link></li>
-                <li><Link href="/register" className="text-gray-600 hover:text-red-700 block">Registrarse</Link></li>
-              </>
-            )}
+              ) : (
+                <div className="space-y-2">
+                  <Link 
+                    href="/login" 
+                    className="block py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                  >
+                    Iniciar Sesión
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="block py-3 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 text-center font-medium"
+                  >
+                    Registrarse
+                  </Link>
+                </div>
+              )}
+            </li>
           </ul>
         </div>
       </header>
@@ -447,7 +498,6 @@ export default function Navbar({ brandName }: { brandName: string }) {
             )}
           </div>
 
-          {/* Desktop Menu */}
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-4">
             <nav>

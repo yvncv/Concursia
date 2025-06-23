@@ -6,8 +6,6 @@ import { useState } from "react";
 import { Shield, ShieldCheck, Lock, Unlock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { findUserByDni } from "./findUserByDni";
 import CreacionMasivaDeUsuarios from "./creacionMasivaDeUsuarios";
-import GeneradorAcademias from "./generadorAcademias";
-import GeneradorEventosPorAcademia from "./generadorEventosAcademia";
 import GeneradorTickets from "./generadorTickets";
 
 export default function AdminDniEncrypter() {
@@ -307,8 +305,6 @@ export default function AdminDniEncrypter() {
         </div>
       </div>
       <CreacionMasivaDeUsuarios />
-      <GeneradorAcademias />
-      <GeneradorEventosPorAcademia />
       <GeneradorTickets />
     </div>
   );
