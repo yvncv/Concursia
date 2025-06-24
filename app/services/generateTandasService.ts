@@ -12,6 +12,7 @@ import { Participant } from '@/app/types/participantType';
 import { Tanda } from '@/app/types/tandaType';
 import { BlockInTanda } from '@/app/types/blockInTandaType';
 import { TandaParticipant } from '@/app/types/tandaParticipantType';
+import { CustomEvent } from '@/app/types/eventType'; // asegúrate de importar bien tu tipo
 import { CompetitionPhase } from '@/app/types/liveCompetitionType';
 
 /**
@@ -36,7 +37,8 @@ const shuffleArray = <T>(array: T[]): T[] => {
 export const generateTandas = async (
   eventId: string,
   liveCompetitionId: string,
-  participants: Participant[]
+  participants: Participant[],
+  event: CustomEvent // <-- nuevo
 ): Promise<Tanda[]> => {
   try {
     // 1. Obtener configuración del LiveCompetition
@@ -59,6 +61,10 @@ export const generateTandas = async (
     
     // 4. Generar tandas
     const tandas: Tanda[] = [];
+
+    const initialJudgeIds = (event.staff || [])
+      .filter(s => s.permissions.includes("judge") && s.juradoInicia)
+      .map(s => s.userId);
     
     for (let tandaIndex = 0; tandaIndex < totalTandas; tandaIndex++) {
       // Obtener participantes para esta tanda
@@ -84,7 +90,7 @@ export const generateTandas = async (
         const block: BlockInTanda = {
           blockIndex,
           participants: tandaParticipantsForBlock,
-          judgeIds: [] // Los jurados se asignarán más tarde
+          judgeIds: initialJudgeIds // <-- ahora asignas automáticamente los jurados
         };
         
         tandasBlocks.push(block);
@@ -208,8 +214,13 @@ export const generateAndPrepareTandas = async (
       throw new Error('Ya existen tandas generadas para esta competencia');
     }
     
+    const eventRef = doc(db, 'eventos', eventId);
+    const eventSnap = await getDoc(eventRef);
+    if (!eventSnap.exists()) throw new Error('Evento no encontrado');
+    const eventData = { id: eventSnap.id, ...eventSnap.data() } as CustomEvent;
+    
     // 2. Generar tandas
-    const tandas = await generateTandas(eventId, liveCompetitionId, participants);
+    const tandas = await generateTandas(eventId, liveCompetitionId, participants, eventData);
     
     // 3. Retornar tandas para mostrar en modal (NO las guardamos aún)
     return tandas;

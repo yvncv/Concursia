@@ -151,6 +151,7 @@ export interface CustomEvent {
   staff?: {
     userId: string;
     permissions: string[];
+    juradoInicia?: boolean;
   }[];
   smallImage: string;
   bannerImage: string;

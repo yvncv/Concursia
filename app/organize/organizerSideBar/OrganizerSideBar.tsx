@@ -75,7 +75,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
           {sidebarState === "collapsed" && (
             <h1 className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-400 truncate">
-              {user?.roleId === "organizer" ? "Organizador" : "Staff"}
+              {user?.roleId === "organizer" ? "Organizador" : "Personal (Staff)"}
             </h1>
           )}
           

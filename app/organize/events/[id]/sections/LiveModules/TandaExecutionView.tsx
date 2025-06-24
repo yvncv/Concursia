@@ -344,7 +344,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
 
               {/* Jurados superiores */}
-              {hasExactJudges(0) && (
                 <div className="flex justify-center gap-3 mb-4">
                   {currentTandaState.blocks[0].judgeIds.slice(0, Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
                     <JudgeAvatar
@@ -355,7 +354,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     />
                   ))}
                 </div>
-              )}
 
               {/* Área de pistas */}
               <div className="border-4 border-gray-800 rounded-2xl bg-yellow-100 p-6">
@@ -391,7 +389,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
 
               {/* Jurados inferiores */}
-              {hasExactJudges(0) && (
                 <div className="flex justify-center gap-3 mt-4">
                   {currentTandaState.blocks[0].judgeIds.slice(Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
                     <JudgeAvatar
@@ -402,7 +399,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     />
                   ))}
                 </div>
-              )}
             </div>
           ) : (
             /* DISEÑO VERTICAL - MÚLTIPLES BLOQUES */
@@ -451,7 +447,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     {/* Jurados a los lados + pista vertical */}
                     <div className="flex items-center justify-center gap-3">
                       {/* Jurados izquierda */}
-                      {hasExactJudges(blockIndex) && (
                         <div className="flex flex-col gap-2">
                           {block.judgeIds.slice(0, Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
                             <JudgeAvatar
@@ -462,7 +457,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                             />
                           ))}
                         </div>
-                      )}
 
                       {/* Área de pista con participantes */}
                       <div className="border-4 border-gray-800 rounded-lg overflow-hidden bg-yellow-100 min-w-[140px]">
@@ -483,7 +477,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                       </div>
 
                       {/* Jurados derecha */}
-                      {hasExactJudges(blockIndex) && (
                         <div className="flex flex-col gap-2">
                           {block.judgeIds.slice(Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
                             <JudgeAvatar
@@ -494,7 +487,6 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                             />
                           ))}
                         </div>
-                      )}
                     </div>
                   </div>
                 );

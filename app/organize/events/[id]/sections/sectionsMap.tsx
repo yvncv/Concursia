@@ -31,7 +31,7 @@ export const ALL_SECTIONS_COMPONENT = [
   
   { id: 'tickets', name: 'Entradas', component: Tickets, icon: <Ticket size={18} /> },
   { id: 'participants', name: 'Participantes', component: Participants, icon: <Users size={18} /> },
-  { id: 'eventstaff', name: 'Staff', component: EventStaff, icon: <UserCog size={18} /> },
+  { id: 'eventstaff', name: 'Personal (Staff)', component: EventStaff, icon: <UserCog size={18} /> },
   { id: 'schedule', name: 'Horario', component: Schedule, icon: <CalendarDays size={18} /> },
   { id: 'statistics', name: 'Estadísticas', component: Statistics, icon: <BarChart2 size={18} /> },
   { id: 'messages', name: 'Mensajes', component: Messages, icon: <MessageSquare size={18} /> },
