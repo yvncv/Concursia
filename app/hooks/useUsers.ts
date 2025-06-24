@@ -17,7 +17,10 @@ export default function useUsers(userIds?: string[]) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const auth = getAuth();
+    let auth;
+    if (typeof window !== 'undefined') {
+      auth = getAuth(); // ✅ Solo en el cliente
+    }
 
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       if (!user) {
