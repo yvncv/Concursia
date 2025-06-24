@@ -12,7 +12,7 @@ interface JudgeSelectionModalProps {
   eventStaff: { userId: string; permissions: string[] }[];
   tandaBlocks: BlockInTanda[];
   onConfirm: (updatedBlocks: BlockInTanda[]) => void;
-  judgesCount: number;
+  judgesCount: number; // Cantidad EXACTA requerida
 }
 
 export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
@@ -36,6 +36,7 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
   );
 
   const [selectedJudges, setSelectedJudges] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -47,16 +48,29 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
 
   const toggleJudge = (userId: string) => {
     const isSelected = selectedJudges.includes(userId);
-    if (isSelected && alreadyAssignedJudgeIds.has(userId)) {
-      const confirmRemove = confirm("Este jurado ya estaba asignado previamente. ¿Deseas quitarlo?");
-      if (!confirmRemove) return;
+    
+    if (isSelected) {
+      // Si ya está seleccionado, lo removemos
+      if (alreadyAssignedJudgeIds.has(userId)) {
+        const confirmRemove = confirm("Este jurado ya estaba asignado previamente. ¿Deseas quitarlo?");
+        if (!confirmRemove) return;
+      }
+      setSelectedJudges(prev => prev.filter(id => id !== userId));
+    } else {
+      // Si no está seleccionado, lo agregamos solo si no hemos alcanzado el límite
+      if (selectedJudges.length < judgesCount) {
+        setSelectedJudges(prev => [...prev, userId]);
+      }
     }
-    setSelectedJudges(prev =>
-      isSelected ? prev.filter(id => id !== userId) : (prev.length >= judgesCount ? prev : [...prev, userId])
-    );
   };
 
   const handleConfirm = async () => {
+    // Validación estricta: debe tener exactamente la cantidad requerida
+    if (selectedJudges.length !== judgesCount) {
+      alert(`Debes seleccionar exactamente ${judgesCount} jurado(s). Actualmente tienes ${selectedJudges.length} seleccionado(s).`);
+      return;
+    }
+
     const updatedBlocks: BlockInTanda[] = tandaBlocks.map(block => ({
       ...block,
       judgeIds: selectedJudges,
@@ -82,6 +96,21 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
     onClose();
   };
 
+  // Filtrar jurados por término de búsqueda
+  const filteredJudges = judges.filter(judge => {
+    const user = usersMap[judge.userId];
+    if (!user) return false;
+    
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
+
+  // Verificar si se puede confirmar (exactamente la cantidad requerida)
+  const canConfirm = selectedJudges.length === judgesCount;
+  
+  // Verificar si se puede seleccionar más jurados
+  const canSelectMore = selectedJudges.length < judgesCount;
+
   if (!open) return null;
 
   if (loadingUsers) {
@@ -100,88 +129,152 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all max-h-[90vh] overflow-hidden">
+        {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Asignar Jurados</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Seleccionar Jurados</h2>
             <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <p className="text-sm text-gray-700 mt-1">Selecciona hasta {judgesCount} jurado(s) para todos los bloques</p>
-          <div className="text-xs mt-1 space-y-1">
+          
+          <div className="mt-3">
+            <div className="text-sm text-gray-700 mb-2">
+              <span className="font-semibold">Requerido:</span> Exactamente {judgesCount} jurado(s) para todos los bloques
+            </div>
+            
+            {/* Contador de seleccionados */}
+            <div className={`text-sm font-medium ${
+              canConfirm 
+                ? 'text-green-600 bg-green-50 border border-green-200' 
+                : selectedJudges.length > judgesCount
+                  ? 'text-red-600 bg-red-50 border border-red-200'
+                  : 'text-orange-600 bg-orange-50 border border-orange-200'
+            } px-3 py-2 rounded-lg inline-block`}>
+              {selectedJudges.length} de {judgesCount} seleccionados
+              {canConfirm && ' ✓ Listo para asignar'}
+              {selectedJudges.length < judgesCount && ` (faltan ${judgesCount - selectedJudges.length})`}
+              {selectedJudges.length > judgesCount && ` (sobran ${selectedJudges.length - judgesCount})`}
+            </div>
+          </div>
+
+          {/* Buscador */}
+          <div className="mt-4">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Notas importantes */}
+          <div className="text-xs mt-3 space-y-1">
             <p className="font-semibold text-gray-700">Notas importantes:</p>
-            <ul className="list-disc list-inside space-y-1 text-gray-700">
-              <li>
-                Los usuarios con <span className="font-medium text-red-500">check</span> y <span className="font-medium text-red-500">punto rojo</span> ya han sido asignados previamente.
-              </li>
-              <li>
-                Se pueden deseleccionar y volver a asignar (esté seguro de realizar cualquier cambio).
-              </li>
-              <li>
-                Si seleccionas jurados nuevos y <span className="font-medium text-red-500">cierras sin guardar</span>, las selecciones se conservarán al reabrir.
-              </li>
+            <ul className="list-disc list-inside space-y-1 text-gray-600">
+              <li>Los usuarios con <span className="font-medium text-red-500">punto rojo</span> ya estaban asignados previamente.</li>
+              <li>Debes seleccionar exactamente {judgesCount} jurado(s), no más, no menos.</li>
+              <li>Si cierras sin guardar, las selecciones se conservarán al reabrir.</li>
             </ul>
           </div>
         </div>
 
-        <div className="px-6 py-4">
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {judges.length > 0 ? (
-              judges.map(judge => {
+        {/* Lista de jurados */}
+        <div className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 300px)' }}>
+          <div className="space-y-3">
+            {filteredJudges.length > 0 ? (
+              filteredJudges.map(judge => {
                 const user = usersMap[judge.userId];
                 const isAlreadyAssigned = alreadyAssignedJudgeIds.has(judge.userId);
                 const isSelected = selectedJudges.includes(judge.userId);
-                const isChecked = isSelected;
-                const disabled = (!isSelected && selectedJudges.length >= judgesCount);
+                const canSelect = canSelectMore || isSelected;
 
                 return (
                   <label
                     key={judge.userId}
-                    className={`flex items-center gap-3 p-1 rounded-lg transition-colors group cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      isSelected 
+                        ? isAlreadyAssigned 
+                          ? 'border-red-500 bg-red-50' 
+                          : 'border-green-500 bg-green-50'
+                        : canSelect
+                          ? 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          : 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                    }`}
                   >
                     <div className="relative">
                       <input
                         type="checkbox"
-                        disabled={disabled}
-                        checked={isChecked}
+                        disabled={!canSelect}
+                        checked={isSelected}
                         onChange={() => toggleJudge(judge.userId)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded border-2 transition-all ${isChecked && isAlreadyAssigned
-                        ? 'bg-red-600 border-red-600' :
-                        isChecked ?
-                          'bg-gray-400 border-gray-300 group-hover:border-red-300' :
-                          "group-hover:border-red-300"
-                        }`}>
-                        {(isChecked) && (
-                          <svg className="w-3 h-3 text-white absolute top-0.5 left-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <div className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${
+                        isSelected && isAlreadyAssigned
+                          ? 'bg-red-500 border-red-500' 
+                          : isSelected 
+                            ? 'bg-green-500 border-green-500'
+                            : canSelect
+                              ? 'border-gray-300 hover:border-blue-400'
+                              : 'border-gray-200'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                    {/* Foto y datos del jurado */}
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                        {user?.profileImage ? (
+                          <img
+                            src={typeof user.profileImage === 'string' ? user.profileImage : URL.createObjectURL(user.profileImage)}
+                            alt={`${user.firstName} ${user.lastName}`}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
                           <span className="text-white text-sm font-medium">
                             {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                           </span>
-                        </div>
-                        <span className="font-medium text-gray-900">
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">
                           {user?.firstName} {user?.lastName}
-                        </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Jurado {isAlreadyAssigned ? '(ya asignado)' : '(disponible)'}
+                        </div>
                       </div>
                     </div>
 
-                    {isAlreadyAssigned && <div className="w-2 h-2 bg-red-600 rounded-full" />}
+                    {/* Indicadores visuales */}
+                    <div className="flex items-center space-x-2">
+                      {isAlreadyAssigned && (
+                        <div className="w-3 h-3 bg-red-500 rounded-full" title="Ya estaba asignado" />
+                      )}
+                      {isSelected && !isAlreadyAssigned && (
+                        <div className="w-3 h-3 bg-green-500 rounded-full" title="Recién seleccionado" />
+                      )}
+                    </div>
                   </label>
                 );
               })
-            ) : (
+            ) : judges.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,16 +283,15 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
                 </div>
                 <p className="text-gray-500 text-sm">No hay jurados disponibles</p>
               </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-sm">No se encontraron jurados con ese nombre</p>
+              </div>
             )}
           </div>
         </div>
 
-        {selectedJudges.length >= judgesCount && (
-          <div className="px-6 text-sm text-red-600 font-medium">
-            Has alcanzado el máximo de jurados permitidos.
-          </div>
-        )}
-
+        {/* Footer con botones */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
           <button
             onClick={handleClose}
@@ -209,10 +301,17 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={selectedJudges.length === 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${selectedJudges.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105'}`}
+            disabled={!canConfirm}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              canConfirm 
+                ? 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105' 
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
           >
-            Asignar a todos los bloques
+            {canConfirm 
+              ? `Asignar ${judgesCount} jurado(s) a todos los bloques`
+              : `Selecciona exactamente ${judgesCount} jurado(s)`
+            }
           </button>
         </div>
       </div>

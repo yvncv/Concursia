@@ -66,7 +66,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
   return (
     <div className="bg-yellow-200 rounded-lg p-4 text-center min-h-[120px] flex flex-col items-center justify-center relative">
-
       {/* Imagen(es) del participante */}
       <div className="mb-2">
         {isCouple ? (
@@ -135,6 +134,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   const [currentTandaState, setcurrentTandaState] = useState<Tanda>(currentTanda);
   const { users } = useUsers();
   const { liveCompetitions } = useLiveCompetitions(event.id);
+  
   const usersMap = useMemo(() => {
     const map: Record<string, User> = {};
     users.forEach(user => {
@@ -142,6 +142,14 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
     });
     return map;
   }, [users]);
+
+  // Obtener la cantidad exacta de jurados requerida para esta modalidad
+  const getRequiredJudgesCount = (): number => {
+    const levelConfig = event.dance.levels[level]?.config;
+    return levelConfig?.judgesCount || 3; // fallback a 3 si no está configurado
+  };
+
+  const requiredJudgesCount = getRequiredJudgesCount();
 
   useEffect(() => {
     setcurrentTandaState(currentTanda);
@@ -196,10 +204,26 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
     setActualCurrentTandaIndex();
   };
 
-  // Verificar si un bloque tiene jurados asignados
-  const hasJudges = (blockIndex: number): boolean => {
+  // Verificar si un bloque tiene EXACTAMENTE la cantidad requerida de jurados
+  const hasExactJudges = (blockIndex: number): boolean => {
     const block = currentTandaState.blocks[blockIndex];
-    return block && block.judgeIds && block.judgeIds.length > 0;
+    return block && block.judgeIds && block.judgeIds.length === requiredJudgesCount;
+  };
+
+  // Verificar si todos los bloques están listos para competir
+  const allBlocksReady = (): boolean => {
+    return currentTandaState.blocks.every((_, index) => hasExactJudges(index));
+  };
+
+  // Obtener el estado de jurados de un bloque específico
+  const getJudgesStatus = (blockIndex: number): { current: number; required: number; isReady: boolean } => {
+    const block = currentTandaState.blocks[blockIndex];
+    const current = block?.judgeIds?.length || 0;
+    return {
+      current,
+      required: requiredJudgesCount,
+      isReady: current === requiredJudgesCount
+    };
   };
 
   // Obtener el total de participantes en la tanda
@@ -208,18 +232,10 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
     0
   );
 
-  function getAvailableJudges(event: CustomEvent): { userId: string }[] {
-    return (event.staff || []).filter(member =>
-      member.permissions.includes('judge') // solo jurados
-    );
-  }
-
   const handleAssignJudges = (blocks: BlockInTanda[]) => {
     setTempBlocks(blocks);
     setShowJudgeModal(true);
   };
-
-  const liveCompetition = liveCompetitions.find(c => c.id === currentTandaState.liveCompetitionId);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -285,10 +301,10 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
           </div>
         </div>
 
-        {/* Grid de pistas - NUEVO DISEÑO COMO LAS IMÁGENES */}
+        {/* Grid de pistas */}
         <div className="space-y-8">
           {currentTandaState.blocks.length === 1 ? (
-            /* DISEÑO HORIZONTAL - UN SOLO BLOQUE (como imagen 1) */
+            /* DISEÑO HORIZONTAL - UN SOLO BLOQUE */
             <div className="bg-white rounded-xl shadow-lg p-6 relative">
               {/* Estado de jurados del bloque */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -298,9 +314,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     <div>
                       <div className="font-medium text-gray-800">Jurados asignados</div>
                       <div className="text-sm text-gray-600">
-                        {hasJudges(0)
-                          ? `${currentTandaState.blocks[0].judgeIds.length} jurados seleccionados`
-                          : 'Sin jurados asignados'}
+                        {getJudgesStatus(0).current} de {requiredJudgesCount} jurados requeridos
                       </div>
                     </div>
                   </div>
@@ -313,17 +327,24 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     <span>Seleccionar Jurados</span>
                   </button>
 
-                  {hasJudges(0) && (
+                  {hasExactJudges(0) ? (
                     <div className="flex items-center space-x-2 text-green-600">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <span className="text-sm font-medium">Listo para competir</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-orange-600">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span className="text-sm font-medium">
+                        Faltan {requiredJudgesCount - getJudgesStatus(0).current} jurado(s)
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Jurados superiores */}
-              {hasJudges(0) && (
+              {hasExactJudges(0) && (
                 <div className="flex justify-center gap-3 mb-4">
                   {currentTandaState.blocks[0].judgeIds.slice(0, Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
                     <JudgeAvatar
@@ -355,7 +376,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                 }}>
                   {currentTandaState.blocks[0].participants.map((tandaParticipant, pistaIndex) => (
                     <div key={tandaParticipant.participantId}
-                      className={`relative ${!hasJudges(0) ? 'opacity-50' : ''}`}>
+                      className={`relative ${!hasExactJudges(0) ? 'opacity-50' : ''}`}>
                       {pistaIndex > 0 && (
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-black -ml-2 rounded"></div>
                       )}
@@ -370,7 +391,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
 
               {/* Jurados inferiores */}
-              {hasJudges(0) && (
+              {hasExactJudges(0) && (
                 <div className="flex justify-center gap-3 mt-4">
                   {currentTandaState.blocks[0].judgeIds.slice(Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
                     <JudgeAvatar
@@ -384,85 +405,101 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               )}
             </div>
           ) : (
-            /* DISEÑO VERTICAL - MÚLTIPLES BLOQUES (como imagen 2) */
+            /* DISEÑO VERTICAL - MÚLTIPLES BLOQUES */
             <div
               className="grid gap-6"
               style={{ gridTemplateColumns: `repeat(${Math.min(currentTandaState.blocks.length, 3)}, 1fr)` }}
             >
-              {currentTandaState.blocks.map((block, blockIndex) => (
-                <div key={blockIndex} className="bg-white rounded-xl shadow-lg p-4 relative flex flex-col items-center">
-                  {/* Título del bloque */}
-                  <div className="mb-4 text-center">
-                    <div className="font-semibold text-gray-800 text-sm mb-1">
-                      BLOQUE {String.fromCharCode(65 + blockIndex)}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {hasJudges(blockIndex)
-                        ? `${block.judgeIds.length} jurado(s)`
-                        : 'Sin jurados'}
-                    </div>
-
-                    {!hasJudges(blockIndex) && (
-                      <button
-                        onClick={() => handleAssignJudges([block])}
-                        className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                      >
-                        Seleccionar
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Jurados a los lados + pista vertical */}
-                  <div className="flex items-center justify-center gap-3">
-                    {/* Jurados izquierda */}
-                    {hasJudges(blockIndex) && (
-                      <div className="flex flex-col gap-2">
-                        {block.judgeIds.slice(0, Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
-                          <JudgeAvatar
-                            key={`left-${judgeId}`}
-                            userId={judgeId}
-                            usersMap={usersMap}
-                            judgeIndex={i}
-                          />
-                        ))}
+              {currentTandaState.blocks.map((block, blockIndex) => {
+                const judgesStatus = getJudgesStatus(blockIndex);
+                
+                return (
+                  <div key={blockIndex} className="bg-white rounded-xl shadow-lg p-4 relative flex flex-col items-center">
+                    {/* Título del bloque */}
+                    <div className="mb-4 text-center">
+                      <div className="font-semibold text-gray-800 text-sm mb-1">
+                        BLOQUE {String.fromCharCode(65 + blockIndex)}
                       </div>
-                    )}
+                      <div className="text-xs text-gray-600">
+                        {judgesStatus.current}/{judgesStatus.required} jurados
+                      </div>
 
-                    {/* Área de pista con participantes */}
-                    <div className="border-4 border-gray-800 rounded-lg overflow-hidden bg-yellow-100 min-w-[140px]">
-                      {block.participants.map((tandaParticipant, pistaIndex) => (
-                        <div
-                          key={tandaParticipant.participantId}
-                          className={`h-16 flex items-center justify-center px-2 relative text-sm font-medium text-gray-800 ${pistaIndex > 0 ? 'border-t-2 border-gray-800' : ''
-                            } ${!hasJudges(blockIndex) ? 'opacity-50' : ''}`}
+                      {!judgesStatus.isReady && (
+                        <button
+                          onClick={() => handleAssignJudges([block])}
+                          className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
                         >
-                          <ParticipantCard
-                            participantId={tandaParticipant.participantId}
-                            allParticipants={allParticipants}
-                            pistaNumber={pistaIndex + 1}
-                          />
+                          Seleccionar
+                        </button>
+                      )}
+
+                      {judgesStatus.isReady ? (
+                        <div className="mt-2 flex items-center justify-center space-x-1 text-green-600">
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                          <span className="text-xs font-medium">Listo</span>
                         </div>
-                      ))}
+                      ) : (
+                        <div className="mt-2 flex items-center justify-center space-x-1 text-orange-600">
+                          <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                          <span className="text-xs font-medium">
+                            Faltan {judgesStatus.required - judgesStatus.current}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Jurados derecha */}
-                    {hasJudges(blockIndex) && (
-                      <div className="flex flex-col gap-2">
-                        {block.judgeIds.slice(Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
-                          <JudgeAvatar
-                            key={`right-${judgeId}`}
-                            userId={judgeId}
-                            usersMap={usersMap}
-                            judgeIndex={i + Math.ceil(block.judgeIds.length / 2)}
-                          />
+                    {/* Jurados a los lados + pista vertical */}
+                    <div className="flex items-center justify-center gap-3">
+                      {/* Jurados izquierda */}
+                      {hasExactJudges(blockIndex) && (
+                        <div className="flex flex-col gap-2">
+                          {block.judgeIds.slice(0, Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
+                            <JudgeAvatar
+                              key={`left-${judgeId}`}
+                              userId={judgeId}
+                              usersMap={usersMap}
+                              judgeIndex={i}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Área de pista con participantes */}
+                      <div className="border-4 border-gray-800 rounded-lg overflow-hidden bg-yellow-100 min-w-[140px]">
+                        {block.participants.map((tandaParticipant, pistaIndex) => (
+                          <div
+                            key={tandaParticipant.participantId}
+                            className={`h-16 flex items-center justify-center px-2 relative text-sm font-medium text-gray-800 ${
+                              pistaIndex > 0 ? 'border-t-2 border-gray-800' : ''
+                            } ${!hasExactJudges(blockIndex) ? 'opacity-50' : ''}`}
+                          >
+                            <ParticipantCard
+                              participantId={tandaParticipant.participantId}
+                              allParticipants={allParticipants}
+                              pistaNumber={pistaIndex + 1}
+                            />
+                          </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
 
+                      {/* Jurados derecha */}
+                      {hasExactJudges(blockIndex) && (
+                        <div className="flex flex-col gap-2">
+                          {block.judgeIds.slice(Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
+                            <JudgeAvatar
+                              key={`right-${judgeId}`}
+                              userId={judgeId}
+                              usersMap={usersMap}
+                              judgeIndex={i + Math.ceil(block.judgeIds.length / 2)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
@@ -483,13 +520,14 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleStartPause}
-                disabled={currentTandaState.blocks.some((_, index) => !hasJudges(index))}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${currentTandaState.blocks.some((_, index) => !hasJudges(index))
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : isRunning
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
+                disabled={!allBlocksReady()}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+                  !allBlocksReady()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : isRunning
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
               >
                 <Play className="w-5 h-5" />
                 <span>{isRunning ? 'Pausar Tanda' : 'Iniciar Tanda'}</span>
@@ -509,18 +547,30 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
           </div>
 
           {/* Indicador de estado */}
-          {currentTandaState.blocks.some((_, index) => !hasJudges(index)) && (
+          {!allBlocksReady() && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center">
                 <div className="text-yellow-600 mr-3">⚠️</div>
                 <div className="text-yellow-800 text-sm">
-                  Asigne jurados a todos los bloques antes de iniciar la tanda
+                  Cada bloque necesita exactamente {requiredJudgesCount} jurado(s) para iniciar la tanda
+                </div>
+              </div>
+            </div>
+          )}
+
+          {allBlocksReady() && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="text-green-600 mr-3">✅</div>
+                <div className="text-green-800 text-sm">
+                  Todos los bloques tienen {requiredJudgesCount} jurados asignados. ¡Listo para comenzar!
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
       {showJudgeModal && (
         <JudgeSelectionModal
           open={showJudgeModal}
@@ -536,7 +586,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               blocks: updatedBlocks
             }));
           }}
-          judgesCount={3}
+          judgesCount={requiredJudgesCount}
         />
       )}
     </div>
