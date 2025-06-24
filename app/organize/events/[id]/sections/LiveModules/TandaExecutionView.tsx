@@ -6,7 +6,7 @@ import { Participant } from '@/app/types/participantType';
 import { useParticipantsWithUsers, getParticipantDisplayName, getParticipantImages } from '@/app/hooks/useParticipantsWithUsers';
 import { JudgeSelectionModal } from './modals/JudgesSelectionModal';
 import { BlockInTanda } from '@/app/types/blockInTandaType';
-import JudgeAvatar from './components/JudgeAvatar';
+import {JudgeAvatar} from './components/JudgeAvatar';
 import useUsers from '@/app/hooks/useUsers';
 import { User } from '@/app/types/userType';
 import useLiveCompetitions from '@/app/hooks/useLiveCompetition';
@@ -134,7 +134,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   const [currentTandaState, setcurrentTandaState] = useState<Tanda>(currentTanda);
   const { users } = useUsers();
   const { liveCompetitions } = useLiveCompetitions(event.id);
-  
+
   const usersMap = useMemo(() => {
     const map: Record<string, User> = {};
     users.forEach(user => {
@@ -235,6 +235,13 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   const handleAssignJudges = (blocks: BlockInTanda[]) => {
     setTempBlocks(blocks);
     setShowJudgeModal(true);
+  };
+
+  const didJudgeScoreAllParticipants = (block: BlockInTanda, judgeId: string): boolean => {
+    return block.participants.every(participant => {
+      const scoreEntry = participant.scores?.find(score => score.judgeId === judgeId);
+      return typeof scoreEntry?.score === 'number';
+    });
   };
 
   return (
@@ -344,16 +351,22 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
 
               {/* Jurados superiores */}
-                <div className="flex justify-center gap-3 mb-4">
-                  {currentTandaState.blocks[0].judgeIds.slice(0, Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
+              <div className="flex justify-center gap-3 mb-4">
+                {currentTandaState.blocks[0].judgeIds.slice(0, Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => {
+                  const hasScoredAll = didJudgeScoreAllParticipants(currentTandaState.blocks[0], judgeId);
+
+                  return (
                     <JudgeAvatar
                       key={judgeId}
                       userId={judgeId}
                       usersMap={usersMap}
                       judgeIndex={index}
+                      hasScoredAll={hasScoredAll}
+                      block={currentTandaState.blocks[0]} // opcional, si necesitas mostrar nota promedio
                     />
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
 
               {/* Área de pistas */}
               <div className="border-4 border-gray-800 rounded-2xl bg-yellow-100 p-6">
@@ -389,16 +402,22 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               </div>
 
               {/* Jurados inferiores */}
-                <div className="flex justify-center gap-3 mt-4">
-                  {currentTandaState.blocks[0].judgeIds.slice(Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => (
+              <div className="flex justify-center gap-3 mt-4">
+                {currentTandaState.blocks[0].judgeIds.slice(Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)).map((judgeId, index) => {
+                  const hasScoredAll = didJudgeScoreAllParticipants(currentTandaState.blocks[0], judgeId);
+
+                  return (
                     <JudgeAvatar
                       key={judgeId}
                       userId={judgeId}
                       usersMap={usersMap}
+                      hasScoredAll={hasScoredAll}
+                      block={currentTandaState.blocks[0]} // opcional, si necesitas mostrar nota promedio
                       judgeIndex={index + Math.ceil(currentTandaState.blocks[0].judgeIds.length / 2)}
                     />
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             /* DISEÑO VERTICAL - MÚLTIPLES BLOQUES */
@@ -408,7 +427,7 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
             >
               {currentTandaState.blocks.map((block, blockIndex) => {
                 const judgesStatus = getJudgesStatus(blockIndex);
-                
+
                 return (
                   <div key={blockIndex} className="bg-white rounded-xl shadow-lg p-4 relative flex flex-col items-center">
                     {/* Título del bloque */}
@@ -447,25 +466,30 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                     {/* Jurados a los lados + pista vertical */}
                     <div className="flex items-center justify-center gap-3">
                       {/* Jurados izquierda */}
-                        <div className="flex flex-col gap-2">
-                          {block.judgeIds.slice(0, Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
+                      <div className="flex flex-col gap-2">
+                        {block.judgeIds.slice(0, Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => {
+                          const hasScoredAll = didJudgeScoreAllParticipants(currentTandaState.blocks[0], judgeId);
+
+                          return (
                             <JudgeAvatar
-                              key={`left-${judgeId}`}
+                              key={judgeId}
                               userId={judgeId}
                               usersMap={usersMap}
+                              hasScoredAll={hasScoredAll}
+                              block={currentTandaState.blocks[0]} // opcional, si necesitas mostrar nota promedio
                               judgeIndex={i}
                             />
-                          ))}
-                        </div>
+                          );
+                        })}
+                      </div>
 
                       {/* Área de pista con participantes */}
                       <div className="border-4 border-gray-800 rounded-lg overflow-hidden bg-yellow-100 min-w-[140px]">
                         {block.participants.map((tandaParticipant, pistaIndex) => (
                           <div
                             key={tandaParticipant.participantId}
-                            className={`h-16 flex items-center justify-center px-2 relative text-sm font-medium text-gray-800 ${
-                              pistaIndex > 0 ? 'border-t-2 border-gray-800' : ''
-                            } ${!hasExactJudges(blockIndex) ? 'opacity-50' : ''}`}
+                            className={`h-16 flex items-center justify-center px-2 relative text-sm font-medium text-gray-800 ${pistaIndex > 0 ? 'border-t-2 border-gray-800' : ''
+                              } ${!hasExactJudges(blockIndex) ? 'opacity-50' : ''}`}
                           >
                             <ParticipantCard
                               participantId={tandaParticipant.participantId}
@@ -477,16 +501,22 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
                       </div>
 
                       {/* Jurados derecha */}
-                        <div className="flex flex-col gap-2">
-                          {block.judgeIds.slice(Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => (
+                      <div className="flex flex-col gap-2">
+                        {block.judgeIds.slice(Math.ceil(block.judgeIds.length / 2)).map((judgeId, i) => {
+                          const hasScoredAll = didJudgeScoreAllParticipants(currentTandaState.blocks[0], judgeId);
+
+                          return (
                             <JudgeAvatar
-                              key={`right-${judgeId}`}
+                              key={judgeId}
                               userId={judgeId}
                               usersMap={usersMap}
+                              hasScoredAll={hasScoredAll}
+                              block={currentTandaState.blocks[0]} // opcional, si necesitas mostrar nota promedio
                               judgeIndex={i + Math.ceil(block.judgeIds.length / 2)}
                             />
-                          ))}
-                        </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 );
@@ -513,13 +543,12 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
               <button
                 onClick={handleStartPause}
                 disabled={!allBlocksReady()}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                  !allBlocksReady()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : isRunning
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${!allBlocksReady()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : isRunning
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
               >
                 <Play className="w-5 h-5" />
                 <span>{isRunning ? 'Pausar Tanda' : 'Iniciar Tanda'}</span>
