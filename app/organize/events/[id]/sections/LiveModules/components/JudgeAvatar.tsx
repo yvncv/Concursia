@@ -31,14 +31,18 @@ export const JudgeAvatar: React.FC<JudgeAvatarProps> = ({ userId, usersMap, judg
   return (
     <div className="flex flex-col items-center space-y-2 p-2 relative">
       <div className={`relative w-16 h-16 rounded-full overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 border-4
-        ${hasScoredAll 
-          ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-emerald-200' 
+        ${hasScoredAll
+          ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-emerald-200'
           : 'border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 shadow-slate-200'
         }
       `}>
         {user?.profileImage ? (
           <img
-            src={user.profileImage}
+            src={
+              typeof user.profileImage === "string"
+                ? user.profileImage
+                : URL.createObjectURL(user.profileImage)
+            }
             alt={user.firstName}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
           />
@@ -48,7 +52,7 @@ export const JudgeAvatar: React.FC<JudgeAvatarProps> = ({ userId, usersMap, judg
           </div>
         )}
       </div>
-      
+
       {/* Indicador de estado - fuera del avatar */}
       <div className={`absolute top-1 right-1 w-5 h-5 rounded-full border-2 border-white shadow-md transition-all duration-300 z-20
         ${hasScoredAll ? 'bg-emerald-500' : 'bg-slate-400'}
