@@ -97,7 +97,7 @@ const StaffList = ({
       return;
     }
 
-    if (editPermissions.includes('judge')) return;
+    if (editPermissions.includes('judge') && editPermissions.length === 1 && perm !== 'judge') return;
 
     setEditPermissions(prev =>
       prev.includes(perm)
@@ -319,13 +319,14 @@ const StaffList = ({
         <JudgeConfirmationModal
           isRemoving={isJudgeRemoval}
           onConfirm={() => {
-            if (isJudgeRemoval && previousPermissions) {
-              // Restaurar permisos previos si se quitó jurado
-              setEditPermissions(previousPermissions);
+            if (isJudgeRemoval) {
+              // Quitar el permiso de judge
+              setEditPermissions(prev => prev.filter(p => p !== "judge"));
+              setEditJuradoInicia(false); // ✅ también quitar el flag de inicio automático
             } else {
-              // Asignar solo permiso de jurado
-              setPreviousPermissions(editPermissions);
-              setEditPermissions(['judge']);
+              // Asignar solo "judge" y remover los demás
+              setEditPermissions(["judge"]);
+              setEditJuradoInicia(false);
             }
 
             setShowJudgeModal(false);

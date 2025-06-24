@@ -6,18 +6,24 @@ interface JudgeConfirmationModalProps {
   onCancel: () => void;
 }
 
-const JudgeConfirmationModal = ({ isRemoving, onConfirm, onCancel }: JudgeConfirmationModalProps) => {
+const JudgeConfirmationModal = ({
+  isRemoving,
+  onConfirm,
+  onCancel
+}: JudgeConfirmationModalProps) => {
+  const title = isRemoving
+    ? 'Quitar permiso de Jurado'
+    : 'Asignar permiso de Jurado';
+
+  const message = isRemoving
+    ? 'Estás a punto de quitar el permiso de jurado. ¿Deseas continuar?'
+    : 'Al asignar el permiso de jurado se eliminarán los demás permisos. ¿Deseas continuar?';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-bold mb-4">
-          {isRemoving ? 'Quitar permiso de Jurado' : 'Asignar permiso de Jurado'}
-        </h2>
-        <p className="text-gray-700 mb-6">
-          {isRemoving
-            ? 'Estás a punto de quitar el permiso de jurado. ¿Deseas restaurar los permisos anteriores?'
-            : 'Al asignar el permiso de jurado se eliminarán los demás permisos. ¿Deseas continuar?'}
-        </p>
+        <h2 className="text-lg font-bold mb-4">{title}</h2>
+        <p className="text-gray-700 mb-6">{message}</p>
         <div className="flex justify-end gap-2">
           <button
             onClick={onCancel}

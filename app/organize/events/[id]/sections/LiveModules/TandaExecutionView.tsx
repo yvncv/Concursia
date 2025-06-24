@@ -6,11 +6,11 @@ import { Participant } from '@/app/types/participantType';
 import { useParticipantsWithUsers, getParticipantDisplayName, getParticipantImages } from '@/app/hooks/useParticipantsWithUsers';
 import { JudgeSelectionModal } from './modals/JudgesSelectionModal';
 import { BlockInTanda } from '@/app/types/blockInTandaType';
-import {JudgeAvatar} from './components/JudgeAvatar';
+import { JudgeAvatar } from './components/JudgeAvatar';
 import useUsers from '@/app/hooks/useUsers';
 import { User } from '@/app/types/userType';
 import useLiveCompetitions from '@/app/hooks/useLiveCompetition';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/app/firebase/config';
 
 interface TandaExecutionViewProps {
@@ -152,8 +152,30 @@ export const TandaExecutionView: React.FC<TandaExecutionViewProps> = ({
   const requiredJudgesCount = getRequiredJudgesCount();
 
   useEffect(() => {
-    setcurrentTandaState(currentTanda);
-  }, [currentTanda]);
+    const liveCompetition = liveCompetitions.find(
+      (c) => c.category === category && c.level === level && c.gender === gender
+    );
+    if (!liveCompetition) return;
+
+    const tandaRef = doc(
+      db,
+      "eventos",
+      event.id,
+      "liveCompetition",
+      liveCompetition.id,
+      "tandas",
+      `tanda_${currentTanda.index}`
+    );
+
+    const unsubscribe = onSnapshot(tandaRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const updatedTanda = docSnap.data() as Tanda;
+        setcurrentTandaState(updatedTanda);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [event.id, liveCompetitions, currentTanda.index, level, category, gender]);
 
   // Temporizador para la tanda
   useEffect(() => {
