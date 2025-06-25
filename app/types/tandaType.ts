@@ -9,9 +9,12 @@ export interface Tanda {
   index: number;                      // Orden secuencial de esta tanda (0, 1, 2...)
   phase: "Eliminatoria" | "Semifinal" | "Final"; // Fase a la que pertenece esta tanda
   blocks: BlockInTanda[];             // Bloques que componen esta tanda (ej. 3 bloques activos)
-  status: "pendiente" | "en_proceso" | "finalizada"; // Estado actual de la tanda
+  status: "stopped" | "playing" | "paused" | "waiting_scores" |"finished"; // Estado actual de la tanda
   startTime?: Timestamp;              // Hora real de inicio de la tanda
   endTime?: Timestamp;                // Hora real de finalización
+  pausedAt?: Timestamp;               // Momento en que se pausó
+  resumedAt?: Timestamp;              // Momento en que se reanudó
+  totalPausedDuration?: number;       // Tiempo total pausado en segundos
   liveCompetitionId: string;          // id del live competition
 
   /**

@@ -28,6 +28,24 @@ export const JudgeAvatar: React.FC<JudgeAvatarProps> = ({ userId, usersMap, judg
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "Jurado sin nombre";
 
+  const getProfileImageSrc = (): string | null => {
+    if (!user?.profileImage) return null;
+    
+    // Si es string, retornarlo directamente
+    if (typeof user.profileImage === 'string') {
+      return user.profileImage;
+    }
+    
+    // Si es File, crear URL temporal
+    if (user.profileImage instanceof File) {
+      return URL.createObjectURL(user.profileImage);
+    }
+    
+    return null;
+  };
+
+  const profileImageSrc = getProfileImageSrc();
+
   return (
     <div className="flex flex-col items-center space-y-2 p-2 relative">
       <div className={`relative w-16 h-16 rounded-full overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 border-4
@@ -36,10 +54,10 @@ export const JudgeAvatar: React.FC<JudgeAvatarProps> = ({ userId, usersMap, judg
           : 'border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 shadow-slate-200'
         }
       `}>
-        {user?.profileImage ? (
+        {profileImageSrc ? (
           <img
-            src={user.profileImage}
-            alt={user.firstName}
+            src={profileImageSrc}
+            alt={user?.firstName || 'Jurado'}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
           />
         ) : (

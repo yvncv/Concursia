@@ -7,12 +7,12 @@ import useAcademy from "@/app/hooks/useAcademy";
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '../../firebase/config';
 import Image from 'next/image';
-import { 
-  LucideImage, 
-  User as UserIcon, 
-  Trophy, 
-  MapPin, 
-  Award, 
+import {
+  LucideImage,
+  User as UserIcon,
+  Trophy,
+  MapPin,
+  Award,
   Calendar,
   Building2,
   ExternalLink,
@@ -28,6 +28,7 @@ import PersonalInformation from './components/PersonalInformation';
 import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
+import UserAchievements from './components/UserAchievements';
 import { decryptValue } from '@/app/utils/encryption';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -182,10 +183,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     <main className="flex flex-col min-h-screen bg-gray-50">
       {/* Cover Image Section */}
       <div className={`relative h-[15rem] md:h-[30rem] bg-gradient-to-r ${foundUser?.gender === 'Masculino'
-          ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
-          : foundUser?.gender === 'Femenino'
-            ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
-            : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
+        ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
+        : foundUser?.gender === 'Femenino'
+          ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
+          : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
         }`}>
         {foundUser.coverImage && (
           <Image
@@ -256,7 +257,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
               {/* Academy Badge - Pequeño ícono debajo de la foto */}
               {foundUser.marinera?.academyId && academy && !loadingAcademy && (
-                <div 
+                <div
                   className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 cursor-pointer group/academy"
                   onClick={handleViewAcademyProfile}
                 >
@@ -277,7 +278,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Tooltip */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 sm:px-3 py-1 bg-black bg-opacity-80 text-white text-xs rounded-lg opacity-0 group-hover/academy:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
                       Academia: {academy.name}
@@ -399,7 +400,13 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <div className="space-y-6 md:space-y-8">
               {/* Academy History */}
               <AcademyHistory userId={foundUser.id} />
-              
+
+              {/* User Achievements */}
+              <UserAchievements
+                userId={foundUser.id}
+                userName={capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
+              />
+
               {/* Activity Status */}
               <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Estado</h3>
@@ -454,10 +461,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         onFileSelect={handleFileSelect}
         onDelete={handleDeleteProfilePicture}
         currentImage={
-          croppedImage || 
-          (typeof foundUser.profileImage === 'string' 
-            ? foundUser.profileImage 
-            : foundUser.profileImage 
+          croppedImage ||
+          (typeof foundUser.profileImage === 'string'
+            ? foundUser.profileImage
+            : foundUser.profileImage
               ? URL.createObjectURL(foundUser.profileImage as File)
               : null
           )

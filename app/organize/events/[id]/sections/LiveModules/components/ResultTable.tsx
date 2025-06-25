@@ -82,7 +82,7 @@ export const ResultTable: React.FC<Props> = ({ block, allParticipants }) => {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6">
         <div className="flex items-center space-x-3">
           <Star className="w-6 h-6 text-yellow-300" />
-          <h2 className="text-xl font-bold text-white">Matriz de Calificaciones</h2>
+          <h2 className="text-xl font-bold text-white">Tabla de puntuación</h2>
         </div>
       </div>
 
