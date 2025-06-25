@@ -183,6 +183,8 @@ export interface CustomEvent {
     };
   };
   settings: EventSettings;
+  currentLiveCompetitionId?: string;             // Competencia actualmente activa
+  completedCompetitions: string[];               // IDs de competencias terminadas
   createdBy: string;
   lastUpdatedBy: string;
   createdAt: Timestamp;

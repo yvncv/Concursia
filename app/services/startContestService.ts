@@ -104,14 +104,16 @@ const groupParticipantsByCategory = async (participants: Participant[]): Promise
  * @param eventId - ID del evento
  * @param participantsByCategory - Participantes agrupados
  * @param event - Datos del evento (para obtener configuración)
+ * @returns Array de IDs de competencias creadas
  */
 const createLiveCompetitionDocuments = async (
   eventId: string, 
   participantsByCategory: ParticipantsByCategory,
   event: CustomEvent
-): Promise<void> => {
+): Promise<string[]> => {
   const batch = writeBatch(db);
   const liveCompetitionRef = collection(db, 'eventos', eventId, 'liveCompetition');
+  const createdCompetitionIds: string[] = [];
   let documentsCreated = 0;
 
   // Iterar por cada modalidad
@@ -138,7 +140,7 @@ const createLiveCompetitionDocuments = async (
             ? 'Final' 
             : 'Eliminatoria';
 
-          // Crear documento LiveCompetition
+          // Crear documento LiveCompetition con NUEVOS CAMPOS
           const liveCompetitionData: LiveCompetitionCreate = {
             eventId,
             level: levelId,
@@ -150,6 +152,12 @@ const createLiveCompetitionDocuments = async (
             tracksPerBlock,
             totalTandas,
             currentTandaIndex: 0,
+            
+            // NUEVOS CAMPOS:
+            status: "pending",           // Inicia como pendiente
+            isFinished: false,           // No ha terminado
+            completedTandas: 0,          // 0 tandas completadas
+            
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
@@ -157,6 +165,7 @@ const createLiveCompetitionDocuments = async (
           // Agregar al batch
           const docRef = doc(liveCompetitionRef, docId);
           batch.set(docRef, liveCompetitionData);
+          createdCompetitionIds.push(docId);
           documentsCreated++;
         }
       }
@@ -164,12 +173,13 @@ const createLiveCompetitionDocuments = async (
   }
 
   if (documentsCreated === 0) {
-    return;
+    return [];
   }
 
   try {
     // Ejecutar batch
     await batch.commit();
+    return createdCompetitionIds;
   } catch (error) {
     throw new Error(`Error al crear documentos LiveCompetition: ${error}`);
   }
@@ -216,14 +226,23 @@ export const startContestWithEventData = async (eventId: string): Promise<void> 
     const participantsByCategory = await groupParticipantsByCategory(participants);
 
     // 5. Crear documentos LiveCompetition
-    await createLiveCompetitionDocuments(eventId, participantsByCategory, eventData);
+    const createdCompetitionIds = await createLiveCompetitionDocuments(eventId, participantsByCategory, eventData);
 
-    // 6. Cambiar estado del evento
+    if (createdCompetitionIds.length === 0) {
+      throw new Error('No se pudieron crear las competencias en vivo');
+    }
+
+    // 6. Actualizar evento con NUEVOS CAMPOS
     await updateDoc(eventRef, {
       status: 'live',
       realStartTime: serverTimestamp(),
+      currentLiveCompetitionId: createdCompetitionIds[0], // Primera competencia como activa
+      completedCompetitions: [],                          // Array vacío al inicio
       updatedAt: serverTimestamp()
     });
+
+    console.log(`✅ Evento iniciado con ${createdCompetitionIds.length} competencias creadas`);
+    console.log('🎯 Primera competencia activa:', createdCompetitionIds[0]);
 
   } catch (error) {
     // Si hubo error, intentar revertir cambios
@@ -234,7 +253,7 @@ export const startContestWithEventData = async (eventId: string): Promise<void> 
         updatedAt: serverTimestamp()
       });
     } catch (revertError) {
-      // Error al revertir - el evento podría quedar inconsistente
+      console.error('❌ Error al revertir cambios:', revertError);
     }
     
     throw error;

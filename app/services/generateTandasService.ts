@@ -102,7 +102,7 @@ export const generateTandas = async (
         index: tandaIndex,
         phase: currentPhase,
         blocks: tandasBlocks,
-        status: 'pendiente',
+        status: 'stopped',
         liveCompetitionId: liveCompetitionId,
       };
       

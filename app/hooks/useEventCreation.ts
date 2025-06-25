@@ -317,6 +317,10 @@ export const useEventCreation = (): EventCreationHandler => {
       capacity: eventData.details.capacity,
       dance: { levels: processedLevels },
       settings: settings,
+
+      currentLiveCompetitionId: undefined,  // Se asignará cuando inicie el evento
+      completedCompetitions: [],            // Array vacío al crear el evento
+
       createdBy: user.uid,
       lastUpdatedBy: user.uid,
       createdAt: Timestamp.now(),
