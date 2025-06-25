@@ -265,7 +265,7 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
               readOnly
               className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-800 font-medium focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all outline-none"
             />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="absolute -top-2 -right-1 transform ">
               <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Verificado</span>
             </div>
           </div>

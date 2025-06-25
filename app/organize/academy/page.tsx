@@ -159,7 +159,7 @@ const OrganizeAcademyPage = () => {
             crecimientoMensual={crecimientoMensual}
           />
 
-          <div className="grid lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Contenido principal - más ancho (3/4) */}
             <div className="lg:col-span-3">
               <AcademyTabs

@@ -124,7 +124,7 @@ const Overview: React.FC<OverviewProps> = ({ event }) => {
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Resumen de Modalidades</h2>
                 <div className="space-y-4">
                     {modalityStats.map((modality) => (
-                        <div key={modality.name} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                        <div key={modality.name} className="flex flex-row flex-wrap gap-4 items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                             <div className="flex items-center">
                                 <button className="mr-3 p-2 bg-green-100 hover:bg-green-200 rounded-lg transition-colors duration-150">
                                     <Play className="h-4 w-4 text-green-600" />

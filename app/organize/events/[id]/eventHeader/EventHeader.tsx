@@ -95,7 +95,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
           </div>
 
           {/* Center section */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 hidden sm:block">
             <button className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
               <Undo className="h-4 w-4" />
             </button>
@@ -108,7 +108,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
           </div>
 
           {/* Right section */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3" >
             {/* Hidden span to measure text width */}
             <span 
               // ref={spanRef} 
@@ -149,7 +149,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
               )} */}
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 hidden sm:block">
               <button className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
                 <BarChart2 className="h-4 w-4" />
               </button>

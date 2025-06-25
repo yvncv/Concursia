@@ -115,7 +115,7 @@ export const AcademyStatsHeader: React.FC<StatsHeaderProps> = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -177,7 +177,7 @@ export const AcademyTabs: React.FC<AcademyTabsProps> = ({
 }) => {
   return (
     <div className="mb-6">
-      <div className="bg-gray-100 p-1 rounded-2xl inline-flex w-full">
+      <div className="bg-gray-100 p-1 rounded-2xl flex flex-col sm:flex-row w-full">
         <button
           onClick={() => setActiveTab("solicitudes")}
           className={`flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-xl transition-all duration-300 ${
@@ -464,11 +464,11 @@ export const AffiliatedStudentsSection: React.FC<AffiliatedStudentsSectionProps>
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center flex-col sm:flex-row justify-between">
           <h2 className="text-lg font-semibold text-gray-800">Estudiantes Afiliados</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -525,10 +525,22 @@ export const AffiliatedStudentsSection: React.FC<AffiliatedStudentsSectionProps>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {student.firstName} {student.lastName}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                      <div className="flex flex-row items-start justify-between sm:items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {student.firstName} {student.lastName}
+                        </h3>
+                        <div className="relative">
+                          <button 
+                            onClick={() => onRemove(student.id, `${student.firstName} ${student.lastName}`)}
+                            disabled={loading}
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700 disabled:text-gray-400 border border-red-300 hover:border-red-400 disabled:border-gray-300 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
+                          >
+                          <UserX className="w-3 h-3" /><span className="hidden sm:block">Expulsar</span>
+                          
+                        </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-row flex-wrap items-center gap-4 text-sm text-gray-600 mt-1">
                         <span className="flex items-center gap-1">
                           <CheckCircle className="w-3 h-3 text-green-500" />
                           Afiliado desde {joinedAt.toLocaleDateString('es-PE')}
@@ -544,16 +556,7 @@ export const AffiliatedStudentsSection: React.FC<AffiliatedStudentsSectionProps>
                       </div>
                     </div>
 
-                    <div className="relative">
-                      <button 
-                        onClick={() => onRemove(student.id, `${student.firstName} ${student.lastName}`)}
-                        disabled={loading}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-700 disabled:text-gray-400 border border-red-300 hover:border-red-400 disabled:border-gray-300 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
-                      >
-                        <UserX className="w-3 h-3" />
-                        Expulsar
-                      </button>
-                    </div>
+                    
                   </div>
 
                   {student.marinera?.participant && (
@@ -570,7 +573,7 @@ export const AffiliatedStudentsSection: React.FC<AffiliatedStudentsSectionProps>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                  <div className="flex flex-row flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
                     <span className="flex items-center gap-1">
                       <Mail className="w-3 h-3" />
                       {student.email[0]}

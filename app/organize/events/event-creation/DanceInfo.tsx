@@ -226,9 +226,9 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-medium text-gray-700">Modalidades disponibles</h3>
         <div className="text-sm">
-          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
+          <div className="bg-green-100 text-green-800 px-3 text-xs sm:text-base py-1 rounded-full">
             ✅ {availableModalities.length} modalidades • {availableCategories.length} categorías
-          </span>
+          </div>
         </div>
       </div>
 

@@ -43,11 +43,11 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
         <h2 className="text-2xl font-semibold text-gray-800 relative after:content-[''] after:absolute after:left-0 after:w-20 after:h-1 after:bg-blue-500 after:-bottom-2">
           Información Personal
         </h2>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-          <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
+        <div className="flex items-center gap-2 truncate">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse truncate"></div>
+          <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
             {canEdit ? 'Tu Perfil' : 'Perfil Público'}
-          </span>
+          </div>
         </div>
       </div>
 

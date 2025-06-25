@@ -14,12 +14,6 @@ import {
   MapPin, 
   Award, 
   Calendar,
-  Building2,
-  ExternalLink,
-  Mail,
-  Phone,
-  Globe,
-  Users
 } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
@@ -328,8 +322,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       <div className="flex-1 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-white rounded-lg sm:rounded-xl col-span-1 p-4 sm:p-6 sm:col-span-2 lg:col-span-1  shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
                   <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
@@ -343,7 +337,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </div>
             </div>
 
-            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl col-span-1 p-4 sm:p-6 sm:col-span-2 lg:col-span-1 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-green-100 p-2 sm:p-3 rounded-full">
                   <UserIcon className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
@@ -357,7 +351,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </div>
             </div>
 
-            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl col-span-1 p-4 sm:p-6 sm:col-span-2 lg:col-span-1 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-purple-100 p-2 sm:p-3 rounded-full">
                   <Award className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
@@ -371,7 +365,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </div>
             </div>
 
-            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg sm:rounded-xl col-span-1 p-4 sm:p-6 sm:col-span-2 lg:col-span-1 shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className="bg-orange-100 p-2 sm:p-3 rounded-full">
                   <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />

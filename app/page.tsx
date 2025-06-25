@@ -50,7 +50,7 @@ export default function LandingPage() {
                 <h2 className="text-3xl font-bold text-center mb-8">
                   Eventos Recientes
                 </h2>
-                <div className="flex flex-wrap justify-center gap-4">
+                <div className="flex flex-wrap justify-center gap-8">
                   {pastEvents.map((event, index) => {
                     if (index >= 6) return;
                     return <EventComponent key={event.id} event={event} />;
@@ -70,7 +70,7 @@ export default function LandingPage() {
               Galería de Imágenes
             </h2>
             {events.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="flex flex-row flex-wrap justify-center gap-8">
                 {events.map((event, index) => {
                   if (index >= 8) return;
                   return (
@@ -80,7 +80,7 @@ export default function LandingPage() {
                       alt={`Imagen de marinera ${event.smallImage}`}
                       width={300}
                       height={300}
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="h-64 object-cover w-72 rounded-lg"
                       loader={({ src }) => src}
                     />
                   );

@@ -19,13 +19,13 @@ const PlaceInformation: React.FC<Props> = ({ foundUser }) => {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-lg border border-blue-100">
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-lg border border-blue-100">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-gray-800 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-1 after:bg-blue-500 after:-bottom-2">
           Información de Ubicación
         </h2>
-        <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
+        <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full hidden sm:block text-sm font-medium">
           Locación
         </span>
       </div>

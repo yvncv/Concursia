@@ -62,14 +62,14 @@ export default function TodosEventos() {
           </div>
 
           {/* Grid de Eventos */}
-          <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
+          <div className="w-full flex flex-col items-center justify-center max-w-[1400px]">
               {currentEvents.length > 0 ? (
                   <div
-                      className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
+                      className="w-[90%] flex flex-row flex-wrap gap-4 justify-around min-h-[400px]">
                     {currentEvents.map((event) => (
                         <div
                             key={event.id}
-                            className="transform transition-all duration-300 hover:scale-[1.02]"
+                            className="transform h-[450px] transition-all duration-300 hover:scale-[1.02]"
                         >
                           <EventComponent event={event}/>
                         </div>

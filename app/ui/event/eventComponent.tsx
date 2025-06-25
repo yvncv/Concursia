@@ -55,8 +55,8 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
   return (
     <div
       ref={elementRef}
-      className={`relative flex flex-col bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden cursor-pointer 
-        w-full max-w-[165px] sm:max-w-[190px] md:max-w-[220px] lg:max-w-[240px] xl:max-w-[260px] mx-auto 
+      className={`relative flex flex-col h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden cursor-pointer 
+        w-full max-w-[220px] lg:max-w-[240px] xl:max-w-[260px] 
         transition-all duration-500 ease-out hover:shadow-3xl hover:scale-[1.05] group 
         border border-white/20 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
         }`}

@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
       <section id="info-cards" className="">
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-x-4">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-4">
           {/* Tarjeta de Usuarios */}
           <div className="bg-white p-4 shadow-md rounded-lg">
             <h2 className="text-lg font-semibold">Usuarios</h2>
@@ -207,7 +207,7 @@ const Dashboard: React.FC = () => {
       </section>
 
       {/* Gráficos */}
-      <div className="mt-8 grid  grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-x-4">
+      <div className="mt-8 grid  grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-4">
         {/* Gráfico de Barras */}
         <div className="bg-white p-4 shadow-md rounded-lg">
           <h3 className="text-lg font-semibold">

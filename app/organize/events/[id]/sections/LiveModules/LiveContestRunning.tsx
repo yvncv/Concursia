@@ -461,7 +461,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
 
                     {/* Controles */}
                     {scheduleItems.length > 0 && (
-                        <div className="flex justify-center space-x-4 mt-8 pt-6 border-t border-gray-200">
+                        <div className="flex flex-row flex-wrap justify-center space-x-4 mt-8 pt-6 border-t border-gray-200">
                             <button
                                 onClick={handlePrevious}
                                 disabled={currentItemIndex === 0}

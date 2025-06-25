@@ -215,7 +215,7 @@ const ForumsPage = () => {
         {/* Controles mejorados */}
         <section className="mb-8">
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-orange-100/50">
-            <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
               {/* Barra de búsqueda */}
               <div className="relative flex-grow max-w-md group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-400 w-5 h-5 group-focus-within:text-red-500 transition-colors" />
@@ -229,7 +229,7 @@ const ForumsPage = () => {
               </div>
 
               {/* Filtros */}
-              <div className="flex gap-3">
+              <div className="flex flex-row flex-wrap gap-3">
                 <div className="relative group">
                   <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-400 w-4 h-4 group-focus-within:text-red-500 transition-colors" />
                   <select
@@ -647,9 +647,9 @@ const ForumsPage = () => {
                   {post.description}
                 </p>
 
-                <footer className="flex items-center justify-between">
+                <footer className="flex flex-row flex-wrap gap-4 items-center justify-between">
                   <div className="flex items-center gap-4 text-sm text-orange-600/80">
-                    <div className="flex items-center gap-2 bg-orange-50 px-3 py-1 rounded-full">
+                    <div className="flex  items-center gap-2 bg-orange-50 px-3 py-1 rounded-full">
                       <User className="w-4 h-4" />
                       <span className="font-medium">{post.createdByName}</span>
                     </div>
