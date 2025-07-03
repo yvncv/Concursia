@@ -1,47 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { X, Filter, Trash2, Check, Search } from "lucide-react";
 
-export interface FilterOptions {
-  modalities: string[];
+export interface ParticipantFilterOptions {
+  levels: string[];
   categories: string[];
   academies: string[];
+  statuses: string[];
+  phases: string[];
 }
 
-interface FilterModalProps {
+interface ParticipantFilterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyFilters: (filterOptions: FilterOptions) => void;
+  onApplyFilters: (filterOptions: ParticipantFilterOptions) => void;
   availableFilters: {
-    modalities: string[];
+    levels: string[];
     categories: string[];
     academies: string[];
+    statuses: string[];
+    phases: string[];
   };
-  currentFilters?: FilterOptions;
+  currentFilters?: ParticipantFilterOptions;
 }
 
-const FilterModal: React.FC<FilterModalProps> = ({
+const ParticipantFilterModal: React.FC<ParticipantFilterModalProps> = ({
   isOpen,
   onClose,
   onApplyFilters,
   availableFilters,
   currentFilters
 }) => {
-  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedAcademies, setSelectedAcademies] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedPhases, setSelectedPhases] = useState<string[]>([]);
   
   // Estados para búsqueda
-  const [modalitySearch, setModalitySearch] = useState("");
+  const [levelSearch, setLevelSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
   const [academySearch, setAcademySearch] = useState("");
 
   // Inicializar con filtros actuales cuando el modal se abre
   useEffect(() => {
     if (isOpen && currentFilters) {
-      setSelectedModalities(currentFilters.modalities || []);
+      setSelectedLevels(currentFilters.levels || []);
       setSelectedCategories(currentFilters.categories || []);
       setSelectedAcademies(currentFilters.academies || []);
-      setModalitySearch("");
+      setSelectedStatuses(currentFilters.statuses || []);
+      setSelectedPhases(currentFilters.phases || []);
+      setLevelSearch("");
       setCategorySearch("");
       setAcademySearch("");
     }
@@ -49,23 +57,27 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const handleApplyFilters = () => {
     onApplyFilters({
-      modalities: selectedModalities,
+      levels: selectedLevels,
       categories: selectedCategories,
-      academies: selectedAcademies
+      academies: selectedAcademies,
+      statuses: selectedStatuses,
+      phases: selectedPhases,
     });
     onClose();
   };
 
   const clearAllFilters = () => {
-    setSelectedModalities([]);
+    setSelectedLevels([]);
     setSelectedCategories([]);
     setSelectedAcademies([]);
+    setSelectedStatuses([]);
+    setSelectedPhases([]);
   };
 
-  const removeFilter = (type: 'modality' | 'category' | 'academy', value: string) => {
+  const removeFilter = (type: 'level' | 'category' | 'academy' | 'status' | 'phase', value: string) => {
     switch (type) {
-      case 'modality':
-        setSelectedModalities(prev => prev.filter(m => m !== value));
+      case 'level':
+        setSelectedLevels(prev => prev.filter(l => l !== value));
         break;
       case 'category':
         setSelectedCategories(prev => prev.filter(c => c !== value));
@@ -73,36 +85,48 @@ const FilterModal: React.FC<FilterModalProps> = ({
       case 'academy':
         setSelectedAcademies(prev => prev.filter(a => a !== value));
         break;
+      case 'status':
+        setSelectedStatuses(prev => prev.filter(s => s !== value));
+        break;
+      case 'phase':
+        setSelectedPhases(prev => prev.filter(p => p !== value));
+        break;
     }
   };
 
-  const toggleModality = (modality: string) => {
-    setSelectedModalities(prev => 
-      prev.includes(modality)
-        ? prev.filter(m => m !== modality)
-        : [...prev, modality]
+  const toggleLevel = (level: string) => {
+    setSelectedLevels(prev => 
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
     );
   };
 
   const toggleCategory = (category: string) => {
     setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
     );
   };
 
   const toggleAcademy = (academy: string) => {
     setSelectedAcademies(prev => 
-      prev.includes(academy)
-        ? prev.filter(a => a !== academy)
-        : [...prev, academy]
+      prev.includes(academy) ? prev.filter(a => a !== academy) : [...prev, academy]
+    );
+  };
+
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses(prev => 
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
+  const togglePhase = (phase: string) => {
+    setSelectedPhases(prev => 
+      prev.includes(phase) ? prev.filter(p => p !== phase) : [...prev, phase]
     );
   };
 
   // Filtrar opciones basado en búsqueda
-  const filteredModalities = availableFilters.modalities.filter(modality =>
-    modality.toLowerCase().includes(modalitySearch.toLowerCase())
+  const filteredLevels = availableFilters.levels.filter(level =>
+    level.toLowerCase().includes(levelSearch.toLowerCase())
   );
 
   const filteredCategories = availableFilters.categories.filter(category =>
@@ -114,24 +138,26 @@ const FilterModal: React.FC<FilterModalProps> = ({
   );
 
   // Contar total de filtros activos
-  const totalActiveFilters = selectedModalities.length + selectedCategories.length + selectedAcademies.length;
+  const totalActiveFilters = selectedLevels.length + selectedCategories.length + 
+    selectedAcademies.length + selectedStatuses.length + selectedPhases.length;
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+      {/* Modal Container */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col">
         
-        {/* Header con gradiente */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+        {/* HEADER - FIJO */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white rounded-t-2xl">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white bg-opacity-20 rounded-full">
                 <Filter className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Filtros Avanzados</h2>
-                <p className="text-blue-100 text-sm">
+                <h2 className="text-2xl font-bold">Filtros de Participantes</h2>
+                <p className="text-purple-100 text-sm">
                   {totalActiveFilters > 0 
                     ? `${totalActiveFilters} filtro${totalActiveFilters !== 1 ? 's' : ''} activo${totalActiveFilters !== 1 ? 's' : ''}`
                     : 'Sin filtros aplicados'
@@ -148,7 +174,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </div>
 
-        {/* Filtros activos */}
+        {/* FILTROS ACTIVOS - FIJO (Solo si hay filtros) */}
         {totalActiveFilters > 0 && (
           <div className="p-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
@@ -162,13 +188,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {selectedModalities.map(modality => (
-                <span key={modality} className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
-                  {modality}
-                  <button 
-                    onClick={() => removeFilter('modality', modality)}
-                    className="hover:bg-purple-200 rounded-full p-0.5"
-                  >
+              {selectedLevels.map(level => (
+                <span key={level} className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
+                  {level}
+                  <button onClick={() => removeFilter('level', level)} className="hover:bg-purple-200 rounded-full p-0.5">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -176,10 +199,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               {selectedCategories.map(category => (
                 <span key={category} className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
                   {category}
-                  <button 
-                    onClick={() => removeFilter('category', category)}
-                    className="hover:bg-green-200 rounded-full p-0.5"
-                  >
+                  <button onClick={() => removeFilter('category', category)} className="hover:bg-green-200 rounded-full p-0.5">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -187,10 +207,23 @@ const FilterModal: React.FC<FilterModalProps> = ({
               {selectedAcademies.map(academy => (
                 <span key={academy} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
                   {academy}
-                  <button 
-                    onClick={() => removeFilter('academy', academy)}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
-                  >
+                  <button onClick={() => removeFilter('academy', academy)} className="hover:bg-blue-200 rounded-full p-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              {selectedStatuses.map(status => (
+                <span key={status} className="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
+                  {status}
+                  <button onClick={() => removeFilter('status', status)} className="hover:bg-orange-200 rounded-full p-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              {selectedPhases.map(phase => (
+                <span key={phase} className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-1 rounded-full">
+                  {phase}
+                  <button onClick={() => removeFilter('phase', phase)} className="hover:bg-indigo-200 rounded-full p-0.5">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -199,65 +232,59 @@ const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         )}
 
-        {/* Contenido scrolleable */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="p-6 space-y-6">
+        {/* CONTENIDO - SCROLLEABLE */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
             
             {/* Modalidades */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-6 bg-gradient-to-b from-purple-500 to-purple-600 rounded-full"></div>
                 <h3 className="text-lg font-bold text-gray-800">Modalidades</h3>
-                <span className="text-sm text-gray-500">({filteredModalities.length})</span>
+                <span className="text-sm text-gray-500">({filteredLevels.length})</span>
               </div>
               
-              {availableFilters.modalities.length > 5 && (
+              {availableFilters.levels.length > 5 && (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Buscar modalidades..."
-                    value={modalitySearch}
-                    onChange={(e) => setModalitySearch(e.target.value)}
+                    value={levelSearch}
+                    onChange={(e) => setLevelSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                {filteredModalities.map(modality => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {filteredLevels.map(level => (
                   <label 
-                    key={modality} 
+                    key={level} 
                     className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      selectedModalities.includes(modality)
+                      selectedLevels.includes(level)
                         ? 'border-purple-500 bg-purple-50 text-purple-800'
                         : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={selectedModalities.includes(modality)}
-                      onChange={() => toggleModality(modality)}
+                      checked={selectedLevels.includes(level)}
+                      onChange={() => toggleLevel(level)}
                       className="sr-only"
                     />
                     <div className={`w-4 h-4 rounded border-2 mr-3 flex items-center justify-center ${
-                      selectedModalities.includes(modality)
+                      selectedLevels.includes(level)
                         ? 'border-purple-500 bg-purple-500'
                         : 'border-gray-300'
                     }`}>
-                      {selectedModalities.includes(modality) && (
+                      {selectedLevels.includes(level) && (
                         <Check className="w-3 h-3 text-white" />
                       )}
                     </div>
-                    <span className="font-medium">{modality}</span>
+                    <span className="font-medium">{level}</span>
                   </label>
                 ))}
-                {filteredModalities.length === 0 && modalitySearch && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No se encontraron modalidades</p>
-                )}
-                {availableFilters.modalities.length === 0 && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No hay modalidades disponibles</p>
-                )}
               </div>
             </div>
 
@@ -282,7 +309,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {filteredCategories.map(category => (
                   <label 
                     key={category} 
@@ -310,12 +337,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     <span className="font-medium">{category}</span>
                   </label>
                 ))}
-                {filteredCategories.length === 0 && categorySearch && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No se encontraron categorías</p>
-                )}
-                {availableFilters.categories.length === 0 && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No hay categorías disponibles</p>
-                )}
               </div>
             </div>
 
@@ -340,7 +361,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {filteredAcademies.map(academy => (
                   <label 
                     key={academy} 
@@ -368,30 +389,102 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     <span className="font-medium">{academy}</span>
                   </label>
                 ))}
-                {filteredAcademies.length === 0 && academySearch && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No se encontraron academias</p>
-                )}
-                {availableFilters.academies.length === 0 && (
-                  <p className="text-gray-500 italic col-span-2 text-center py-4">No hay academias disponibles</p>
-                )}
+              </div>
+            </div>
+
+            {/* Estados */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-6 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
+                <h3 className="text-lg font-bold text-gray-800">Estados</h3>
+                <span className="text-sm text-gray-500">({availableFilters.statuses.length})</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {availableFilters.statuses.map(status => (
+                  <label 
+                    key={status} 
+                    className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      selectedStatuses.includes(status)
+                        ? 'border-orange-500 bg-orange-50 text-orange-800'
+                        : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStatuses.includes(status)}
+                      onChange={() => toggleStatus(status)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded border-2 mr-3 flex items-center justify-center ${
+                      selectedStatuses.includes(status)
+                        ? 'border-orange-500 bg-orange-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedStatuses.includes(status) && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <span className="font-medium capitalize">{status.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Fases */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-6 bg-gradient-to-b from-indigo-500 to-indigo-600 rounded-full"></div>
+                <h3 className="text-lg font-bold text-gray-800">Fases</h3>
+                <span className="text-sm text-gray-500">({availableFilters.phases.length})</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {availableFilters.phases.map(phase => (
+                  <label 
+                    key={phase} 
+                    className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      selectedPhases.includes(phase)
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-800'
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPhases.includes(phase)}
+                      onChange={() => togglePhase(phase)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded border-2 mr-3 flex items-center justify-center ${
+                      selectedPhases.includes(phase)
+                        ? 'border-indigo-500 bg-indigo-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedPhases.includes(phase) && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <span className="font-medium capitalize">{phase}</span>
+                  </label>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Botones de acción */}
-        <div className="border-t border-gray-200 p-6">
+        {/* FOOTER - FIJO */}
+        <div className="border-t border-gray-200 p-4 bg-white rounded-b-2xl">
           <div className="flex gap-3 justify-end">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200"
+              className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200"
             >
               <X className="w-4 h-4" />
               Cancelar
             </button>
             <button
               onClick={handleApplyFilters}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <Filter className="w-4 h-4" />
               Aplicar Filtros {totalActiveFilters > 0 && `(${totalActiveFilters})`}
@@ -403,4 +496,4 @@ const FilterModal: React.FC<FilterModalProps> = ({
   );
 };
 
-export default FilterModal;
+export default ParticipantFilterModal;

@@ -2,8 +2,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import useMyRegistrations, { RegistrationItem } from '@/app/hooks/user/useMyRegistrations';
+import useMyRegistrations, { RegistrationItem } from '@/app/hooks/my-registrations/useMyRegistrations';
 import useUser from '@/app/hooks/useUser';
+import RegistrationDetailsModal from './modals/RegistrationDetailsModal';
+import CancelRegistrationModal from './modals/CancelRegistrationModal';
 
 const MyRegistrationsPage = () => {
   const { user, loadingUser } = useUser();
@@ -60,9 +62,38 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const handleCancelRegistration = async (registrationId: string) => {
-    // TODO: Implementar lógica de cancelación
-    console.log('Cancelar inscripción:', registrationId);
+  // Estados para los modales
+  const [selectedRegistration, setSelectedRegistration] = useState<RegistrationItem | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const handleViewDetails = (registration: RegistrationItem) => {
+    setSelectedRegistration(registration);
+    setShowDetailsModal(true);
+  };
+
+  const handleCancelRegistration = (registration: RegistrationItem) => {
+    setSelectedRegistration(registration);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancellation = async (registrationId: string, reason: string) => {
+    try {
+      // TODO: Implementar la llamada a la API para cancelar
+      console.log('Cancelando inscripción:', registrationId, 'Motivo:', reason);
+      
+      // Simular llamada API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Refrescar la lista después de cancelar
+      await refetch();
+      
+      // Mostrar notificación de éxito (puedes implementar un toast aquí)
+      alert('Inscripción cancelada exitosamente');
+    } catch (error) {
+      console.error('Error al cancelar inscripción:', error);
+      alert('Error al cancelar la inscripción. Inténtalo de nuevo.');
+    }
   };
 
   const filteredRegistrations = registrations.filter(reg => {
@@ -151,240 +182,276 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Inscripciones</h1>
-            <p className="text-gray-600">Gestiona todos los concursos a los que te has inscrito</p>
-          </div>
-          
-          <div className="mt-4 md:mt-0 flex items-center space-x-4">
-            {/* Filtros */}
-            <div className="flex items-center space-x-2">
-              <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-              </svg>
-              <select
-                value={filter}
-                onChange={(e) => handleFilterChange(e.target.value as any)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              >
-                <option value="all">Todas</option>
-                <option value="pending">Pendientes</option>
-                <option value="confirmed">Confirmadas</option>
-                <option value="cancelled">Anuladas</option>
-              </select>
+    <>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-6">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Inscripciones</h1>
+              <p className="text-gray-600">Gestiona todos los concursos a los que te has inscrito</p>
             </div>
+            
+            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              {/* Filtros */}
+              <div className="flex items-center space-x-2">
+                <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
+                <select
+                  value={filter}
+                  onChange={(e) => handleFilterChange(e.target.value as any)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="all">Todas</option>
+                  <option value="pending">Pendientes</option>
+                  <option value="confirmed">Confirmadas</option>
+                  <option value="cancelled">Anuladas</option>
+                </select>
+              </div>
 
-            <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Explorar Concursos</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Registrations List */}
+          {filteredRegistrations.length === 0 ? (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span>Explorar Concursos</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Registrations List */}
-        {filteredRegistrations.length === 0 ? (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No hay inscripciones</h3>
-            <p className="mt-2 text-gray-500">
-              {filter === 'all' 
-                ? 'Aún no te has inscrito a ningún concurso'
-                : `No tienes inscripciones ${filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmadas' : 'anuladas'}`
-              }
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-6">
-              {paginatedRegistrations.map((registration) => (
-                <div key={registration.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                      {/* Main Info */}
-                      <div className="flex-1">
-                        <div className="flex items-start space-x-4">
-                          {/* Event Image */}
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {registration.eventImage ? (
-                              <img 
-                                src={registration.eventImage} 
-                                alt={registration.eventName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                      </svg>
-                                    `;
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                              </svg>
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                {registration.eventName}
-                              </h3>
-                              <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(registration.status)}`}>
-                                {getStatusIcon(registration.status)}
-                                <span>{registration.status}</span>
-                              </span>
-                              {registration.participantCode && (
-                                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-200">
-                                  #{registration.participantCode}
-                                </span>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No hay inscripciones</h3>
+              <p className="mt-2 text-gray-500">
+                {filter === 'all' 
+                  ? 'Aún no te has inscrito a ningún concurso'
+                  : `No tienes inscripciones ${filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmadas' : 'anuladas'}`
+                }
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-6">
+                {paginatedRegistrations.map((registration) => (
+                  <div key={registration.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        {/* Main Info */}
+                        <div className="flex-1">
+                          <div className="flex items-start space-x-4">
+                            {/* Event Image */}
+                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {registration.eventImage ? (
+                                <img 
+                                  src={registration.eventImage} 
+                                  alt={registration.eventName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `
+                                        <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                      `;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                </svg>
                               )}
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div className="flex items-center space-x-1">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span>Categoría: {registration.category}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                  {registration.eventName}
+                                </h3>
+                                <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(registration.status)}`}>
+                                  {getStatusIcon(registration.status)}
+                                  <span>{registration.status}</span>
+                                </span>
+                                {registration.participantCode && (
+                                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-200">
+                                    #{registration.participantCode}
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                <span>Modalidad: {registration.level}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>{registration.location}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>Evento: {registration.eventDate.toLocaleDateString()}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                </svg>
-                                <span>S/ {registration.amount.toFixed(2)}</span>
-                              </div>
-                            </div>
 
-                            {/* Participantes y Academia */}
-                            <div className="mt-3 space-y-1">
-                              <div className="text-sm">
-                                <span className="font-medium text-gray-700">Participantes: </span>
-                                <span className="text-gray-600">{registration.participants.join(', ')}</span>
-                              </div>
-                              {registration.academies.length > 0 && (
-                                <div className="text-sm">
-                                  <span className="font-medium text-gray-700">Academia: </span>
-                                  <span className="text-gray-600">{registration.academies.join(', ')}</span>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                <div className="flex items-center space-x-1">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                  <span>Categoría: {registration.category}</span>
                                 </div>
-                              )}
-                            </div>
+                                <div className="flex items-center space-x-1">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                  </svg>
+                                  <span>Modalidad: {registration.level}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                  <span>{registration.location}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <span>Evento: {registration.eventDate.toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                  </svg>
+                                  <span>S/ {registration.amount.toFixed(2)}</span>
+                                </div>
+                              </div>
 
-                            {/* Fechas importantes */}
-                            <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-                              <span>Inscrito: {registration.registrationDate.toLocaleDateString()}</span>
-                              {registration.paymentDate && (
-                                <span>Pagado: {registration.paymentDate.toLocaleDateString()}</span>
-                              )}
-                              {registration.expirationDate && registration.status === 'Pendiente' && (
-                                <span className="text-orange-600">
-                                  Vence: {registration.expirationDate.toLocaleDateString()}
-                                </span>
-                              )}
+                              {/* Participantes y Academia */}
+                              <div className="mt-3 space-y-1">
+                                <div className="text-sm">
+                                  <span className="font-medium text-gray-700">Participantes: </span>
+                                  <span className="text-gray-600">{registration.participants.join(', ')}</span>
+                                </div>
+                                {registration.academies.length > 0 && (
+                                  <div className="text-sm">
+                                    <span className="font-medium text-gray-700">Academia: </span>
+                                    <span className="text-gray-600">{registration.academies.join(', ')}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Fechas importantes */}
+                              <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+                                <span>Inscrito: {registration.registrationDate.toLocaleDateString()}</span>
+                                {registration.paymentDate && (
+                                  <span>Pagado: {registration.paymentDate.toLocaleDateString()}</span>
+                                )}
+                                {registration.expirationDate && registration.status === 'Pendiente' && (
+                                  <span className="text-orange-600">
+                                    Vence: {registration.expirationDate.toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      <div className="mt-4 lg:mt-0 lg:ml-6 flex-shrink-0">
-                        <div className="flex space-x-3">
-                          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                            Ver Detalles
-                          </button>
-                          {registration.canCancel && (
+                        {/* Actions */}
+                        <div className="mt-4 lg:mt-0 lg:ml-6 flex-shrink-0">
+                          <div className="flex space-x-3">
                             <button 
-                              onClick={() => handleCancelRegistration(registration.id)}
-                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors border border-gray-300"
+                              onClick={() => handleViewDetails(registration)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1"
                             >
-                              Cancelar Inscripción
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>Ver Detalles</span>
                             </button>
-                          )}
+                            {registration.canCancel && (
+                              <button 
+                                onClick={() => handleCancelRegistration(registration)}
+                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors border border-gray-300 flex items-center space-x-1"
+                              >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span>Cancelar Inscripción</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Anterior
-                </button>
-                
-                <div className="flex space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 text-sm font-medium rounded-md ${
-                        currentPage === page
-                          ? 'bg-red-500 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Siguiente
-                </button>
+                ))}
               </div>
-            )}
 
-            {/* Info de paginación */}
-            <div className="mt-4 text-center text-sm text-gray-600">
-              Mostrando {startIndex + 1} a {Math.min(endIndex, filteredRegistrations.length)} de {filteredRegistrations.length} inscripciones
-            </div>
-          </>
-        )}
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  
+                  <div className="flex space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          currentPage === page
+                            ? 'bg-red-500 text-white'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
+
+              {/* Info de paginación */}
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredRegistrations.length)} de {filteredRegistrations.length} inscripciones
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Modales */}
+      {selectedRegistration && (
+        <>
+          <RegistrationDetailsModal
+            registration={selectedRegistration}
+            isOpen={showDetailsModal}
+            onClose={() => {
+              setShowDetailsModal(false);
+              setSelectedRegistration(null);
+            }}
+          />
+          
+          <CancelRegistrationModal
+            registration={selectedRegistration}
+            isOpen={showCancelModal}
+            onClose={() => {
+              setShowCancelModal(false);
+              setSelectedRegistration(null);
+            }}
+            onConfirm={handleConfirmCancellation}
+          />
+        </>
+      )}
+    </>
   );
 };
 

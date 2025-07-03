@@ -318,7 +318,7 @@ export const useEventCreation = (): EventCreationHandler => {
       dance: { levels: processedLevels },
       settings: settings,
 
-      currentLiveCompetitionId: undefined,  // Se asignará cuando inicie el evento
+      currentLiveCompetitionId: null,  // Se asignará cuando inicie el evento
       completedCompetitions: [],            // Array vacío al crear el evento
 
       createdBy: user.uid,

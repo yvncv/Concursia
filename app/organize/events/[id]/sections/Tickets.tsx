@@ -5,29 +5,31 @@ import useUsers from "@/app/hooks/useUsers";
 import { Ticket, TicketEntry } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
 import {
-  Search,
-  Filter,
   Eye,
   Trash2,
   CheckCircle,
-  Clock,
-  XCircle,
   Users,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
-  ListRestart,
   Trophy,
   School,
   UserCircle,
   CreditCard,
   Calendar,
 } from "lucide-react";
-import DeleteTicket from "@/app/organize/events/[id]/sections/ticketsModules/deleteTicket";
-import ConfirmTicket from "@/app/organize/events/[id]/sections/ticketsModules/confirmTicket";
-import FilterModal, { FilterOptions } from "@/app/organize/events/[id]/sections/ticketsModules/modals/FilterModal";
 import useAcademies from "@/app/hooks/useAcademies";
 import { decryptValue } from "@/app/utils/encryption";
+
+// Componentes separados
+import TicketsStats from "./ticketsModules/TicketsStats";
+import TicketsSearchAndFilters from "./ticketsModules/TicketsSearchAndFilters";
+
+// Modales
+import FilterModal, { FilterOptions } from "./ticketsModules/modals/FilterModal";
+import TicketDetailModal from "./ticketsModules/modals/TicketDetailModal";
+import DeleteTicketModal from "./ticketsModules/modals/DeleteTicketModal";
+import ConfirmTicketModal from "./ticketsModules/modals/ConfirmTicketModal";
 
 interface TicketsProps {
   event: CustomEvent;
@@ -310,26 +312,37 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
   const { tickets, loading, error, fetchTickets } = useTicket(event.id);
   const { getUserById } = useUsers();
   const { academies, loadingAcademies, errorAcademies } = useAcademies();
+  
+  // Estados principales
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [academyNames, setAcademyNames] = useState<Record<string, string>>({});
-  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [ticketUsers, setTicketUsers] = useState<Record<string, Record<string, User>>>({});
   const [dniInput, setDniInput] = useState<string>("");
   const [tableLoading, setTableLoading] = useState(false);
-  const [ticketUsers, setTicketUsers] = useState<Record<string, Record<string, User>>>({});
 
-  // Pagination states
+  // Estados de modales
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // Estados de paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const [ticketsPerPage] = useState(10); // You can adjust this number
+  const [ticketsPerPage] = useState(10);
 
+  // Estados de filtros
   const [availableFilters, setAvailableFilters] = useState({
     modalities: [] as string[],
     categories: [] as string[],
     academies: [] as string[]
+  });
+
+  const [activeFilters, setActiveFilters] = useState<FilterOptions>({
+    modalities: [],
+    categories: [],
+    academies: []
   });
 
   useEffect(() => {
@@ -346,7 +359,6 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     }
   }, [tickets, academies]);
 
-  // Reset to first page when filtered tickets change
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredTickets]);
@@ -385,10 +397,26 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         if (entry.level) modalities.add(entry.level);
         if (entry.category) categories.add(entry.category);
 
+        // Extraer academias de academiesId (academias registradas)
         if (entry.academiesId && entry.academiesId.length > 0) {
           entry.academiesId.forEach(id => {
             if (academyNamesMap[id]) academies.add(academyNamesMap[id]);
           });
+        }
+
+        // Extraer academias de academiesName (academias no registradas)
+        if (entry.academiesName && entry.academiesName.length > 0) {
+          entry.academiesName.forEach(name => {
+            if (name && name.trim() !== '') {
+              academies.add(name.trim());
+            }
+          });
+        }
+
+        // Si no tiene academias, añadir "Libre"
+        if ((!entry.academiesId || entry.academiesId.length === 0) && 
+            (!entry.academiesName || entry.academiesName.length === 0)) {
+          academies.add("Libre");
         }
       });
     });
@@ -396,13 +424,13 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     setAvailableFilters({
       modalities: Array.from(modalities),
       categories: Array.from(categories),
-      academies: Array.from(academies)
+      academies: Array.from(academies).sort() // Ordenar alfabéticamente
     });
   };
 
   const openModal = async (ticket: Ticket) => {
     setSelectedTicket(ticket);
-    setIsModalOpen(true);
+    setIsDetailModalOpen(true);
 
     const usersToFetch: User[] = [];
     for (const entry of ticket.entries) {
@@ -448,7 +476,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
   const closeModal = () => {
     setSelectedTicket(null);
-    setIsModalOpen(false);
+    setIsDetailModalOpen(false);
     setUsers([]);
   };
 
@@ -471,6 +499,9 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
 
   const applyFilters = (filterOptions: FilterOptions) => {
     const { modalities, categories, academies } = filterOptions;
+
+    // Guardar filtros activos
+    setActiveFilters(filterOptions);
 
     if (!modalities.length && !categories.length && !academies.length) {
       setFilteredTickets(tickets);
@@ -507,6 +538,15 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     setFilteredTickets(filtered);
   };
 
+  const clearAllFilters = () => {
+    setActiveFilters({
+      modalities: [],
+      categories: [],
+      academies: []
+    });
+    setFilteredTickets(tickets);
+  };
+
   // Pagination calculations
   const indexOfLastTicket = currentPage * ticketsPerPage;
   const indexOfFirstTicket = indexOfLastTicket - ticketsPerPage;
@@ -517,118 +557,27 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
     setCurrentPage(pageNumber);
   };
 
-  // Statistics
-  const stats = {
-    total: filteredTickets.length,
-    pending: filteredTickets.filter(t => t.status === 'Pendiente').length,
-    paid: filteredTickets.filter(t => t.status === 'Pagado').length,
-    canceled: filteredTickets.filter(t => t.status === 'Anulado').length,
-    totalAmount: filteredTickets.reduce((sum, t) => sum + t.totalAmount, 0),
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Gestión de Tickets</h1>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Tickets</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <div className="p-3 bg-gray-100 rounded-full">
-                <Users className="w-6 h-6 text-gray-600" />
-              </div>
-            </div>
-          </div>
+        {/* Stats Component */}
+        <TicketsStats tickets={filteredTickets} />
 
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pendientes</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pagados</p>
-                <p className="text-2xl font-bold text-green-600">{stats.paid}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Anulados</p>
-                <p className="text-2xl font-bold text-red-600">{stats.canceled}</p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <XCircle className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total S/</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.totalAmount.toFixed(2)}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <CreditCard className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Buscar por DNI..."
-                value={dniInput}
-                onChange={(e) => setDniInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearchEventByDNI(dniInput)}
-                className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-
-            <button
-              onClick={() => {
-                setDniInput("");
-                handleSearchEventByDNI("");
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              title="Limpiar búsqueda"
-            >
-              <ListRestart className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={() => setIsFilterMenuOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Filter className="w-5 h-5" />
-              Filtrar
-            </button>
-          </div>
-        </div>
+        {/* Search and Filter Component */}
+        <TicketsSearchAndFilters
+          dniInput={dniInput}
+          onDniInputChange={setDniInput}
+          onSearch={handleSearchEventByDNI}
+          onClearSearch={() => {
+            setDniInput("");
+            handleSearchEventByDNI("");
+          }}
+          onOpenFilters={() => setIsFilterMenuOpen(true)}
+          activeFilters={activeFilters}
+          onClearAllFilters={clearAllFilters}
+        />
 
         {/* Tickets List */}
         <div className="space-y-4">
@@ -671,133 +620,32 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         </div>
       </div>
 
-      {/* Detail Modal */}
-      {isModalOpen && selectedTicket && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Detalles del Ticket #{selectedTicket.id.slice(0, 8)}</h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-red-600">
-                <XCircle className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Estado</p>
-                  <p className={`font-medium ${selectedTicket.status === 'Pagado' ? 'text-green-600' :
-                    selectedTicket.status === 'Pendiente' ? 'text-yellow-600' :
-                      'text-red-600'
-                    }`}>{selectedTicket.status}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tipo de Inscripción</p>
-                  <p className="font-medium">{selectedTicket.inscriptionType}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Fecha de Registro</p>
-                  <p className="font-medium">{selectedTicket.registrationDate.toDate().toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Fecha de Pago</p>
-                  <p className="font-medium">
-                    {selectedTicket.paymentDate ? selectedTicket.paymentDate.toDate().toLocaleString() : 'No disponible'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total a Pagar</p>
-                  <p className="font-medium text-lg">S/ {selectedTicket.totalAmount.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3">Inscripciones</h3>
-                {selectedTicket.entries.map((entry, i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-4 mb-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Modalidad - Categoría</p>
-                        <p className="font-medium">{entry.level} - {entry.category}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Academia(s)</p>
-                        <div>
-                          {(() => {
-                            // Prioridad 1: academiesName (academias nuevas)
-                            if (entry.academiesName && entry.academiesName.length > 0) {
-                              return entry.academiesName
-                                .filter(name => name && name.trim() !== '')
-                                .join(", ") || "Libre";
-                            }
-
-                            // Prioridad 2: academiesId (academias existentes)
-                            if (entry.academiesId && entry.academiesId.length > 0) {
-                              return entry.academiesId
-                                .filter(id => id && id.trim() !== '')
-                                .map(id => academyNames[id] || "Academia no encontrada")
-                                .join(", ");
-                            }
-
-                            // Default: Libre
-                            return "Libre";
-                          })()}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Participantes</p>
-                        <div className="space-y-1">
-                          {entry.usersId.map((userId) => {
-                            const user = ticketUsers[selectedTicket.id]?.[userId];
-                            return user ? (
-                              <div key={userId} className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${user?.gender === 'Masculino' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-                                <span className="text-sm">{decryptValue(user?.dni)} - {user?.firstName} {user?.lastName}</span>
-                              </div>
-                            ) : (
-                              <span key={userId} className="text-sm text-gray-500">Usuario no encontrado</span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {selectedTicket.status === "Pendiente" && (
-                <div className="flex gap-2 mt-6">
-                  <button
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    onClick={() => handleConfirmTicket(selectedTicket)}
-                  >
-                    Confirmar Pago
-                  </button>
-                  <button
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                    onClick={() => handleDeleteTicket(selectedTicket)}
-                  >
-                    Eliminar Ticket
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modales */}
+      <TicketDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={closeModal}
+        ticket={selectedTicket}
+        ticketUsers={ticketUsers[selectedTicket?.id || ""] || {}}
+        academyNames={academyNames}
+        onConfirm={() => handleConfirmTicket(selectedTicket!)}
+        onDelete={() => handleDeleteTicket(selectedTicket!)}
+      />
 
       <FilterModal
         isOpen={isFilterMenuOpen}
         onClose={() => setIsFilterMenuOpen(false)}
         onApplyFilters={applyFilters}
         availableFilters={availableFilters}
+        currentFilters={activeFilters}
       />
 
-      <DeleteTicket
+      <DeleteTicketModal
         isOpen={isDeleteModalOpen}
         onClose={handleModalClose}
         ticket={selectedTicket!}
       />
-      <ConfirmTicket
+
+      <ConfirmTicketModal
         isOpen={isConfirmModalOpen}
         onClose={handleModalClose}
         ticket={selectedTicket!}
