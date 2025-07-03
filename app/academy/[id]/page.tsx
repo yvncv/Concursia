@@ -14,6 +14,7 @@ import AcademyInformation from './components/AcademyInformation';
 import ContactInformation from './components/ContactInformation';
 import LocationInformation from './components/LocationInformation';
 import AcademyJoinRequestButton from './components/AcademyJoinRequestButton';
+import Map from '@/app/ui/map/mapa';
 
 export default function AcademyPage({ params }: { params: Promise<{ id: string }> }) {
   const { academies, loadingAcademies } = useAcademies();
