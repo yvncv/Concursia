@@ -1,9 +1,10 @@
-// Import the functions you need from the SDKs you need
-import { getApp, initializeApp, getApps } from "firebase/app";
+// app/firebase/config.ts
+
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { getFirestore, setDoc, doc, Timestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import type { Auth } from "firebase/auth"; // Importa solo el tipo
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_apiKey,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_authDomain,
@@ -13,15 +14,17 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_appId,
 };
 
-// Initialize Firebase
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
-// Estos sí se pueden usar en servidor sin problema
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Solo inicializar Auth en el cliente
-export const auth = typeof window !== "undefined" ? (await import("firebase/auth")).getAuth(app) : null;
+// ✅ Auth sin require y sin await
+let auth: Auth | null = null;
 
-// También puedes exportar las funciones de Firestore directamente si lo prefieres
-export { setDoc, doc, Timestamp };
+if (typeof window !== "undefined") {
+  import("firebase/auth").then((mod) => {
+    auth = mod.getAuth(app);
+  });
+}
+
+export { setDoc, doc, Timestamp, auth };
