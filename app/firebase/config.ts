@@ -3,7 +3,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getFirestore, setDoc, doc, Timestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAuth, type Auth } from "firebase/auth"; // Importa solo el tipo
+import { getAuth } from "firebase/auth"; // Importa solo el tipo
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_apiKey,
