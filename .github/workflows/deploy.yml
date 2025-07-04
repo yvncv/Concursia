@@ -9,16 +9,20 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      NEXT_PUBLIC_FIREBASE_apiKey: ${{ secrets.NEXT_PUBLIC_FIREBASE_apiKey }}
+      NEXT_PUBLIC_FIREBASE_authDomain: ${{ secrets.NEXT_PUBLIC_FIREBASE_authDomain }}
+      NEXT_PUBLIC_FIREBASE_projectId: ${{ secrets.NEXT_PUBLIC_FIREBASE_projectId }}
+      NEXT_PUBLIC_FIREBASE_storageBucket: ${{ secrets.NEXT_PUBLIC_FIREBASE_storageBucket }}
+      NEXT_PUBLIC_FIREBASE_messagingSenderId: ${{ secrets.NEXT_PUBLIC_FIREBASE_messagingSenderId }}
+      NEXT_PUBLIC_FIREBASE_appId: ${{ secrets.NEXT_PUBLIC_FIREBASE_appId }}
+      FIREBASE_CLI_EXPERIMENTS: webframeworks
+
     steps:
       - name: 🔄 Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: 📥 Authenticate to GCP
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: 🟢 Setup Node.js 20
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
@@ -29,11 +33,10 @@ jobs:
       - name: 🔨 Build Next.js project
         run: npm run build
 
-      - name: 🚀 Enable experiments & Deploy to Firebase
-        run: |
-          # Instala Firebase CLI
-          npm install -g firebase-tools
-          # Habilita el experimento para web frameworks
-          firebase experiments:enable webframeworks
-          # Finalmente despliega Hosting + Functions
-          firebase deploy --only "hosting,functions" --project next-proj-216fd
+      - name: 🚀 Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXT_PROJ_216FD }}
+          channelId: live
+          projectId: next-proj-216fd
