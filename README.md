@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🌐 Proyecto Web - Next.js + Firebase
 
-## Getting Started
+Este es un proyecto web desarrollado con Next.js y desplegado en Firebase, que integra múltiples servicios como Authentication, Firestore, Functions, Storage y Hosting. Además, se utiliza GitHub Actions para automatizar el flujo de despliegue a producción.
 
-First, run the development server:
+🚀 Instalación
+    1. Clona el repositorio:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+        git clone https://github.com/tu-usuario/tu-repo.git
+        cd tu-repo
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    2. Instala las dependencias del proyecto:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+        npm install
+        # o
+        yarn install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    3. Crea un archivo .env.local con las variables necesarias para tu entorno (por ejemplo, claves de Firebase, etc.).
 
-## Learn More
+⚙️ Configuración
+Asegúrate de tener configurado Firebase en tu entorno:
 
-To learn more about Next.js, take a look at the following resources:
+    1. Instala Firebase CLI si no la tienes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+        npm install -g firebase-tools
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    2. Inicia sesión en Firebase:
 
-## Deploy on Vercel
+        firebase login
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    3. Asocia el proyecto local con tu proyecto de Firebase:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+        firebase use --add
+
+    4. Archivos clave incluidos en este repositorio:
+
+        - firebase.json: configuración del hosting y servicios.
+        - .firebaserc: alias del proyecto.
+        - functions/: lógica backend (Cloud Functions).
+        - app/: estructura del frontend con Next.js (modo App Router).
+
+🧪 Uso en Desarrollo
+
+Para levantar el servidor local de desarrollo:
+
+    npm run dev
+
+Abre http://localhost:3000 para ver la aplicación.
+
+El frontend se actualiza automáticamente al guardar cambios.
+
+Para emular servicios de Firebase localmente (opcional):
+
+    firebase emulators:start
+
+📦 Despliegue
+
+El despliegue a producción se realiza automáticamente mediante GitHub Actions al hacer push a la rama main.
+
+También puede hacerse manualmente con:
+
+    firebase deploy --only "hosting,functions"
+
+📁 Estructura del Proyecto
+
+    ├── app/                # Frontend Next.js (App Router)
+    ├── functions/          # Backend con Cloud Functions
+    ├── public/             # Archivos estáticos
+    ├── firebase.json       # Configuración de Firebase Hosting
+    ├── .firebaserc         # Alias del proyecto
+    └── .github/workflows/  # CI/CD con GitHub Actions
+
+🧠 Tecnologías Utilizadas
+    - Next.js
+    - Firebase
+    - Hosting, Auth, Firestore, Storage, Functions
+    - GitHub Actions
+    - TypeScript
+    - IA Generativa (Claude + ChatGPT) (en el flujo de desarrollo)
+
+👥 Equipo
+Proyecto desarrollado por un equipo de 3 personas, integrando prácticas de DevOps, BPM, y automatización asistida por IA.
