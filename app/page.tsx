@@ -35,7 +35,7 @@ export default function LandingPage() {
             </p>
             <Link
               href={"/calendario"}
-              className="text-xl bg-purple-500 p-4 rounded-lg text-white hover:bg-purple-800"
+              className="text-xl bg-cyan-500 p-4 rounded-lg text-white hover:bg-cyan-800"
             >
               Ver Eventos
             </Link>
