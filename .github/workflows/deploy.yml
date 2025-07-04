@@ -9,6 +9,15 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      NEXT_PUBLIC_FIREBASE_apiKey: ${{ secrets.NEXT_PUBLIC_FIREBASE_apiKey }}
+      NEXT_PUBLIC_FIREBASE_authDomain: ${{ secrets.NEXT_PUBLIC_FIREBASE_authDomain }}
+      NEXT_PUBLIC_FIREBASE_projectId: ${{ secrets.NEXT_PUBLIC_FIREBASE_projectId }}
+      NEXT_PUBLIC_FIREBASE_storageBucket: ${{ secrets.NEXT_PUBLIC_FIREBASE_storageBucket }}
+      NEXT_PUBLIC_FIREBASE_messagingSenderId: ${{ secrets.NEXT_PUBLIC_FIREBASE_messagingSenderId }}
+      NEXT_PUBLIC_FIREBASE_appId: ${{ secrets.NEXT_PUBLIC_FIREBASE_appId }}
+      FIREBASE_CLI_EXPERIMENTS: webframeworks
+
     steps:
       - name: 🔄 Checkout repo
         uses: actions/checkout@v4
@@ -31,5 +40,3 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXT_PROJ_216FD }}
           channelId: live
           projectId: next-proj-216fd
-        env:
-          FIREBASE_CLI_EXPERIMENTS: webframeworks
