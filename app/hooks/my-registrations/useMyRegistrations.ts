@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Ticket } from '../../types/ticketType';
@@ -19,7 +19,6 @@ export interface RegistrationItem {
   level: string;
   amount: number;
   registrationDate: Date;
-  expirationDate?: Date;
   paymentDate?: Date;
   participants: string[];
   academies: string[];
@@ -35,76 +34,6 @@ const useMyRegistrations = (userId: string) => {
   const [registrations, setRegistrations] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchRegistrations = async () => {
-      try {
-        setLoading(true);
-        const allRegistrations: RegistrationItem[] = [];
-
-        // 1. Buscar TODOS los tickets y filtrar por entries que contengan al usuario
-        const ticketsQuery = query(collection(db, 'tickets'));
-        const ticketsSnapshot = await getDocs(ticketsQuery);
-
-        // 2. Buscar participants del usuario
-        const participantsQuery = query(
-          collection(db, 'participants'),
-          where('usersId', 'array-contains', userId)
-        );
-        const participantsSnapshot = await getDocs(participantsQuery);
-
-        // Procesar tickets - filtrar por entries que contengan al usuario
-        for (const ticketDoc of ticketsSnapshot.docs) {
-          const ticket = { id: ticketDoc.id, ...ticketDoc.data() } as Ticket;
-
-          // Verificar si alguna entry del ticket incluye al usuario
-          const hasUserInEntries = ticket.entries.some(entry =>
-            entry.usersId.includes(userId)
-          );
-
-          if (hasUserInEntries) {
-            // Verificar si este ticket ya tiene un participant
-            const hasParticipant = participantsSnapshot.docs.some(
-              participantDoc => participantDoc.data().ticketId === ticket.id
-            );
-
-            if (!hasParticipant) {
-              // Procesar cada entry que incluya al usuario
-              const registrationItems = await processTicketEntries(ticket, userId);
-              allRegistrations.push(...registrationItems);
-            }
-          }
-        }
-
-        // Procesar participants (inscripciones confirmadas)
-        for (const participantDoc of participantsSnapshot.docs) {
-          const participant = { id: participantDoc.id, ...participantDoc.data() } as Participant;
-          const registrationItem = await processParticipant(participant);
-          if (registrationItem) {
-            allRegistrations.push(registrationItem);
-          }
-        }
-
-        // Ordenar por fecha más reciente
-        allRegistrations.sort((a, b) => b.registrationDate.getTime() - a.registrationDate.getTime());
-
-        setRegistrations(allRegistrations);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching registrations:', err);
-        setError('Error al cargar las inscripciones');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRegistrations();
-  }, [userId]);
 
   // Función auxiliar para obtener nombres de academias
   const getAcademyNames = async (academyIds: string[]): Promise<string[]> => {
@@ -193,21 +122,21 @@ const useMyRegistrations = (userId: string) => {
           );
 
           const now = new Date();
-          const expirationDate = ticket.expirationDate.toDate();
-          const canCancel = ticket.status === 'Pendiente' && expirationDate > now;
+          // Cambiar la lógica de canCancel para usar el status de la entry específica
+          const canCancel = entry.status !== 'Anulado' && ticket.status !== 'Anulado';
 
           const registrationItem: RegistrationItem = {
             id: `${ticket.id}-entry-${i}`, // ID único para cada entry
             type: 'ticket',
-            status: ticket.status === 'Pagado' ? 'Confirmada' :
-              ticket.status === 'Anulado' ? 'Anulado' : 'Pendiente',
+            // Usar el status de la entry específica, no del ticket completo
+            status: entry.status === 'Anulado' ? 'Anulado' :
+              ticket.status === 'Pagado' ? 'Confirmada' : 'Pendiente',
             eventName: eventData.name,
             eventDate: eventData.startDate.toDate(),
             category: entry.category,
             level: entry.level,
             amount: entry.amount,
             registrationDate: ticket.registrationDate.toDate(),
-            expirationDate: expirationDate,
             paymentDate: ticket.paymentDate?.toDate(),
             participants: participantNames,
             academies: academyNames,
@@ -306,11 +235,83 @@ const useMyRegistrations = (userId: string) => {
     }
   };
 
-  const refetch = () => {
-    if (userId) {
-      setLoading(true);
+  // Mover fetchRegistrations fuera del useEffect y hacerla una función useCallback
+  const fetchRegistrations = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
     }
-  };
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const allRegistrations: RegistrationItem[] = [];
+
+      // 1. Buscar TODOS los tickets y filtrar por entries que contengan al usuario
+      const ticketsQuery = query(collection(db, 'tickets'));
+      const ticketsSnapshot = await getDocs(ticketsQuery);
+
+      // 2. Buscar participants del usuario
+      const participantsQuery = query(
+        collection(db, 'participants'),
+        where('usersId', 'array-contains', userId)
+      );
+      const participantsSnapshot = await getDocs(participantsQuery);
+
+      // Procesar tickets - filtrar por entries que contengan al usuario
+      for (const ticketDoc of ticketsSnapshot.docs) {
+        const ticket = { id: ticketDoc.id, ...ticketDoc.data() } as Ticket;
+
+        // Verificar si alguna entry del ticket incluye al usuario
+        const hasUserInEntries = ticket.entries.some(entry =>
+          entry.usersId.includes(userId)
+        );
+
+        if (hasUserInEntries) {
+          // Verificar si este ticket ya tiene un participant
+          const hasParticipant = participantsSnapshot.docs.some(
+            participantDoc => participantDoc.data().ticketId === ticket.id
+          );
+
+          if (!hasParticipant) {
+            // Procesar cada entry que incluya al usuario
+            const registrationItems = await processTicketEntries(ticket, userId);
+            allRegistrations.push(...registrationItems);
+          }
+        }
+      }
+
+      // Procesar participants (inscripciones confirmadas)
+      for (const participantDoc of participantsSnapshot.docs) {
+        const participant = { id: participantDoc.id, ...participantDoc.data() } as Participant;
+        const registrationItem = await processParticipant(participant);
+        if (registrationItem) {
+          allRegistrations.push(registrationItem);
+        }
+      }
+
+      // Ordenar por fecha más reciente
+      allRegistrations.sort((a, b) => b.registrationDate.getTime() - a.registrationDate.getTime());
+      
+      setRegistrations(allRegistrations);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching registrations:', err);
+      setError('Error al cargar las inscripciones');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, [fetchRegistrations]);
+
+  // Función refetch corregida
+  const refetch = useCallback(() => {
+    fetchRegistrations();
+  }, [fetchRegistrations]);
 
   return {
     registrations,

@@ -168,8 +168,6 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
 
       // Crear el objeto del ticket
       const now = Timestamp.now();
-      // Fecha de expiración: 3 días desde ahora
-      const expirationDate = Timestamp.fromDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000));
 
       // Extraer todos los IDs de usuario y academias para el ticket principal
       const allUsersId = inscripciones.flatMap(insc =>
@@ -192,7 +190,6 @@ const EventoInscripcionAlumnos: React.FC<EventoInscripcionAlumnosProps> = ({ eve
         status: 'Pendiente',
         eventId: event.id,
         registrationDate: now,
-        expirationDate: expirationDate,
         inscriptionType: 'Grupal',
         totalAmount: montoTotal,
         entries,

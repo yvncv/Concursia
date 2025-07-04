@@ -48,31 +48,39 @@ export const useCreateTicket = () => {
         throw new Error('Precio no válido');
       }
 
-      // Preparar academias del usuario principal
-      const userAcademyId = selectedAcademy || null; // null si es nueva
-      const userAcademyName = selectedAcademyName;
+      // Preparar arrays de academias
+      const academiesId: string[] = [];
+      const academiesName: string[] = [];
 
-      // Preparar academias de la pareja (si existe)
-      const coupleAcademyId = pareja ? (coupleSelectedAcademy || null) : null;
-      const coupleAcademyName = pareja ? coupleSelectedAcademyName : '';
+      // Academia del usuario principal
+      if (selectedAcademy) {
+        academiesId.push(selectedAcademy);
+      }
+      academiesName.push(selectedAcademyName);
+
+      // Academia de la pareja (si existe)
+      if (pareja) {
+        if (coupleSelectedAcademy) {
+          academiesId.push(coupleSelectedAcademy);
+        }
+        if (coupleSelectedAcademyName) {
+          academiesName.push(coupleSelectedAcademyName);
+        }
+      }
 
       // Crear entry
       const entry: TicketEntry = {
         usersId: pareja ? [user.id, pareja.id] : [user.id],
-        academiesId: pareja 
-          ? [userAcademyId, coupleAcademyId].filter(id => id !== null) // Remover nulls para el array
-          : [userAcademyId].filter(id => id !== null),
-        academiesName: pareja 
-          ? [userAcademyName, coupleAcademyName].filter(name => name !== '')
-          : [userAcademyName],
+        academiesId,
+        academiesName,
         category: user.marinera?.participant?.category || '',
         level: selectedCategory,
         amount: price,
       };
 
-      // Crear fecha de expiración (48 horas)
+      // Calcular fecha de expiración (24 horas)
       const expirationDate = new Date();
-      expirationDate.setHours(expirationDate.getHours() + 48);
+      expirationDate.setHours(expirationDate.getHours() + 24);
 
       // Crear ticket data
       const ticketData: TicketData = {
@@ -80,7 +88,7 @@ export const useCreateTicket = () => {
         eventId: event.id,
         registrationDate: Timestamp.fromDate(new Date()),
         expirationDate: Timestamp.fromDate(expirationDate),
-        inscriptionType: 'Individual',
+        inscriptionType: 'Individual', // Siempre Individual porque es un usuario registrándose por la web
         totalAmount: entry.amount,
         entries: [entry],
         createdBy: user.id,
@@ -98,6 +106,7 @@ export const useCreateTicket = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
+      console.error('Error creating ticket:', err);
       return null;
     } finally {
       setIsCreating(false);

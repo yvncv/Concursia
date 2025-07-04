@@ -87,8 +87,46 @@ export class PDFGeneratorService {
       // INFORMACIÓN DEL EVENTO
       yPos = this.addSection(pdf, 'INFORMACIÓN DEL EVENTO', yPos, colors.primary);
       
+      // Nombre del evento completo (sin cortes)
+      pdf.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      pdf.roundedRect(15, yPos - 3, 180, 15, 2, 2, 'F');
+      
+      pdf.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Evento:', 20, yPos + 3);
+      
+      pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      // Usar splitTextToSize para manejar texto largo
+      const eventNameLines = pdf.splitTextToSize(registration.eventName, 140);
+      pdf.text(eventNameLines, 50, yPos + 3);
+      
+      yPos += Math.max(15, eventNameLines.length * 5 + 10);
+
+      // Academia organizadora
+      if (registration.academies.length > 0) {
+        pdf.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+        pdf.roundedRect(15, yPos - 3, 180, 12, 2, 2, 'F');
+        
+        pdf.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Academia Organizadora:', 20, yPos + 3);
+        
+        pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        const academyText = registration.academies.join(', ');
+        const academyLines = pdf.splitTextToSize(academyText, 100);
+        pdf.text(academyLines, 80, yPos + 3);
+        
+        yPos += Math.max(15, academyLines.length * 5 + 5);
+      }
+
+      // Resto de información del evento
       const eventData = [
-        { label: 'Evento:', value: registration.eventName },
         { label: 'Fecha:', value: registration.eventDate.toLocaleDateString() },
         { label: 'Lugar:', value: registration.location },
         { label: 'Categoría:', value: registration.category },
@@ -140,21 +178,6 @@ export class PDFGeneratorService {
         yPos += 12;
       });
 
-      // ACADEMIA (si existe)
-      if (registration.academies.length > 0) {
-        yPos = this.addSection(pdf, 'ACADEMIA', yPos, colors.primary);
-        
-        pdf.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
-        pdf.roundedRect(15, yPos - 2, 180, 12, 2, 2, 'F');
-        
-        pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(registration.academies.join(', '), 20, yPos + 4);
-        
-        yPos += 20;
-      }
-
       // QR CODE Y ESTADO
       const qrData = `ID:${registration.id}-CODE:${registration.participantCode || 'PENDING'}-EVENT:${registration.eventName}`;
       const qrDataURL = await QRCode.toDataURL(qrData, {
@@ -196,42 +219,15 @@ export class PDFGeneratorService {
 
       yPos += 45;
 
-      // INSTRUCCIONES
-      pdf.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
-      pdf.roundedRect(15, yPos, 180, 30, 3, 3, 'F');
-      
-      pdf.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('📋 INSTRUCCIONES IMPORTANTES', 20, yPos + 8);
-      
-      pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      
-      const instructions = [
-        '• Presenta este comprobante junto con tu documento de identidad',
-        '• Llega 30 minutos antes del evento',
-        '• Para consultas: soporte@concursia.com'
-      ];
-      
-      instructions.forEach((instruction, index) => {
-        pdf.text(instruction, 20, yPos + 15 + (index * 5));
-      });
-
-      // FOOTER
+      // FOOTER SIMPLIFICADO
       const footerY = 275;
       pdf.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
       pdf.rect(0, footerY, 210, 22, 'F');
       
       pdf.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-      pdf.setFontSize(11);
+      pdf.setFontSize(12);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('CONCURSIA - Plataforma de Concursos', 105, footerY + 8, { align: 'center' });
-      
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('📧 soporte@concursia.com | 📱 +51 999 888 777 | 🌐 www.concursia.com', 105, footerY + 15, { align: 'center' });
+      pdf.text('CONCURSIA - Plataforma de Concursos', 105, footerY + 13, { align: 'center' });
 
       // Guardar PDF
       const fileName = `Comprobante_${registration.eventName.replace(/[^a-zA-Z0-9]/g, '_')}_${registration.participantCode || registration.id}.pdf`;
@@ -279,12 +275,12 @@ export class PDFGeneratorService {
       pdf.setFont('helvetica', 'bold');
       pdf.text(item.label, x + 3, y + 2);
 
-      // Valor
+      // Valor (sin truncar)
       pdf.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
       pdf.setFont('helvetica', 'normal');
       const maxWidth = colWidth - 40;
-      const truncatedValue = item.value.length > 20 ? item.value.substring(0, 20) + '...' : item.value;
-      pdf.text(truncatedValue, x + 35, y + 2);
+      const valueLines = pdf.splitTextToSize(item.value, maxWidth);
+      pdf.text(valueLines, x + 35, y + 2);
 
       currentCol++;
       if (currentCol >= columns) {

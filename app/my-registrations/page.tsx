@@ -77,23 +77,9 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
     setShowCancelModal(true);
   };
 
-  const handleConfirmCancellation = async (registrationId: string, reason: string) => {
-    try {
-      // TODO: Implementar la llamada a la API para cancelar
-      console.log('Cancelando inscripción:', registrationId, 'Motivo:', reason);
-      
-      // Simular llamada API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Refrescar la lista después de cancelar
-      await refetch();
-      
-      // Mostrar notificación de éxito (puedes implementar un toast aquí)
-      alert('Inscripción cancelada exitosamente');
-    } catch (error) {
-      console.error('Error al cancelar inscripción:', error);
-      alert('Error al cancelar la inscripción. Inténtalo de nuevo.');
-    }
+  // Función simplificada - solo refrescar la lista
+  const handleCancellationSuccess = () => {
+    refetch();
   };
 
   const filteredRegistrations = registrations.filter(reg => {
@@ -191,7 +177,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Inscripciones</h1>
               <p className="text-gray-600">Gestiona todos los concursos a los que te has inscrito</p>
             </div>
-            
+
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
               {/* Filtros */}
               <div className="flex items-center space-x-2">
@@ -227,7 +213,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-900">No hay inscripciones</h3>
               <p className="mt-2 text-gray-500">
-                {filter === 'all' 
+                {filter === 'all'
                   ? 'Aún no te has inscrito a ningún concurso'
                   : `No tienes inscripciones ${filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmadas' : 'anuladas'}`
                 }
@@ -246,8 +232,8 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                             {/* Event Image */}
                             <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                               {registration.eventImage ? (
-                                <img 
-                                  src={registration.eventImage} 
+                                <img
+                                  src={registration.eventImage}
                                   alt={registration.eventName}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -340,11 +326,6 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                                 {registration.paymentDate && (
                                   <span>Pagado: {registration.paymentDate.toLocaleDateString()}</span>
                                 )}
-                                {registration.expirationDate && registration.status === 'Pendiente' && (
-                                  <span className="text-orange-600">
-                                    Vence: {registration.expirationDate.toLocaleDateString()}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -353,7 +334,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                         {/* Actions */}
                         <div className="mt-4 lg:mt-0 lg:ml-6 flex-shrink-0">
                           <div className="flex space-x-3">
-                            <button 
+                            <button
                               onClick={() => handleViewDetails(registration)}
                               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1"
                             >
@@ -364,7 +345,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                               <span>Ver Detalles</span>
                             </button>
                             {registration.canCancel && (
-                              <button 
+                              <button
                                 onClick={() => handleCancelRegistration(registration)}
                                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors border border-gray-300 flex items-center space-x-1"
                               >
@@ -392,17 +373,16 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                   >
                     Anterior
                   </button>
-                  
+
                   <div className="flex space-x-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                          currentPage === page
-                            ? 'bg-red-500 text-white'
-                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === page
+                          ? 'bg-red-500 text-white'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         {page}
                       </button>
@@ -439,7 +419,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
               setSelectedRegistration(null);
             }}
           />
-          
+
           <CancelRegistrationModal
             registration={selectedRegistration}
             isOpen={showCancelModal}
@@ -447,7 +427,8 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
               setShowCancelModal(false);
               setSelectedRegistration(null);
             }}
-            onConfirm={handleConfirmCancellation}
+            onSuccess={handleCancellationSuccess}
+            userId={userId}
           />
         </>
       )}

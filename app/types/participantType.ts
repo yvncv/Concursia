@@ -6,6 +6,7 @@ export interface Participant {
   code: string; // Codigo en la espalda del participante
   usersId: string[];
   academiesId: string[];
+  academiesName: string[];
   eventId: string;
   category: string;
   level: string;

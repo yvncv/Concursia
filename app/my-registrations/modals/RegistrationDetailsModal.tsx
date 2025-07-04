@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import toast from "react-hot-toast";
 import { RegistrationItem } from '@/app/hooks/my-registrations/useMyRegistrations';
 import { usePDFGenerator } from '@/app/hooks/my-registrations/usePDFGenerator';
 
@@ -29,12 +30,17 @@ const RegistrationDetailsModal: React.FC<RegistrationDetailsModalProps> = ({
       registration,
       () => {
         console.log('PDF generado exitosamente');
-        // Mostrar mensaje de éxito
-        alert('¡Comprobante PDF descargado exitosamente!');
+        toast.success('¡Comprobante PDF descargado exitosamente!', {
+          duration: 4000,
+          position: 'top-center',
+        });
       },
       (error) => {
         console.error('Error:', error);
-        alert('Error al generar el PDF. Inténtalo de nuevo.');
+        toast.error('Error al generar el PDF. Inténtalo de nuevo.', {
+          duration: 4000,
+          position: 'top-center',
+        });
       }
     );
   };
@@ -240,12 +246,6 @@ const RegistrationDetailsModal: React.FC<RegistrationDetailsModalProps> = ({
                   <p className="text-green-600 font-medium">{registration.paymentDate.toLocaleDateString()}</p>
                 </div>
               )}
-              {registration.expirationDate && registration.status === 'Pendiente' && (
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Fecha de Vencimiento:</span>
-                  <p className="text-orange-600 font-medium">{registration.expirationDate.toLocaleDateString()}</p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -277,33 +277,9 @@ const RegistrationDetailsModal: React.FC<RegistrationDetailsModalProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Mensaje de error */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              <div className="flex items-center">
-                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                {error}
-              </div>
-            </div>
-          )}
-
-          {/* Mensaje de éxito */}
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-              <div className="flex items-center">
-                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Comprobante PDF generado y descargado exitosamente
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Footer simplificado con un solo botón */}
+        {/* Footer - Botón condicional para PDF */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
           <div className="flex justify-between items-center">
             <button
@@ -313,29 +289,38 @@ const RegistrationDetailsModal: React.FC<RegistrationDetailsModalProps> = ({
               Cerrar
             </button>
             
-            {/* Botón único para descargar PDF */}
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGenerating}
-              className="px-8 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Generando PDF...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>Descargar Comprobante PDF</span>
-                </>
-              )}
-            </button>
+            {/* Botón para descargar PDF - Solo si NO está anulado */}
+            {registration.status === 'Confirmada' ? (
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGenerating}
+                className="px-8 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Generando PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Descargar Comprobante PDF</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="px-8 py-2 bg-gray-300 text-gray-500 rounded-lg flex items-center space-x-2 cursor-not-allowed">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-2.636-2.636M6 18l-1.5-1.5m0 0L3 15l1.5-1.5M6 6l2.636-2.636L6 6zm12 12l-2.636 2.636L18 18z" />
+                </svg>
+                <span>Comprobante no disponible</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

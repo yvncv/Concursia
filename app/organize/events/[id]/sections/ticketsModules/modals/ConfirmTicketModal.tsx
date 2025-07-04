@@ -44,6 +44,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                     code: participantCodes[i] || "",
                     usersId: entry.usersId,
                     academiesId: entry.academiesId,
+                    academiesName: entry.academiesName,
                     eventId: ticket.eventId,
                     category: entry.category,
                     level: entry.level,
