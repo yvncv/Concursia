@@ -20,6 +20,12 @@ export default function LandingPage() {
   const galleryImages = events.slice(0, 8);
 
   useEffect(() => {
+    if (galleryImages.length > 0 && currentIndex >= galleryImages.length) {
+      setCurrentIndex(0);
+    }
+  }, [galleryImages, currentIndex]);
+
+  useEffect(() => {
     if (!isAutoPlaying || galleryImages.length === 0) return;
 
     const interval = setInterval(() => {
@@ -186,14 +192,18 @@ export default function LandingPage() {
               <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden shadow-2xl">
                 {/* Imagen principal */}
                 <div className="relative w-full h-full">
-                  <Image
-                    src={galleryImages[currentIndex]?.smallImage}
-                    alt={`Imagen de marinera ${galleryImages[currentIndex]?.smallImage}`}
-                    fill
-                    className="object-cover transition-all duration-700 ease-in-out"
-                    loader={({ src }) => src}
-                    priority
-                  />
+                  {galleryImages[currentIndex]?.smallImage ? (
+                    <Image
+                      src={galleryImages[currentIndex].smallImage}
+                      alt={`Imagen de marinera ${currentIndex + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500">Cargando imagen...</span>
+                    </div>
+                  )}
 
                   {/* Overlay decorativo */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
