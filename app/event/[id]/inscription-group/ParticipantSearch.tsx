@@ -7,6 +7,8 @@ import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
 import { useParticipantSearch, Participante } from "@/app/hooks/useParticipantSearch";
 import { usePullCoupleValidation } from "@/app/hooks/usePullCoupleValidation";
 import { useAcademyAffiliationValidation } from "@/app/hooks/tickets/useAcademyAffiliationValidation";
+import ParticipantCard from "./components/ParticipantCard";
+import AcademySelector from "../components/AcademySelector";
 
 // Definición de tipos
 interface Academy {
@@ -95,29 +97,44 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   const [dniPareja, setDniPareja] = useState<string>("");
   const [academiaParticipante, setAcademiaParticipante] = useState<string>("");
   const [academiaPareja, setAcademiaPareja] = useState<string>("");
+  const [academiaParticipanteNombre, setAcademiaParticipanteNombre] = useState<string>("Libre");
+  const [academiaParejaNombre, setAcademiaParejaNombre] = useState<string>("Libre");
   const [eventSettings, setEventSettings] = useState<DocumentData | null>(null);
   const [loadingSettings, setLoadingSettings] = useState<boolean>(true);
 
-  // Hooks de validación
+  // Handlers para selección de academias
+  const handleParticipantAcademySelect = useCallback((academyId: string, academyName: string) => {
+    setAcademiaParticipante(academyId);
+    setAcademiaParticipanteNombre(academyName);
+  }, []);
+
+  const handleCoupleAcademySelect = useCallback((academyId: string, academyName: string) => {
+    setAcademiaPareja(academyId);
+    setAcademiaParejaNombre(academyName);
+  }, []);
+
+  // Hook de validación de academia
   const academyValidation = useAcademyAffiliationValidation(
     participanteInfo ? {
       id: participanteInfo.id,
       academyId: academiaParticipante,
-      academyName: academies.find(a => a.id === academiaParticipante)?.name || ""
+      academyName: academiaParticipanteNombre
     } : null,
     parejaInfo ? {
       id: parejaInfo.id,
       academyId: academiaPareja,
-      academyName: academies.find(a => a.id === academiaPareja)?.name || ""
+      academyName: academiaParejaNombre
     } : null,
     user
   );
 
+  // Hook de validación de parejas
   const {
     allowed: pullCoupleAllowed,
     message: pullCoupleMessage,
     diferenciaValor,
-    categoriaFinal
+    categoriaFinal,
+    esMayorParticipante
   } = usePullCoupleValidation(participanteInfo, parejaInfo, eventSettings as any);
 
   // Cargar configuraciones del evento
@@ -238,12 +255,12 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
 
   // Determinar si el formulario es válido
   const esFormularioValido = useCallback((): boolean => {
-    if (!participanteInfo || !academiaParticipante) return false;
+    if (!participanteInfo || (!academiaParticipante && academiaParticipanteNombre === "Libre")) return false;
     if (validarCategoriaParticipante()) return false;
     if (!academyValidation.isValid) return false;
     
     if (requierePareja) {
-      if (!parejaInfo || !academiaPareja) return false;
+      if (!parejaInfo || (!academiaPareja && academiaParejaNombre === "Libre")) return false;
       if (validarPareja()) return false;
     }
     
@@ -251,46 +268,15 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   }, [
     participanteInfo,
     academiaParticipante,
+    academiaParticipanteNombre,
     validarCategoriaParticipante,
     academyValidation.isValid,
     requierePareja,
     parejaInfo,
     academiaPareja,
+    academiaParejaNombre,
     validarPareja
   ]);
-
-  // Notificar cambios de pull couple al componente padre
-  useEffect(() => {
-    if (pullCoupleAllowed && diferenciaValor > 0) {
-      onPullCoupleChange({
-        aplicar: true,
-        categoriaFinal: categoriaFinal as string
-      });
-    } else {
-      onPullCoupleChange({
-        aplicar: false,
-        categoriaFinal: participanteInfo?.category || ""
-      });
-    }
-  }, [pullCoupleAllowed, diferenciaValor, categoriaFinal, participanteInfo, onPullCoupleChange]);
-
-  // Notificar cambios de validación al componente padre
-  useEffect(() => {
-    onValidationChange(esFormularioValido());
-  }, [esFormularioValido, onValidationChange]);
-
-  // Notificar datos al componente padre cuando están listos
-  useEffect(() => {
-    if (participanteInfo && academiaParticipante && !validarCategoriaParticipante()) {
-      onParticipantFound(participanteInfo, academiaParticipante);
-    }
-  }, [participanteInfo, academiaParticipante, validarCategoriaParticipante, onParticipantFound]);
-
-  useEffect(() => {
-    if (parejaInfo && academiaPareja && !validarPareja()) {
-      onCoupleFound(parejaInfo, academiaPareja);
-    }
-  }, [parejaInfo, academiaPareja, validarPareja, onCoupleFound]);
 
   // Manejar búsqueda de participante
   const handleBuscarParticipante = useCallback(async (): Promise<void> => {
@@ -331,21 +317,6 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     }
   }, [buscarPareja, dniPareja, dniParticipante, searchErrorPareja]);
 
-  // Limpiar formulario
-  const limpiarFormulario = useCallback(() => {
-    setDniParticipante("");
-    setDniPareja("");
-    limpiarParticipante();
-    limpiarPareja();
-    setAcademiaParticipante("");
-    setAcademiaPareja("");
-  }, [limpiarParticipante, limpiarPareja]);
-
-  // Exponer función de limpieza
-  useEffect(() => {
-    // Podríamos usar useImperativeHandle si necesitamos exponer funciones al padre
-  }, []);
-
   // Estado derivado: determinar si se aplicará jalar pareja
   const aplicarJalarPareja = useCallback((): boolean => {
     return requierePareja && 
@@ -353,6 +324,39 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
            pullCoupleAllowed && 
            diferenciaValor > 0;
   }, [requierePareja, parejaInfo, pullCoupleAllowed, diferenciaValor]);
+
+  // Notificar cambios de pull couple al componente padre
+  useEffect(() => {
+    if (pullCoupleAllowed && diferenciaValor > 0) {
+      onPullCoupleChange({
+        aplicar: true,
+        categoriaFinal: categoriaFinal as string
+      });
+    } else {
+      onPullCoupleChange({
+        aplicar: false,
+        categoriaFinal: participanteInfo?.category || ""
+      });
+    }
+  }, [pullCoupleAllowed, diferenciaValor, categoriaFinal, participanteInfo, onPullCoupleChange]);
+
+  // Notificar cambios de validación al componente padre
+  useEffect(() => {
+    onValidationChange(esFormularioValido());
+  }, [esFormularioValido, onValidationChange]);
+
+  // Notificar datos al componente padre cuando están listos
+  useEffect(() => {
+    if (participanteInfo && (academiaParticipante || academiaParticipanteNombre !== "Libre") && !validarCategoriaParticipante()) {
+      onParticipantFound(participanteInfo, academiaParticipante);
+    }
+  }, [participanteInfo, academiaParticipante, academiaParticipanteNombre, validarCategoriaParticipante, onParticipantFound]);
+
+  useEffect(() => {
+    if (parejaInfo && (academiaPareja || academiaParejaNombre !== "Libre") && !validarPareja()) {
+      onCoupleFound(parejaInfo, academiaPareja);
+    }
+  }, [parejaInfo, academiaPareja, academiaParejaNombre, validarPareja, onCoupleFound]);
 
   return (
     <div className="space-y-6">
@@ -399,25 +403,18 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
       </div>
 
       {/* Selección de academia del participante */}
-      {participanteInfo && (
+      {participanteInfo && !validarCategoriaParticipante() && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            🏫 Academia del participante:
-          </label>
-          <select
-            value={academiaParticipante}
-            onChange={(e) => setAcademiaParticipante(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white"
+          <AcademySelector
+            onAcademySelect={handleParticipantAcademySelect}
+            initialAcademyId=""
+            initialAcademyName="Libre"
+            theme="light"
+            label="🏫 Academia del participante"
+            placeholder="Buscar academia del participante..."
+            required={true}
             disabled={loadingAcademies}
-          >
-            <option value="">Seleccionar academia</option>
-            {academies.map(academia => (
-              <option key={academia.id} value={academia.id}>{academia.name}</option>
-            ))}
-          </select>
-          {loadingAcademies && (
-            <p className="text-xs text-gray-500 mt-1">Cargando academias...</p>
-          )}
+          />
         </div>
       )}
 
@@ -468,25 +465,21 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
       {/* Selección de academia de la pareja */}
       {requierePareja && parejaInfo && !validarPareja() && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            🏫 Academia de la pareja:
-          </label>
-          <select
-            value={academiaPareja}
-            onChange={(e) => setAcademiaPareja(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition bg-white"
+          <AcademySelector
+            onAcademySelect={handleCoupleAcademySelect}
+            initialAcademyId=""
+            initialAcademyName="Libre"
+            theme="light"
+            label="🏫 Academia de la pareja"
+            placeholder="Buscar academia de la pareja..."
+            required={true}
             disabled={loadingAcademies}
-          >
-            <option value="">Seleccionar academia</option>
-            {academies.map(academia => (
-              <option key={academia.id} value={academia.id}>{academia.name}</option>
-            ))}
-          </select>
+          />
         </div>
       )}
 
       {/* Validación de academia */}
-      {(participanteInfo && academiaParticipante) && (
+      {(participanteInfo && (academiaParticipante || academiaParticipanteNombre !== "Libre")) && (
         <div className={`p-3 rounded-lg border ${
           academyValidation.isValid 
             ? 'bg-green-50 border-green-200' 
@@ -534,7 +527,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
             participant={participanteInfo}
             calcularEdad={getEdadDisplay}
             type="participante"
-            academyName={academies.find(a => a.id === academiaParticipante)?.name}
+            academyName={academiaParticipanteNombre}
           />
         )}
 
@@ -543,7 +536,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
             participant={parejaInfo}
             calcularEdad={getEdadDisplay}
             type="pareja"
-            academyName={academies.find(a => a.id === academiaPareja)?.name}
+            academyName={academiaParejaNombre}
           />
         )}
       </div>
@@ -557,72 +550,6 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
           </div>
         </div>
       )}
-    </div>
-  );
-};
-
-// Componente auxiliar para mostrar información de participantes
-interface ParticipantCardProps {
-  participant: Participante;
-  calcularEdad: (birthDate: any) => string | number;
-  type: "participante" | "pareja";
-  academyName?: string;
-}
-
-const ParticipantCard: React.FC<ParticipantCardProps> = ({ 
-  participant, 
-  calcularEdad, 
-  type, 
-  academyName 
-}) => {
-  if (!participant) return null;
-
-  const isParticipante = type === "participante";
-  const cardTitle = isParticipante ? "👤 Participante" : "👥 Pareja";
-
-  const bgColor = isParticipante ? "bg-blue-50" : "bg-purple-50";
-  const borderColor = isParticipante ? "border-blue-200" : "border-purple-200";
-  const titleColor = isParticipante ? "text-blue-700" : "text-purple-700";
-
-  return (
-    <div className={`rounded-lg ${bgColor} border ${borderColor} p-4 shadow-sm transition-all duration-200 hover:shadow-md`}>
-      <h4 className={`font-semibold ${titleColor} mb-3 flex items-center justify-between`}>
-        {cardTitle}
-        <div className={`w-3 h-3 rounded-full ${isParticipante ? 'bg-blue-500' : 'bg-purple-500'}`}></div>
-      </h4>
-
-      <div className="space-y-3 text-sm">
-        <div className="bg-white rounded-lg p-3 border">
-          <span className="font-medium text-gray-700 block">Nombre completo:</span>
-          <p className="text-gray-900 font-medium">{participant.firstName} {participant.lastName}</p>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-white rounded-lg p-2 border">
-            <span className="font-medium text-gray-700 text-xs block">Categoría:</span>
-            <p className="text-gray-900 font-medium">{participant.category}</p>
-          </div>
-          
-          <div className="bg-white rounded-lg p-2 border">
-            <span className="font-medium text-gray-700 text-xs block">Edad:</span>
-            <p className="text-gray-900 font-medium">{calcularEdad(participant.birthDate)} años</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-2 border">
-          <span className="font-medium text-gray-700 text-xs block">Género:</span>
-          <p className="text-gray-900">
-            {participant.gender === 'Masculino' ? '👨 Masculino' : '👩 Femenino'}
-          </p>
-        </div>
-
-        {academyName && (
-          <div className="bg-white rounded-lg p-2 border">
-            <span className="font-medium text-gray-700 text-xs block">Academia:</span>
-            <p className="text-gray-900 font-medium">{academyName}</p>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
