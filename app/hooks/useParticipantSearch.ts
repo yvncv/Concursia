@@ -1,6 +1,7 @@
 // hooks/useParticipantSearch.ts
 import { useState, useCallback, useRef } from "react";
-import { getFirestore, collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
+import { findUserByHashedDni } from "@/app/utils/findUserByHashedDni";
 import { CategoryLevel } from "../types/categoriesType";
 
 export interface Participante {
@@ -34,24 +35,30 @@ export function useParticipantSearch(): ParticipantSearchResult {
     dni: string, 
     otherParticipantDni: string = ""
   ): Promise<Participante | null> => {
-    if (!dni.trim()) {
+    // Validar formato de DNI
+    const sanitizedDni = dni.trim();
+    
+    if (!sanitizedDni) {
       setSearchError("Ingrese un DNI válido");
       return null;
     }
     
-    // Normalizar DNI
-    const normalizedDNI = dni.trim().padStart(8, '0');
+    if (!/^\d{8}$/.test(sanitizedDni)) {
+      setSearchError("El DNI debe tener exactamente 8 dígitos");
+      return null;
+    }
     
     // Verificar que no sea el mismo que otro participante ya buscado
-    if (otherParticipantDni && normalizedDNI === otherParticipantDni.trim().padStart(8, '0')) {
+    if (otherParticipantDni && sanitizedDni === otherParticipantDni.trim()) {
       setSearchError("No puede ser el mismo participante");
       return null;
     }
     
     // Verificar caché para evitar búsquedas innecesarias
-    if (participantsCache.current.has(normalizedDNI)) {
-      const cachedData = participantsCache.current.get(normalizedDNI)!;
+    if (participantsCache.current.has(sanitizedDni)) {
+      const cachedData = participantsCache.current.get(sanitizedDni)!;
       setParticipantInfo(cachedData);
+      setSearchError("");
       return cachedData;
     }
     
@@ -60,27 +67,42 @@ export function useParticipantSearch(): ParticipantSearchResult {
     setParticipantInfo(null);
     
     try {
-      const db = getFirestore();
-      const usersCollection = collection(db, "users");
-      const q = query(usersCollection, where("dni", "==", normalizedDNI));
-      const snapshot = await getDocs(q);
+      // Usar la función correcta para buscar por DNI hasheado
+      const user = await findUserByHashedDni(sanitizedDni);
       
-      if (snapshot.empty) {
+      if (!user) {
         setSearchError("No se encontró ningún usuario con este DNI");
         return null;
       }
       
-      const userData = snapshot.docs[0].data() as Participante;
-      userData.id = snapshot.docs[0].id;
+      // Verificar que el usuario tenga los campos necesarios para participar
+      if (!user.marinera?.participant?.category) {
+        setSearchError("El usuario no tiene categoría de participante asignada");
+        return null;
+      }
+      
+      // Crear objeto participante con la estructura esperada
+      const participantData: Participante = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        dni: user.dni, // Este viene encriptado de la DB
+        birthDate: user.birthDate,
+        gender: user.gender,
+        phoneNumber: user.phoneNumber,
+        category: user.marinera.participant.category as CategoryLevel
+      };
       
       // Guardar en caché para futuras búsquedas
-      participantsCache.current.set(normalizedDNI, userData);
+      participantsCache.current.set(sanitizedDni, participantData);
       
-      setParticipantInfo(userData);
-      return userData;
+      setParticipantInfo(participantData);
+      setSearchError("");
+      return participantData;
+      
     } catch (error) {
       console.error("Error al buscar participante:", error);
-      setSearchError("Error al buscar usuario");
+      setSearchError("Error al buscar usuario. Intente nuevamente.");
       return null;
     } finally {
       setIsSearching(false);
@@ -92,11 +114,17 @@ export function useParticipantSearch(): ParticipantSearchResult {
     setSearchError("");
   }, []);
   
+  // Función auxiliar para limpiar el caché si es necesario
+  const clearCache = useCallback((): void => {
+    participantsCache.current.clear();
+  }, []);
+  
   return {
     isSearching,
     searchError,
     participantInfo,
     searchParticipant,
-    clearParticipant
+    clearParticipant,
+    // clearCache // Opcional, por si necesitas limpiar el caché
   };
 }

@@ -5,7 +5,7 @@ import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/hooks/useUser";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
-import EventoInscripcionAlumnos from "./EventoInscripcionAlumnos";
+import EventoInscripcionAlumnos from "./EventGroupInscription";
 import dynamic from "next/dynamic";
 import { use } from "react";
 import { MapPin, Calendar, User, ArrowLeftCircle } from "lucide-react";
