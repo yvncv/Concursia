@@ -14,7 +14,7 @@ import {
   useParticipantsWithUsers, 
   getParticipantDisplayName, 
 } from "@/app/hooks/useParticipantsWithUsers";
-import { decryptValue } from "@/app/utils/encryption";
+import { decryptValue } from "@/app/utils/security/securityHelpers";
 
 interface JudgeViewProps {
   currentTanda: Tanda;

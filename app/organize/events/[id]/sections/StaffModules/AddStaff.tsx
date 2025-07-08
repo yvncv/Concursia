@@ -5,7 +5,7 @@ import useUsers from '@/app/hooks/useUsers';
 import { CustomEvent } from '@/app/types/eventType';
 import { User } from '@/app/types/userType';
 import { Search, UserPlus, Info } from 'lucide-react';
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
 
 const SECTIONS = [

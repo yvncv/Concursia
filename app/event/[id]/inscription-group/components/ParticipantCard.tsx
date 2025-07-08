@@ -1,7 +1,7 @@
 import React from "react";
 import { User, Award, Calendar, Building2 } from "lucide-react";
 import { Timestamp } from "firebase/firestore";
-import { decryptValue } from "@/app/utils/encryption";
+import { decryptValue } from "@/app/utils/security/securityHelpers";
 
 // Definición de tipos
 interface Participant {

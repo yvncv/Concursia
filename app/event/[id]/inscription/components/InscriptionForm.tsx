@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { User } from '@/app/types/userType';
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 import AcademySelector from '../../components/AcademySelector';
 
 interface ParticipantDataProps {

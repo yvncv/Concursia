@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle, Trash2, ArrowRight, Users } from "lucide-react";
 import toast from 'react-hot-toast';
-import { decryptValue } from "@/app/utils/encryption";
+import { decryptValue } from "@/app/utils/security/securityHelpers";
 
 // Definición de tipos
 interface EventSettings {

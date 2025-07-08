@@ -1,9 +1,9 @@
 import { db } from "@/app/firebase/config"
 import { collection, query, where, getDocs } from "firebase/firestore"
-import { hashDni } from "../utils/hash"
+import { hashValue } from "@/app/utils/security/securityHelpers";
 
 export async function findUserByDni(dni: string) {
-  const hashed = hashDni(dni)
+  const hashed = hashValue(dni)
   const q = query(collection(db, "users"), where("dniHash", "==", hashed))
   const snapshot = await getDocs(q)
 

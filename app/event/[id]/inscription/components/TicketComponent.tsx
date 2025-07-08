@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { decryptValue } from '@/app/utils/encryption'
+import { decryptValue } from '@/app/utils/security/securityHelpers'
 const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal }) => {
   return (
     <div className="w-full flex flex-col items-center justify-start pt-6 sm:pt-10 pb-8 min-h-screen bg-gray-50">

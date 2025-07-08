@@ -1,7 +1,6 @@
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
-import { decryptValue } from "./encryption";
-import { hashDni } from "./hash";
+import { decryptValue, hashValue } from "@/app/utils/security/securityHelpers";
 
 export async function hashAllDnis() {
   const usersCol = collection(db, "users");
@@ -18,7 +17,7 @@ export async function hashAllDnis() {
 
     try {
       const decrypted = decryptValue(encryptedDni);
-      const dniHash = hashDni(decrypted);
+      const dniHash = hashValue(decrypted);
 
       await updateDoc(doc(db, "users", userDoc.id), {
         dniHash: dniHash,

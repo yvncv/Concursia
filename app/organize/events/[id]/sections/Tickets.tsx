@@ -19,7 +19,7 @@ import {
   Calendar,
 } from "lucide-react";
 import useAcademies from "@/app/hooks/useAcademies";
-import { decryptValue } from "@/app/utils/encryption";
+import { decryptValue } from "@/app/utils/security/securityHelpers";
 
 // Componentes separados
 import TicketsStats from "./ticketsModules/TicketsStats";

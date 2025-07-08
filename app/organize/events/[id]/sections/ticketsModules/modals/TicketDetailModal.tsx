@@ -2,7 +2,7 @@ import React from "react";
 import { Ticket } from "@/app/types/ticketType";
 import { User } from "@/app/types/userType";
 import { XCircle, Trophy, School, Users, CheckCircle, Trash2 } from "lucide-react";
-import { decryptValue } from "@/app/utils/encryption";
+import { decryptValue } from "@/app/utils/security/securityHelpers";
 
 interface TicketDetailModalProps {
   isOpen: boolean;

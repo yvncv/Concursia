@@ -3,7 +3,7 @@ import { Eye, Tag, UserCircle } from "lucide-react";
 import { Participant } from "@/app/types/participantType";
 import { User } from "@/app/types/userType";
 import { Ticket } from "@/app/types/ticketType";
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 
 interface ParticipantRow {
   participant: Participant;

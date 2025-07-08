@@ -15,8 +15,7 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { User } from "@/app/types/userType";
-import { encryptValue } from "../utils/encryption";
-import { hashDni } from "../utils/hash";
+import { encryptValue, hashValue } from "@/app/utils/security/securityHelpers";
 
 // Import steps
 import Step1BasicInfo from "./steps/Step1BasicInfo";
@@ -133,7 +132,7 @@ export default function RegisterPage() {
         id: user.uid,
         roleId: "user",
         dni: encryptValue(completeData.dni),
-        dniHash: hashDni(completeData.dni),
+        dniHash: hashValue(completeData.dni),
         firstName: completeData.firstName,
         lastName: completeData.lastName,
         birthDate: Timestamp.fromDate(new Date(`${completeData.birthDate}T00:00:00`)),

@@ -29,7 +29,7 @@ import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
 import UserAchievements from './components/UserAchievements';
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();

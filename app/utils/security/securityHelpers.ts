@@ -14,3 +14,7 @@ export function decryptValue(encrypted: string): string {
     return 'valor_incompatible'
   }
 }
+
+export function hashValue(value: string): string {
+  return CryptoJS.SHA256(value).toString()
+}

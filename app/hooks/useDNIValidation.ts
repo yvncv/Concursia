@@ -1,9 +1,7 @@
 // app/register/hooks/useDNIValidation.ts
 import { useState, useCallback } from "react";
 import axios from "axios";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/app/firebase/config";
-import { findUserByHashedDni } from "../utils/findUserByHashedDni";
+import { findUserByHashedDni } from "../utils/security/dni/findUserByHashedDni";
 
 interface ApiData {
   firstName: string;

@@ -1,4 +1,4 @@
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 import { UserCircle } from 'lucide-react';
 import React from 'react';
 

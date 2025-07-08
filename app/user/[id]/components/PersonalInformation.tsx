@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '@/app/types/userType';
-import { decryptValue } from '@/app/utils/encryption';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 
 interface Props {
   foundUser: User;

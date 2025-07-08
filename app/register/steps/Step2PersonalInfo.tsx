@@ -53,7 +53,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
 
   // Nuevo estado para la declaración jurada
   const [acceptDataResponsibility, setAcceptDataResponsibility] = useState(false);
-  const [showDataResponsibilityModal, setShowDataResponsibilityModal] = useState(false);
 
   const [locationData, setLocationData] = useState<User['location']>({
     department: "",
