@@ -8,6 +8,12 @@ export interface TicketEntry {
   category: string;              // Categoría de la inscripción  
   level: string;                 // Nivel
   amount: number;                // Precio correspondiente a esta entrada
+  
+  // Campos de cancelación por entry (opcionales)
+  status?: 'Anulado';            // Status específico de esta entry
+  cancelledDate?: Timestamp;     // Fecha de cancelación de esta entry
+  cancellationReason?: string;   // Motivo de cancelación de esta entry
+  cancelledBy?: string;          // Usuario que canceló esta entry
 }
 
 // Ticket principal
@@ -21,7 +27,12 @@ export interface Ticket {
   inscriptionType: 'Individual' | 'Grupal' | 'Presencial';
   totalAmount: number;
   entries: TicketEntry[];                    // Aquí está toda la info
-  createdBy: string;                         // ID del usuario que lo generó    
+  createdBy: string;                         // ID del usuario que lo generó
+  
+  // Campos de cancelación (opcionales)
+  cancelledDate?: Timestamp;                 // Fecha y hora de cancelación
+  cancellationReason?: string;               // Motivo de la cancelación
+  cancelledBy?: string;                      // ID del usuario que canceló
 }
 
 // Para guardar en Firestore sin el ID

@@ -28,7 +28,7 @@ import TicketsSearchAndFilters from "./ticketsModules/TicketsSearchAndFilters";
 // Modales
 import FilterModal, { FilterOptions } from "./ticketsModules/modals/FilterModal";
 import TicketDetailModal from "./ticketsModules/modals/TicketDetailModal";
-import DeleteTicketModal from "./ticketsModules/modals/DeleteTicketModal";
+import CancelTicketModal from "./ticketsModules/modals/CancelTicketModal";
 import ConfirmTicketModal from "./ticketsModules/modals/ConfirmTicketModal";
 
 interface TicketsProps {
@@ -639,7 +639,7 @@ const Tickets: React.FC<TicketsProps> = ({ event }) => {
         currentFilters={activeFilters}
       />
 
-      <DeleteTicketModal
+      <CancelTicketModal
         isOpen={isDeleteModalOpen}
         onClose={handleModalClose}
         ticket={selectedTicket!}
