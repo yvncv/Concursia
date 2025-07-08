@@ -10,7 +10,7 @@ import useCreateTicket from '@/app/hooks/tickets/useCreateTicket';
 import { Ticket } from "@/app/types/ticketType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
-import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
+import { findUserByHashedDni } from '@/app/utils/security/dni/findUserByHashedDni';
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {

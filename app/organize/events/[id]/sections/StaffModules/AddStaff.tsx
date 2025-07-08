@@ -6,7 +6,7 @@ import { CustomEvent } from '@/app/types/eventType';
 import { User } from '@/app/types/userType';
 import { Search, UserPlus, Info } from 'lucide-react';
 import { decryptValue } from '@/app/utils/security/securityHelpers';
-import { findUserByHashedDni } from '@/app/utils/findUserByHashedDni';
+import { findUserByHashedDni } from "@/app/utils/security/dni/findUserByHashedDni";
 
 const SECTIONS = [
   { id: 'overview', name: 'Visión General', description: 'Ver información general del evento' },

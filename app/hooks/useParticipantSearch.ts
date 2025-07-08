@@ -1,7 +1,7 @@
 // hooks/useParticipantSearch.ts
 import { useState, useCallback, useRef } from "react";
 import { Timestamp } from "firebase/firestore";
-import { findUserByHashedDni } from "@/app/utils/findUserByHashedDni";
+import { findUserByHashedDni } from "@/app/utils/security/dni/findUserByHashedDni";
 import { CategoryLevel } from "../types/categoriesType";
 
 export interface Participante {

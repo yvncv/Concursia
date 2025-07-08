@@ -1,7 +1,7 @@
 "use client";
-import { encryptAllDnisIfNeeded } from "../utils/dni/encryptAllDnisIfNeeded";
-import { decryptAllDnis } from "../utils/dni/decryptAllDnisIfNeeded";
-import { hashAllDnis } from "../utils/dni/hashAllDnisIfNeeded";
+import { encryptAllDnisIfNeeded } from "@/app/utils/security/dni/encryptAllDnisIfNeeded";
+import { decryptAllDnis } from "@/app/utils/security/dni/decryptAllDnisIfNeeded";
+import { hashAllDnis } from "@/app/utils/security/dni/hashAllDnisIfNeeded";
 import { useState } from "react";
 import { Shield, ShieldCheck, Lock, Unlock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { findUserByDni } from "./findUserByDni";
