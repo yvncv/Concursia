@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/app/firebase/config";
+import { findUserByHashedDni } from "../utils/findUserByHashedDni";
 
 interface ApiData {
   firstName: string;
@@ -79,18 +80,6 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       .join(' ');
   };
 
-  const checkDniExistsInFirestore = async (dniToCheck: string): Promise<boolean> => {
-    try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("dni", "==", dniToCheck));
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error("Error al verificar DNI:", error);
-      return false;
-    }
-  };
-
   // Consultar datos en RENIEC con sistema de reintentos
   const fetchReniecData = async (dniToSearch: string): Promise<void> => {
     setLoading(true);
@@ -102,7 +91,7 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
 
     try {
       // Verificar si DNI ya existe
-      const dniExists = await checkDniExistsInFirestore(dniToSearch);
+      const dniExists = await findUserByHashedDni(dniToSearch);
       if (dniExists) {
         setExistsError(
           "Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión."
