@@ -1,8 +1,11 @@
+// Tu componente TandasConfirmationModal modificado
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Users, Mail, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Tanda } from '@/app/types/tandaType';
 import { Participant } from '@/app/types/participantType';
+import { User } from '@/app/types/userType';
 import { useParticipantsWithUsers, getParticipantDisplayName, getParticipantImages } from '@/app/hooks/useParticipantsWithUsers';
+import { useEmailNotifications } from '@/app/hooks/tanda/useEmailNotifications';
 
 interface TandasConfirmationModalProps {
   isOpen: boolean;
@@ -10,10 +13,12 @@ interface TandasConfirmationModalProps {
   onConfirm: () => void;
   tandas: Tanda[];
   allParticipants: Participant[];
+  allUsers: User[]; // AGREGAR ESTA PROP
   level: string;
   category: string;
   gender: string;
   isLoading?: boolean;
+  competitionName?: string;
 }
 
 interface ParticipantCardProps {
@@ -115,12 +120,62 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
   onConfirm,
   tandas,
   allParticipants,
+  allUsers, // NUEVA PROP
   level,
   category,
   gender,
-  isLoading = false
+  isLoading = false,
+  competitionName = 'Competencia de Marinera'
 }) => {
   const [currentTandaIndex, setCurrentTandaIndex] = useState(0);
+  const [showEmailResults, setShowEmailResults] = useState(false);
+  const [emailResults, setEmailResults] = useState<any>(null);
+  
+  const { 
+    sendTandaNotifications, 
+    isSending, 
+    sendingProgress, 
+    currentEmail, 
+    totalEmails,
+    currentEmailAddress
+  } = useEmailNotifications();
+
+  // Función modificada para manejar la confirmación
+  const handleConfirm = async () => {
+    try {
+      console.log('Iniciando confirmación de tandas...');
+      
+      // Primero ejecutar la lógica original de confirmación
+      await onConfirm();
+      
+      console.log('Tandas confirmadas, enviando emails...');
+      
+      // Luego enviar las notificaciones por email
+      const result = await sendTandaNotifications(
+        tandas,
+        allParticipants,
+        allUsers,
+        level,
+        category,
+        gender,
+        competitionName
+      );
+      
+      console.log('Resultado del envío:', result);
+      
+      setEmailResults(result);
+      setShowEmailResults(true);
+      
+    } catch (error) {
+      console.error('Error in confirmation process:', error);
+      setEmailResults({
+        success: false,
+        message: 'Error en el proceso de confirmación: ' + (error instanceof Error ? error.message : 'Error desconocido'),
+        error
+      });
+      setShowEmailResults(true);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -155,10 +210,56 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
           <button 
             onClick={onClose}
             className="p-2 hover:bg-blue-700 rounded transition-colors"
+            disabled={isSending}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Mostrar resultados de email si existen */}
+        {showEmailResults && emailResults && (
+          <div className={`border-b p-4 ${emailResults.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <div className="flex items-start space-x-3">
+              {emailResults.success ? (
+                <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 mb-2">
+                  {emailResults.success ? '¡Emails enviados exitosamente!' : 'Hubo problemas enviando emails'}
+                </h3>
+                <p className="text-sm text-gray-700 mb-2">
+                  {emailResults.message}
+                </p>
+                {emailResults.totalEmails && (
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>📧 Total de emails procesados: {emailResults.totalEmails}</p>
+                    <p>👥 Participantes notificados: {emailResults.notifications}</p>
+                    {emailResults.results?.details && (
+                      <p>
+                        ✅ Exitosos: {emailResults.results.success} | 
+                        ❌ Fallidos: {emailResults.results.failed}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {emailResults.results?.errors && emailResults.results.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="text-xs text-red-600 cursor-pointer">
+                      Ver errores ({emailResults.results.errors.length})
+                    </summary>
+                    <div className="mt-1 max-h-20 overflow-y-auto text-xs text-red-600">
+                      {emailResults.results.errors.map((error: string, index: number) => (
+                        <div key={index} className="py-1">{error}</div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Información de la tanda actual */}
         <div className="bg-gray-50 p-4 border-b">
@@ -177,7 +278,7 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
               <div className="flex items-center space-x-2">
                 <button 
                   onClick={handlePreviousTanda}
-                  disabled={currentTandaIndex === 0}
+                  disabled={currentTandaIndex === 0 || isSending}
                   className="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -188,7 +289,8 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
                     <button
                       key={index}
                       onClick={() => handleTandaClick(index)}
-                      className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
+                      disabled={isSending}
+                      className={`w-8 h-8 rounded text-sm font-medium transition-colors disabled:opacity-50 ${
                         index === currentTandaIndex
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
@@ -201,7 +303,7 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
                 
                 <button 
                   onClick={handleNextTanda}
-                  disabled={currentTandaIndex === tandas.length - 1}
+                  disabled={currentTandaIndex === tandas.length - 1 || isSending}
                   className="p-1 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -262,22 +364,79 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
           </div>
         </div>
 
-        {/* Footer con botones */}
-        <div className="bg-gray-50 p-4 flex justify-end space-x-3 border-t">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-gray-600 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
-            disabled={isLoading}
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Confirmando...' : 'Confirmar'}
-          </button>
+        {/* Footer modificado para mostrar progreso de envío */}
+        <div className="bg-gray-50 p-4 border-t">
+          {isSending && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 animate-pulse" />
+                  <span>Enviando notificaciones por email...</span>
+                </div>
+                <span>{currentEmail}/{totalEmails} ({sendingProgress}%)</span>
+              </div>
+              
+              {/* Email actual */}
+              {currentEmailAddress && (
+                <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
+                  <Clock className="w-3 h-3" />
+                  <span>Enviando a: {currentEmailAddress}</span>
+                </div>
+              )}
+              
+              {/* Barra de progreso */}
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className="bg-blue-600 h-3 rounded-full transition-all duration-300 flex items-center justify-center"
+                  style={{ width: `${sendingProgress}%` }}
+                >
+                  {sendingProgress > 10 && (
+                    <span className="text-xs text-white font-medium">
+                      {sendingProgress}%
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Estimación de tiempo */}
+              {totalEmails > 0 && currentEmail > 0 && (
+                <div className="text-xs text-gray-500 mt-1 text-center">
+                  Tiempo estimado restante: ~{Math.ceil((totalEmails - currentEmail) * 0.15 / 60)} minutos
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 text-gray-600 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+              disabled={isLoading || isSending}
+            >
+              {showEmailResults ? 'Cerrar' : 'Cancelar'}
+            </button>
+            {!showEmailResults && (
+              <button
+                onClick={handleConfirm}
+                disabled={isLoading || isSending}
+                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isSending ? (
+                  <>
+                    <Mail className="w-4 h-4 animate-pulse" />
+                    <span>Enviando emails... ({sendingProgress}%)</span>
+                  </>
+                ) : isLoading ? (
+                  <span>Confirmando...</span>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    <span>Confirmar y Notificar</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

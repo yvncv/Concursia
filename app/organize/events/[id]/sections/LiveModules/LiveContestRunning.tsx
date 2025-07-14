@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Play, Eye, Pause, SkipForward, Clock, Users, Calendar, FileText, BarChart3, Settings, Printer, MoreHorizontal } from 'lucide-react';
 import { CustomEvent } from '@/app/types/eventType';
 import useEventParticipants from '@/app/hooks/useEventParticipants';
+import useUsers from '@/app/hooks/useUsers'; // ← AGREGADO
 import { TandasConfirmationModal } from './modals/TandasConfirmationModal';
 import { TandaExecutionView } from './TandaExecutionView';
 import { generateAndPrepareTandas, confirmAndSaveTandas, checkIfTandasExist } from '@/app/services/generateTandasService';
@@ -53,6 +54,37 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         loadingParticipants,
         error
     } = useEventParticipants(event.id);
+
+    // ← AGREGADO: Hook para cargar usuarios de participantes
+    const participantUserIds = useMemo(() => {
+        if (!selectedItem) return [];
+        
+        const participants = selectedItem.gender
+            ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
+            : getParticipantsByCategory(selectedItem.levelId, selectedItem.category);
+
+        const userIds = new Set<string>();
+        participants.forEach(participant => {
+            if (participant.usersId && Array.isArray(participant.usersId)) {
+                participant.usersId.forEach(id => userIds.add(id));
+            }
+        });
+        return Array.from(userIds);
+    }, [selectedItem, getParticipantsByGender, getParticipantsByCategory]);
+
+    const { users: allUsers, loadingUsers } = useUsers(participantUserIds);
+
+    // ← AGREGADO: Debug para verificar carga de usuarios
+    useEffect(() => {
+        if (selectedItem && participantUserIds.length > 0) {
+            console.log('📋 Usuarios para modal:', {
+                selectedItem: selectedItem.category,
+                userIds: participantUserIds.length,
+                usersLoaded: allUsers.length,
+                loading: loadingUsers
+            });
+        }
+    }, [selectedItem, participantUserIds, allUsers, loadingUsers]);
 
     // Obtener datos del evento
     const scheduleItems = event.settings?.schedule?.items || [];
@@ -191,8 +223,6 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
             setIsGeneratingTandas(false);
         }
     };
-
-
 
     // Función para confirmar las tandas
     const handleConfirmTandas = async () => {
@@ -567,7 +597,7 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                 </div>
             </div>
 
-            {/* Modal de confirmación de tandas */}
+            {/* ← MODIFICADO: Modal de confirmación de tandas con emails */}
             <TandasConfirmationModal
                 isOpen={showTandasModal}
                 onClose={handleCloseModal}
@@ -578,10 +608,12 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
                         ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
                         : getParticipantsByCategory(selectedItem.levelId, selectedItem.category)
                 ) : []}
+                allUsers={allUsers} // ← AGREGADO
                 level={selectedItem?.levelId || ''}
                 category={selectedItem?.category || ''}
                 gender={selectedItem?.gender || ''}
-                isLoading={isConfirmingTandas}
+                isLoading={isConfirmingTandas || loadingUsers} // ← MODIFICADO
+                competitionName={event.name} // ← AGREGADO
             />
         </div>
     );
