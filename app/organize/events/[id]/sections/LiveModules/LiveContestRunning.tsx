@@ -74,18 +74,6 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
 
     const { users: allUsers, loadingUsers } = useUsers(participantUserIds);
 
-    // ← AGREGADO: Debug para verificar carga de usuarios
-    useEffect(() => {
-        if (selectedItem && participantUserIds.length > 0) {
-            console.log('📋 Usuarios para modal:', {
-                selectedItem: selectedItem.category,
-                userIds: participantUserIds.length,
-                usersLoaded: allUsers.length,
-                loading: loadingUsers
-            });
-        }
-    }, [selectedItem, participantUserIds, allUsers, loadingUsers]);
-
     // Obtener datos del evento
     const scheduleItems = event.settings?.schedule?.items || [];
 

@@ -1,18 +1,63 @@
 // app/api/send-emails/route.ts (si usas App Router)
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
+  console.log('🔍 API Route Gmail SMTP iniciada');
+  
+  // VALIDAR VARIABLES DE ENTORNO
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+  const fromEmail = process.env.FROM_EMAIL;
+  const fromName = process.env.FROM_NAME || 'Competencia de Marinera';
+  
+  console.log('🔍 Debug variables de entorno:');
+  console.log('- GMAIL_USER:', gmailUser);
+  console.log('- GMAIL_APP_PASSWORD existe:', !!gmailPassword);
+  console.log('- FROM_EMAIL:', fromEmail);
+  
+  if (!gmailUser || !gmailPassword) {
+    console.error('❌ Faltan credenciales de Gmail');
+    return NextResponse.json({
+      success: false,
+      message: 'Faltan credenciales de Gmail. Verifica GMAIL_USER y GMAIL_APP_PASSWORD en .env.local',
+      error: 'Missing Gmail credentials'
+    }, { status: 500 });
+  }
+
   try {
     const { emails } = await request.json();
+    console.log('📧 Emails recibidos:', emails?.length || 0);
 
     if (!emails || !Array.isArray(emails)) {
-      return NextResponse.json({ message: 'Se requiere un array de emails' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        message: 'Se requiere un array de emails' 
+      }, { status: 400 });
     }
 
-    console.log(`📧 Procesando ${emails.length} emails...`);
+    // Crear transporter de Gmail
+    console.log('🔧 Configurando Gmail SMTP...');
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPassword,
+      },
+    });
+
+    // Verificar conexión
+    try {
+      await transporter.verify();
+      console.log('✅ Conexión Gmail SMTP verificada');
+    } catch (verifyError) {
+      console.error('❌ Error verificando Gmail SMTP:', verifyError);
+      return NextResponse.json({
+        success: false,
+        message: 'Error de autenticación con Gmail. Verifica tu contraseña de aplicación.',
+        error: verifyError.message
+      }, { status: 500 });
+    }
 
     const results = {
       success: 0,
@@ -26,51 +71,42 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`📤 Enviando email a: ${emailData.to}`);
 
-        const { data, error } = await resend.emails.send({
-          from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
-          to: [emailData.to],
+        const mailOptions = {
+          from: `${fromName} <${fromEmail}>`,
+          to: emailData.to,
           subject: emailData.subject,
           html: emailData.html,
           text: emailData.text,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+        console.log(`✅ Email enviado exitosamente a: ${emailData.to}, MessageID:`, info.messageId);
+        results.success++;
+        results.details.push({
+          email: emailData.to,
+          success: true,
+          participantCode: emailData.participantCode
         });
 
-        if (error) {
-          console.error(`❌ Error enviando a ${emailData.to}:`, error);
-          results.failed++;
-          results.errors.push(`Error enviando a ${emailData.to}: ${error.message}`);
-          results.details.push({
-            email: emailData.to,
-            success: false,
-            error: error.message,
-            participantCode: emailData.participantCode
-          });
-        } else {
-          console.log(`✅ Email enviado exitosamente a: ${emailData.to}`);
-          results.success++;
-          results.details.push({
-            email: emailData.to,
-            success: true,
-            participantCode: emailData.participantCode
-          });
-        }
+        // Pausa entre envíos para evitar rate limiting de Gmail
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo entre emails
 
-        // Pausa entre envíos para evitar rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-      } catch (error) {
-        console.error(`❌ Excepción enviando a ${emailData.to}:`, error);
+      } catch (emailError) {
+        console.error(`❌ Error enviando a ${emailData.to}:`, emailError);
         results.failed++;
-        results.errors.push(`Excepción enviando a ${emailData.to}: ${error.message}`);
+        const errorMessage = emailError.message || String(emailError);
+        results.errors.push(`Error enviando a ${emailData.to}: ${errorMessage}`);
         results.details.push({
           email: emailData.to,
           success: false,
-          error: error.message,
+          error: errorMessage,
           participantCode: emailData.participantCode
         });
       }
     }
 
-    console.log(`📊 Resumen: ${results.success} exitosos, ${results.failed} fallidos`);
+    console.log(`📊 Resumen final: ${results.success} exitosos, ${results.failed} fallidos`);
 
     return NextResponse.json({
       success: true,
@@ -79,11 +115,26 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error general en API:', error);
+    console.error('❌ Error general en API route:', error);
     return NextResponse.json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
+}
+
+// Método GET para testing
+export async function GET() {
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+  
+  return NextResponse.json({
+    message: 'API de emails con Gmail SMTP funcionando',
+    hasGmailUser: !!gmailUser,
+    hasGmailPassword: !!gmailPassword,
+    fromEmail: process.env.FROM_EMAIL,
+    timestamp: new Date().toISOString()
+  });
 }
