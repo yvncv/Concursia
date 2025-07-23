@@ -23,7 +23,7 @@ function generateRandomUser(
   index: number,
   academy?: Academy,
   role: "user" | "organizer" = "user"
-): Partial<User> {
+): any {
   const firstNames = ["Luis", "Ana", "Carlos", "María", "Pedro", "Lucía"];
   const lastNames = ["Gómez", "Pérez", "Ramírez", "Torres", "Díaz"];
   const genders = ["Masculino", "Femenino"];
@@ -45,7 +45,7 @@ function generateRandomUser(
   const dni = `${Math.floor(10000000 + Math.random() * 90000000)}`;
   const dniHash = CryptoJS.SHA256(dni).toString();
 
-  return {
+  const baseUser = {
     id: uuidv4(),
     roleId: role,
     dni,
@@ -60,24 +60,12 @@ function generateRandomUser(
       )
     ),
     gender,
-    // email: email,
-    // phoneNumber: [
-    //   "9" + Math.floor(10000000 + Math.random() * 90000000).toString(),
-    // ],
+    email: [email],
+    phoneNumber: [
+      "9" + Math.floor(10000000 + Math.random() * 90000000).toString(),
+    ],
     profileImage: "",
     coverImage: "",
-    marinera: academy
-      ? {
-        participant: {
-          level,
-          category,
-          participatedEvents: [],
-        },
-        academyId: academy.id,
-        academyName: academy.name,
-        attendedEvents: [],
-      }
-      : undefined,
     staffOf: [],
     location: {
       department,
@@ -87,6 +75,25 @@ function generateRandomUser(
     socialMedia: {},
     createdAt: Timestamp.now(),
   };
+
+  // Only add marinera field if academy is provided
+  if (academy) {
+    return {
+      ...baseUser,
+      marinera: {
+        participant: {
+          level,
+          category,
+          participatedEvents: [],
+        },
+        academyId: academy.id,
+        academyName: academy.name,
+        attendedEvents: [],
+      },
+    };
+  }
+
+  return baseUser;
 }
 
 export default function CreacionMasivaDeUsuarios() {

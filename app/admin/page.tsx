@@ -7,6 +7,8 @@ import { Shield, ShieldCheck, Lock, Unlock, AlertTriangle, CheckCircle, Loader2 
 import { findUserByDni } from "./findUserByDni";
 import CreacionMasivaDeUsuarios from "./creacionMasivaDeUsuarios";
 import GeneradorTickets from "./generadorTickets";
+import CreacionMasivaDeAcademias from "./creacionMasivaDeAcademias";
+import CreacionMasivaDeEventos from "./creacionMasivaDeEventos";
 
 export default function AdminDniEncrypter() {
   const [status, setStatus] = useState<string>("");
@@ -304,7 +306,9 @@ export default function AdminDniEncrypter() {
           </div>
         </div>
       </div>
+      <CreacionMasivaDeAcademias />
       <CreacionMasivaDeUsuarios />
+      <CreacionMasivaDeEventos />
       <GeneradorTickets />
     </div>
   );
