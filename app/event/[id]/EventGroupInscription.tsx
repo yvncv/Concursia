@@ -7,6 +7,8 @@ import { CustomEvent, LevelData } from "@/app/types/eventType";
 import useAcademy from "@/app/hooks/useAcademy";
 import useCreateGroupTicket from "@/app/hooks/tickets/useCreateGroupTicket";
 import { useGroupInscriptionsValidation } from "@/app/hooks/tickets/useAcademyAffiliationValidation";
+import { determineCategory } from "@/app/utils/category/determineCategory";
+import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
 
 import InscriptionForm from "./inscription-group/InscriptionForm";
 import InscriptionList from "./inscription-group/components/InscriptionList";
@@ -22,7 +24,7 @@ interface Participante {
   telefono: string;
   academyId: string;
   academyName: string;
-  originalCategory: string;
+  birthDate: Date;
 }
 
 interface Inscripcion {
@@ -41,6 +43,22 @@ interface EventGroupInscriptionProps {
 }
 
 const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, user }) => {
+  // Hook para categorías globales
+  const { categorias } = useGlobalCategories();
+
+  // Función para obtener categoría de un participante
+  const getParticipantCategory = (participante: Participante): string => {
+    if (!participante.birthDate || categorias.length === 0) {
+      return "Sin categoría";
+    }
+    
+    return determineCategory(
+      participante.birthDate,
+      new Date(),
+      categorias
+    ) || "Categoría no encontrada";
+  };
+
   // Verificación inicial de la estructura del evento
   useEffect(() => {
     if (!event.dance?.levels || Object.keys(event.dance.levels).length === 0) {
@@ -370,6 +388,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               academies={academies}
               inscripcionesExistentes={inscripciones}
               loadingAcademies={loadingAcademies}
+              getParticipantCategory={getParticipantCategory}
             />
 
             {/* Lista de inscripciones */}
@@ -381,6 +400,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               montoTotal={montoTotal}
               event={adaptEventForComponents(event)}
               groupValidation={groupValidation}
+              getParticipantCategory={getParticipantCategory}
             />
           </div>
         ) : (
@@ -395,6 +415,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
             errorAcademy={errorAcademy}
             openModal={handleOpenModal}
             onNewInscription={nuevaInscripcion}
+            getParticipantCategory={getParticipantCategory}
           />
         )}
         

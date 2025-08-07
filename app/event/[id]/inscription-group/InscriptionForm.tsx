@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { UserPlus, Award, CheckCircle } from "lucide-react";
 import toast from 'react-hot-toast';
+import { Timestamp } from "firebase/firestore";
 import { User } from "@/app/types/userType";
 import { Participante } from "@/app/hooks/useParticipantSearch";
 import { LevelData } from "@/app/types/eventType";
@@ -39,7 +40,7 @@ interface Inscripcion {
     telefono: string;
     academyId: string;
     academyName: string;
-    originalCategory: string;
+    birthDate: Date;
   };
   pareja: {
     id: string;
@@ -50,7 +51,7 @@ interface Inscripcion {
     telefono: string;
     academyId: string;
     academyName: string;
-    originalCategory: string;
+    birthDate: Date;
   } | null;
   precio: number;
 }
@@ -64,6 +65,7 @@ interface InscriptionFormProps {
   academies: Academy[];
   inscripcionesExistentes?: Inscripcion[];
   loadingAcademies?: boolean;
+  getParticipantCategory: (participante: { birthDate: Date }) => string;
 }
 
 const InscriptionForm: React.FC<InscriptionFormProps> = ({
@@ -74,7 +76,8 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   agregarInscripcion,
   academies,
   inscripcionesExistentes = [],
-  loadingAcademies = false
+  loadingAcademies = false,
+  getParticipantCategory
 }) => {
   // Estados para participantes encontrados
   const [participanteEncontrado, setParticipanteEncontrado] = useState<Participante | null>(null);
@@ -96,12 +99,31 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   // Opciones de modalidades
   const modalidades: string[] = Object.keys(event.settings.levels || {});
 
+  // Helper para convertir cualquier tipo de fecha a Date
+  const convertToDate = useCallback((dateValue: any): Date => {
+    if (!dateValue) return new Date();
+    
+    if (dateValue instanceof Timestamp) {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+    
+    // Si es string, número o cualquier otra cosa
+    return new Date(dateValue);
+  }, []);
   // Obtener la edad para mostrar en la UI
   const getEdadDisplay = useCallback((birthDate: any): string | number => {
     if (!birthDate) return "N/A";
     
     const hoy = new Date();
-    const fechaNac = birthDate.toDate();
+    const fechaNac = convertToDate(birthDate);
     let edad = hoy.getFullYear() - fechaNac.getFullYear();
     const m = hoy.getMonth() - fechaNac.getMonth();
 
@@ -110,7 +132,15 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     }
 
     return edad;
-  }, []);
+  }, [convertToDate]);
+
+  // Obtener categoría de un participante
+  const getParticipantCategoryFromBirthDate = useCallback((birthDate: any): string => {
+    if (!birthDate) return "Sin categoría";
+    
+    const fechaNac = convertToDate(birthDate);
+    return getParticipantCategory({ birthDate: fechaNac });
+  }, [getParticipantCategory, convertToDate]);
 
   // Manejar cambio de modalidad
   const handleModalidadChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>): void => {
@@ -180,7 +210,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     // Determinar la categoría final
     const categoriaFinal = pullCoupleData.aplicar 
       ? pullCoupleData.categoriaFinal 
-      : participanteEncontrado.category;
+      : getParticipantCategoryFromBirthDate(participanteEncontrado.birthDate);
 
     // Crear objeto de inscripción
     const nuevaInscripcion: Inscripcion = {
@@ -197,7 +227,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
         telefono: participanteEncontrado.phoneNumber?.[0] || "No disponible",
         academyId: academiaParticipante,
         academyName: academies.find(a => a.id === academiaParticipante)?.name || "Academia no especificada",
-        originalCategory: participanteEncontrado.category
+        birthDate: convertToDate(participanteEncontrado.birthDate)
       },
       pareja: parejaEncontrada ? {
         id: parejaEncontrada.id,
@@ -208,7 +238,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
         telefono: parejaEncontrada.phoneNumber?.[0] || "No disponible",
         academyId: academiaPareja,
         academyName: academies.find(a => a.id === academiaPareja)?.name || "Academia no especificada",
-        originalCategory: parejaEncontrada.category
+        birthDate: convertToDate(parejaEncontrada.birthDate)
       } : null,
       precio: precioBase
     };
@@ -229,6 +259,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     modalidad,
     pullCoupleData,
     getEdadDisplay,
+    getParticipantCategoryFromBirthDate,
     academies,
     agregarInscripcion,
     resetFormulario
@@ -301,6 +332,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
           onCoupleFound={handleCoupleFound}
           onValidationChange={handleValidationChange}
           onPullCoupleChange={handlePullCoupleChange}
+          getParticipantCategory={getParticipantCategory}
         />
 
         {/* Preview de la inscripción */}
@@ -322,7 +354,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
                   <div className="flex justify-between">
                     <span className="text-gray-600">Categoría:</span>
                     <span className="font-medium">
-                      {pullCoupleData.aplicar ? pullCoupleData.categoriaFinal : participanteEncontrado.category}
+                      {pullCoupleData.aplicar ? pullCoupleData.categoriaFinal : getParticipantCategoryFromBirthDate(participanteEncontrado.birthDate)}
                       {pullCoupleData.aplicar && <span className="text-yellow-600 ml-1">(JP)</span>}
                     </span>
                   </div>

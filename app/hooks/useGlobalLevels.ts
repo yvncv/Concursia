@@ -61,8 +61,6 @@ export function useGlobalLevels(): LevelsHookResult {
               setModalityConfigs({}); // No hay configuraciones adicionales
               
             } else if (typeof firstValue === 'object' && firstValue !== null && 'name' in firstValue) {
-              // 🆕 Formato enriquecido: { "0": { name: "Seriado", couple: false, ... }, ... }
-              console.log("✅ Detectado formato enriquecido de modalidades");
               
               const modalityNames: ModalityLevel[] = [];
               const configsMap: { [key: string]: ModalityConfig } = {};

@@ -23,10 +23,13 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
   } = useGlobalLevels();
 
   const {
-    categorias: availableCategories,
+    categorias: availableCategoriesObjects,
     loading: categoriesLoading,
     error: categoriesError
   } = useGlobalCategories();
+
+  // Extraer solo los nombres de las categorías
+  const availableCategories = availableCategoriesObjects?.map(cat => cat.name) || [];
 
   const isLoading = levelsLoading || categoriesLoading;
   const hasError = levelsError || categoriesError;
@@ -345,11 +348,11 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
                     </h4>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {availableCategories.map((category) => {
-                        const isChecked = data.levels[modalityName]?.categories?.includes(category) || false;
+                      {availableCategories.map((categoryName) => {
+                        const isChecked = data.levels[modalityName]?.categories?.includes(categoryName) || false;
                         return (
                           <label
-                            key={`${modalityName}-${category}`}
+                            key={`${modalityName}-${categoryName}`}
                             className={`flex items-center p-2 rounded border cursor-pointer transition-colors ${isChecked
                                 ? 'bg-blue-50 border-blue-300 text-blue-700'
                                 : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
@@ -358,11 +361,11 @@ export default function DanceInfo({ data, updateData, isOnlyRead }: DanceInfoPro
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={() => handleCategoryChange(modalityName, category)}
+                              onChange={() => handleCategoryChange(modalityName, categoryName)}
                               disabled={isOnlyRead}
                               className="sr-only"
                             />
-                            <span className="text-sm font-medium">{category}</span>
+                            <span className="text-sm font-medium">{categoryName}</span>
                           </label>
                         );
                       })}

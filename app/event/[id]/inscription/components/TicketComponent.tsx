@@ -2,7 +2,8 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { decryptValue } from '@/app/utils/security/securityHelpers'
-const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal }) => {
+
+const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal, getUserCategory }) => {
   return (
     <div className="w-full flex flex-col items-center justify-start pt-6 sm:pt-10 pb-8 min-h-screen bg-gray-50">
       {/* Encabezado de confirmación */}
@@ -141,7 +142,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   <>
                     <p><span className="font-medium">Nombre:</span> {user?.firstName} {user?.lastName}</p>
                     <p><span className="font-medium">DNI:</span> {decryptValue(user?.dni)}</p>
-                    <p><span className="font-medium">Categoría:</span> {user?.marinera.participant.category}</p>
+                    <p><span className="font-medium">Categoría:</span> {getUserCategory(user)}</p>
                     {user?.level && <p><span className="font-medium">Nivel:</span> {user?.level}</p>}
                   </>
                 )}

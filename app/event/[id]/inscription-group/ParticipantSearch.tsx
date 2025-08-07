@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { getFirestore, doc, getDoc, DocumentData } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 import { Search, AlertCircle, Users, CheckCircle } from "lucide-react";
 import toast from 'react-hot-toast';
 import { User } from "@/app/types/userType";
@@ -30,7 +31,7 @@ interface Inscripcion {
     telefono: string;
     academyId: string;
     academyName: string;
-    originalCategory: string;
+    birthDate: Date;
   };
   pareja: {
     id: string;
@@ -41,7 +42,7 @@ interface Inscripcion {
     telefono: string;
     academyId: string;
     academyName: string;
-    originalCategory: string;
+    birthDate: Date;
   } | null;
   precio: number;
 }
@@ -59,6 +60,7 @@ interface ParticipantSearchProps {
   onCoupleFound: (pareja: Participante, academia: string) => void;
   onValidationChange: (isValid: boolean) => void;
   onPullCoupleChange: (data: { aplicar: boolean; categoriaFinal: string }) => void;
+  getParticipantCategory: (participante: { birthDate: Date }) => string;
 }
 
 const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
@@ -73,7 +75,8 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   onParticipantFound,
   onCoupleFound,
   onValidationChange,
-  onPullCoupleChange
+  onPullCoupleChange,
+  getParticipantCategory
 }) => {
   // Hooks de búsqueda de participantes
   const {
@@ -101,6 +104,34 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   const [academiaParejaNombre, setAcademiaParejaNombre] = useState<string>("Libre");
   const [eventSettings, setEventSettings] = useState<DocumentData | null>(null);
   const [loadingSettings, setLoadingSettings] = useState<boolean>(true);
+
+  // Helper para convertir cualquier tipo de fecha a Date
+  const convertToDate = useCallback((dateValue: any): Date => {
+    if (!dateValue) return new Date();
+    
+    if (dateValue instanceof Timestamp) {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+    
+    // Si es string, número o cualquier otra cosa
+    return new Date(dateValue);
+  }, []);
+
+  // Función para obtener categoría de un participante
+  const getParticipantCategoryFromBirthDate = useCallback((birthDate: any): string => {
+    if (!birthDate) return "Sin categoría";
+    
+    const fechaNac = convertToDate(birthDate);
+    return getParticipantCategory({ birthDate: fechaNac });
+  }, [getParticipantCategory, convertToDate]);
 
   // Handlers para selección de academias
   const handleParticipantAcademySelect = useCallback((academyId: string, academyName: string) => {
@@ -169,7 +200,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     if (!birthDate) return "N/A";
     
     const hoy = new Date();
-    const fechaNac = birthDate.toDate();
+    const fechaNac = convertToDate(birthDate);
     let edad = hoy.getFullYear() - fechaNac.getFullYear();
     const m = hoy.getMonth() - fechaNac.getMonth();
 
@@ -178,7 +209,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     }
 
     return edad;
-  }, []);
+  }, [convertToDate]);
 
   // Verificar si la categoría está disponible en la modalidad
   const esCategoriaDisponible = useCallback((categoria: string): boolean => {
@@ -214,8 +245,10 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   const validarCategoriaParticipante = useCallback((): string | null => {
     if (!participanteInfo) return null;
     
-    if (!esCategoriaDisponible(participanteInfo.category)) {
-      return `La categoría del participante (${participanteInfo.category}) no está disponible en esta modalidad`;
+    const categoriaParticipante = getParticipantCategoryFromBirthDate(participanteInfo.birthDate);
+    
+    if (!esCategoriaDisponible(categoriaParticipante)) {
+      return `La categoría del participante (${categoriaParticipante}) no está disponible en esta modalidad`;
     }
     
     if (existeInscripcionDuplicada()) {
@@ -223,7 +256,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     }
 
     return null;
-  }, [participanteInfo, esCategoriaDisponible, existeInscripcionDuplicada, modalidad]);
+  }, [participanteInfo, esCategoriaDisponible, existeInscripcionDuplicada, modalidad, getParticipantCategoryFromBirthDate]);
 
   // Validar pareja
   const validarPareja = useCallback((): string | null => {
@@ -233,8 +266,10 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
       return "La pareja debe ser de género opuesto (hombre-mujer)";
     }
     
-    if (!esCategoriaDisponible(parejaInfo.category)) {
-      return `La categoría de la pareja (${parejaInfo.category}) no está disponible en esta modalidad`;
+    const categoriaPareja = getParticipantCategoryFromBirthDate(parejaInfo.birthDate);
+    
+    if (!esCategoriaDisponible(categoriaPareja)) {
+      return `La categoría de la pareja (${categoriaPareja}) no está disponible en esta modalidad`;
     }
     
     if (!pullCoupleAllowed && diferenciaValor > 0) {
@@ -250,7 +285,8 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     esCategoriaDisponible,
     pullCoupleAllowed, 
     diferenciaValor, 
-    pullCoupleMessage
+    pullCoupleMessage,
+    getParticipantCategoryFromBirthDate
   ]);
 
   // Determinar si el formulario es válido
@@ -335,10 +371,10 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     } else {
       onPullCoupleChange({
         aplicar: false,
-        categoriaFinal: participanteInfo?.category || ""
+        categoriaFinal: participanteInfo ? getParticipantCategoryFromBirthDate(participanteInfo.birthDate) : ""
       });
     }
-  }, [pullCoupleAllowed, diferenciaValor, categoriaFinal, participanteInfo, onPullCoupleChange]);
+  }, [pullCoupleAllowed, diferenciaValor, categoriaFinal, participanteInfo, onPullCoupleChange, getParticipantCategoryFromBirthDate]);
 
   // Notificar cambios de validación al componente padre
   useEffect(() => {
@@ -528,6 +564,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
             calcularEdad={getEdadDisplay}
             type="participante"
             academyName={academiaParticipanteNombre}
+            getParticipantCategory={getParticipantCategory}
           />
         )}
 
@@ -537,6 +574,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
             calcularEdad={getEdadDisplay}
             type="pareja"
             academyName={academiaParejaNombre}
+            getParticipantCategory={getParticipantCategory}
           />
         )}
       </div>

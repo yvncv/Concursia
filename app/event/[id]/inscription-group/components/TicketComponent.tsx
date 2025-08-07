@@ -42,7 +42,7 @@ interface Participante {
   telefono: string;
   academyId: string;
   academyName: string;
-  originalCategory: string;
+  birthDate: Date;
 }
 
 interface Inscripcion {
@@ -65,6 +65,7 @@ interface TicketComponentProps {
   errorAcademy: string | null;
   openModal: () => void;
   onNewInscription?: () => void;
+  getParticipantCategory: (participante: { birthDate: Date }) => string;
 }
 
 const TicketComponent: React.FC<TicketComponentProps> = ({
@@ -76,7 +77,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
   loadingAcademy,
   errorAcademy,
   openModal,
-  onNewInscription
+  onNewInscription,
+  getParticipantCategory
 }) => {
   
   const totalAmount = inscripciones.reduce((sum, insc) => sum + insc.precio, 0);
@@ -203,9 +205,15 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                     <h4 className="font-medium text-gray-900">{inscripcion.modalidad}</h4>
                     <p className="text-sm text-gray-600">Categoría: {inscripcion.category}</p>
                     {inscripcion.isPullCouple && (
-                      <span className="inline-block text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full mt-1">
-                        Jalar Pareja aplicado
-                      </span>
+                      <div className="mt-1">
+                        <span className="inline-block text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                          Jalar Pareja aplicado
+                        </span>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Categorías originales: {getParticipantCategory({ birthDate: inscripcion.participante.birthDate })} / 
+                          {inscripcion.pareja && getParticipantCategory({ birthDate: inscripcion.pareja.birthDate })}
+                        </p>
+                      </div>
                     )}
                   </div>
                   <div className="text-right">
@@ -218,14 +226,20 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                   <div>
                     <p className="text-sm font-medium text-gray-700">Participante:</p>
                     <p className="text-gray-900">{inscripcion.participante.nombre}</p>
-                    <p className="text-xs text-gray-500">{inscripcion.participante.academyName}</p>
+                    <p className="text-xs text-gray-500">
+                      {inscripcion.participante.academyName} • 
+                      Cat: {getParticipantCategory({ birthDate: inscripcion.participante.birthDate })}
+                    </p>
                   </div>
                   
                   {inscripcion.pareja && (
                     <div>
                       <p className="text-sm font-medium text-gray-700">Pareja:</p>
                       <p className="text-gray-900">{inscripcion.pareja.nombre}</p>
-                      <p className="text-xs text-gray-500">{inscripcion.pareja.academyName}</p>
+                      <p className="text-xs text-gray-500">
+                        {inscripcion.pareja.academyName} • 
+                        Cat: {getParticipantCategory({ birthDate: inscripcion.pareja.birthDate })}
+                      </p>
                     </div>
                   )}
                 </div>

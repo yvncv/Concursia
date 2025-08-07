@@ -48,10 +48,13 @@ export const useEventCreation = (): EventCreationHandler => {
   } = useGlobalLevels();
 
   const {
-    categorias: availableCategories,
+    categorias: availableCategoriesObjects,
     loading: categoriesLoading,
     error: categoriesError
   } = useGlobalCategories();
+
+  // Extraer solo los nombres de las categorías para validaciones
+  const availableCategories: CategoryLevel[] = availableCategoriesObjects?.map(cat => cat.name) || [];
 
   const globalConfigLoading = levelsLoading || categoriesLoading;
   const globalConfigError = levelsError?.message || categoriesError?.message || null;
@@ -117,11 +120,11 @@ export const useEventCreation = (): EventCreationHandler => {
 
       modalityPhases.forEach(phase => {
         genders.forEach(gender => {
-          categories.forEach(category => {
+          categories.forEach(categoryName => {
             scheduleItems.push({
               id: uuidv4(),
               levelId: modalityName,
-              category: category,
+              category: categoryName, // Es string según tu tipo ScheduleItem
               gender: gender,
               phase: phase,
               order: orderCounter++,
@@ -194,10 +197,10 @@ export const useEventCreation = (): EventCreationHandler => {
         return `Modalidad "${levelId}" no existe en la configuración de Firebase`;
       }
 
-      // Validar categorías existen en Firebase
+      // Validar categorías existen
       if (levelData.categories && levelData.categories.length > 0) {
         const invalidCategories = levelData.categories
-          .filter(category => !availableCategories.includes(category as CategoryLevel));
+          .filter((categoryName: string) => !availableCategories.includes(categoryName as CategoryLevel));
 
         if (invalidCategories.length > 0) {
           return `Categorías no válidas en ${levelId}: ${invalidCategories.join(', ')}`;

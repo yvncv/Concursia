@@ -127,13 +127,11 @@ const createLiveCompetitionDocuments = async (
           // Crear ID único para el documento
           const docId = `${levelId}_${category}_${gender}`;
           
-          // Obtener configuración de la modalidad desde el evento
-          const levelConfig = event?.dance?.levels?.[levelId]?.config;
-          
-          // Calcular total de tandas basado en la configuración
-          const blocks = levelConfig?.blocks || 1;
-          const tracksPerBlock = levelConfig?.tracksPerBlock || 1;
-          const totalTandas = Math.ceil(participants.length / (blocks * tracksPerBlock));
+          // Usar valores por defecto null para configuración posterior
+          const blocks = null;
+          const tracksPerBlock = null;
+          const judgesPerBlock = null;
+          const totalTandas = 1; // Valor mínimo para evitar errores
           
           // Determinar fase inicial basada en el tipo de modalidad
           const currentPhase: CompetitionPhase = levelId.toLowerCase().includes('seriado') 
@@ -150,6 +148,7 @@ const createLiveCompetitionDocuments = async (
             totalParticipants: participants.length,
             blocks,
             tracksPerBlock,
+            judgesPerBlock,
             totalTandas,
             currentTandaIndex: 0,
             
@@ -236,13 +235,10 @@ export const startContestWithEventData = async (eventId: string): Promise<void> 
     await updateDoc(eventRef, {
       status: 'live',
       realStartTime: serverTimestamp(),
-      currentLiveCompetitionId: createdCompetitionIds[0], // Primera competencia como activa
-      completedCompetitions: [],                          // Array vacío al inicio
+      currentLiveCompetitionId: null,
+      completedCompetitions: [],
       updatedAt: serverTimestamp()
     });
-
-    console.log(`✅ Evento iniciado con ${createdCompetitionIds.length} competencias creadas`);
-    console.log('🎯 Primera competencia activa:', createdCompetitionIds[0]);
 
   } catch (error) {
     // Si hubo error, intentar revertir cambios

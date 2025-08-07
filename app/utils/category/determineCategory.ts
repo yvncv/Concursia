@@ -1,4 +1,4 @@
-// utils/determineCategory.ts
+// utils/category/determineCategory.ts
 import { AgeCategory, CategoryLevel } from "@/app/types/categoriesType";
 
 export const determineCategory = (

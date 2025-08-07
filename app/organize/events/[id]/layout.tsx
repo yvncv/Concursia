@@ -77,8 +77,8 @@ export default function EventLayout() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
-        <main className="flex-1 overflow-x-auto transition-all duration-300">
-          <div className={`${isCollapsed ? 'w-[calc(100vw-4rem)]' : 'w-[calc(100vw-16rem)]'} p-6 min-w-[1024px]`}>
+        <main className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto p-6">
             <ActiveComponent event={currentEvent} onBack={onBack} />
           </div>
         </main>

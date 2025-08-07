@@ -151,20 +151,20 @@ export const TandasConfirmationModal: React.FC<TandasConfirmationModalProps> = (
       console.log('Tandas confirmadas, enviando emails...');
       
       // Luego enviar las notificaciones por email
-      const result = await sendTandaNotifications(
-        tandas,
-        allParticipants,
-        allUsers,
-        level,
-        category,
-        gender,
-        competitionName
-      );
+      // const result = await sendTandaNotifications(
+      //   tandas,
+      //   allParticipants,
+      //   allUsers,
+      //   level,
+      //   category,
+      //   gender,
+      //   competitionName
+      // );
       
-      console.log('Resultado del envío:', result);
+      // console.log('Resultado del envío:', result);
       
-      setEmailResults(result);
-      setShowEmailResults(true);
+      // setEmailResults(result);
+      // setShowEmailResults(true);
       
     } catch (error) {
       console.error('Error in confirmation process:', error);

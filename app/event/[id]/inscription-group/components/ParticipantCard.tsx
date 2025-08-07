@@ -11,7 +11,6 @@ interface Participant {
   dni: string;
   birthDate: Timestamp;
   gender: string;
-  category: string;
   phoneNumber?: string[];
   [key: string]: any;
 }
@@ -23,6 +22,7 @@ interface ParticipantCardProps {
   academyName?: string;
   showDni?: boolean;
   compact?: boolean;
+  getParticipantCategory: (participante: { birthDate: Date }) => string;
 }
 
 const ParticipantCard: React.FC<ParticipantCardProps> = ({ 
@@ -31,9 +31,34 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   type, 
   academyName,
   showDni = false,
-  compact = false
+  compact = false,
+  getParticipantCategory
 }) => {
   if (!participant) return null;
+
+  // Helper para convertir Timestamp a Date
+  const convertToDate = (dateValue: any): Date => {
+    if (!dateValue) return new Date();
+    
+    if (dateValue instanceof Timestamp) {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+      return dateValue.toDate();
+    }
+    
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+    
+    return new Date(dateValue);
+  };
+
+  // Obtener categoría dinámica
+  const participantCategory = getParticipantCategory({ 
+    birthDate: convertToDate(participant.birthDate) 
+  });
 
   const isParticipante = type === "participante";
   const cardTitle = isParticipante ? "👤 Participante" : "👥 Pareja";
@@ -74,7 +99,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
             {participant.firstName} {participant.lastName}
           </p>
           <p className="text-gray-600">
-            {participant.category} • {calcularEdad(participant.birthDate)} años
+            {participantCategory} • {calcularEdad(participant.birthDate)} años
           </p>
           {academyName && (
             <p className={`${colors.accent} font-medium`}>{academyName}</p>
@@ -113,7 +138,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               <Award className="w-3 h-3 text-gray-600 mr-1" />
               <span className="font-medium text-gray-700 text-xs">Categoría:</span>
             </div>
-            <p className="text-gray-900 font-medium">{participant.category}</p>
+            <p className="text-gray-900 font-medium">{participantCategory}</p>
           </div>
           
           <div className="bg-white rounded-lg p-2 border">

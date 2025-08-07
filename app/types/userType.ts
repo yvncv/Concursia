@@ -17,7 +17,7 @@ export type User = FirebaseUser & {
   marinera?: {
     participant?: { // campo con informacion del usuario si es participante
       level: string;
-      category: string;
+      category?: string;
       participatedEvents: string[]; // eventos en los que participó
     };
     academyId?: string; // id de la academia a la que pertenece

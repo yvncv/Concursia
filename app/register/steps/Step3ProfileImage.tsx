@@ -28,7 +28,6 @@ interface Step3Props {
     birthDate: string;
     gender: string;
     phoneNumber: string;
-    category: string;
     location: User['location'];
   };
   onComplete: (data: { 

@@ -1,39 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Play, Eye, Pause, SkipForward, Clock, Users, Calendar, FileText, BarChart3, Settings, Printer, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Play, Eye, Calendar, Users, Clock, Trophy, Settings, CheckCircle2, Loader2 } from 'lucide-react';
 import { CustomEvent } from '@/app/types/eventType';
 import useEventParticipants from '@/app/hooks/useEventParticipants';
-import useUsers from '@/app/hooks/useUsers'; // ← AGREGADO
+import useUsers from '@/app/hooks/useUsers';
+import { useCompetitionManager } from '@/app/hooks/events/useCompetitionManager';
 import { TandasConfirmationModal } from './modals/TandasConfirmationModal';
+import { CompetitionConfigModal } from './modals/CompetitionConfigModal';
 import { TandaExecutionView } from './TandaExecutionView';
-import { generateAndPrepareTandas, confirmAndSaveTandas, checkIfTandasExist } from '@/app/services/generateTandasService';
 import { Tanda } from '@/app/types/tandaType';
 import { Participant } from '@/app/types/participantType';
-import { db } from '@/app/firebase/config';
-import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 interface LiveContestRunningProps {
     event: CustomEvent;
     onBack: () => void;
+    onBackToSchedule?: () => void;
 }
 
-// Estados de la aplicación
 type ViewState = 'schedule' | 'execution';
 
-export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, onBack }) => {
-    const [currentTime, setCurrentTime] = useState(0);
-    const [isRunning, setIsRunning] = useState(true);
-    const [currentItemIndex, setCurrentItemIndex] = useState(0);
-
-    // Estados para el modal de tandas
-    const [showTandasModal, setShowTandasModal] = useState(false);
-    const [generatedTandas, setGeneratedTandas] = useState<Tanda[]>([]);
-    const [selectedItem, setSelectedItem] = useState<any>(null);
-    const [isGeneratingTandas, setIsGeneratingTandas] = useState(false);
-    const [isConfirmingTandas, setIsConfirmingTandas] = useState(false);
-    const [existingTandasIds, setExistingTandasIds] = useState<string[]>([]);
-
-    // Estados para la vista de ejecución
+export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, onBack, onBackToSchedule }) => {
     const [viewState, setViewState] = useState<ViewState>('schedule');
+    const [currentTime, setCurrentTime] = useState(0);
     const [currentTandaIndex, setCurrentTandaIndex] = useState(0);
     const [executionData, setExecutionData] = useState<{
         level: string;
@@ -43,22 +31,70 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         participants: Participant[];
     } | null>(null);
 
+    // Calcular tiempo de inicio del evento
+    const [eventStartTime] = useState(() => {
+        if (event.startDate) {
+            try {
+                if (event.startDate instanceof Timestamp) {
+                    return event.startDate.toDate().getTime();
+                }
+                if (typeof event.startDate === 'object' && event.startDate !== null && 'toDate' in event.startDate) {
+                    return (event.startDate as any).toDate().getTime();
+                }
+                const dateValue = event.startDate as any;
+                return new Date(dateValue).getTime();
+            } catch (error) {
+                console.warn('Error parsing event.startDate:', error);
+                return Date.now();
+            }
+        }
+        return Date.now();
+    });
+
+    // Hook de participantes
     const {
         totalParticipants,
-        participantStats,
         getParticipantCount,
         getParticipantCountByGender,
         getParticipantsByGender,
         getParticipantsByCategory,
-        getGendersInCategory,
         loadingParticipants,
         error
     } = useEventParticipants(event.id);
 
-    // ← AGREGADO: Hook para cargar usuarios de participantes
+    // Datos del cronograma
+    const scheduleItems = event.settings?.schedule?.items || [];
+
+    // Custom hook con toda la lógica de competencias
+    const {
+        competitionStatuses,
+        showConfigModal,
+        showTandasModal,
+        selectedItem,
+        generatedTandas,
+        isConfiguring,
+        isGeneratingTandas,
+        isConfirmingTandas,
+        handleConfigClick,
+        handleConfirmConfig,
+        handleCloseConfigModal,
+        handlePlayClick,
+        handleConfirmTandas,
+        handleCloseModal,
+        handleCompetitionFinished,
+        getActionButton,
+        getBadgeInfo
+    } = useCompetitionManager({
+        event,
+        scheduleItems,
+        getParticipantsByGender,
+        getParticipantsByCategory
+    });
+
+    // IDs de usuarios para cargar datos
     const participantUserIds = useMemo(() => {
         if (!selectedItem) return [];
-        
+
         const participants = selectedItem.gender
             ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
             : getParticipantsByCategory(selectedItem.levelId, selectedItem.category);
@@ -74,36 +110,28 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
 
     const { users: allUsers, loadingUsers } = useUsers(participantUserIds);
 
-    // Obtener datos del evento
-    const scheduleItems = event.settings?.schedule?.items || [];
+    // Cálculos para estadísticas
+    const totalItems = scheduleItems.length;
+    const completedCount = Object.values(competitionStatuses).filter(status => status.currentStatus === 'completed').length;
+    const totalEstimatedTime = scheduleItems.reduce((total, item) => total + (item.estimatedTime || 0), 0);
+    const completedTime = scheduleItems
+        .filter(item => competitionStatuses[item.id]?.currentStatus === 'completed')
+        .reduce((total, item) => total + (item.estimatedTime || 0), 0);
 
+    // Temporizador del evento
     useEffect(() => {
-        const checkAll = async () => {
-            const ids: string[] = [];
-
-            for (const item of scheduleItems) {
-                const id = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
-                const exist = await checkIfTandasExist(event.id, id, item.phase || 'Final');
-                if (exist) ids.push(item.id);
-            }
-
-            setExistingTandasIds(ids);
+        const updateTime = () => {
+            const now = Date.now();
+            const elapsed = Math.floor((now - eventStartTime) / 1000);
+            setCurrentTime(elapsed);
         };
 
-        checkAll();
-    }, [scheduleItems]);
-
-    // Temporizador
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isRunning) {
-            interval = setInterval(() => {
-                setCurrentTime(prevTime => prevTime + 1);
-            }, 1000);
-        }
+        updateTime();
+        const interval = setInterval(updateTime, 1000);
         return () => clearInterval(interval);
-    }, [isRunning]);
+    }, [eventStartTime]);
 
+    // Funciones de formato
     const formatTime = (seconds: number): string => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
@@ -111,23 +139,15 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handlePlayPause = () => {
-        setIsRunning(!isRunning);
-    };
-
-    const handleNext = () => {
-        if (currentItemIndex < scheduleItems.length - 1) {
-            setCurrentItemIndex(currentItemIndex + 1);
+    const formatDuration = (minutes: number): string => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        if (hours > 0) {
+            return `${hours}h ${mins}m`;
         }
+        return `${mins}m`;
     };
 
-    const handlePrevious = () => {
-        if (currentItemIndex > 0) {
-            setCurrentItemIndex(currentItemIndex - 1);
-        }
-    };
-
-    // Función para obtener participantes del item actual
     const getCurrentParticipants = (item: any) => {
         if (item.gender) {
             return getParticipantCountByGender(item.levelId, item.category, item.gender);
@@ -136,137 +156,59 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         }
     };
 
-    // Función para manejar el click en el botón Play
-    const handlePlayClick = async (item: any, index: number) => {
-        try {
-            setIsGeneratingTandas(true);
-            setSelectedItem(item);
-
-            const participants = item.gender
-                ? getParticipantsByGender(item.levelId, item.category, item.gender)
-                : getParticipantsByCategory(item.levelId, item.category);
-
-            if (participants.length === 0) {
-                alert('No hay participantes registrados para esta categoría');
-                return;
-            }
-
-            const liveCompetitionId = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
-            const phase = item.phase || 'Final';
-
-            // ⚠️ Si ya existen tandas, simplemente las cargamos desde Firestore
-            if (existingTandasIds.includes(item.id)) {
-                const snapshot = await getDocs(
-                    collection(db, `eventos/${event.id}/liveCompetition/${liveCompetitionId}/tandas`)
-                );
-
-                const tandas: Tanda[] = snapshot.docs.map(doc => ({
-                    ...doc.data(),
-                    id: doc.id
-                })) as Tanda[];
-
-                setExecutionData({
-                    level: item.levelId,
-                    category: item.category,
-                    gender: item.gender || 'Mixto',
-                    tandas,
-                    participants,
-                });
-
-                setCurrentTandaIndex(0);
-                setViewState('execution');
-                return;
-            }
-
-            // 🧱 Asegurar que el documento LiveCompetition existe
-            const liveCompDocRef = doc(db, 'eventos', event.id, 'liveCompetition', liveCompetitionId);
-            const docSnap = await getDoc(liveCompDocRef);
-            if (!docSnap.exists()) {
-                await setDoc(liveCompDocRef, {
-                    eventId: event.id,
-                    level: item.levelId,
-                    category: item.category,
-                    gender: item.gender || 'Mixto',
-                    phase,
-                    createdAt: serverTimestamp(),
-                    status: 'pending',
-                });
-            }
-
-            // 🌀 Generar nuevas tandas
-            const tandas = await generateAndPrepareTandas(
-                event.id,
-                liveCompetitionId,
-                phase,
-                participants
-            );
-
-            setGeneratedTandas(tandas);
-            setShowTandasModal(true);
-
-        } catch (error) {
-            console.error('Error generando o cargando tandas:', error);
-            alert(`Error al procesar tandas: ${error.message || error}`);
-        } finally {
-            setIsGeneratingTandas(false);
+    // Función para renderizar el icono correcto
+    const renderActionIcon = (iconType: string) => {
+        switch (iconType) {
+            case 'settings':
+                return <Settings className="h-4 w-4" />;
+            case 'play':
+                return <Play className="h-4 w-4" />;
+            case 'eye':
+                return <Eye className="h-4 w-4" />;
+            case 'loader':
+                return <Loader2 className="h-4 w-4 animate-spin" />;
+            default:
+                return <Settings className="h-4 w-4" />;
         }
     };
 
-    // Función para confirmar las tandas
-    const handleConfirmTandas = async () => {
-        if (!selectedItem || generatedTandas.length === 0) return;
+    // Handlers para ejecución de tandas
+    const handlePlayClickWithExecution = async (item: any, index: number) => {
+        const result = await handlePlayClick(item, index);
+        if (result) {
+            setExecutionData({
+                level: item.levelId,
+                category: item.category,
+                gender: item.gender || 'Mixto',
+                tandas: result.tandas,
+                participants: result.participants,
+            });
+            setCurrentTandaIndex(0);
+            setViewState('execution');
+        }
+    };
 
-        try {
-            setIsConfirmingTandas(true);
-
-            const liveCompetitionId = `${selectedItem.levelId}_${selectedItem.category}_${selectedItem.gender || 'Mixto'}`;
-            const phase = selectedItem.phase || 'Final';
-
-            // Guardar tandas en Firestore
-            await confirmAndSaveTandas(
-                event.id,
-                liveCompetitionId,
-                phase,
-                generatedTandas
-            );
-
-            // Obtener participantes para la ejecución
-            const participants = selectedItem.gender
-                ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
-                : getParticipantsByCategory(selectedItem.levelId, selectedItem.category);
-
-            // Preparar datos para la vista de ejecución
+    const handleConfirmTandasWithExecution = async () => {
+        const result = await handleConfirmTandas();
+        if (result) {
             setExecutionData({
                 level: selectedItem.levelId,
                 category: selectedItem.category,
                 gender: selectedItem.gender || 'Mixto',
-                tandas: generatedTandas,
-                participants
+                tandas: result.tandas,
+                participants: result.participants
             });
-
-            // Cerrar modal y cambiar a vista de ejecución
-            setShowTandasModal(false);
-            setGeneratedTandas([]);
-            setSelectedItem(null);
             setCurrentTandaIndex(0);
             setViewState('execution');
-
-        } catch (error) {
-            console.error('Error confirmando tandas:', error);
-            alert(`Error al confirmar tandas: ${error.message || error}`);
-        } finally {
-            setIsConfirmingTandas(false);
         }
     };
 
-    // Función para volver al cronograma desde la ejecución
     const handleBackToSchedule = () => {
         setViewState('schedule');
         setExecutionData(null);
         setCurrentTandaIndex(0);
     };
 
-    // Funciones para navegar entre tandas
     const handleNextTanda = () => {
         if (executionData && currentTandaIndex < executionData.tandas.length - 1) {
             setCurrentTandaIndex(currentTandaIndex + 1);
@@ -279,7 +221,131 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         }
     };
 
-    // Si estamos en vista de ejecución, mostrar el componente correspondiente
+    // Componente para tarjetas de estadísticas
+    const renderStatsCard = (icon: React.ReactNode, title: string, value: string) => (
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex-1 min-w-[140px]">
+            <div className="flex items-center space-x-3">
+                {icon}
+                <div className="min-w-0">
+                    <p className="text-sm text-gray-600">{title}</p>
+                    <p className="text-xl font-bold text-gray-900 font-mono">{value}</p>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Componente para cada item del cronograma
+    const renderScheduleItem = (item: any, index: number) => {
+        const participantsCount = getCurrentParticipants(item);
+        const status = competitionStatuses[item.id];
+        const liveCompetitionId = `${item.levelId}_${item.category}_${item.gender || 'Mixto'}`;
+        const isCurrentlyLive = event.currentLiveCompetitionId === liveCompetitionId;
+
+        if (!status) {
+            return null; // Aún cargando
+        }
+
+        const actionButton = getActionButton(item, participantsCount);
+        const badgeInfo = getBadgeInfo(status);
+        const isCompleted = status.currentStatus === 'completed';
+
+        // Handler para ejecutar la acción correcta
+        const handleActionClick = () => {
+            switch (actionButton.action) {
+                case 'config':
+                    handleConfigClick(item);
+                    break;
+                case 'play':
+                case 'view':
+                    handlePlayClickWithExecution(item, index);
+                    break;
+                case 'none':
+                default:
+                    // No hacer nada
+                    break;
+            }
+        };
+
+        return (
+            <div
+                key={item.id}
+                className={`relative flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+                    isCompleted
+                        ? 'bg-purple-50 border-purple-200'
+                        : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                }`}
+            >
+                <div className="flex items-center space-x-4">
+                    <div className="relative">
+                        {isCompleted ? (
+                            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                <CheckCircle2 className="h-5 w-5 text-white" />
+                            </div>
+                        ) : (
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
+                                {index + 1}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                            <h4 className={`font-semibold ${isCompleted ? 'text-purple-800' : 'text-gray-900'}`}>
+                                {item.category}
+                            </h4>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${badgeInfo.className}`}>
+                                {badgeInfo.text}
+                            </span>
+                            {isCurrentlyLive && status.currentStatus === 'in-progress' && (
+                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full animate-pulse">
+                                    🔴 EN VIVO
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                            <span className="capitalize">{item.levelId}</span>
+                            <span>•</span>
+                            <span>{participantsCount} participantes</span>
+                            <span>•</span>
+                            <span>{formatDuration(item.estimatedTime || 0)}</span>
+                            {item.phase && (
+                                <>
+                                    <span>•</span>
+                                    <span>{item.phase}</span>
+                                </>
+                            )}
+                            {item.gender && (
+                                <>
+                                    <span>•</span>
+                                    <span>{item.gender}</span>
+                                </>
+                            )}
+                        </div>
+                        {participantsCount === 0 && (
+                            <div className="mt-2">
+                                <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
+                                    ⚠️ Sin participantes registrados
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                    <button
+                        onClick={handleActionClick}
+                        disabled={actionButton.disabled}
+                        className={`p-2 rounded-lg transition-colors ${actionButton.className}`}
+                        title={actionButton.title}
+                    >
+                        {renderActionIcon(actionButton.iconType)}
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    // Vista de ejecución
     if (viewState === 'execution' && executionData) {
         return (
             <TandaExecutionView
@@ -296,61 +362,68 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         );
     }
 
-    // Función para cerrar el modal
-    const handleCloseModal = () => {
-        setShowTandasModal(false);
-        setGeneratedTandas([]);
-        setSelectedItem(null);
-    };
-
-    // Loading state
+    // Estado de carga
     if (loadingParticipants) {
         return (
             <div className="space-y-6">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex items-center space-x-4 mb-8">
                         <button
-                            onClick={onBack}
-                            className="p-2 hover:bg-gray-100 rounded transition-colors"
+                            onClick={() => {
+                                if (onBackToSchedule) {
+                                    onBackToSchedule();
+                                } else {
+                                    onBack();
+                                }
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            title={onBackToSchedule ? "Volver a Principal" : "Volver a Live Schedule"}
                         >
                             <ArrowLeft className="h-5 w-5 text-gray-600" />
                         </button>
-                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                        <h1 className="text-3xl font-bold text-gray-900">Concurso en vivo</h1>
                     </div>
-                </div>
 
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                        <p className="text-gray-600">Cargando datos del concurso...</p>
+                    <div className="flex items-center justify-center min-h-[400px]">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <p className="text-gray-600">Cargando datos del concurso...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         );
     }
 
-    // Error state
+    // Estado de error
     if (error) {
         return (
             <div className="space-y-6">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex items-center space-x-4 mb-8">
                         <button
-                            onClick={onBack}
-                            className="p-2 hover:bg-gray-100 rounded transition-colors"
+                            onClick={() => {
+                                if (onBackToSchedule) {
+                                    onBackToSchedule();
+                                } else {
+                                    onBack();
+                                }
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            title={onBackToSchedule ? "Volver a Principal" : "Volver a Live Schedule"}
                         >
                             <ArrowLeft className="h-5 w-5 text-gray-600" />
                         </button>
-                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
+                        <h1 className="text-3xl font-bold text-gray-900">Concurso en vivo</h1>
                     </div>
-                </div>
 
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                    <div className="flex items-center">
-                        <div className="text-red-500 mr-3">⚠️</div>
-                        <div>
-                            <h3 className="text-red-800 font-medium">Error al cargar datos del concurso</h3>
-                            <p className="text-red-600 text-sm mt-1">{error}</p>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                        <div className="flex items-center">
+                            <div className="text-red-500 mr-3">⚠️</div>
+                            <div>
+                                <h3 className="text-red-800 font-medium">Error al cargar datos del concurso</h3>
+                                <p className="text-red-600 text-sm mt-1">{error}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -358,251 +431,118 @@ export const LiveContestRunning: React.FC<LiveContestRunningProps> = ({ event, o
         );
     }
 
+    // Vista principal
     return (
         <div className="space-y-6">
-            {/* Header con título y temporizador */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Concurso en vivo</h2>
-                        <p className="text-sm text-gray-600">{event.name}</p>
-                    </div>
-                </div>
-
-                <div className="text-right">
-                    <div className="text-sm text-gray-600 mb-1">Tiempo:</div>
-                    <div className="text-xl font-mono font-bold text-gray-800">
-                        {formatTime(currentTime)}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-2">
-                        {totalParticipants} participantes totales
-                    </div>
-                </div>
-            </div>
-
-            {/* Información del evento actual */}
-            {scheduleItems.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-center justify-between">
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+                    <div className="flex items-center space-x-4">
+                        <button
+                            onClick={() => {
+                                if (onBackToSchedule) {
+                                    onBackToSchedule();
+                                } else {
+                                    onBack();
+                                }
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            title={onBackToSchedule ? "Volver a Principal" : "Volver a Live Schedule"}
+                        >
+                            <ArrowLeft className="h-5 w-5 text-gray-600" />
+                        </button>
                         <div>
-                            <h3 className="text-lg font-semibold text-blue-800">
-                                Ahora: {scheduleItems[currentItemIndex]?.category}
-                            </h3>
-                            <p className="text-blue-600 capitalize">
-                                {scheduleItems[currentItemIndex]?.levelId}
-                            </p>
-                            <p className="text-sm text-blue-500">
-                                Fase: {scheduleItems[currentItemIndex]?.phase || 'Final'}
-                                {scheduleItems[currentItemIndex]?.gender && ` • ${scheduleItems[currentItemIndex]?.gender}`}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-800">
-                                {getCurrentParticipants(scheduleItems[currentItemIndex])}
-                            </div>
-                            <div className="text-sm text-blue-600">Participantes</div>
+                            <h1 className="text-3xl font-bold text-gray-900">Concurso en vivo</h1>
+                            <p className="text-gray-600 mt-1">{event.name}</p>
                         </div>
                     </div>
+
+                    <div className="flex flex-wrap gap-3 lg:gap-4">
+                        {renderStatsCard(
+                            <Clock className="h-5 w-5 text-blue-500 flex-shrink-0" />,
+                            "Tiempo transcurrido",
+                            formatTime(currentTime)
+                        )}
+                        {renderStatsCard(
+                            <Users className="h-5 w-5 text-green-500 flex-shrink-0" />,
+                            "Participantes",
+                            totalParticipants.toString()
+                        )}
+                        {renderStatsCard(
+                            <Trophy className="h-5 w-5 text-orange-500 flex-shrink-0" />,
+                            "Progreso",
+                            `${completedCount}/${totalItems}`
+                        )}
+                    </div>
                 </div>
-            )}
 
-            {/* Cronograma */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">Cronograma</h3>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
+                    <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">Progreso del evento</h3>
+                        <span className="text-sm text-gray-600">
+                            {formatDuration(completedTime)} / {formatDuration(totalEstimatedTime)}
+                        </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                            style={{ width: `${totalItems > 0 ? (completedCount / totalItems) * 100 : 0}%` }}
+                        ></div>
+                    </div>
                 </div>
 
-                <div className="p-6">
-                    <div className="space-y-3">
-                        {scheduleItems.length > 0 ? scheduleItems.map((item, index) => {
-                            const participantsCount = getCurrentParticipants(item);
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="flex items-center space-x-2">
+                            <Calendar className="h-5 w-5 text-gray-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Cronograma de competencias</h3>
+                        </div>
+                    </div>
 
-                            return (
-                                <div
-                                    key={item.id}
-                                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${index === currentItemIndex
-                                        ? 'bg-green-50 border-green-200 shadow-sm'
-                                        : index < currentItemIndex
-                                            ? 'bg-gray-50 border-gray-200 opacity-60'
-                                            : 'bg-white border-gray-200 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <div className="flex items-center space-x-4">
-                                        <div className={`w-3 h-3 rounded-full ${index === currentItemIndex
-                                            ? 'bg-green-500 animate-pulse'
-                                            : index < currentItemIndex
-                                                ? 'bg-gray-400'
-                                                : 'bg-gray-300'
-                                            }`}></div>
-                                        <div>
-                                            <div className={`font-medium ${index === currentItemIndex ? 'text-green-800' : 'text-gray-700'
-                                                }`}>
-                                                {item.category}
-                                            </div>
-                                            <div className="text-sm text-gray-500 capitalize">
-                                                {item.levelId} • {participantsCount} participantes • {item.estimatedTime || 0} min
-                                                {item.phase && ` • ${item.phase}`}
-                                                {item.gender && ` • ${item.gender}`}
-                                            </div>
-                                            {participantsCount === 0 && (
-                                                <div className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded mt-1 inline-block">
-                                                    ⚠️ Sin participantes registrados
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => handlePlayClick(item, index)}
-                                        disabled={participantsCount === 0 || isGeneratingTandas}
-                                        className={`p-2 rounded-full transition-colors ${participantsCount > 0 && !isGeneratingTandas
-                                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        {isGeneratingTandas && selectedItem?.id === item.id ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                                        ) : existingTandasIds.includes(item.id) ? (
-                                            <Eye className="h-4 w-4" />
-                                        ) : (
-                                            <Play className="h-4 w-4" />
-                                        )}
-                                    </button>
-                                </div>
-                            );
-                        }) : (
-                            <div className="text-center py-8 text-gray-500">
-                                <p>No hay elementos en el cronograma</p>
+                    <div className="p-6">
+                        {scheduleItems.length > 0 ? (
+                            <div className="space-y-3">
+                                {scheduleItems.map((item, index) => renderScheduleItem(item, index))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                <p className="text-gray-500 text-lg">No hay elementos en el cronograma</p>
+                                <p className="text-gray-400 text-sm">Agrega competencias para comenzar</p>
                             </div>
                         )}
                     </div>
-
-                    {/* Controles */}
-                    {scheduleItems.length > 0 && (
-                        <div className="flex justify-center space-x-4 mt-8 pt-6 border-t border-gray-200">
-                            <button
-                                onClick={handlePrevious}
-                                disabled={currentItemIndex === 0}
-                                className="flex items-center space-x-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-                            >
-                                <ArrowLeft className="h-5 w-5" />
-                                <span>Anterior</span>
-                            </button>
-
-                            <button
-                                onClick={handlePlayPause}
-                                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${isRunning
-                                    ? 'bg-red-600 text-white hover:bg-red-700'
-                                    : 'bg-green-600 text-white hover:bg-green-700'
-                                    }`}
-                            >
-                                {isRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-                                <span>{isRunning ? 'Pausar' : 'Continuar'}</span>
-                            </button>
-
-                            <button
-                                onClick={handleNext}
-                                disabled={currentItemIndex === scheduleItems.length - 1}
-                                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-                            >
-                                <span>Siguiente</span>
-                                <SkipForward className="h-5 w-5" />
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Estadísticas del progreso */}
-                    {scheduleItems.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Progreso: {currentItemIndex + 1} de {scheduleItems.length}</span>
-                                <span>
-                                    Tiempo estimado restante: {
-                                        scheduleItems.slice(currentItemIndex).reduce((total, item) => total + (item.estimatedTime || 0), 0)
-                                    } minutos
-                                </span>
-                            </div>
-
-                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${((currentItemIndex + 1) / scheduleItems.length) * 100}%` }}
-                                ></div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Resumen de participantes por modalidad */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <h4 className="font-medium text-gray-800 mb-3">Resumen de participantes por modalidad</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {Object.entries(participantStats).map(([level, categories]) => {
-                                const levelTotal = Object.values(categories).reduce((sum, categoryData) => {
-                                    return sum + Object.values(categoryData).reduce((genderSum, genderData) => genderSum + genderData.count, 0);
-                                }, 0);
-
-                                const categoryCount = Object.keys(categories).length;
-
-                                return (
-                                    <div key={level} className="bg-gray-50 rounded-lg p-3">
-                                        <div className="font-medium text-gray-700 capitalize text-sm">{level}</div>
-                                        <div className="text-lg font-bold text-gray-800">{levelTotal}</div>
-                                        <div className="text-xs text-gray-500">
-                                            {categoryCount} categoría{categoryCount !== 1 ? 's' : ''}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Desglose por categoría y género */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <h4 className="font-medium text-gray-800 mb-3">Desglose por categoría y género</h4>
-                        <div className="space-y-4">
-                            {Object.entries(participantStats).map(([level, categories]) => (
-                                <div key={level} className="bg-gray-50 rounded-lg p-4">
-                                    <h5 className="font-medium text-gray-700 capitalize mb-3">{level}</h5>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {Object.entries(categories).map(([category, genders]) => (
-                                            <div key={category} className="bg-white rounded p-3">
-                                                <div className="font-medium text-sm text-gray-600 mb-2">{category}</div>
-                                                <div className="space-y-1">
-                                                    {Object.entries(genders).map(([gender, data]) => (
-                                                        <div key={gender} className="flex justify-between text-sm">
-                                                            <span className="text-gray-500">{gender}:</span>
-                                                            <span className="font-medium">{data.count}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
-            </div>
 
-            {/* ← MODIFICADO: Modal de confirmación de tandas con emails */}
-            <TandasConfirmationModal
-                isOpen={showTandasModal}
-                onClose={handleCloseModal}
-                onConfirm={handleConfirmTandas}
-                tandas={generatedTandas}
-                allParticipants={selectedItem ? (
-                    selectedItem.gender
-                        ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
-                        : getParticipantsByCategory(selectedItem.levelId, selectedItem.category)
-                ) : []}
-                allUsers={allUsers} // ← AGREGADO
-                level={selectedItem?.levelId || ''}
-                category={selectedItem?.category || ''}
-                gender={selectedItem?.gender || ''}
-                isLoading={isConfirmingTandas || loadingUsers} // ← MODIFICADO
-                competitionName={event.name} // ← AGREGADO
-            />
+                {/* Modales */}
+                <TandasConfirmationModal
+                    isOpen={showTandasModal}
+                    onClose={handleCloseModal}
+                    onConfirm={handleConfirmTandasWithExecution}
+                    tandas={generatedTandas}
+                    allParticipants={selectedItem ? (
+                        selectedItem.gender
+                            ? getParticipantsByGender(selectedItem.levelId, selectedItem.category, selectedItem.gender)
+                            : getParticipantsByCategory(selectedItem.levelId, selectedItem.category)
+                    ) : []}
+                    allUsers={allUsers}
+                    level={selectedItem?.levelId || ''}
+                    category={selectedItem?.category || ''}
+                    gender={selectedItem?.gender || ''}
+                    isLoading={isConfirmingTandas || loadingUsers}
+                    competitionName={event.name}
+                />
+
+                <CompetitionConfigModal
+                    isOpen={showConfigModal}
+                    onClose={handleCloseConfigModal}
+                    onConfirm={handleConfirmConfig}
+                    isLoading={isConfiguring}
+                    level={selectedItem?.levelId || ''}
+                    category={selectedItem?.category || ''}
+                    gender={selectedItem?.gender || ''}
+                    totalParticipants={selectedItem ? getCurrentParticipants(selectedItem) : 0}
+                />
+            </div>
         </div>
     );
 };

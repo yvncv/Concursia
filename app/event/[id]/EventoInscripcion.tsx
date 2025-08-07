@@ -11,6 +11,8 @@ import { Ticket } from "@/app/types/ticketType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
 import { findUserByHashedDni } from '@/app/utils/security/dni/findUserByHashedDni';
+import { determineCategory } from "@/app/utils/category/determineCategory";
+import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
 
 // Componente para los pasos del wizard
 const WizardSteps = ({ currentStep }: { currentStep: number }) => {
@@ -109,6 +111,8 @@ const EventoInscripcion = ({ event, openModal, user }: {
   openModal: () => void,
   user: User
 }) => {
+  // Hook para categorías globales
+  const { categorias } = useGlobalCategories();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -130,6 +134,19 @@ const EventoInscripcion = ({ event, openModal, user }: {
 
   // ← USAR EL NUEVO HOOK
   const { createTicket, isCreating, error: createError, clearError } = useCreateTicket();
+
+  // Función para obtener categoría de un usuario
+  const getUserCategory = (user: User): string => {
+    if (!user?.birthDate || categorias.length === 0) {
+      return "Sin categoría";
+    }
+    
+    return determineCategory(
+      user.birthDate.toDate(),
+      new Date(),
+      categorias
+    ) || "Categoría no encontrada";
+  };
 
   // Función para buscar el usuario por DNI
   const buscarPareja = async () => {
@@ -196,13 +213,21 @@ const EventoInscripcion = ({ event, openModal, user }: {
       };
 
       const checkCategoryDifference = () => {
-        const userCategoryIndex = categories.indexOf(user?.marinera?.participant?.category);
-        const parejaCategoryIndex = categories.indexOf(pareja.marinera?.participant?.category);
+        // Obtener categorías dinámicamente
+        const userCategory = getUserCategory(user!);
+        const parejaCategory = getUserCategory(pareja);
+        
+        const userCategoryIndex = categories.indexOf(userCategory);
+        const parejaCategoryIndex = categories.indexOf(parejaCategory);
         const categoryDifference = Math.abs(userCategoryIndex - parejaCategoryIndex);
         return categoryDifference <= event.settings.pullCouple.difference;
       };
 
-      if (user?.marinera?.participant?.category !== pareja.marinera?.participant?.category) {
+      // Comparar categorías dinámicamente
+      const userCategory = getUserCategory(user!);
+      const parejaCategory = getUserCategory(pareja);
+
+      if (userCategory !== parejaCategory) {
         if (event.settings.pullCouple.criteria === "Age") {
           if (!checkAgeDifference()) {
             alert("La diferencia de edad no es la correcta");
@@ -272,6 +297,7 @@ const EventoInscripcion = ({ event, openModal, user }: {
             handleAcademySelect={handleAcademySelect}
             handleCoupleAcademySelect={handleCoupleAcademySelect}
             onCanProceedChange={setCanProceed}
+            getUserCategory={getUserCategory}
           />
         )}
 
@@ -284,6 +310,7 @@ const EventoInscripcion = ({ event, openModal, user }: {
             loadingAcademy={loadingAcademy}
             errorAcademy={errorAcademy}
             openModal={openModal}
+            getUserCategory={getUserCategory}
           />
         )}
 
