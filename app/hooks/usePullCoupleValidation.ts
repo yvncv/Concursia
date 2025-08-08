@@ -74,9 +74,12 @@ export function usePullCoupleValidation(
     }
     
     try {
-      // Obtener índices en la escala de categorías
-      const indexParticipante = categoriasPorNivel.indexOf(participanteInfo.category);
-      const indexPareja = categoriasPorNivel.indexOf(parejaInfo.category);
+      // Crear array de nombres de categorías para la comparación
+      const nombresCategorias = categoriasPorNivel.map(cat => cat.name);
+      
+      // Obtener índices en la escala de categorías usando los nombres
+      const indexParticipante = nombresCategorias.indexOf(participanteInfo.category as any);
+      const indexPareja = nombresCategorias.indexOf(parejaInfo.category as any);
       
       if (indexParticipante === -1 || indexPareja === -1) {
         setValidation({
