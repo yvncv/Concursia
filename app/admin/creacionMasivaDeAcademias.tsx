@@ -220,9 +220,8 @@ export default function CreacionMasivaDeAcademias() {
           });
           
           setAssignedCount(prev => prev + 1);
-          console.log(`✅ Organizador ${randomOrganizer.firstName} asignado a academia ${academy.name}`);
         } catch (error) {
-          console.error(`❌ Error al asignar organizador a academia ${academy.name}:`, error);
+          console.error(`❌ Error al asignar organizador a academia`, error);
         }
       }
 

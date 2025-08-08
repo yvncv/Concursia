@@ -166,7 +166,7 @@ export const TandaBlocks: React.FC<TandaBlocksProps> = ({
               <Users className="w-5 h-5 text-gray-600" />
               <div>
                 <div className="font-medium text-gray-800">
-                  Tanda {currentTanda.number} - Bloque Único
+                  Tanda {currentTanda.index} - Bloque Único
                 </div>
                 <div className="text-sm text-gray-600">
                   {judgesStatus.current} de {requiredJudgesCount} jurados | {block.participants.length} participantes
@@ -284,7 +284,7 @@ export const TandaBlocks: React.FC<TandaBlocksProps> = ({
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h2 className="text-xl font-bold text-gray-800">
-                Tanda {currentTanda.number}
+                Tanda {currentTanda.index}
               </h2>
               <p className="text-sm text-gray-600">
                 {currentTanda.blocks.length} bloques simultáneos | 
