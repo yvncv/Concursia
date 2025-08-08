@@ -175,17 +175,6 @@ const AddStaff = ({ event }: EventStaffProps) => {
     const isCurrentlyJudge = newPermissions.includes('judge');
 
     if (isJudge && !isCurrentlyJudge) {
-      const maxJudges = event?.dance?.levels?.Seriado?.config?.judgesCount || 0;
-
-      const totalCurrentJudges = staffEntries.filter(e =>
-        e.permissions.includes('judge') &&
-        e.userId !== newUser?.id
-      ).length;
-
-      if (totalCurrentJudges >= maxJudges) {
-        showNotification('error', `Ya se alcanzó el máximo de ${maxJudges} jurados permitidos.`);
-        return;
-      }
 
       // Si tiene otros permisos, confirmar que solo quedará como jurado
       if (newPermissions.length > 0) {
