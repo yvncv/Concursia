@@ -54,7 +54,7 @@ export default function GeneralInfo({ data, updateData, isOnlyRead }: GeneralInf
                     Status
                 </label>
                 <Switch
-                    checked={data.status === 'active'}
+                    checked={data.status === 'pendiente'}
                     onChange={(checked) => updateData({ ...data, status: checked ? 'active' : 'inactive' })}
                     disabled={isOnlyRead}
                     className={`${isOnlyRead ? 'bg-gray-200 cursor-not-allowed' : data.status === 'active' ? 'bg-green-500' : 'bg-red-500'} relative inline-flex items-center h-6 rounded-full w-11`}

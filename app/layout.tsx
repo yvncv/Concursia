@@ -15,7 +15,7 @@ const poppins = localFont({
 export const metadata: Metadata = {
   title: "Concursia | Marinera",
   description: "Maqueta de proyecto",
-  keywords: "tusuy, peru, maqueta, proyecto, marinera",
+  keywords: "concursos, peru, maqueta, proyecto, marinera",
   
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" translate="yes">
       <head>
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_KEY}&libraries=places`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&libraries=places`}
           strategy="beforeInteractive"
         />
       </head>

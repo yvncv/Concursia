@@ -3,6 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/app/firebase/config';
 import { Academy } from '@/app/types/academyType';
 import { MapPin, Navigation, Home, Building, Globe } from 'lucide-react';
+import Map from '@/app/ui/map/mapa';
 
 interface Props {
   academy: Academy;
@@ -227,16 +228,7 @@ const LocationInformation: React.FC<Props> = ({ academy, canEdit }) => {
       {/* Map Preview */}
       {(locationInfo.latitude && locationInfo.longitude) && (
         <div className="mb-6 h-48 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-          <iframe
-            src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${locationInfo.latitude},${locationInfo.longitude}`}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="grayscale hover:grayscale-0 transition-all duration-300"
-          />
+          <Map latitude={locationInfo.latitude} longitude={locationInfo.longitude}/>
         </div>
       )}
 

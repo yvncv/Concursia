@@ -136,20 +136,6 @@ export interface EventFormData {
   settings: EventSettings;
 }
 
-// Define el tipo de datos para la configuración de inscripción
-export interface RegistrationSettings {
-    grupalCSV: boolean;
-    individualWeb: boolean;
-    sameDay: boolean;
-}
-
-// Define el tipo de datos para la configuración de "jalar pareja"
-export interface PullCoupleSettings {
-    enabled: boolean;
-    criteria: "Category" | "Age";
-    difference: number;
-}
-
 // Interfaz para el evento en Firestore
 export interface CustomEvent {
   id: string;
@@ -157,12 +143,15 @@ export interface CustomEvent {
   description: string;
   startDate: Timestamp;
   endDate: Timestamp;
+  realStartTime?: Timestamp;
+  realEndTime?: Timestamp;
   academyId?: string;
   academyName: string;
   organizerId: string;
   staff?: {
     userId: string;
     permissions: string[];
+    juradoInicia?: boolean;
   }[];
   smallImage: string;
   bannerImage: string;
@@ -194,6 +183,8 @@ export interface CustomEvent {
     };
   };
   settings: EventSettings;
+  currentLiveCompetitionId?: string;             // Competencia actualmente activa
+  completedCompetitions: string[];               // IDs de competencias terminadas
   createdBy: string;
   lastUpdatedBy: string;
   createdAt: Timestamp;

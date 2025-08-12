@@ -1,7 +1,9 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal }) => {
+import { decryptValue } from '@/app/utils/security/securityHelpers'
+
+const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, errorAcademy, openModal, getUserCategory }) => {
   return (
     <div className="w-full flex flex-col items-center justify-start pt-6 sm:pt-10 pb-8 min-h-screen bg-gray-50">
       {/* Encabezado de confirmación */}
@@ -110,7 +112,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
         {/* Panel de confirmación de inscripción */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
-            <h3 className="text-xl font-bold text-white">Confirmación de inscripción</h3>
+            <h3 className="text-lg font-bold text-white">Confirmación de inscripción</h3>
           </div>
 
           <div className="p-6">
@@ -139,8 +141,8 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                 {user && (
                   <>
                     <p><span className="font-medium">Nombre:</span> {user?.firstName} {user?.lastName}</p>
-                    <p><span className="font-medium">DNI:</span> {user?.dni}</p>
-                    <p><span className="font-medium">Categoría:</span> {user?.category}</p>
+                    <p><span className="font-medium">DNI:</span> {decryptValue(user?.dni)}</p>
+                    <p><span className="font-medium">Categoría:</span> {getUserCategory(user)}</p>
                     {user?.level && <p><span className="font-medium">Nivel:</span> {user?.level}</p>}
                   </>
                 )}
@@ -169,7 +171,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
       {/* Panel de contacto con la academia */}
       <div className="w-[90%] md:w-[85%] lg:w-[90%] bg-white rounded-xl shadow-md overflow-hidden mb-10">
         <div className="bg-gradient-to-tr from-orange-500 to-red-600 px-6 py-4">
-          <h3 className="text-xl font-bold text-white flex items-center">
+          <h3 className="text-lg font-bold text-white flex items-center">
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
             </svg>
@@ -197,7 +199,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   </span>
                   <div>
                     <p className="font-medium">Academia:</p>
-                    <p className="text-lg">{academy.name}</p>
+                    <p className="text-md">{academy.name}</p>
                   </div>
                 </div>
 
@@ -227,21 +229,25 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                     <p>{academy.location.department}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-3 p-2">
-                  <span className="flex-shrink-0 text-orange-500 w-6 h-6">
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 text-orange-500 w-6 h-6 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </span>
-                  <p className="text-xl">Teléfono: {academy.phoneNumber}</p>
+                  <div>
+                    <p className="font-medium">Tel. de contacto:</p>
+                    <p className="font-medium">{academy.phoneNumber[0]}, {academy.phoneNumber[1]}</p>
+                  </div>
                 </div>
+              </div>
 
+              <div className="flex flex-col space-y-4">
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <a
-                    href={`tel:${academy.phoneNumber.replace(/\s+/g, '')}`}
+                    href={`tel:${(Array.isArray(academy.phoneNumber)
+                      ? academy.phoneNumber[0]
+                      : academy.phoneNumber)?.replace(/\s+/g, '') || ''}`}
                     className="flex items-center justify-center bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +257,9 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
                   </a>
 
                   <a
-                    href={`https://wa.me/${academy.phoneNumber.replace(/\s+/g, '')}`}
+                    href={`https://wa.me/${(Array.isArray(academy.phoneNumber)
+                      ? academy.phoneNumber[0]
+                      : academy.phoneNumber)?.replace(/\s+/g, '') || ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
@@ -284,7 +292,7 @@ const TicketComponent = ({ event, user, academy, ticketId, loadingAcademy, error
 
       {/* Botones de acción */}
       <div className="w-[90%] md:w-[85%] lg:w-[90%] flex flex-col sm:flex-row justify-center gap-4 mt-6">
-        <Link href="/dashboard/events" passHref>
+        <Link href="/my-registrations" passHref>
           <div className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"

@@ -111,19 +111,19 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
           <div className="flex items-center space-x-3">
             {/* Hidden span to measure text width */}
             <span 
-              ref={spanRef} 
+              // ref={spanRef} 
               className="absolute opacity-0 text-sm whitespace-nowrap"
               aria-hidden="true"
             >
-              {eventName}
+              {event.name}
             </span>
             
             <div 
-              className="relative"
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => !isEditing && setIsHovering(false)}
+              className="relative text-white text-sm inline-block cursor-text whitespace-nowrap"
+              // onMouseEnter={() => setIsHovering(true)}
+              // onMouseLeave={() => !isEditing && setIsHovering(false)}
             >
-              {isEditing ? (
+              {/* {isEditing ? (
                 <input
                   ref={inputRef}
                   type="text"
@@ -142,11 +142,11 @@ const EventHeader: React.FC<EventHeaderProps> = ({ event, onEventNameChange }) =
                 >
                   {isSaving ? (
                     <span className="opacity-70">Guardando...</span>
-                  ) : (
-                    eventName
-                  )}
+                  ) : ( */}
+                    {event.name}
+                  {/* )}
                 </span>
-              )}
+              )} */}
             </div>
             
             <div className="flex items-center space-x-2">

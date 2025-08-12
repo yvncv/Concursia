@@ -5,7 +5,7 @@ import useEvents from "@/app/hooks/useEvents";
 import useUser from "@/app/hooks/useUser";
 import EventoInformacion from "./EventoInformacion";
 import EventoInscripcion from "./EventoInscripcion";
-import EventoInscripcionAlumnos from "./EventoInscripcionAlumnos";
+import EventoInscripcionAlumnos from "./EventGroupInscription";
 import dynamic from "next/dynamic";
 import { use } from "react";
 import { MapPin, Calendar, User, ArrowLeftCircle } from "lucide-react";
@@ -208,7 +208,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 Inscripción
               </button>
               <div>
-                {!isGrupalCSVEnabled && (
+                {!isIndividualWebEnabled && (
                   <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
                 )}
               </div>

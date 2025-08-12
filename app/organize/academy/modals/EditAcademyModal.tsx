@@ -413,7 +413,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
                   value={formData.socialMedia.facebook}
                   onChange={(e) => handleInputChange('socialMedia', e.target.value, 'facebook')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://facebook.com/tusuy.peru"
+                  placeholder="foto de facebook"
                 />
               </div>
               <div>
@@ -426,7 +426,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
                   value={formData.socialMedia.instagram}
                   onChange={(e) => handleInputChange('socialMedia', e.target.value, 'instagram')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="@tusuy.peru"
+                  placeholder="usuario de instagram"
                 />
               </div>
               <div>
@@ -439,7 +439,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
                   value={formData.socialMedia.youtube}
                   onChange={(e) => handleInputChange('socialMedia', e.target.value, 'youtube')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://youtube.com/@tusuy.peru"
+                  placeholder="enlace de youtube"
                 />
               </div>
               <div>
@@ -452,7 +452,7 @@ const EditAcademyModal: React.FC<EditAcademyModalProps> = ({
                   value={formData.socialMedia.tiktok}
                   onChange={(e) => handleInputChange('socialMedia', e.target.value, 'tiktok')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="@tusuy.peru"
+                  placeholder="usuario de tiktok"
                 />
               </div>
             </div>

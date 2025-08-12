@@ -1,3 +1,4 @@
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 import { UserCircle } from 'lucide-react';
 import React from 'react';
 
@@ -54,7 +55,7 @@ const InfoUser: React.FC<{ users: any; title: string }> = ({ users, title }) => 
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">DNI</p>
-                    <p className="font-medium">{user?.dni}</p>
+                    <p className="font-medium">{decryptValue(user?.dni)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Género</p>

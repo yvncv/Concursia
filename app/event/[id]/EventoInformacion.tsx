@@ -3,6 +3,7 @@
 import { CustomEvent } from "@/app/types/eventType";
 import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircle, UserPlus, Users, ShoppingCart, Ticket } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
+import TicketPurchaseModal, { useTicketPurchaseModal } from "./purchase-modal/TicketPurchaseModal";
 
 interface EventoInformacionProps {
     event: CustomEvent;
@@ -29,6 +30,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     isIndividualWebEnabled,
     isGrupalCSVEnabled
 }) => {
+    const { isPurchaseOpen, openPurchaseModal, closePurchaseModal } = useTicketPurchaseModal();
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);
@@ -68,7 +70,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     // Si isEventOrganizer no se proporciona, lo calculamos comparando IDs
     const isOrganizer = isEventOrganizer !== undefined ?
         isEventOrganizer :
-        (user?.id && event.organizerId === user?.id);
+        (user?.id && event.organizerId === user?.id || (user?.roleId == "organizer" && event.academyId === user?.marinera?.academyId));
 
     // Determine if inscription types are enabled based on settings
     // IMPORTANTE: Priorizar los valores recibidos por props, que vienen de useSettings()
@@ -320,7 +322,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         {/* Botón de compra */}
                         <div className="mt-6">
                             <button
-                                onClick={() => alert('Hola')}
+                                onClick={openPurchaseModal}
                                 className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 active:scale-98 flex items-center justify-center gap-2"
                             >
                                 <ShoppingCart className="w-5 h-5" />
@@ -344,6 +346,10 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                     </div>
                 </div>
             </div>
+            <TicketPurchaseModal
+                isPurchaseOpen={isPurchaseOpen}
+                onPurchaseClose={closePurchaseModal}
+            />
         </div>
     );
 };

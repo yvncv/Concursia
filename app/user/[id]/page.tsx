@@ -28,6 +28,8 @@ import PersonalInformation from './components/PersonalInformation';
 import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
+import UserAchievements from './components/UserAchievements';
+import { decryptValue } from '@/app/utils/security/securityHelpers';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();
@@ -181,10 +183,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     <main className="flex flex-col min-h-screen bg-gray-50">
       {/* Cover Image Section */}
       <div className={`relative h-[15rem] md:h-[30rem] bg-gradient-to-r ${foundUser?.gender === 'Masculino'
-          ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
-          : foundUser?.gender === 'Femenino'
-            ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
-            : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
+        ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
+        : foundUser?.gender === 'Femenino'
+          ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-red-500'
+          : 'bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500'
         }`}>
         {foundUser.coverImage && (
           <Image
@@ -399,6 +401,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               {/* Academy History */}
               <AcademyHistory userId={foundUser.id} />
 
+              {/* User Achievements */}
+              <UserAchievements
+                userId={foundUser.id}
+                userName={capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
+              />
+
               {/* Activity Status */}
               <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Estado</h3>
@@ -452,6 +460,16 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         onClose={() => setIsChangeImageModalOpen(false)}
         onFileSelect={handleFileSelect}
         onDelete={handleDeleteProfilePicture}
+        currentImage={
+          croppedImage ||
+          (typeof foundUser.profileImage === 'string'
+            ? foundUser.profileImage
+            : foundUser.profileImage
+              ? URL.createObjectURL(foundUser.profileImage as File)
+              : null
+          )
+        }
+        userName={capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
       />
       {selectedImage && (
         <ImageCropModal
