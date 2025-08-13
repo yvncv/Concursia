@@ -48,7 +48,7 @@ export default function AdminPage() {
             </nav>
           </aside>
           {/* Contenido principal */}
-          <main className="flex-1 max-w-2xl mx-auto">
+          <main className="flex-1 mx-auto">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Herramientas de Administración
