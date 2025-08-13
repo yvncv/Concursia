@@ -6,6 +6,7 @@ import GeneradorTickets from "./generadorTickets";
 import CreacionMasivaDeAcademias from "./creacionMasivaDeAcademias";
 import CreacionMasivaDeEventos from "./creacionMasivaDeEventos";
 import EncriptarDNI from "./encriptarDni";
+import ListaUsuarios from "./listaUsuarios";
 
 const modules = [
   { key: "encriptarDNI", label: "Encriptar DNI", component: <EncriptarDNI /> },
@@ -13,6 +14,7 @@ const modules = [
   { key: "usuarios", label: "Crear Usuarios", component: <CreacionMasivaDeUsuarios /> },
   { key: "eventos", label: "Crear Eventos", component: <CreacionMasivaDeEventos /> },
   { key: "tickets", label: "Generar Tickets", component: <GeneradorTickets /> },
+  {key: "listaUsuarios", label: "Lista de Usuarios", component: <ListaUsuarios />},
 ];
 
 export default function AdminPage() {
