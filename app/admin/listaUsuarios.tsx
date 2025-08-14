@@ -21,7 +21,7 @@ export default function ListaUsuarios() {
                             <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Nombre</th>
                             <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Correo</th>
                             <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Rol</th>
-                            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Opciones</th>
+                            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Detalles</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -43,12 +43,6 @@ export default function ListaUsuarios() {
                                         onClick={() => setSelectedUser(u)}
                                     >
                                         Ver
-                                    </button>
-                                    <button
-                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
-                                        onClick={() => alert(`Eliminar usuario: ${u.id}`)}
-                                    >
-                                        Eliminar
                                     </button>
                                 </td>
                             </tr>
