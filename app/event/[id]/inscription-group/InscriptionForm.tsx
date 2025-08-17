@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { UserPlus, Award, CheckCircle } from "lucide-react";
-import toast from 'react-hot-toast';
 import { Timestamp } from "firebase/firestore";
 import { User } from "@/app/types/userType";
 import { Participante } from "@/app/hooks/useParticipantSearch";
@@ -89,6 +88,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     aplicar: boolean;
     categoriaFinal: string;
   }>({ aplicar: false, categoriaFinal: "" });
+  const [participantSearchKey, setParticipantSearchKey] = useState<number>(0);
 
   // Determinar si la modalidad requiere pareja
   const requierePareja: boolean = event.settings.levels[modalidad]?.couple || false;
@@ -102,26 +102,27 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   // Helper para convertir cualquier tipo de fecha a Date
   const convertToDate = useCallback((dateValue: any): Date => {
     if (!dateValue) return new Date();
-    
+
     if (dateValue instanceof Timestamp) {
       return dateValue.toDate();
     }
-    
+
     if (dateValue.toDate && typeof dateValue.toDate === 'function') {
       return dateValue.toDate();
     }
-    
+
     if (dateValue instanceof Date) {
       return dateValue;
     }
-    
+
     // Si es string, número o cualquier otra cosa
     return new Date(dateValue);
   }, []);
+
   // Obtener la edad para mostrar en la UI
   const getEdadDisplay = useCallback((birthDate: any): string | number => {
     if (!birthDate) return "N/A";
-    
+
     const hoy = new Date();
     const fechaNac = convertToDate(birthDate);
     let edad = hoy.getFullYear() - fechaNac.getFullYear();
@@ -137,7 +138,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   // Obtener categoría de un participante
   const getParticipantCategoryFromBirthDate = useCallback((birthDate: any): string => {
     if (!birthDate) return "Sin categoría";
-    
+
     const fechaNac = convertToDate(birthDate);
     return getParticipantCategory({ birthDate: fechaNac });
   }, [getParticipantCategory, convertToDate]);
@@ -146,19 +147,10 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   const handleModalidadChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>): void => {
     const nuevaModalidad = e.target.value;
     setModalidad(nuevaModalidad);
-    
+
     // Limpiar estado al cambiar modalidad
     resetFormulario();
-    
-    // Toast informativo
-    const modalidadInfo = event.settings.levels[nuevaModalidad];
-    if (modalidadInfo) {
-      toast(`📋 Modalidad: ${nuevaModalidad} (${modalidadInfo.couple ? 'Parejas' : 'Individual'})`, {
-        duration: 3000,
-        icon: '🎯'
-      });
-    }
-  }, [setModalidad, event.settings.levels]);
+  }, [setModalidad]);
 
   // Resetear formulario
   const resetFormulario = useCallback(() => {
@@ -168,6 +160,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setAcademiaPareja("");
     setFormularioValido(false);
     setPullCoupleData({ aplicar: false, categoriaFinal: "" });
+    setParticipantSearchKey(prev => prev + 1);
   }, []);
 
   // Manejar participante encontrado
@@ -195,12 +188,10 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   // Manejar envío del formulario
   const handleSubmit = useCallback((): void => {
     if (!formularioValido || !participanteEncontrado || !academiaParticipante) {
-      toast.error("Complete todos los campos requeridos");
       return;
     }
 
     if (requierePareja && (!parejaEncontrada || !academiaPareja)) {
-      toast.error("Complete la información de la pareja");
       return;
     }
 
@@ -208,8 +199,8 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     const precioBase = event.settings.levels[modalidad]?.price || 0;
 
     // Determinar la categoría final
-    const categoriaFinal = pullCoupleData.aplicar 
-      ? pullCoupleData.categoriaFinal 
+    const categoriaFinal = pullCoupleData.aplicar
+      ? pullCoupleData.categoriaFinal
       : getParticipantCategoryFromBirthDate(participanteEncontrado.birthDate);
 
     // Crear objeto de inscripción
@@ -274,45 +265,79 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
 
       <div className="space-y-6">
         {/* Selección de modalidad */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            <Award className="w-4 h-4 inline mr-2" />
-            Modalidad de competencia:
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <label className="block text-sm font-medium text-blue-800 mb-3 flex items-center">
+            <Award className="w-4 h-4 mr-2" />
+            Modalidad de Competencia
           </label>
+
           <select
             value={modalidad}
             onChange={handleModalidadChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-lg font-medium"
+            className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-base font-medium"
           >
             {modalidades.map(mod => (
               <option key={mod} value={mod}>{mod}</option>
             ))}
           </select>
-          
-          {/* Información de la modalidad */}
+
+          {/* Información de la modalidad en cards horizontales */}
           {modalidad && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div className="bg-white rounded-lg p-3 border shadow-sm">
-                <span className="font-medium text-gray-600 block mb-1">Precio:</span>
-                <span className="text-green-600 font-bold text-lg">
-                  S/. {event.settings.levels[modalidad]?.price || 0}
-                </span>
+            <div className="space-y-3">
+              {/* Primera fila: Precio y Tipo */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Card de Precio */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Precio</span>
+                    <div className="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
+                      <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-xl font-bold text-gray-900">
+                      S/. {event.settings.levels[modalidad]?.price || 0}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card de Tipo */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Tipo</span>
+                    <div className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center">
+                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-xl font-semibold text-purple-600">
+                      {requierePareja ? 'Parejas' : 'Individual'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-3 border shadow-sm">
-                <span className="font-medium text-gray-600 block mb-1">Tipo:</span>
-                <span className="font-medium">
-                  {requierePareja ? (
-                    <span className="text-purple-600">👥 Parejas</span>
+
+              {/* Segunda fila: Categorías (ocupando todo el ancho) */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Categorías disponibles:</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {categoriasDisponibles.length > 0 ? (
+                    categoriasDisponibles.map((categoria, index) => (
+                      <span
+                        key={index}
+                        className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+                      >
+                        {categoria}
+                      </span>
+                    ))
                   ) : (
-                    <span className="text-blue-600">👤 Individual</span>
+                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                      Todas
+                    </span>
                   )}
-                </span>
-              </div>
-              <div className="bg-white rounded-lg p-3 border shadow-sm">
-                <span className="font-medium text-gray-600 block mb-1">Categorías:</span>
-                <span className="text-gray-800 text-xs">
-                  {categoriasDisponibles.length > 0 ? categoriasDisponibles.join(', ') : 'Todas'}
-                </span>
+                </div>
               </div>
             </div>
           )}
@@ -320,6 +345,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
 
         {/* Componente de búsqueda de participantes */}
         <ParticipantSearch
+          key={participantSearchKey}
           eventId={event.id}
           modalidad={modalidad}
           requierePareja={requierePareja}
@@ -342,7 +368,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
               <CheckCircle className="w-5 h-5 mr-2" />
               Preview de inscripción
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="bg-white rounded-lg p-4 border">
                 <h5 className="font-medium text-gray-700 mb-2">Información general</h5>
@@ -381,7 +407,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
                       {academies.find(a => a.id === academiaParticipante)?.name}
                     </p>
                   </div>
-                  
+
                   {parejaEncontrada && (
                     <div>
                       <span className="text-gray-600">Pareja:</span>
@@ -410,18 +436,17 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
           <button
             onClick={handleSubmit}
             disabled={!formularioValido}
-            className={`w-full py-4 px-6 rounded-lg font-medium transition-all duration-200 transform ${
-              formularioValido
-                ? 'bg-green-600 text-white hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full py-4 px-6 rounded-lg font-medium transition-all duration-200 transform ${formularioValido
+              ? 'bg-green-600 text-white hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             <span className="flex items-center justify-center">
               <UserPlus className="w-5 h-5 mr-2" />
               {formularioValido ? 'Agregar inscripción' : 'Complete los datos requeridos'}
             </span>
           </button>
-          
+
           {!formularioValido && (
             <div className="mt-3 text-center">
               <p className="text-xs text-gray-500">

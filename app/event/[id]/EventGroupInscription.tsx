@@ -290,31 +290,6 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
 
   return (
     <>
-      {/* Toaster para notificaciones */}
-      <Toaster 
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#fff',
-            color: '#333',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
-            },
-          },
-        }}
-      />
-
       <div className="w-full max-w-6xl mx-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-6 border border-gray-100">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -348,31 +323,6 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               <p className="text-2xl font-bold text-orange-600">S/. {montoTotal}</p>
               <p className="text-xs text-gray-600">Total</p>
             </div>
-          </div>
-        )}
-
-        {/* Validación grupal */}
-        {inscripciones.length > 0 && (
-          <div className={`mb-6 p-4 rounded-lg border ${
-            groupValidation.isValid 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-red-50 border-red-200'
-          }`}>
-            <div className="flex items-center">
-              <div className={`w-2 h-2 rounded-full mr-2 ${
-                groupValidation.isValid ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
-              <p className={`text-sm font-medium ${
-                groupValidation.isValid ? 'text-green-800' : 'text-red-800'
-              }`}>
-                {groupValidation.message}
-              </p>
-            </div>
-            {groupValidation.userAcademyName && (
-              <p className="text-xs text-gray-600 mt-1">
-                Validando para academia: {groupValidation.userAcademyName}
-              </p>
-            )}
           </div>
         )}
 

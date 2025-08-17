@@ -1,13 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { getFirestore, doc, getDoc, DocumentData } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
-import { Search, AlertCircle, Users, CheckCircle } from "lucide-react";
-import toast from 'react-hot-toast';
-import { User } from "@/app/types/userType";
-import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
+import { Search, AlertCircle, Users, CheckCircle, User } from "lucide-react";
+import { User as UserType } from "@/app/types/userType";
 import { useParticipantSearch, Participante } from "@/app/hooks/useParticipantSearch";
 import { usePullCoupleValidation } from "@/app/hooks/usePullCoupleValidation";
-import { useAcademyAffiliationValidation } from "@/app/hooks/tickets/useAcademyAffiliationValidation";
 import ParticipantCard from "./components/ParticipantCard";
 import AcademySelector from "../components/AcademySelector";
 
@@ -52,7 +49,7 @@ interface ParticipantSearchProps {
   modalidad: string;
   requierePareja: boolean;
   categoriasDisponibles: string[];
-  user: User;
+  user: UserType;
   academies: Academy[];
   inscripcionesExistentes: Inscripcion[];
   loadingAcademies: boolean;
@@ -98,9 +95,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   // Estados locales
   const [dniParticipante, setDniParticipante] = useState<string>("");
   const [dniPareja, setDniPareja] = useState<string>("");
-  const [academiaParticipante, setAcademiaParticipante] = useState<string>("");
   const [academiaPareja, setAcademiaPareja] = useState<string>("");
-  const [academiaParticipanteNombre, setAcademiaParticipanteNombre] = useState<string>("Libre");
   const [academiaParejaNombre, setAcademiaParejaNombre] = useState<string>("Libre");
   const [eventSettings, setEventSettings] = useState<DocumentData | null>(null);
   const [loadingSettings, setLoadingSettings] = useState<boolean>(true);
@@ -133,31 +128,22 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     return getParticipantCategory({ birthDate: fechaNac });
   }, [getParticipantCategory, convertToDate]);
 
-  // Handlers para selección de academias
-  const handleParticipantAcademySelect = useCallback((academyId: string, academyName: string) => {
-    setAcademiaParticipante(academyId);
-    setAcademiaParticipanteNombre(academyName);
-  }, []);
+  // Auto-selección de academia para la pareja
+  useEffect(() => {
+    if (parejaInfo?.academyId && parejaInfo?.academyName) {
+      setAcademiaPareja(parejaInfo.academyId);
+      setAcademiaParejaNombre(parejaInfo.academyName);
+    } else if (parejaInfo && (!parejaInfo.academyId || !parejaInfo.academyName)) {
+      setAcademiaPareja("");
+      setAcademiaParejaNombre("Libre");
+    }
+  }, [parejaInfo]);
 
+  // Handler para selección de academia de la pareja
   const handleCoupleAcademySelect = useCallback((academyId: string, academyName: string) => {
     setAcademiaPareja(academyId);
     setAcademiaParejaNombre(academyName);
   }, []);
-
-  // Hook de validación de academia
-  const academyValidation = useAcademyAffiliationValidation(
-    participanteInfo ? {
-      id: participanteInfo.id,
-      academyId: academiaParticipante,
-      academyName: academiaParticipanteNombre
-    } : null,
-    parejaInfo ? {
-      id: parejaInfo.id,
-      academyId: academiaPareja,
-      academyName: academiaParejaNombre
-    } : null,
-    user
-  );
 
   // Hook de validación de parejas
   const {
@@ -186,7 +172,6 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
         }
       } catch (error) {
         console.error("Error al cargar configuraciones:", error);
-        toast.error("Error al cargar configuraciones del evento");
       } finally {
         setLoadingSettings(false);
       }
@@ -241,9 +226,32 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     return participanteDuplicado || (parejaInfo ? parejaDuplicada : false);
   }, [participanteInfo, parejaInfo, inscripcionesExistentes, modalidad, requierePareja]);
 
+  // Validar que el participante pertenezca a la academia del usuario
+  const validarAcademiaParticipante = useCallback((): string | null => {
+    if (!participanteInfo) return null;
+    
+    // Verificar si el participante pertenece a la academia del usuario
+    const userAcademyId = user.marinera?.academyId;
+    
+    if (userAcademyId && participanteInfo.academyId !== userAcademyId) {
+      return `Este estudiante no es de tu academia. Seleccione un participante de tu academia.`;
+    }
+    
+    // Si el participante no tiene academia asignada
+    if (!participanteInfo.academyId || !participanteInfo.academyName) {
+      return `Este estudiante no tiene academia asignada.`;
+    }
+    
+    return null;
+  }, [participanteInfo, user.marinera?.academyId]);
+
   // Validar categoría del participante
   const validarCategoriaParticipante = useCallback((): string | null => {
     if (!participanteInfo) return null;
+    
+    // Primero validar que sea de tu academia
+    const errorAcademia = validarAcademiaParticipante();
+    if (errorAcademia) return errorAcademia;
     
     const categoriaParticipante = getParticipantCategoryFromBirthDate(participanteInfo.birthDate);
     
@@ -256,7 +264,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     }
 
     return null;
-  }, [participanteInfo, esCategoriaDisponible, existeInscripcionDuplicada, modalidad, getParticipantCategoryFromBirthDate]);
+  }, [participanteInfo, validarAcademiaParticipante, esCategoriaDisponible, existeInscripcionDuplicada, modalidad, getParticipantCategoryFromBirthDate]);
 
   // Validar pareja
   const validarPareja = useCallback((): string | null => {
@@ -291,9 +299,8 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
 
   // Determinar si el formulario es válido
   const esFormularioValido = useCallback((): boolean => {
-    if (!participanteInfo || (!academiaParticipante && academiaParticipanteNombre === "Libre")) return false;
+    if (!participanteInfo) return false;
     if (validarCategoriaParticipante()) return false;
-    if (!academyValidation.isValid) return false;
     
     if (requierePareja) {
       if (!parejaInfo || (!academiaPareja && academiaParejaNombre === "Libre")) return false;
@@ -303,10 +310,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     return true;
   }, [
     participanteInfo,
-    academiaParticipante,
-    academiaParticipanteNombre,
     validarCategoriaParticipante,
-    academyValidation.isValid,
     requierePareja,
     parejaInfo,
     academiaPareja,
@@ -317,41 +321,32 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   // Manejar búsqueda de participante
   const handleBuscarParticipante = useCallback(async (): Promise<void> => {
     if (!dniParticipante.trim()) {
-      toast.error("Ingresa un DNI válido");
       return;
     }
 
     try {
       await buscarParticipante(dniParticipante);
-      if (!searchErrorParticipante) {
-        toast.success("Participante encontrado");
-      }
     } catch (error) {
-      toast.error("Error al buscar participante");
+      console.error("Error al buscar participante:", error);
     }
-  }, [buscarParticipante, dniParticipante, searchErrorParticipante]);
+  }, [buscarParticipante, dniParticipante]);
 
   // Manejar búsqueda de pareja
   const handleBuscarPareja = useCallback(async (): Promise<void> => {
     if (!dniPareja.trim()) {
-      toast.error("Ingresa un DNI válido para la pareja");
       return;
     }
 
     if (dniPareja === dniParticipante) {
-      toast.error("El DNI de la pareja no puede ser igual al del participante");
       return;
     }
 
     try {
       await buscarPareja(dniPareja, dniParticipante);
-      if (!searchErrorPareja) {
-        toast.success("Pareja encontrada");
-      }
     } catch (error) {
-      toast.error("Error al buscar pareja");
+      console.error("Error al buscar pareja:", error);
     }
-  }, [buscarPareja, dniPareja, dniParticipante, searchErrorPareja]);
+  }, [buscarPareja, dniPareja, dniParticipante]);
 
   // Estado derivado: determinar si se aplicará jalar pareja
   const aplicarJalarPareja = useCallback((): boolean => {
@@ -383,10 +378,11 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
 
   // Notificar datos al componente padre cuando están listos
   useEffect(() => {
-    if (participanteInfo && (academiaParticipante || academiaParticipanteNombre !== "Libre") && !validarCategoriaParticipante()) {
-      onParticipantFound(participanteInfo, academiaParticipante);
+    if (participanteInfo && !validarCategoriaParticipante()) {
+      // Para el participante, usamos su propia academyId
+      onParticipantFound(participanteInfo, participanteInfo.academyId || "");
     }
-  }, [participanteInfo, academiaParticipante, academiaParticipanteNombre, validarCategoriaParticipante, onParticipantFound]);
+  }, [participanteInfo, validarCategoriaParticipante, onParticipantFound]);
 
   useEffect(() => {
     if (parejaInfo && (academiaPareja || academiaParejaNombre !== "Libre") && !validarPareja()) {
@@ -396,140 +392,157 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Búsqueda de participante */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700">
-          🔍 Buscar participante por DNI:
+      {/* Sección de Datos del Participante */}
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+        <label className="block text-sm font-medium text-blue-800 mb-4 flex items-center">
+          <User className="w-4 h-4 mr-2" />
+          Datos del Participante
         </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={dniParticipante}
-            onChange={(e) => setDniParticipante(e.target.value)}
-            placeholder="Ingresa 8 dígitos del DNI"
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            maxLength={8}
-          />
-          <button
-            onClick={handleBuscarParticipante}
-            disabled={isSearchingParticipante}
-            className="bg-blue-600 text-white px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center min-w-[50px]"
-          >
-            {isSearchingParticipante ? (
-              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-            ) : (
-              <Search className="w-5 h-5" />
-            )}
-          </button>
-        </div>
         
-        {searchErrorParticipante && (
-          <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200 flex items-center">
-            <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-            {searchErrorParticipante}
-          </div>
-        )}
-
-        {validarCategoriaParticipante() && (
-          <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200 flex items-center">
-            <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-            {validarCategoriaParticipante()}
-          </div>
-        )}
-      </div>
-
-      {/* Selección de academia del participante */}
-      {participanteInfo && !validarCategoriaParticipante() && (
-        <div>
-          <AcademySelector
-            onAcademySelect={handleParticipantAcademySelect}
-            initialAcademyId=""
-            initialAcademyName="Libre"
-            theme="light"
-            label="🏫 Academia del participante"
-            placeholder="Buscar academia del participante..."
-            required={true}
-            disabled={loadingAcademies}
-          />
-        </div>
-      )}
-
-      {/* Búsqueda de pareja (solo para modalidades que lo requieren) */}
-      {requierePareja && participanteInfo && !validarCategoriaParticipante() && (
-        <div className="space-y-3 border-t pt-4">
-          <label className="block text-sm font-medium text-gray-700">
-            🤝 Buscar pareja por DNI:
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={dniPareja}
-              onChange={(e) => setDniPareja(e.target.value)}
-              placeholder="Ingresa 8 dígitos del DNI"
-              className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              maxLength={8}
-            />
-            <button
-              onClick={handleBuscarPareja}
-              disabled={isSearchingPareja}
-              className="bg-purple-600 text-white px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400 flex items-center justify-center min-w-[50px]"
-            >
-              {isSearchingPareja ? (
-                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-              ) : (
-                <Search className="w-5 h-5" />
-              )}
-            </button>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              DNI del Participante
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={dniParticipante}
+                onChange={(e) => setDniParticipante(e.target.value)}
+                placeholder="12345678"
+                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                maxLength={8}
+              />
+              <button
+                onClick={handleBuscarParticipante}
+                disabled={isSearchingParticipante}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center min-w-[100px]"
+              >
+                {isSearchingParticipante ? (
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Buscar
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           
-          {searchErrorPareja && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200 flex items-center">
+          {searchErrorParticipante && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-              {searchErrorPareja}
+              {searchErrorParticipante}
             </div>
           )}
 
-          {validarPareja() && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200 flex items-center">
+          {validarCategoriaParticipante() && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-              {validarPareja()}
+              {validarCategoriaParticipante()}
+            </div>
+          )}
+
+          {/* Card del participante - solo si es válido */}
+          {participanteInfo && !validarCategoriaParticipante() && (
+            <div className="mt-4">
+              <ParticipantCard
+                participant={participanteInfo}
+                calcularEdad={getEdadDisplay}
+                type="participante"
+                getParticipantCategory={getParticipantCategory}
+              />
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Selección de academia de la pareja */}
-      {requierePareja && parejaInfo && !validarPareja() && (
-        <div>
-          <AcademySelector
-            onAcademySelect={handleCoupleAcademySelect}
-            initialAcademyId=""
-            initialAcademyName="Libre"
-            theme="light"
-            label="🏫 Academia de la pareja"
-            placeholder="Buscar academia de la pareja..."
-            required={true}
-            disabled={loadingAcademies}
-          />
-        </div>
-      )}
+      {/* Sección de Datos de la Pareja - Solo visible si requiere pareja */}
+      {requierePareja && (
+        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+          <label className="block text-sm font-medium text-purple-800 mb-4 flex items-center">
+            <Users className="w-4 h-4 mr-2" />
+            Datos de la Pareja
+          </label>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                DNI de la Pareja
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={dniPareja}
+                  onChange={(e) => setDniPareja(e.target.value)}
+                  placeholder="87654321"
+                  className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  maxLength={8}
+                  disabled={!participanteInfo || !!validarCategoriaParticipante()}
+                />
+                <button
+                  onClick={handleBuscarPareja}
+                  disabled={isSearchingPareja || !participanteInfo || !!validarCategoriaParticipante()}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+                >
+                  {isSearchingPareja ? (
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      Buscar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            {searchErrorPareja && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                {searchErrorPareja}
+              </div>
+            )}
 
-      {/* Validación de academia */}
-      {(participanteInfo && (academiaParticipante || academiaParticipanteNombre !== "Libre")) && (
-        <div className={`p-3 rounded-lg border ${
-          academyValidation.isValid 
-            ? 'bg-green-50 border-green-200' 
-            : 'bg-red-50 border-red-200'
-        }`}>
-          <div className="flex items-center">
-            <div className={`w-2 h-2 rounded-full mr-2 ${
-              academyValidation.isValid ? 'bg-green-500' : 'bg-red-500'
-            }`}></div>
-            <p className={`text-sm ${
-              academyValidation.isValid ? 'text-green-800' : 'text-red-800'
-            }`}>
-              {academyValidation.message}
-            </p>
+            {validarPareja() && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                {validarPareja()}
+              </div>
+            )}
+
+            {/* Selección de academia de la pareja */}
+            {parejaInfo && !validarPareja() && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <div className="w-4 h-4 bg-purple-100 rounded mr-2 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-purple-500 rounded"></div>
+                  </div>
+                  Academia de la Pareja
+                </label>
+                <AcademySelector
+                  onAcademySelect={handleCoupleAcademySelect}
+                  initialAcademyId={parejaInfo?.academyId || ""}
+                  initialAcademyName={parejaInfo?.academyName || "Libre"}
+                  theme="light"
+                  placeholder="Buscar o seleccionar academia..."
+                  required={true}
+                  disabled={loadingAcademies || (!!parejaInfo?.academyId && !!parejaInfo?.academyName)}
+                />
+              </div>
+            )}
+            {/* Card de la pareja - solo si es válida */}
+            {parejaInfo && !validarPareja() && (
+              <div className="mt-4">
+                <ParticipantCard
+                  participant={parejaInfo}
+                  calcularEdad={getEdadDisplay}
+                  type="pareja"
+                  getParticipantCategory={getParticipantCategory}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -555,29 +568,6 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
           </div>
         </div>
       )}
-
-      {/* Preview de participantes encontrados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {participanteInfo && (
-          <ParticipantCard
-            participant={participanteInfo}
-            calcularEdad={getEdadDisplay}
-            type="participante"
-            academyName={academiaParticipanteNombre}
-            getParticipantCategory={getParticipantCategory}
-          />
-        )}
-
-        {requierePareja && parejaInfo && (
-          <ParticipantCard
-            participant={parejaInfo}
-            calcularEdad={getEdadDisplay}
-            type="pareja"
-            academyName={academiaParejaNombre}
-            getParticipantCategory={getParticipantCategory}
-          />
-        )}
-      </div>
 
       {/* Estados de carga */}
       {loadingSettings && (

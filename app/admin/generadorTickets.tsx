@@ -71,9 +71,6 @@ export default function GeneradorVisual() {
     const selectedAcademy = user.marinera!.academyId!;
     const selectedAcademyName = academiesMap[selectedAcademy] || "Desconocida";
 
-    console.log(`👤 Usuario seleccionado: ${user.firstName} ${user.lastName}`);
-    console.log(`📂 Categoría: ${selectedCategory} | Academia: ${selectedAcademyName}`);
-
     // Validar si la categoría existe en el evento
     if (!event.dance?.levels || !(selectedCategory in event.dance.levels)) {
       const msg = `❌ ${user.firstName} tiene categoría "${selectedCategory}" no válida en ${event.name}`;
@@ -83,7 +80,6 @@ export default function GeneradorVisual() {
     }
 
     try {
-      console.log("📩 Llamando a createTicket...");
       const ticketId = await createTicket({
         event,
         user,
