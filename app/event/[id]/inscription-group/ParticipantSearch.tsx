@@ -54,7 +54,7 @@ interface ParticipantSearchProps {
   inscripcionesExistentes: Inscripcion[];
   loadingAcademies: boolean;
   onParticipantFound: (participante: Participante, academia: string) => void;
-  onCoupleFound: (pareja: Participante, academia: string) => void;
+  onCoupleFound: (pareja: Participante, academia: string, esLibre: boolean) => void;
   onValidationChange: (isValid: boolean) => void;
   onPullCoupleChange: (data: { aplicar: boolean; categoriaFinal: string }) => void;
   getParticipantCategory: (participante: { birthDate: Date }) => string;
@@ -103,19 +103,19 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   // Helper para convertir cualquier tipo de fecha a Date
   const convertToDate = useCallback((dateValue: any): Date => {
     if (!dateValue) return new Date();
-    
+
     if (dateValue instanceof Timestamp) {
       return dateValue.toDate();
     }
-    
+
     if (dateValue.toDate && typeof dateValue.toDate === 'function') {
       return dateValue.toDate();
     }
-    
+
     if (dateValue instanceof Date) {
       return dateValue;
     }
-    
+
     // Si es string, número o cualquier otra cosa
     return new Date(dateValue);
   }, []);
@@ -123,7 +123,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   // Función para obtener categoría de un participante
   const getParticipantCategoryFromBirthDate = useCallback((birthDate: any): string => {
     if (!birthDate) return "Sin categoría";
-    
+
     const fechaNac = convertToDate(birthDate);
     return getParticipantCategory({ birthDate: fechaNac });
   }, [getParticipantCategory, convertToDate]);
@@ -183,7 +183,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   // Obtener la edad para mostrar en la UI
   const getEdadDisplay = useCallback((birthDate: any): string | number => {
     if (!birthDate) return "N/A";
-    
+
     const hoy = new Date();
     const fechaNac = convertToDate(birthDate);
     let edad = hoy.getFullYear() - fechaNac.getFullYear();
@@ -211,54 +211,54 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   const existeInscripcionDuplicada = useCallback((): boolean => {
     if (!participanteInfo) return false;
 
-    const participanteDuplicado = inscripcionesExistentes.some(inscripcion => 
-      inscripcion.modalidad === modalidad && 
-      (inscripcion.participante.id === participanteInfo.id || 
-       (inscripcion.pareja && inscripcion.pareja.id === participanteInfo.id))
+    const participanteDuplicado = inscripcionesExistentes.some(inscripcion =>
+      inscripcion.modalidad === modalidad &&
+      (inscripcion.participante.id === participanteInfo.id ||
+        (inscripcion.pareja && inscripcion.pareja.id === participanteInfo.id))
     );
-    
-    const parejaDuplicada = requierePareja && parejaInfo && inscripcionesExistentes.some(inscripcion => 
-      inscripcion.modalidad === modalidad && 
-      (inscripcion.participante.id === parejaInfo.id || 
-       (inscripcion.pareja && inscripcion.pareja.id === parejaInfo.id))
+
+    const parejaDuplicada = requierePareja && parejaInfo && inscripcionesExistentes.some(inscripcion =>
+      inscripcion.modalidad === modalidad &&
+      (inscripcion.participante.id === parejaInfo.id ||
+        (inscripcion.pareja && inscripcion.pareja.id === parejaInfo.id))
     );
-    
+
     return participanteDuplicado || (parejaInfo ? parejaDuplicada : false);
   }, [participanteInfo, parejaInfo, inscripcionesExistentes, modalidad, requierePareja]);
 
   // Validar que el participante pertenezca a la academia del usuario
   const validarAcademiaParticipante = useCallback((): string | null => {
     if (!participanteInfo) return null;
-    
+
     // Verificar si el participante pertenece a la academia del usuario
     const userAcademyId = user.marinera?.academyId;
-    
+
     if (userAcademyId && participanteInfo.academyId !== userAcademyId) {
       return `Este estudiante no es de tu academia. Seleccione un participante de tu academia.`;
     }
-    
+
     // Si el participante no tiene academia asignada
     if (!participanteInfo.academyId || !participanteInfo.academyName) {
       return `Este estudiante no tiene academia asignada.`;
     }
-    
+
     return null;
   }, [participanteInfo, user.marinera?.academyId]);
 
   // Validar categoría del participante
   const validarCategoriaParticipante = useCallback((): string | null => {
     if (!participanteInfo) return null;
-    
+
     // Primero validar que sea de tu academia
     const errorAcademia = validarAcademiaParticipante();
     if (errorAcademia) return errorAcademia;
-    
+
     const categoriaParticipante = getParticipantCategoryFromBirthDate(participanteInfo.birthDate);
-    
+
     if (!esCategoriaDisponible(categoriaParticipante)) {
       return `La categoría del participante (${categoriaParticipante}) no está disponible en esta modalidad`;
     }
-    
+
     if (existeInscripcionDuplicada()) {
       return `El participante ya está inscrito en la modalidad ${modalidad}`;
     }
@@ -273,26 +273,26 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     if (!sonGenerosCompatibles()) {
       return "La pareja debe ser de género opuesto (hombre-mujer)";
     }
-    
+
     const categoriaPareja = getParticipantCategoryFromBirthDate(parejaInfo.birthDate);
-    
+
     if (!esCategoriaDisponible(categoriaPareja)) {
       return `La categoría de la pareja (${categoriaPareja}) no está disponible en esta modalidad`;
     }
-    
+
     if (!pullCoupleAllowed && diferenciaValor > 0) {
       return pullCoupleMessage || "Las categorías no son compatibles para inscripción";
     }
 
     return null;
   }, [
-    requierePareja, 
-    participanteInfo, 
-    parejaInfo, 
-    sonGenerosCompatibles, 
+    requierePareja,
+    participanteInfo,
+    parejaInfo,
+    sonGenerosCompatibles,
     esCategoriaDisponible,
-    pullCoupleAllowed, 
-    diferenciaValor, 
+    pullCoupleAllowed,
+    diferenciaValor,
     pullCoupleMessage,
     getParticipantCategoryFromBirthDate
   ]);
@@ -301,12 +301,16 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
   const esFormularioValido = useCallback((): boolean => {
     if (!participanteInfo) return false;
     if (validarCategoriaParticipante()) return false;
-    
+
     if (requierePareja) {
-      if (!parejaInfo || (!academiaPareja && academiaParejaNombre === "Libre")) return false;
+      // Debe haber pareja encontrada
+      if (!parejaInfo) return false;
+      // Y debe tener academia seleccionada O ser "Libre"
+      if (!academiaPareja && academiaParejaNombre !== "Libre") return false;
+      // Y no debe haber errores de validación
       if (validarPareja()) return false;
     }
-    
+
     return true;
   }, [
     participanteInfo,
@@ -350,10 +354,10 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
 
   // Estado derivado: determinar si se aplicará jalar pareja
   const aplicarJalarPareja = useCallback((): boolean => {
-    return requierePareja && 
-           parejaInfo !== null && 
-           pullCoupleAllowed && 
-           diferenciaValor > 0;
+    return requierePareja &&
+      parejaInfo !== null &&
+      pullCoupleAllowed &&
+      diferenciaValor > 0;
   }, [requierePareja, parejaInfo, pullCoupleAllowed, diferenciaValor]);
 
   // Notificar cambios de pull couple al componente padre
@@ -384,9 +388,12 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
     }
   }, [participanteInfo, validarCategoriaParticipante, onParticipantFound]);
 
+  // CORREGIDO: Notificar pareja con flag de "Libre"
   useEffect(() => {
-    if (parejaInfo && (academiaPareja || academiaParejaNombre !== "Libre") && !validarPareja()) {
-      onCoupleFound(parejaInfo, academiaPareja);
+    if (parejaInfo && !validarPareja()) {
+      const academyIdToSend = academiaParejaNombre === "Libre" ? "" : academiaPareja;
+      const esLibre = academiaParejaNombre === "Libre";
+      onCoupleFound(parejaInfo, academyIdToSend, esLibre);
     }
   }, [parejaInfo, academiaPareja, academiaParejaNombre, validarPareja, onCoupleFound]);
 
@@ -398,7 +405,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
           <User className="w-4 h-4 mr-2" />
           Datos del Participante
         </label>
-        
+
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -429,7 +436,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
               </button>
             </div>
           </div>
-          
+
           {searchErrorParticipante && (
             <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -465,7 +472,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
             <Users className="w-4 h-4 mr-2" />
             Datos de la Pareja
           </label>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -497,7 +504,7 @@ const ParticipantSearch: React.FC<ParticipantSearchProps> = ({
                 </button>
               </div>
             </div>
-            
+
             {searchErrorPareja && (
               <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
                 <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />

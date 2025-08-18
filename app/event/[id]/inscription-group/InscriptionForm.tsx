@@ -83,6 +83,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   const [parejaEncontrada, setParejaEncontrada] = useState<Participante | null>(null);
   const [academiaParticipante, setAcademiaParticipante] = useState<string>("");
   const [academiaPareja, setAcademiaPareja] = useState<string>("");
+  const [esParejLibre, setEsParejLibre] = useState<boolean>(false); // NUEVO ESTADO
   const [formularioValido, setFormularioValido] = useState<boolean>(false);
   const [pullCoupleData, setPullCoupleData] = useState<{
     aplicar: boolean;
@@ -158,6 +159,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setParejaEncontrada(null);
     setAcademiaParticipante("");
     setAcademiaPareja("");
+    setEsParejLibre(false);
     setFormularioValido(false);
     setPullCoupleData({ aplicar: false, categoriaFinal: "" });
     setParticipantSearchKey(prev => prev + 1);
@@ -169,10 +171,11 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setAcademiaParticipante(academia);
   }, []);
 
-  // Manejar pareja encontrada  
-  const handleCoupleFound = useCallback((pareja: Participante, academia: string) => {
+  // CORREGIDO: Manejar pareja encontrada con flag de "Libre"
+  const handleCoupleFound = useCallback((pareja: Participante, academia: string, esLibre: boolean = false) => {
     setParejaEncontrada(pareja);
     setAcademiaPareja(academia);
+    setEsParejLibre(esLibre);
   }, []);
 
   // Manejar cambio de validación
@@ -185,14 +188,34 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setPullCoupleData(data);
   }, []);
 
-  // Manejar envío del formulario
+  // CORREGIDO: Manejar envío del formulario
   const handleSubmit = useCallback((): void => {
+    console.log("🔍 DEBUGGING handleSubmit:");
+    console.log("formularioValido:", formularioValido);
+    console.log("participanteEncontrado:", participanteEncontrado);
+    console.log("academiaParticipante:", academiaParticipante);
+    console.log("requierePareja:", requierePareja);
+    console.log("parejaEncontrada:", parejaEncontrada);
+    console.log("academiaPareja:", academiaPareja);
+    console.log("esParejLibre:", esParejLibre);
+
     if (!formularioValido || !participanteEncontrado || !academiaParticipante) {
+      console.log("❌ Falla validación principal");
       return;
     }
 
-    if (requierePareja && (!parejaEncontrada || !academiaPareja)) {
-      return;
+    // CORREGIDO: Validación de pareja
+    if (requierePareja) {
+      if (!parejaEncontrada) {
+        console.log("❌ Falta pareja");
+        return;
+      }
+      
+      // Permitir si es "Libre" O si tiene academia asignada
+      if (!academiaPareja && !esParejLibre) {
+        console.log("❌ Pareja sin academia y no es Libre");
+        return;
+      }
     }
 
     // Obtener precio según modalidad
@@ -203,7 +226,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
       ? pullCoupleData.categoriaFinal
       : getParticipantCategoryFromBirthDate(participanteEncontrado.birthDate);
 
-    // Crear objeto de inscripción
+    // CORREGIDO: Crear objeto de inscripción
     const nuevaInscripcion: Inscripcion = {
       modalidad,
       level: modalidad,
@@ -227,12 +250,14 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
         edad: getEdadDisplay(parejaEncontrada.birthDate),
         genero: parejaEncontrada.gender,
         telefono: parejaEncontrada.phoneNumber?.[0] || "No disponible",
-        academyId: academiaPareja,
-        academyName: academies.find(a => a.id === academiaPareja)?.name || "Academia no especificada",
+        academyId: academiaPareja || "", // Vacío si es libre
+        academyName: esParejLibre ? "Libre" : (academies.find(a => a.id === academiaPareja)?.name || "Academia no especificada"),
         birthDate: convertToDate(parejaEncontrada.birthDate)
       } : null,
       precio: precioBase
     };
+
+    console.log("📝 Llamando agregarInscripcion con:", nuevaInscripcion);
 
     // Agregar a la lista de inscripciones
     agregarInscripcion(nuevaInscripcion);
@@ -246,6 +271,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     requierePareja,
     parejaEncontrada,
     academiaPareja,
+    esParejLibre,
     event.settings.levels,
     modalidad,
     pullCoupleData,
@@ -253,7 +279,8 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     getParticipantCategoryFromBirthDate,
     academies,
     agregarInscripcion,
-    resetFormulario
+    resetFormulario,
+    convertToDate
   ]);
 
   return (
@@ -413,7 +440,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
                       <span className="text-gray-600">Pareja:</span>
                       <p className="font-medium">{parejaEncontrada.firstName} {parejaEncontrada.lastName}</p>
                       <p className="text-xs text-gray-500">
-                        {academies.find(a => a.id === academiaPareja)?.name}
+                        {esParejLibre ? "Libre" : academies.find(a => a.id === academiaPareja)?.name}
                       </p>
                     </div>
                   )}
@@ -453,7 +480,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
                 {!participanteEncontrado && "• Busque y seleccione un participante"}
                 {participanteEncontrado && !academiaParticipante && "• Seleccione academia del participante"}
                 {requierePareja && participanteEncontrado && !parejaEncontrada && "• Busque una pareja"}
-                {requierePareja && parejaEncontrada && !academiaPareja && "• Seleccione academia de la pareja"}
+                {requierePareja && parejaEncontrada && !academiaPareja && !esParejLibre && "• Seleccione academia de la pareja"}
               </p>
             </div>
           )}

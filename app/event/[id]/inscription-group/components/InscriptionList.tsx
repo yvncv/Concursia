@@ -162,8 +162,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
                 {inscripciones.map((inscripcion, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="font-medium text-gray-900">{inscripcion.modalidad}</div>
-                      <div className="text-xs text-gray-500">{inscripcion.level}</div>
+                      <div className="font-medium text-gray-900">{inscripcion.level}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <div>
