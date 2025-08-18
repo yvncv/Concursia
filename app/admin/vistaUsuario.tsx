@@ -44,6 +44,7 @@ export default function VistaUsuario({ user, onClose }: VistaUsuarioProps) {
                 <p className="px-4 py-2 text-gray-900 dark:text-gray-100"><strong>Academia:</strong> {user.marinera.academyName ?? "-"}</p>
                 <p className="px-4 py-2 text-gray-900 dark:text-gray-100"><strong>Categoria:</strong> {user.marinera.participant.category ?? "-"}</p>
                 <p className="px-4 py-2 text-gray-900 dark:text-gray-100"><strong>Número:</strong> {user.phoneNumber ?? "-"}</p>
+                <p className="px-4 py-2 text-gray-900 dark:text-gray-100"><strong>ID:</strong> { user.id ?? "-"}</p>
                 <button
                     className="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
                     onClick={onClose}
