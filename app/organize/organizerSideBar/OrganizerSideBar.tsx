@@ -27,8 +27,9 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
   const pathname = usePathname();
   const { user } = useUser();
 
-  // Removemos la lógica de handleResize que interfería con el control manual
-  // El resize ahora se maneja completamente desde el layout padre
+  // Verificar si el usuario es organizador de la academia específica autorizada
+  const isAuthorizedAcademyOrganizer = user?.roleId === "organizer" && 
+                                      user?.marinera?.academyId === "SSHmOq0voJb1rJFsoTXA";
 
   const toggleSidebar = useCallback(() => {
     const isMobile = window.innerWidth < 768;
@@ -56,6 +57,27 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
   // Detectar si es mobile para mostrar overlay
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
+  // Definir los elementos del menú dinámicamente
+  const getMenuItems = () => {
+    const baseItems = [
+      { label: "Dashboard", href: "/organize", icon: <LayoutDashboard size={20} /> },
+      { label: "Academia", href: "/organize/academy", icon: <Academy size={20} /> },
+    ];
+
+    // Solo agregar "Eventos" si es organizador de la academia específica autorizada
+    if (isAuthorizedAcademyOrganizer) {
+      baseItems.push({
+        label: "Eventos",
+        href: "/organize/events",
+        icon: <Calendar size={20} />
+      });
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
+
   return (
     <>
       <aside
@@ -77,6 +99,13 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
             <h1 className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-400 truncate">
               {user?.roleId === "organizer" ? "Organizador" : "Personal (Staff)"}
             </h1>
+          )}
+          
+          {/* Indicador de academia asignada */}
+          {sidebarState === "collapsed" && user?.marinera?.academyName && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+              {user.marinera.academyName}
+            </div>
           )}
           
           {/* Botón de cerrar (X) - visible en mobile cuando está expandido */}
@@ -104,11 +133,7 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
         <div className="p-3 sm:p-4 pt-2">
           <nav>
             <ul className="space-y-1 sm:space-y-2">
-              {[
-                { label: "Dashboard", href: "/organize", icon: <LayoutDashboard size={20} /> },
-                { label: "Academia", href: "/organize/academy", icon: <Academy size={20} /> },
-                { label: "Eventos", href: "/organize/events", icon: <Calendar size={20} /> },
-              ].map((item) => (
+              {menuItems.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -143,15 +168,29 @@ const OrganizerSideBar: React.FC<OrganizerSideBarProps> = ({
                 </li>
               ))}
             </ul>
+
+            {/* Mensaje informativo si no es organizador de la academia autorizada */}
+            {!isAuthorizedAcademyOrganizer && sidebarState === "collapsed" && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                  <strong>Nota:</strong> La gestión de eventos está disponible solo para academias autorizadas.
+                </div>
+              </div>
+            )}
           </nav>
         </div>
 
-        {/* Footer del sidebar (opcional) */}
+        {/* Footer del sidebar */}
         {sidebarState === "collapsed" && (
           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
               {user?.firstName || "Usuario"}
             </div>
+            {user?.marinera?.academyName && (
+              <div className="text-xs text-blue-600 dark:text-blue-400 text-center mt-1">
+                {user.marinera.academyName}
+              </div>
+            )}
           </div>
         )}
       </aside>

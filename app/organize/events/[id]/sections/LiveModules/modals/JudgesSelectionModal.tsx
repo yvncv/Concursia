@@ -230,15 +230,15 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-7xl transform transition-all max-h-[95vh] overflow-hidden">
-        {/* Header mejorado */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 px-8 py-6 text-white">
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden">
+        {/* Header fijo */}
+        <div className="bg-gradient-to-r from-red-500 to-red-600 px-8 py-6 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V19C3 20.1 3.9 21 5 21H11V19H5V3H13V9H21ZM14 19H16L18.5 16.5C18.89 16.11 18.89 15.48 18.5 15.09C18.11 14.7 17.48 14.7 17.09 15.09L15 17.17L13.91 16.09C13.52 15.7 12.89 15.7 12.5 16.09C12.11 16.48 12.11 17.11 12.5 17.5L14 19ZM16 20.5C16 21.33 16.67 22 17.5 22S19 21.33 19 20.5S18.33 19 17.5 19S16 19.67 16 20.5Z"/>
                   </svg>
                 </div>
                 Distribución de Jurados
@@ -257,7 +257,7 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
             </button>
           </div>
 
-          {/* Estadísticas mejoradas */}
+          {/* Estadísticas */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white/10 backdrop-blur rounded-xl p-4">
               <div className="text-2xl font-bold">{totalAssigned}</div>
@@ -281,8 +281,8 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
           </div>
         </div>
 
-        {/* Búsqueda mejorada */}
-        <div className="px-8 py-4 bg-gray-50 border-b">
+        {/* Búsqueda fija */}
+        <div className="px-8 py-4 bg-gray-50 border-b flex-shrink-0">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center">
               <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,363 +299,365 @@ export const JudgeSelectionModal: React.FC<JudgeSelectionModalProps> = ({
           </div>
         </div>
 
-        {/* Contenido principal mejorado */}
-        <div className="flex flex-col lg:flex-row" style={{ height: 'calc(95% - 280px)' }}>
-          {/* Lista de jurados (izquierda) */}
-          <div className="w-full lg:w-2/5 px-6 py-4 overflow-y-auto border-r border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                Jurados Disponibles
-              </h3>
-              <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                {filteredJudges.length}
-              </span>
-            </div>
-            
-            <div className="space-y-2">
-              {filteredJudges.length > 0 ? (
-                filteredJudges.map(judge => {
-                  const user = usersMap[judge.userId];
-                  const isAssigned = isJudgeAssigned(judge.userId);
-                  const assignedBlock = findJudgeBlock(judge.userId);
-                  const wasOriginallyAssigned = tandaBlocks.some(block => 
-                    block.judgeIds?.includes(judge.userId)
-                  );
-                  const nextAvailableBlock = getNextAvailableBlock();
+        {/* Contenido principal con scroll único */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col lg:flex-row">
+            {/* Lista de jurados (izquierda) */}
+            <div className="w-full lg:w-2/5 px-6 py-4 border-r border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  Jurados Disponibles
+                </h3>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {filteredJudges.length}
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                {filteredJudges.length > 0 ? (
+                  filteredJudges.map(judge => {
+                    const user = usersMap[judge.userId];
+                    const isAssigned = isJudgeAssigned(judge.userId);
+                    const assignedBlock = findJudgeBlock(judge.userId);
+                    const wasOriginallyAssigned = tandaBlocks.some(block => 
+                      block.judgeIds?.includes(judge.userId)
+                    );
+                    const nextAvailableBlock = getNextAvailableBlock();
 
-                  return (
-                    <div
-                      key={judge.userId}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, judge.userId)}
-                      className={`group relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-move hover:shadow-lg ${
-                        isAssigned 
-                          ? wasOriginallyAssigned 
-                            ? 'border-red-300 bg-gradient-to-r from-red-50 to-red-100 shadow-sm' 
-                            : 'border-green-300 bg-gradient-to-r from-green-50 to-green-100 shadow-sm'
-                          : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50'
-                      }`}
-                    >
-                      {/* Drag handle */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                        </svg>
-                      </div>
+                    return (
+                      <div
+                        key={judge.userId}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, judge.userId)}
+                        className={`group relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-move hover:shadow-lg ${
+                          isAssigned 
+                            ? wasOriginallyAssigned 
+                              ? 'border-red-300 bg-gradient-to-r from-red-50 to-red-100 shadow-sm' 
+                              : 'border-green-300 bg-gradient-to-r from-green-50 to-green-100 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50'
+                        }`}
+                      >
+                        {/* Drag handle */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                          </svg>
+                        </div>
 
-                      {/* Avatar mejorado */}
-                      <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                          {user?.profileImage ? (
-                            <img
-                              src={typeof user.profileImage === 'string' ? user.profileImage : URL.createObjectURL(user.profileImage)}
-                              alt={`${user.firstName} ${user.lastName}`}
-                              className="w-12 h-12 rounded-xl object-cover"
-                            />
-                          ) : (
-                            <span className="text-white text-sm font-bold">
-                              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                            </span>
-                          )}
+                        {/* Avatar */}
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                            {user?.profileImage ? (
+                              <img
+                                src={typeof user.profileImage === 'string' ? user.profileImage : URL.createObjectURL(user.profileImage)}
+                                alt={`${user.firstName} ${user.lastName}`}
+                                className="w-12 h-12 rounded-xl object-cover"
+                              />
+                            ) : (
+                              <span className="text-white text-sm font-bold">
+                                {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Status indicator */}
+                          <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                            isAssigned 
+                              ? wasOriginallyAssigned ? 'bg-red-500' : 'bg-green-500'
+                              : 'bg-gray-300'
+                          }`} />
                         </div>
                         
-                        {/* Status indicator */}
-                        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                          isAssigned 
-                            ? wasOriginallyAssigned ? 'bg-red-500' : 'bg-green-500'
-                            : 'bg-gray-300'
-                        }`} />
-                      </div>
-                      
-                      {/* Info del jurado */}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 text-base truncate">
-                          {user?.firstName} {user?.lastName}
+                        {/* Info del jurado */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-base truncate">
+                            {user?.firstName} {user?.lastName}
+                          </div>
+                          <div className={`text-sm mt-1 ${
+                            isAssigned 
+                              ? wasOriginallyAssigned ? 'text-red-600' : 'text-green-600'
+                              : 'text-gray-500'
+                          }`}>
+                            {isAssigned 
+                              ? `📍 Bloque ${String.fromCharCode(65 + assignedBlock)}`
+                              : nextAvailableBlock !== -1 
+                                ? `→ Se asignará al Bloque ${String.fromCharCode(65 + nextAvailableBlock)}`
+                                : '⚠️ Todos los bloques completos'
+                            }
+                          </div>
                         </div>
-                        <div className={`text-sm mt-1 ${
-                          isAssigned 
-                            ? wasOriginallyAssigned ? 'text-red-600' : 'text-green-600'
-                            : 'text-gray-500'
-                        }`}>
-                          {isAssigned 
-                            ? `📍 Bloque ${String.fromCharCode(65 + assignedBlock)}`
-                            : nextAvailableBlock !== -1 
-                              ? `→ Se asignará al Bloque ${String.fromCharCode(65 + nextAvailableBlock)}`
-                              : '⚠️ Todos los bloques completos'
-                          }
-                        </div>
-                      </div>
 
-                      {/* Toggle button */}
-                      <button
-                        onClick={() => toggleJudge(judge.userId)}
-                        className={`p-2 rounded-lg transition-all ${
-                          isAssigned
-                            ? 'bg-red-100 hover:bg-red-200 text-red-600'
-                            : canSelectMore
-                              ? 'bg-green-100 hover:bg-green-200 text-green-600'
-                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        }`}
-                        disabled={!canSelectMore && !isAssigned}
-                      >
-                        {isAssigned ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        )}
-                      </button>
+                        {/* Toggle button */}
+                        <button
+                          onClick={() => toggleJudge(judge.userId)}
+                          className={`p-2 rounded-lg transition-all ${
+                            isAssigned
+                              ? 'bg-red-100 hover:bg-red-200 text-red-600'
+                              : canSelectMore
+                                ? 'bg-green-100 hover:bg-green-200 text-green-600'
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                          disabled={!canSelectMore && !isAssigned}
+                        >
+                          {isAssigned ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <p className="text-gray-500 font-medium">
+                      {judges.length === 0 ? "No hay jurados disponibles" : "No se encontraron jurados"}
+                    </p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {judges.length === 0 ? "Verifica la configuración del evento" : "Intenta con otro término de búsqueda"}
+                    </p>
                   </div>
-                  <p className="text-gray-500 font-medium">
-                    {judges.length === 0 ? "No hay jurados disponibles" : "No se encontraron jurados"}
-                  </p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {judges.length === 0 ? "Verifica la configuración del evento" : "Intenta con otro término de búsqueda"}
-                  </p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Instrucciones drag & drop */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Instrucciones
-              </h4>
-              <ul className="text-blue-800 text-xs space-y-1">
-                <li>• <strong>Arrastra</strong> jurados directamente a los bloques</li>
-                <li>• <strong>Click</strong> para asignación automática</li>
-                <li>• <strong>Punto rojo:</strong> asignado previamente</li>
-                <li>• <strong>Punto verde:</strong> recién seleccionado</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Vista de bloques mejorada (derecha) */}
-          <div className="w-full lg:w-3/5 px-6 py-4 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Distribución por Bloques
-              </h3>
-              <div className="flex gap-2">
-                {blockJudges.map((judges, index) => (
-                  <div
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${
-                      judges.length === judgesCount
-                        ? 'bg-green-500'
-                        : judges.length > 0
-                          ? 'bg-yellow-500'
-                          : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
+              {/* Instrucciones drag & drop */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Instrucciones
+                </h4>
+                <ul className="text-blue-800 text-xs space-y-1">
+                  <li>• <strong>Arrastra</strong> jurados directamente a los bloques</li>
+                  <li>• <strong>Click</strong> para asignación automática</li>
+                  <li>• <strong>Punto rojo:</strong> asignado previamente</li>
+                  <li>• <strong>Punto verde:</strong> recién seleccionado</li>
+                </ul>
               </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {blockJudges.map((judges, blockIndex) => (
-                <div
-                  key={blockIndex}
-                  onDragOver={(e) => handleDragOver(e, blockIndex)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, blockIndex)}
-                  className={`relative p-6 rounded-2xl border-2 transition-all duration-300 min-h-[200px] ${
-                    dragOverBlock === blockIndex
-                      ? 'border-blue-400 bg-blue-50 shadow-lg scale-105'
-                      : judges.length === judgesCount
-                        ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100'
-                        : judges.length > judgesCount
-                          ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100'
-                          : judges.length > 0
-                            ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100'
-                            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  {/* Header del bloque */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg ${
+
+            {/* Vista de bloques (derecha) */}
+            <div className="w-full lg:w-3/5 px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Distribución por Bloques
+                </h3>
+                <div className="flex gap-2">
+                  {blockJudges.map((judges, index) => (
+                    <div
+                      key={index}
+                      className={`w-3 h-3 rounded-full ${
                         judges.length === judgesCount
                           ? 'bg-green-500'
                           : judges.length > 0
                             ? 'bg-yellow-500'
-                            : 'bg-gray-400'
-                      }`}>
-                        {String.fromCharCode(65 + blockIndex)}
+                            : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {blockJudges.map((judges, blockIndex) => (
+                  <div
+                    key={blockIndex}
+                    onDragOver={(e) => handleDragOver(e, blockIndex)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, blockIndex)}
+                    className={`relative p-6 rounded-2xl border-2 transition-all duration-300 min-h-[200px] ${
+                      dragOverBlock === blockIndex
+                        ? 'border-blue-400 bg-blue-50 shadow-lg scale-105'
+                        : judges.length === judgesCount
+                          ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100'
+                          : judges.length > judgesCount
+                            ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100'
+                            : judges.length > 0
+                              ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100'
+                              : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    {/* Header del bloque */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg ${
+                          judges.length === judgesCount
+                            ? 'bg-green-500'
+                            : judges.length > 0
+                              ? 'bg-yellow-500'
+                              : 'bg-gray-400'
+                        }`}>
+                          {String.fromCharCode(65 + blockIndex)}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            Bloque {String.fromCharCode(65 + blockIndex)}
+                          </h4>
+                          <p className="text-gray-600 text-sm">
+                            {judges.length > 0 ? `${judges.length} jurado${judges.length > 1 ? 's' : ''}` : 'Sin asignar'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-lg">
-                          Bloque {String.fromCharCode(65 + blockIndex)}
-                        </h4>
-                        <p className="text-gray-600 text-sm">
-                          {judges.length > 0 ? `${judges.length} jurado${judges.length > 1 ? 's' : ''}` : 'Sin asignar'}
-                        </p>
+                      
+                      <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                        judges.length === judgesCount
+                          ? 'bg-green-200 text-green-800'
+                          : judges.length > judgesCount
+                            ? 'bg-red-200 text-red-800'
+                            : 'bg-orange-200 text-orange-800'
+                      }`}>
+                        {judges.length}/{judgesCount}
+                        {judges.length === judgesCount && ' ✓'}
                       </div>
                     </div>
                     
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      judges.length === judgesCount
-                        ? 'bg-green-200 text-green-800'
-                        : judges.length > judgesCount
-                          ? 'bg-red-200 text-red-800'
-                          : 'bg-orange-200 text-orange-800'
-                    }`}>
-                      {judges.length}/{judgesCount}
-                      {judges.length === judgesCount && ' ✓'}
-                    </div>
-                  </div>
-                  
-                  {/* Lista de jurados en el bloque */}
-                  <div className="space-y-3">
-                    {judges.length > 0 ? (
-                      judges.map((judgeId) => {
-                        const user = usersMap[judgeId];
-                        const wasOriginal = tandaBlocks[blockIndex]?.judgeIds?.includes(judgeId);
-                        return (
-                          <div
-                            key={judgeId}
-                            className={`flex items-center gap-3 p-3 rounded-xl border transition-all group ${
-                              wasOriginal 
-                                ? 'bg-red-100 border-red-200 hover:bg-red-150' 
-                                : 'bg-white border-gray-200 hover:bg-gray-50'
-                            }`}
-                          >
-                            <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center shadow">
-                              {user?.profileImage ? (
-                                <img
-                                  src={typeof user.profileImage === 'string' ? user.profileImage : URL.createObjectURL(user.profileImage)}
-                                  alt={`${user.firstName} ${user.lastName}`}
-                                  className="w-8 h-8 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <span className="text-white text-xs font-bold">
-                                  {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 truncate">
-                                {user?.firstName} {user?.lastName}
-                              </div>
-                              {wasOriginal && (
-                                <div className="text-xs text-red-600 flex items-center gap-1">
-                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                                  Asignado previamente
-                                </div>
-                              )}
-                            </div>
-                            
-                            <button
-                              onClick={() => removeJudgeFromBlock(judgeId, blockIndex)}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-all"
+                    {/* Lista de jurados en el bloque */}
+                    <div className="space-y-3">
+                      {judges.length > 0 ? (
+                        judges.map((judgeId) => {
+                          const user = usersMap[judgeId];
+                          const wasOriginal = tandaBlocks[blockIndex]?.judgeIds?.includes(judgeId);
+                          return (
+                            <div
+                              key={judgeId}
+                              className={`flex items-center gap-3 p-3 rounded-xl border transition-all group ${
+                                wasOriginal 
+                                  ? 'bg-red-100 border-red-200 hover:bg-red-150' 
+                                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }`}
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
+                              <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center shadow">
+                                {user?.profileImage ? (
+                                  <img
+                                    src={typeof user.profileImage === 'string' ? user.profileImage : URL.createObjectURL(user.profileImage)}
+                                    alt={`${user.firstName} ${user.lastName}`}
+                                    className="w-8 h-8 rounded-lg object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-white text-xs font-bold">
+                                    {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {user?.firstName} {user?.lastName}
+                                </div>
+                                {wasOriginal && (
+                                  <div className="text-xs text-red-600 flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                    Asignado previamente
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <button
+                                onClick={() => removeJudgeFromBlock(judgeId, blockIndex)}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-all"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                          <div className="w-12 h-12 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center mb-3">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                        <div className="w-12 h-12 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center mb-3">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
+                          <p className="text-sm font-medium">Arrastra jurados aquí</p>
+                          <p className="text-xs mt-1">o haz click en "+" para asignar</p>
                         </div>
-                        <p className="text-sm font-medium">Arrastra jurados aquí</p>
-                        <p className="text-xs mt-1">o haz click en "+" para asignar</p>
+                      )}
+                    </div>
+
+                    {/* Drop zone indicator */}
+                    {dragOverBlock === blockIndex && (
+                      <div className="absolute inset-0 bg-blue-200 bg-opacity-50 rounded-2xl flex items-center justify-center pointer-events-none">
+                        <div className="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg">
+                          Soltar aquí
+                        </div>
                       </div>
                     )}
                   </div>
+                ))}
+              </div>
 
-                  {/* Drop zone indicator */}
-                  {dragOverBlock === blockIndex && (
-                    <div className="absolute inset-0 bg-blue-200 bg-opacity-50 rounded-2xl flex items-center justify-center pointer-events-none">
-                      <div className="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium shadow-lg">
-                        Soltar aquí
-                      </div>
+              {/* Resumen de estado */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-900">Resumen de Asignación</h4>
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    allBlocksComplete 
+                      ? 'bg-green-100 text-green-800' 
+                      : totalAssigned > 0
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {allBlocksComplete ? 'Completo' : totalAssigned > 0 ? 'En Progreso' : 'Pendiente'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div className="p-3 bg-white rounded-lg">
+                    <div className="text-xl font-bold text-gray-900">{judges.length}</div>
+                    <div className="text-xs text-gray-600">Total Disponibles</div>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">{totalAssigned}</div>
+                    <div className="text-xs text-gray-600">Asignados</div>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg">
+                    <div className="text-xl font-bold text-green-600">
+                      {blockJudges.filter(judges => judges.length === judgesCount).length}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Resumen de estado */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900">Resumen de Asignación</h4>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  allBlocksComplete 
-                    ? 'bg-green-100 text-green-800' 
-                    : totalAssigned > 0
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {allBlocksComplete ? 'Completo' : totalAssigned > 0 ? 'En Progreso' : 'Pendiente'}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div className="p-3 bg-white rounded-lg">
-                  <div className="text-xl font-bold text-gray-900">{judges.length}</div>
-                  <div className="text-xs text-gray-600">Total Disponibles</div>
-                </div>
-                <div className="p-3 bg-white rounded-lg">
-                  <div className="text-xl font-bold text-blue-600">{totalAssigned}</div>
-                  <div className="text-xs text-gray-600">Asignados</div>
-                </div>
-                <div className="p-3 bg-white rounded-lg">
-                  <div className="text-xl font-bold text-green-600">
-                    {blockJudges.filter(judges => judges.length === judgesCount).length}
+                    <div className="text-xs text-gray-600">Bloques Completos</div>
                   </div>
-                  <div className="text-xs text-gray-600">Bloques Completos</div>
-                </div>
-                <div className="p-3 bg-white rounded-lg">
-                  <div className="text-xl font-bold text-red-600">
-                    {blockJudges.filter(judges => judges.length !== judgesCount).length}
+                  <div className="p-3 bg-white rounded-lg">
+                    <div className="text-xl font-bold text-red-600">
+                      {blockJudges.filter(judges => judges.length !== judgesCount).length}
+                    </div>
+                    <div className="text-xs text-gray-600">Bloques Pendientes</div>
                   </div>
-                  <div className="text-xs text-gray-600">Bloques Pendientes</div>
                 </div>
-              </div>
 
-              {/* Barra de progreso */}
-              <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Progreso de asignación</span>
-                  <span>{Math.round((totalAssigned / Math.max(totalNeeded, 1)) * 100)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((totalAssigned / Math.max(totalNeeded, 1)) * 100, 100)}%` }}
-                  />
+                {/* Barra de progreso */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Progreso de asignación</span>
+                    <span>{Math.round((totalAssigned / Math.max(totalNeeded, 1)) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min((totalAssigned / Math.max(totalNeeded, 1)) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer mejorado */}
-        <div className="px-8 py-6 bg-gray-50 border-t border-gray-200">
+        {/* Footer fijo */}
+        <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex-shrink-0">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             {/* Información de estado */}
             <div className="flex items-center gap-2 text-sm">

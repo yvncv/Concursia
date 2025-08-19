@@ -61,8 +61,8 @@ export function usePullCoupleValidation(
   
   // Lógica de validación
   useEffect(() => {
-    // No ejecutar la validación si estamos cargando las categorías
-    if (loading || !participanteInfo || !parejaInfo || !eventSettings?.pullCouple?.enabled) {
+    // Si estamos cargando o faltan datos básicos, no validar
+    if (loading || !participanteInfo || !parejaInfo) {
       setValidation({
         allowed: false,
         message: "",
@@ -74,9 +74,12 @@ export function usePullCoupleValidation(
     }
     
     try {
-      // Obtener índices en la escala de categorías
-      const indexParticipante = categoriasPorNivel.indexOf(participanteInfo.category);
-      const indexPareja = categoriasPorNivel.indexOf(parejaInfo.category);
+      // Crear array de nombres de categorías para la comparación
+      const nombresCategorias = categoriasPorNivel.map(cat => cat.name);
+      
+      // Obtener índices en la escala de categorías usando los nombres
+      const indexParticipante = nombresCategorias.indexOf(participanteInfo.category as any);
+      const indexPareja = nombresCategorias.indexOf(parejaInfo.category as any);
       
       if (indexParticipante === -1 || indexPareja === -1) {
         setValidation({
@@ -91,51 +94,65 @@ export function usePullCoupleValidation(
       
       // Calcular diferencia de categorías
       const diferencia = Math.abs(indexParticipante - indexPareja);
-      const maxDiferencia = eventSettings.pullCouple.maxLevelDifference || 1;
-      
-      // Determinar quién tiene mayor nivel
       const esMayorParticipante = indexParticipante > indexPareja;
       
-      // Validar la diferencia y determinar categoría final
-      if (diferencia > 0) {
-        if (diferencia <= maxDiferencia) {
-          // Se permite jalar pareja
-          const categoriaFinal = esMayorParticipante
-            ? participanteInfo.category
-            : parejaInfo.category;
-          
-          setValidation({
-            allowed: true,
-            message: `Se puede aplicar "Jalar Pareja". Se usará la categoría ${categoriaFinal}.`,
-            diferenciaValor: diferencia,
-            categoriaFinal,
-            esMayorParticipante
-          });
-        } else {
-          // Diferencia demasiado grande
-          setValidation({
-            allowed: false,
-            message: `La diferencia de niveles (${diferencia}) excede el máximo permitido (${maxDiferencia}).`,
-            diferenciaValor: diferencia,
-            categoriaFinal: "",
-            esMayorParticipante
-          });
-        }
-      } else {
+      // Primero verificar si hay diferencia de categorías
+      if (diferencia === 0) {
         // Misma categoría, no es necesario jalar
         setValidation({
           allowed: false,
-          message: "Ambos participantes tienen la misma categoría. No es necesario jalar pareja.",
+          message: "Ambos participantes tienen la misma categoría",
           diferenciaValor: 0,
           categoriaFinal: participanteInfo.category,
           esMayorParticipante: false
         });
+        return;
       }
+      
+      // Si hay diferencia, verificar si el evento permite jalar pareja
+      if (!eventSettings?.pullCouple?.enabled) {
+        setValidation({
+          allowed: false,
+          message: "Este evento no permite 'Jalar Pareja'. Los participantes deben ser de la misma categoría",
+          diferenciaValor: diferencia,
+          categoriaFinal: "",
+          esMayorParticipante
+        });
+        return;
+      }
+      
+      // El evento SÍ permite jalar pareja, validar límites
+      const maxDiferencia = eventSettings.pullCouple.maxLevelDifference || 1;
+      
+      if (diferencia <= maxDiferencia) {
+        // Se permite jalar pareja
+        const categoriaFinal = esMayorParticipante
+          ? participanteInfo.category
+          : parejaInfo.category;
+        
+        setValidation({
+          allowed: true,
+          message: `Se puede aplicar "Jalar Pareja". Categoría final: ${categoriaFinal}`,
+          diferenciaValor: diferencia,
+          categoriaFinal,
+          esMayorParticipante
+        });
+      } else {
+        // Diferencia demasiado grande
+        setValidation({
+          allowed: false,
+          message: `La diferencia de categorías (${diferencia}) excede el máximo permitido (${maxDiferencia})`,
+          diferenciaValor: diferencia,
+          categoriaFinal: "",
+          esMayorParticipante
+        });
+      }
+      
     } catch (error) {
       console.error("Error en validación de jalar pareja:", error);
       setValidation({
         allowed: false,
-        message: "Error al validar las categorías.",
+        message: "Error al validar las categorías",
         diferenciaValor: 0,
         categoriaFinal: "",
         esMayorParticipante: false

@@ -13,6 +13,9 @@ export interface Participante {
   gender: string;
   phoneNumber?: string[];
   category: CategoryLevel;
+  academyId?: string;
+  academyName?: string;
+  profileImage?: string; // ✅ Agregar esta línea
 }
 
 interface ParticipantSearchResult {
@@ -81,7 +84,6 @@ export function useParticipantSearch(): ParticipantSearchResult {
         return null;
       }
       
-      // Crear objeto participante con la estructura esperada
       const participantData: Participante = {
         id: user.id,
         firstName: user.firstName,
@@ -90,7 +92,10 @@ export function useParticipantSearch(): ParticipantSearchResult {
         birthDate: user.birthDate,
         gender: user.gender,
         phoneNumber: user.phoneNumber,
-        category: user.marinera.participant.category as CategoryLevel
+        category: user.marinera.participant.category as CategoryLevel,
+        academyId: user.marinera?.academyId || undefined,
+        academyName: user.marinera?.academyName || undefined,
+        profileImage: typeof user.profileImage === 'string' ? user.profileImage : undefined // ✅ Manejar string y File
       };
       
       // Guardar en caché para futuras búsquedas

@@ -30,7 +30,7 @@ interface Participante {
   telefono: string;
   academyId: string;
   academyName: string;
-  originalCategory: string;
+  birthDate: Date;
 }
 
 interface Inscripcion {
@@ -60,6 +60,7 @@ interface InscriptionListProps {
   montoTotal: number;
   event: Event;
   groupValidation: GroupValidation;
+  getParticipantCategory: (participante: { birthDate: Date }) => string;
 }
 
 const InscriptionList: React.FC<InscriptionListProps> = ({
@@ -69,7 +70,8 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
   isSubmitting,
   montoTotal,
   event,
-  groupValidation
+  groupValidation,
+  getParticipantCategory
 }) => {
   
   const handleEliminarInscripcion = (index: number) => {
@@ -160,8 +162,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
                 {inscripciones.map((inscripcion, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="font-medium text-gray-900">{inscripcion.modalidad}</div>
-                      <div className="text-xs text-gray-500">{inscripcion.level}</div>
+                      <div className="font-medium text-gray-900">{inscripcion.level}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <div>
@@ -192,7 +193,10 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
                         {inscripcion.isPullCouple && (
                           <div className="flex items-center text-gray-400 text-xs ml-2">
                             <ArrowRight className="w-3 h-3 mx-1" />
-                            <span>({inscripcion.participante.originalCategory}/{inscripcion.pareja?.originalCategory})</span>
+                            <span>
+                              ({getParticipantCategory({ birthDate: inscripcion.participante.birthDate })}/
+                              {inscripcion.pareja && getParticipantCategory({ birthDate: inscripcion.pareja.birthDate })})
+                            </span>
                           </div>
                         )}
                       </div>

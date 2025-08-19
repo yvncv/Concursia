@@ -34,7 +34,6 @@ interface FormData {
   birthDate: string;
   gender: string;
   phoneNumber: string;
-  category: string;
   location: User['location'];
   
   // Step 3
@@ -60,7 +59,6 @@ export default function RegisterPage() {
     birthDate: string;
     gender: string;
     phoneNumber: string;
-    category: string;
     location: User['location'];
   }) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -139,7 +137,9 @@ export default function RegisterPage() {
         gender: completeData.gender,
         marinera: {
           participant: {
-            category: completeData.category,
+            // Eliminamos category - ahora se calcula dinámicamente
+            level: "",
+            participatedEvents: [],
           },
         },
         email: [completeData.email],

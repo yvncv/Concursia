@@ -10,7 +10,6 @@ import CancelRegistrationModal from './modals/CancelRegistrationModal';
 const MyRegistrationsPage = () => {
   const { user, loadingUser } = useUser();
 
-  // Loading state para el usuario
   if (loadingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -26,7 +25,6 @@ const MyRegistrationsPage = () => {
     );
   }
 
-  // Not logged in
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -51,18 +49,15 @@ const MyRegistrationsPage = () => {
     );
   }
 
-  // User logged in - render the actual component
   return <MyRegistrationsContent userId={user.id} />;
 };
 
-// Componente interno para las inscripciones
 const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
   const { registrations, loading, error, refetch } = useMyRegistrations(userId);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'group'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Estados para los modales
   const [selectedRegistration, setSelectedRegistration] = useState<RegistrationItem | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -77,7 +72,6 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
     setShowCancelModal(true);
   };
 
-  // Función simplificada - solo refrescar la lista
   const handleCancellationSuccess = () => {
     refetch();
   };
@@ -87,17 +81,16 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
     if (filter === 'pending') return reg.status === 'Pendiente';
     if (filter === 'confirmed') return reg.status === 'Confirmada';
     if (filter === 'cancelled') return reg.status === 'Anulado';
+    if (filter === 'group') return reg.isGroupTicket === true;
     return true;
   });
 
-  // Paginación
   const totalPages = Math.ceil(filteredRegistrations.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedRegistrations = filteredRegistrations.slice(startIndex, endIndex);
 
-  // Reset página cuando cambia el filtro
-  const handleFilterChange = (newFilter: 'all' | 'pending' | 'confirmed' | 'cancelled') => {
+  const handleFilterChange = (newFilter: 'all' | 'pending' | 'confirmed' | 'cancelled' | 'group') => {
     setFilter(newFilter);
     setCurrentPage(1);
   };
@@ -134,6 +127,22 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
       default:
         return null;
     }
+  };
+
+  // NUEVO: Función para obtener el icono del tipo de inscripción
+  const getTypeIcon = (registration: RegistrationItem) => {
+    if (registration.isGroupTicket) {
+      return (
+        <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      );
+    }
+    return (
+      <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    );
   };
 
   if (loading) {
@@ -175,11 +184,11 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Inscripciones</h1>
-              <p className="text-gray-600">Gestiona todos los concursos a los que te has inscrito</p>
+              <p className="text-gray-600">Gestiona todos los concursos y tickets que has creado o en los que participas</p>
             </div>
 
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
-              {/* Filtros */}
+              {/* Filtros actualizados */}
               <div className="flex items-center space-x-2">
                 <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
@@ -193,6 +202,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                   <option value="pending">Pendientes</option>
                   <option value="confirmed">Confirmadas</option>
                   <option value="cancelled">Anuladas</option>
+                  <option value="group">Tickets Grupales</option>
                 </select>
               </div>
 
@@ -214,7 +224,9 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
               <h3 className="mt-4 text-lg font-medium text-gray-900">No hay inscripciones</h3>
               <p className="mt-2 text-gray-500">
                 {filter === 'all'
-                  ? 'Aún no te has inscrito a ningún concurso'
+                  ? 'Aún no te has inscrito a ningún concurso ni has creado tickets grupales'
+                  : filter === 'group'
+                  ? 'No has creado tickets grupales'
                   : `No tienes inscripciones ${filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmadas' : 'anuladas'}`
                 }
               </p>
@@ -223,7 +235,9 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
             <>
               <div className="space-y-6">
                 {paginatedRegistrations.map((registration) => (
-                  <div key={registration.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={registration.id} className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow ${
+                    registration.isGroupTicket ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'
+                  }`}>
                     <div className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                         {/* Main Info */}
@@ -261,18 +275,33 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                                 <h3 className="text-lg font-semibold text-gray-900 truncate">
                                   {registration.eventName}
                                 </h3>
+                                
+                                {/* Tipo de inscripción */}
+                                <div className="flex items-center space-x-1">
+                                  {getTypeIcon(registration)}
+                                  {registration.isGroupTicket && (
+                                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-200">
+                                      Ticket Grupal
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Status */}
                                 <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(registration.status)}`}>
                                   {getStatusIcon(registration.status)}
                                   <span>{registration.status}</span>
                                 </span>
+                                
+                                {/* Participant Code */}
                                 {registration.participantCode && (
-                                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-200">
+                                  <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded border border-purple-200">
                                     #{registration.participantCode}
                                   </span>
                                 )}
                               </div>
 
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                              {/* Info Grid */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
                                 <div className="flex items-center space-x-1">
                                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -304,17 +333,36 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                                   </svg>
                                   <span>S/ {registration.amount.toFixed(2)}</span>
                                 </div>
+                                
+                                {/* Información adicional para tickets grupales */}
+                                {registration.isGroupTicket && registration.inscriptionSummary && (
+                                  <div className="flex items-center space-x-1 col-span-2 md:col-span-3">
+                                    <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    <span className="text-blue-600 font-medium">{registration.inscriptionSummary}</span>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Participantes y Academia */}
                               <div className="mt-3 space-y-1">
                                 <div className="text-sm">
-                                  <span className="font-medium text-gray-700">Participantes: </span>
-                                  <span className="text-gray-600">{registration.participants.join(', ')}</span>
+                                  <span className="font-medium text-gray-700">
+                                    {registration.isGroupTicket ? 'Todos los participantes: ' : 'Participantes: '}
+                                  </span>
+                                  <span className="text-gray-600">
+                                    {registration.isGroupTicket && registration.participants.length > 3
+                                      ? `${registration.participants.slice(0, 3).join(', ')} y ${registration.participants.length - 3} más`
+                                      : registration.participants.join(', ')
+                                    }
+                                  </span>
                                 </div>
                                 {registration.academies.length > 0 && (
                                   <div className="text-sm">
-                                    <span className="font-medium text-gray-700">Academia: </span>
+                                    <span className="font-medium text-gray-700">
+                                      {registration.academies.length > 1 ? 'Academias: ' : 'Academia: '}
+                                    </span>
                                     <span className="text-gray-600">{registration.academies.join(', ')}</span>
                                   </div>
                                 )}
@@ -322,9 +370,15 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
 
                               {/* Fechas importantes */}
                               <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-                                <span>Inscrito: {registration.registrationDate.toLocaleDateString()}</span>
+                                <span>
+                                  {registration.isGroupTicket ? 'Ticket creado: ' : 'Inscrito: '}
+                                  {registration.registrationDate.toLocaleDateString()}
+                                </span>
                                 {registration.paymentDate && (
                                   <span>Pagado: {registration.paymentDate.toLocaleDateString()}</span>
+                                )}
+                                {registration.createdByMe && (
+                                  <span className="text-blue-600 font-medium">• Creado por ti</span>
                                 )}
                               </div>
                             </div>
@@ -352,7 +406,7 @@ const MyRegistrationsContent: React.FC<{ userId: string }> = ({ userId }) => {
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                                <span>Cancelar Inscripción</span>
+                                <span>Cancelar</span>
                               </button>
                             )}
                           </div>

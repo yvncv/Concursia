@@ -18,6 +18,7 @@ interface ParticipantDataProps {
   handleAcademySelect: (id: string, name: string) => void;
   handleCoupleAcademySelect: (id: string, name: string) => void;
   onCanProceedChange: (ok: boolean) => void;
+  getUserCategory: (user: User) => string;
 }
 
 const InscriptionForm: React.FC<ParticipantDataProps> = ({
@@ -35,6 +36,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
   handleAcademySelect,
   handleCoupleAcademySelect,
   onCanProceedChange,
+  getUserCategory,
 }) => {
 
   useEffect(() => {
@@ -107,7 +109,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
               <div className="space-y-4">
                 {[
                   { id: 'gender', label: 'Género', value: user?.gender, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-                  { id: 'category', label: 'Categoría', value: user?.marinera?.participant?.category, icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
+                  { id: 'category', label: 'Categoría', value: getUserCategory(user), icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
                 ].map(({ id, label, value, icon }) => (
                   <div key={id} className="flex items-center">
                     <div className="mr-2 bg-red-700 p-2 rounded-xl">
@@ -269,7 +271,7 @@ const InscriptionForm: React.FC<ParticipantDataProps> = ({
                       <div className="space-y-3">
                         {[
                           { id: 'gender', label: 'Género', value: pareja.gender },
-                          { id: 'category', label: 'Categoría', value: pareja.marinera?.participant?.category },
+                          { id: 'category', label: 'Categoría', value: getUserCategory(pareja) },
                         ].map(({ id, label, value }) => (
                           <div key={id} className="flex items-center">
                             <div className="flex-1">

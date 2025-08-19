@@ -16,7 +16,7 @@ interface Participante {
   telefono: string;
   academyId: string;
   academyName: string;
-  originalCategory: string;
+  birthDate: Date;
 }
 
 interface Inscripcion {

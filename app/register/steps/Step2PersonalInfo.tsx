@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { X, AlertTriangle, Shield } from "lucide-react";
 import { User } from "@/app/types/userType";
 import { useDNIValidation } from "@/app/hooks/useDNIValidation";
+import { determineCategory } from "@/app/utils/category/determineCategory";
+import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
 
 interface Step2Props {
   onNext: (data: {
@@ -14,13 +16,15 @@ interface Step2Props {
     birthDate: string;
     gender: string;
     phoneNumber: string;
-    category: string;
     location: User['location'];
   }) => void;
   onBack: () => void;
 }
 
 export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
+  // Hook para categorías globales
+  const { categorias } = useGlobalCategories();
+
   // Hook para validación de DNI con nuevas funcionalidades
   const {
     dni,
@@ -47,7 +51,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [category, setCategory] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -69,26 +72,17 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     return apellidos.length >= 2 && apellidos.every(apellido => apellido.length > 0);
   };
 
-  // Determinar categoría basada en edad actual
-  const determineCategory = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+  // Función para obtener categoría dinámicamente
+  const getUserCategory = (birthDate: string): string => {
+    if (!birthDate || categorias.length === 0) {
+      return "Sin categoría";
     }
     
-    if (age <= 2) return "Baby";
-    else if (age <= 6) return "Pre-Infante";
-    else if (age <= 9) return "Infante";
-    else if (age <= 13) return "Infantil";
-    else if (age <= 17) return "Junior";
-    else if (age <= 34) return "Juvenil";
-    else if (age <= 49) return "Adulto";
-    else if (age <= 61) return "Senior";
-    else return "Master";
+    return determineCategory(
+      new Date(birthDate),
+      new Date(),
+      categorias
+    ) || "Categoría no encontrada";
   };
 
   // Capitalizar texto
@@ -108,13 +102,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       })
       .join(' ');
   };
-
-  // Determinar categoría cuando cambia la fecha de nacimiento
-  useEffect(() => {
-    if (birthDate) {
-      setCategory(determineCategory(birthDate));
-    }
-  }, [birthDate]);
 
   // Auto-rellenar datos cuando se valida la identidad (solo en modo automático)
   useEffect(() => {
@@ -191,7 +178,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
         birthDate,
         gender,
         phoneNumber,
-        category,
         location: locationData
       });
       setLoading(false);
@@ -380,7 +366,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
                 className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 required
               />
-              {category && (
+              {birthDate && (
                 <p className="text-sm text-gray-600 mt-1">
                   Edad: {(() => {
                     const today = new Date();
@@ -391,7 +377,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
                       age--;
                     }
                     return age;
-                  })()} años - Categoría: {category}
+                  })()} años - Categoría: {getUserCategory(birthDate)}
                 </p>
               )}
             </div>

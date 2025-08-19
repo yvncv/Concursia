@@ -1,18 +1,23 @@
 // types/categoriesType.ts
-export type CategoryLevel = 
-  | "Baby" 
-  | "Pre-Infante" 
-  | "Infante" 
+export type CategoryLevel =
+  | "Baby"
+  | "Pre Infante"
+  | "Infante"
   | "Infantil"
-  | "Junior" 
-  | "Juvenil" 
-  | "Adulto" 
-  | "Senior" 
-  | "Master" 
+  | "Junior"
+  | "Juvenil"
+  | "Adulto"
+  | "Senior"
+  | "Master"
   | "Oro";
 
-// Interfaz para la estructura completa de categories en Firebase
+export interface AgeCategory {
+  name: CategoryLevel;
+  minAge: number;
+  maxAge: number;
+}
+
 export interface GlobalCategoriesSettings {
-  categoriesByLevel: { [key: string]: string };
+  categories: AgeCategory[];
   updateDate: string;
 }

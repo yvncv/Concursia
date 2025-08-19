@@ -6,6 +6,7 @@ import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 import type { FirebaseApp } from "firebase/app";
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_apiKey!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_authDomain!,

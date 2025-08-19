@@ -14,8 +14,9 @@ export interface LiveCompetition {
   gender: "Mujeres" | "Varones" | "Mixto"; // Género de los participantes
   currentPhase: CompetitionPhase;     // Fase actual activa
   totalParticipants: number;          // Cantidad total de participantes en esta combinación
-  blocks: number;                     // Cantidad de bloques simultáneos definidos
-  tracksPerBlock: number;             // Cantidad de pistas por bloque
+  blocks: number | null;              // Cantidad de bloques simultáneos definidos (null = no configurado)
+  tracksPerBlock: number | null;      // Cantidad de pistas por bloque (null = no configurado)
+  judgesPerBlock: number | null;      // Cantidad de jurados por bloque (null = no configurado)
   totalTandas: number;                // Total de tandas generadas
   currentTandaIndex: number;          // Índice de la tanda actualmente activa
   
@@ -39,8 +40,9 @@ export interface LiveCompetitionCreate {
   gender: "Mujeres" | "Varones" | "Mixto";
   currentPhase: CompetitionPhase;
   totalParticipants: number;
-  blocks: number;
-  tracksPerBlock: number;
+  blocks: number | null;              // null al crear, se configura después
+  tracksPerBlock: number | null;      // null al crear, se configura después
+  judgesPerBlock: number | null;      // null al crear, se configura después
   totalTandas: number;
   currentTandaIndex: number;
   
