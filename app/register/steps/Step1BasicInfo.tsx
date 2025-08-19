@@ -11,7 +11,7 @@ interface Step1Props {
 }
 
 interface PasswordStrength {
-  level: 'Débil' | 'Media' | 'Fuerte' | '';
+  level: 'Débil' | 'Media' | 'Fuerte' | 'Muy fuerte' | '';
   color: string;
   bg: string;
   hint: string;
@@ -59,16 +59,21 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
       color = "text-red-700";
       bg = "bg-red-400";
       hint = "Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
-    } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && !hasSpecialChar) {
+    } else if (pwd.length >= 8 && !(hasNumber && (hasUpperCase || hasLowerCase))) {
       level = "Media";
       color = "text-yellow-700";
       bg = "bg-yellow-400";
-      hint = "Agrega al menos un carácter especial para mayor seguridad.";
-    } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && hasSpecialChar) {
+      hint = "Considera números y letras para mayor seguridad.";
+    } else if (pwd.length >= 8 && hasNumber && (hasUpperCase || hasLowerCase)) {
       level = "Fuerte";
       color = "text-green-700";
-      bg = "bg-green-500";
+      bg = "bg-green-400";
       hint = "¡Contraseña fuerte!";
+    } else if (pwd.length >= 8 && hasNumber && hasUpperCase && hasLowerCase && hasSpecialChar) {
+      level = "Muy fuerte";
+      color = "text-cyan-700";
+      bg = "bg-cyan-500";
+      hint = "¡Contraseña muy fuerte!";
     }
 
     setPasswordStrength({ level, color, bg, hint });
@@ -119,8 +124,8 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
       return;
     }
 
-    if (passwordStrength.level !== "Fuerte") {
-      setPasswordError("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.");
+    if (!(passwordStrength.level === "Fuerte" || passwordStrength.level === "Muy fuerte")) {
+      setPasswordError("La contraseña debe tener al menos 8 caracteres, una letra y un número.");
       return;
     }
 
@@ -194,9 +199,11 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
               password !== "" && (
                 passwordStrength.level === "Fuerte" 
                   ? "text-green-700 shadow-[0_0_10px_#22c55e]" 
-                  : passwordStrength.level === "Media" 
-                    ? "text-yellow-700 shadow-[0_0_10px_#facc14]" 
-                    : "text-red-700 shadow-[0_0_10px_#ef4444]"
+                  : passwordStrength.level === "Muy fuerte"
+                    ? "text-cyan-700 shadow-[0_0_10px_#06b6d4]"
+                    : passwordStrength.level === "Media" 
+                      ? "text-yellow-700 shadow-[0_0_10px_#facc14]" 
+                      : "text-red-700 shadow-[0_0_10px_#ef4444]"
               )
             } mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
             placeholder="Contraseña"
@@ -211,25 +218,29 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
                   className={`h-2 rounded ${passwordStrength.bg}`}
                   style={{
                     width:
-                      passwordStrength.level === "Fuerte"
+                      passwordStrength.level === "Muy fuerte"
                         ? "100%"
-                        : passwordStrength.level === "Media"
-                          ? "60%"
-                          : passwordStrength.level === "Débil"
-                            ? "30%"
-                            : "0%",
+                        : passwordStrength.level === "Fuerte"
+                          ? "80%"
+                          : passwordStrength.level === "Media"
+                            ? "60%"
+                            : passwordStrength.level === "Débil"
+                              ? "30%"
+                              : "0%",
                   }}
                 />
               </div>
               <span
                 className={`text-sm font-semibold ${
-                  passwordStrength.level === "Fuerte"
-                    ? "text-green-600"
-                    : passwordStrength.level === "Media"
-                      ? "text-yellow-600"
-                      : passwordStrength.level === "Débil"
-                        ? "text-red-600"
-                        : ""
+                  passwordStrength.level === "Muy fuerte"
+                    ? "text-cyan-600"
+                    : passwordStrength.level === "Fuerte"
+                      ? "text-green-600"
+                      : passwordStrength.level === "Media"
+                        ? "text-yellow-600"
+                        : passwordStrength.level === "Débil"
+                          ? "text-red-600"
+                          : ""
                 }`}
               >
                 {passwordStrength.level}
@@ -256,10 +267,12 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={`w-full border-1 ${
-              confirmPassword !== "" && (
-                passwordStrength.level === "Fuerte" && confirmPassword === password 
+              confirmPassword !== "" && confirmPassword === password && (
+                passwordStrength.level === "Fuerte" 
                   ? "text-green-500 shadow-[0_0_10px_#22c55e]" 
-                  : "text-red-500 shadow-[0_0_10px_#ef4444]"
+                  : passwordStrength.level === "Muy fuerte"
+                    ? "text-cyan-500 shadow-[0_0_10px_#06b6d4]"
+                    : "text-red-500 shadow-[0_0_10px_#ef4444]"
               )
             } mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
             placeholder="Confirmar Contraseña"
@@ -278,7 +291,9 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
             !password ||
             !confirmPassword ||
             emailExists ||
-            passwordStrength.level !== "Fuerte" ||
+            passwordStrength.level === "Débil" ||
+            passwordStrength.level === "Media" ||
+            passwordStrength.level === "" ||
             loading
           }
         >
