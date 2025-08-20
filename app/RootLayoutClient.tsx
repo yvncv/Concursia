@@ -39,7 +39,7 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
 
         {/* Botón flotante - Extremo derecho inferior */}
         <a
-            href="https://wa.me/51912345678"
+            href="https://wa.me/51916886591"
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-8 right-8 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transition-all duration-300"
