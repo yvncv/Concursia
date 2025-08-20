@@ -6,13 +6,48 @@ import useEvents from "../hooks/useEvents";
 import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
 import Pagination from "../ui/pagination/Pagination";
+import { ParticipantsModal } from "../ui/event/components/modals/participantsModal";
 
 export default function TodosEventos() {
   const { user, loadingUser } = useUser();
   const { events, loadingEvents } = useEvents();
-  
+
   const eventsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [participantsModal, setParticipantsModal] = useState<{
+    isOpen: boolean;
+    participants: Participant[];
+    academyName: string;
+    eventName: string;
+  }>({
+    isOpen: false,
+    participants: [],
+    academyName: '',
+    eventName: ''
+  });
+
+  // Función para abrir el modal desde cualquier evento
+  const handleShowParticipants = (
+    participants: Participant[],
+    academyName: string,
+    eventName: string
+  ) => {
+    setParticipantsModal({
+      isOpen: true,
+      participants,
+      academyName,
+      eventName
+    });
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setParticipantsModal(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  };
 
   const loadingMessage =
     loadingUser ? "Obteniendo usuario..." : loadingEvents ? "Cargando eventos..." : null;
@@ -27,76 +62,77 @@ export default function TodosEventos() {
     );
   }
 
-  const capitalizeName = (name : string) =>
-    name.toLowerCase().replace(/\b\w/g, (char : string) => char.toUpperCase());
+  const capitalizeName = (name: string) =>
+    name.toLowerCase().replace(/\b\w/g, (char: string) => char.toUpperCase());
 
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-  
+
   // Filtrar TODOS los eventos que tengan inscripciones habilitadas (no solo los de la página actual)
-  const allEventsWithRegistrationEnabled = events.filter(event => 
-    event.settings?.inscription?.groupEnabled === true || 
+  const allEventsWithRegistrationEnabled = events.filter(event =>
+    event.settings?.inscription?.groupEnabled === true ||
     event.settings?.inscription?.individualEnabled === true
   );
-  
+
   // Aplicar paginación a los eventos filtrados
   const currentEvents = allEventsWithRegistrationEnabled.slice(indexOfFirstEvent, indexOfLastEvent);
 
   return (
-      <main className="flex flex-col items-center min-h-screen text-center">
-        {/* Carrusel de Eventos */}
-        <section className="relative h-[200px] sm:h-[450px] flex items-center justify-center w-full">
-          {/* Carrusel de ancho completo */}
-          <div className="absolute inset-0">
-            <CarruselEvento events={allEventsWithRegistrationEnabled}/>
-          </div>
-        </section>
+    <main className="flex flex-col items-center min-h-screen text-center">
+      {/* Carrusel de Eventos */}
+      <section className="relative h-[200px] sm:h-[450px] flex items-center justify-center w-full">
+        {/* Carrusel de ancho completo */}
+        <div className="absolute inset-0">
+          <CarruselEvento events={allEventsWithRegistrationEnabled} />
+        </div>
+      </section>
 
-        {/* Contenido Principal */}
-        <div className="w-full max-w-[1400px] md:px-8 md:mt-12">
-          <div className="bg-white/80 backdrop-blur-sm md:rounded-xl p-3 md:p-6 shadow-lg mb-5 md:mb-8">
-            <h1 className="md:text-2xl font-bold text-red-600">
-              {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Concursia"},
-              estos son los eventos de la fecha!
-            </h1>
-          </div>
+      {/* Contenido Principal */}
+      <div className="w-full max-w-[1400px] md:px-8 md:mt-12">
+        <div className="bg-white/80 backdrop-blur-sm md:rounded-xl p-3 md:p-6 shadow-lg mb-5 md:mb-8">
+          <h1 className="md:text-2xl font-bold text-red-600">
+            {user?.firstName ? `¡${user?.gender === "Femenino" ? "Bienvenida" : "Bienvenido"}, ${capitalizeName(user?.firstName)}` : "¡Bienvenido a Concursia"},
+            estos son los eventos de la fecha!
+          </h1>
+        </div>
 
-          {/* Grid de Eventos */}
-          <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
-              {currentEvents.length > 0 ? (
-                  <div
-                      className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
-                    {currentEvents.map((event) => (
-                        <div
-                            key={event.id}
-                            className="transform transition-all duration-300 hover:scale-[1.02]"
-                        >
-                          <EventComponent event={event}/>
-                        </div>
-                    ))}
-                  </div>
-              ) : (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg text-center">
-                    <p className="text-gray-600 text-lg">
-                      No hay eventos con inscripciones abiertas en este momento.
-                    </p>
-                  </div>
-              )}
-          </div>
+        {/* Grid de Eventos */}
+        <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
+          {currentEvents.length > 0 ? (
+            <div
+              className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
+              {currentEvents.map((event) => (
+                <EventComponent event={event} key={event.id} onShowParticipants={handleShowParticipants} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg text-center">
+              <p className="text-gray-600 text-lg">
+                No hay eventos con inscripciones abiertas en este momento.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Paginación */}
         {allEventsWithRegistrationEnabled.length > 0 && (
-            <div className="flex justify-center py-4">
-              <Pagination
-                  totalItems={allEventsWithRegistrationEnabled.length}
-                  itemsPerPage={eventsPerPage}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-              />
-            </div>
+          <div className="flex justify-center py-4">
+            <Pagination
+              totalItems={allEventsWithRegistrationEnabled.length}
+              itemsPerPage={eventsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
-</main>
-)
-  ;
+      <ParticipantsModal
+        isOpen={participantsModal.isOpen}
+        onClose={handleCloseModal}
+        participants={participantsModal.participants}
+        academyName={participantsModal.academyName}
+        eventName={participantsModal.eventName}
+      />
+    </main>
+  );
 }

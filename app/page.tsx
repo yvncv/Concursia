@@ -7,6 +7,8 @@ import EventComponent from "./ui/event/eventComponent";
 import CarruselEvento from "./ui/carrousel/carrousel";
 import { useEffect, useState } from "react";
 import { Award, CheckCircle, Heart, Mail, MapPin, Music, Phone, Send, Star, TrendingUp, Users } from "lucide-react";
+import { ParticipantsModal } from "./ui/event/components/modals/participantsModal";
+import { Participant } from "./types/participantType";
 
 export default function LandingPage() {
   const { events } = useEvents();
@@ -18,6 +20,40 @@ export default function LandingPage() {
 
   // Filtrar solo las primeras 8 imágenes
   const galleryImages = events.slice(0, 8);
+
+  const [participantsModal, setParticipantsModal] = useState<{
+    isOpen: boolean;
+    participants: Participant[];
+    academyName: string;
+    eventName: string;
+  }>({
+    isOpen: false,
+    participants: [],
+    academyName: '',
+    eventName: ''
+  });
+
+  // Función para abrir el modal desde cualquier evento
+  const handleShowParticipants = (
+    participants: Participant[], 
+    academyName: string, 
+    eventName: string
+  ) => {
+    setParticipantsModal({
+      isOpen: true,
+      participants,
+      academyName,
+      eventName
+    });
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setParticipantsModal(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  };
 
   useEffect(() => {
     if (galleryImages.length > 0 && currentIndex >= galleryImages.length) {
@@ -147,7 +183,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-4">
                   {pastEvents.map((event, index) => {
                     if (index >= 6) return;
-                    return <EventComponent key={event.id} event={event} />;
+                    return <EventComponent key={event.id} event={event} onShowParticipants={handleShowParticipants} />;
                   })}
                 </div>
               </>
@@ -633,6 +669,13 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+      <ParticipantsModal
+        isOpen={participantsModal.isOpen}
+        onClose={handleCloseModal}
+        participants={participantsModal.participants}
+        academyName={participantsModal.academyName}
+        eventName={participantsModal.eventName}
+      />
     </div>
   );
 }

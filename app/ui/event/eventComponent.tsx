@@ -1,14 +1,49 @@
-import { useState, useEffect, useRef } from "react";
+// EventComponent.tsx
+import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Calendar, Clock, MapPin, Star, Radio, Wifi } from "lucide-react";
+import { BadgeCheck, Calendar, Clock, MapPin, Star, Users } from "lucide-react";
+import useUser from "@/app/hooks/useUser";
+import useEventParticipants from "@/app/hooks/useEventParticipants";
 import { CustomEvent } from "../../types/eventType";
+import { FloatingIndicators } from "./components/eventIndicators";
 
-export default function EventComponent({ event }: { event: CustomEvent }) {
+interface EventComponentProps {
+  event: CustomEvent;
+  onShowParticipants?: (participants: any[], academyName: string, eventName: string) => void;
+}
+
+export default function EventComponent({ event, onShowParticipants }: EventComponentProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
   const elementRef = useRef<HTMLDivElement | null>(null);
+  const { user: currentUser } = useUser();
+  const { participants, loadingParticipants } = useEventParticipants(event.id);
+
+  // Calcular participantes de la academia del usuario
+  const academyParticipants = useMemo(() => {
+    if (!currentUser?.marinera?.academyId || !participants || loadingParticipants) {
+      return [];
+    }
+    
+    return participants.filter(participant => 
+      participant.academiesId?.includes(currentUser.marinera.academyId!)
+    );
+  }, [participants, currentUser?.marinera?.academyId, loadingParticipants]);
+
+  const academyParticipantCount = academyParticipants.length;
+
+  // Verificar si el usuario pertenece a una academia y si hay participantes de su academia
+  const userAcademyId = currentUser?.marinera?.academyId;
+  const userAcademyName = currentUser?.marinera?.academyName;
+  const showAcademyParticipants = userAcademyId && academyParticipantCount > 0;
+
+  // Función para manejar la apertura del modal
+  const handleShowParticipants = () => {
+    if (onShowParticipants && userAcademyName) {
+      onShowParticipants(academyParticipants, userAcademyName, event.name);
+    }
+  };
 
   const formatDate = (date: Date): string => {
     return date
@@ -55,7 +90,7 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
   return (
     <div
       ref={elementRef}
-      className={`relative flex flex-col bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden cursor-pointer 
+      className={`relative flex flex-col bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden 
         w-full max-w-[165px] sm:max-w-[190px] md:max-w-[220px] lg:max-w-[240px] xl:max-w-[260px] mx-auto 
         transition-all duration-500 ease-out hover:shadow-3xl hover:scale-[1.05] group 
         border border-white/20 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
@@ -107,49 +142,16 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
           )}
         </div>
 
-        {/* Indicador de en vivo flotante */}
-        {
-          event.status == "live" && (
-            <div className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-2 sm:right-2 lg:top-3 lg:right-3 z-30 flex items-center gap-1 xs:gap-1.5 sm:gap-2">
-              {/* Indicador de EN VIVO */}
-              <div 
-                className="relative group"
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-              >
-                {/* Tooltip - Solo visible en pantallas medianas y grandes */}
-                {showTooltip && (
-                  <div className="hidden md:block absolute -top-10 lg:-top-12 right-0 bg-black/90 text-white text-xs px-2 py-1 lg:px-3 lg:py-1.5 rounded-md lg:rounded-lg backdrop-blur-md whitespace-nowrap">
-                    Evento en vivo
-                    <div className="absolute top-full right-2 w-0 h-0 border-l-2 border-r-2 border-t-2 lg:border-l-4 lg:border-r-4 lg:border-t-4 border-transparent border-t-black/90"></div>
-                  </div>
-                )}
-
-                {/* Contenedor principal */}
-                <div className="relative bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 xs:px-2 xs:py-0.5 sm:px-2.5 sm:py-1 lg:px-3 lg:py-1.5 rounded-full shadow-md sm:shadow-lg border border-white/30 sm:border-2 sm:border-white/20 backdrop-blur-sm sm:backdrop-blur-md">
-                  {/* Animación de pulso de fondo */}
-                  <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-20"></div>
-
-                  {/* Contenido */}
-                  <div className="relative flex items-center gap-0.5 xs:gap-1 lg:gap-1.5">
-                    {/* Punto animado */}
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    
-                    {/* Texto */}
-                    <span className="text-xs xs:text-xs sm:text-xs md:text-sm font-bold tracking-wide">
-                      <span className="hidden xs:inline">EN VIVO</span>
-                      <span className="xs:hidden">EN VIVO</span>
-                    </span>
-                    
-                    {/* Icono - Solo visible en pantallas pequeñas y medianas */}
-                    <Wifi className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:hidden" />
-                    <Radio className="hidden md:block w-3 h-3 lg:w-4 lg:h-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        }
+        {/* Indicadores flotantes usando el componente separado */}
+        <FloatingIndicators
+          isLive={event.status === "live"}
+          academyParticipantCount={academyParticipantCount}
+          showAcademyParticipants={showAcademyParticipants}
+          academyParticipants={academyParticipants}
+          academyName={userAcademyName || ''}
+          eventName={event.name}
+          onShowParticipants={handleShowParticipants}
+        />
 
         {/* Badge de tipo de evento mejorado */}
         <div className="absolute bottom-0 left-0 right-0 z-25">
@@ -215,6 +217,18 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
               {event.academyName}
             </span>
           </div>
+
+          {/* Participantes de tu academia (solo si hay) */}
+          {showAcademyParticipants && (
+            <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100/80 hover:shadow-md transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-sm">
+                <Users className="text-blue-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              </div>
+              <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
+                {academyParticipantCount} de {userAcademyName}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Botón CTA mejorado */}
@@ -237,11 +251,8 @@ export default function EventComponent({ event }: { event: CustomEvent }) {
         </div>
       </div>
 
-      {/* Efectos de hover mejorados */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl" />
-
-      {/* Borde animado colorido */}
-      <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 blur-sm" />
+      {/* Efectos de hover sutiles sin cambio de color */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/2 via-transparent to-white/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl" />
     </div>
   );
 }

@@ -15,7 +15,7 @@ export interface Participante {
   category: CategoryLevel;
   academyId?: string;
   academyName?: string;
-  profileImage?: string; // ✅ Agregar esta línea
+  profileImage?: string;
 }
 
 interface ParticipantSearchResult {

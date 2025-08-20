@@ -231,8 +231,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
   };
 
   const handleSignOut = async () => {
+    router.push("/calendario");
     try {
-      router.push("/calendario");
       await auth.signOut();
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
