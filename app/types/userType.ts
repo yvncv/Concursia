@@ -41,5 +41,15 @@ export type User = FirebaseUser & {
     whatsapp?: string;
     twitter?: string;
   };
+  // NUEVO: Información del apoderado para menores de edad
+  guardian?: {
+    dni: string;
+    dniHash: string;
+    firstName: string;
+    lastName: string;
+    relationship: string; // "Padre", "Madre", "Tutor", "Abuelo/a", etc.
+    authorized: boolean;
+    authorizedAt: Timestamp;
+  };
   createdAt: Timestamp;
 };

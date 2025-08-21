@@ -1,4 +1,4 @@
-// app/register/hooks/useDNIValidation.ts
+// app/hooks/useDNIValidation.ts
 import { useState, useCallback } from "react";
 import axios from "axios";
 import { findUserByHashedDni } from "../utils/security/dni/findUserByHashedDni";
@@ -14,6 +14,11 @@ interface ApiData {
     district: string;
     ubigeo?: string;
   };
+}
+
+interface UseDNIValidationOptions {
+  type: 'participant' | 'guardian';
+  participantDNI?: string; // Solo requerido cuando type es 'guardian'
 }
 
 interface UseDNIValidationReturn {
@@ -42,7 +47,9 @@ interface UseDNIValidationReturn {
   resetRetries: () => void;
 }
 
-export const useDNIValidation = (): UseDNIValidationReturn => {
+export const useDNIValidation = (options: UseDNIValidationOptions): UseDNIValidationReturn => {
+  const { type, participantDNI } = options;
+  
   const [dni, setDni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -78,6 +85,32 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       .join(' ');
   };
 
+  // Validar restricciones específicas según el tipo
+  const validateRestrictions = async (dniToValidate: string): Promise<boolean> => {
+    if (type === 'participant') {
+      // Para participantes: verificar que no esté registrado como usuario
+      const dniExists = await findUserByHashedDni(dniToValidate);
+      if (dniExists) {
+        setExistsError(
+          "Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión."
+        );
+        return false;
+      }
+    } else if (type === 'guardian') {
+      // Para apoderados: verificar que no sea el mismo DNI del menor
+      if (participantDNI && dniToValidate === participantDNI) {
+        setExistsError(
+          "El apoderado no puede tener el mismo DNI que el participante."
+        );
+        return false;
+      }
+      // No verificamos otras restricciones - el apoderado puede ser usuario existente
+      // y puede ser apoderado de múltiples menores
+    }
+    
+    return true;
+  };
+
   // Consultar datos en RENIEC con sistema de reintentos
   const fetchReniecData = async (dniToSearch: string): Promise<void> => {
     setLoading(true);
@@ -88,12 +121,9 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     setValidationError("");
 
     try {
-      // Verificar si DNI ya existe
-      const dniExists = await findUserByHashedDni(dniToSearch);
-      if (dniExists) {
-        setExistsError(
-          "Este DNI ya está registrado. Por favor, intenta con otro o inicia sesión."
-        );
+      // Validar restricciones específicas según el tipo
+      const isValid = await validateRestrictions(dniToSearch);
+      if (!isValid) {
         setLoading(false);
         return;
       }
@@ -139,7 +169,7 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
         handleDNINotFound();
       }
     } catch (error) {
-      console.error("Error al consultar DNI:", error);
+      console.error(`Error al consultar DNI ${type}:`, error);
       handleDNINotFound();
     } finally {
       setLoading(false);
@@ -151,11 +181,13 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     setRetryCount(prevCount => {
       const newRetryCount = prevCount + 1;
       
+      const entityName = type === 'participant' ? 'participante' : 'apoderado';
+      
       if (newRetryCount >= 2) {
-        setError("No se encontró el DNI después de varios intentos.");
+        setError(`No se encontró el DNI del ${entityName} después de varios intentos.`);
         setCanEnableManualMode(true);
       } else {
-        setError(`No se encontró el DNI. Intento ${newRetryCount} de 2.`);
+        setError(`No se encontró el DNI del ${entityName}. Intento ${newRetryCount} de 2.`);
       }
       
       return newRetryCount;
@@ -170,9 +202,10 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
     if (dni.length === 8) {
       await fetchReniecData(dni);
     } else {
-      setError("El DNI debe tener 8 dígitos.");
+      const entityName = type === 'participant' ? 'participante' : 'apoderado';
+      setError(`El DNI del ${entityName} debe tener 8 dígitos.`);
     }
-  }, [dni]);
+  }, [dni, type]);
 
   // Habilitar modo manual
   const enableManualMode = useCallback((): void => {
@@ -204,7 +237,8 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
   // Validar identidad comparando datos ingresados vs RENIEC (o modo manual)
   const validateIdentity = useCallback((firstName: string, lastName: string): void => {
     if (!apiData) {
-      setValidationError("Por favor, ingresa primero tu DNI para validar tus datos.");
+      const entityName = type === 'participant' ? 'tu' : 'del apoderado';
+      setValidationError(`Por favor, ingresa primero ${entityName} DNI para validar los datos.`);
       return;
     }
 
@@ -220,8 +254,9 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
         setIsValidated(true);
         setValidationError("");
       } else {
+        const entityName = type === 'participant' ? 'tu nombre y apellido' : 'el nombre y apellido del apoderado';
         setIsValidated(false);
-        setValidationError("Por favor, ingresa tu nombre y apellido completos.");
+        setValidationError(`Por favor, ingresa ${entityName} completos.`);
       }
       return;
     }
@@ -235,9 +270,10 @@ export const useDNIValidation = (): UseDNIValidationReturn => {
       setValidationError("");
     } else {
       setIsValidated(false);
-      setValidationError("Los datos ingresados no coinciden con los registrados en RENIEC.");
+      const entityName = type === 'participant' ? 'Los datos ingresados' : 'Los datos del apoderado';
+      setValidationError(`${entityName} no coinciden con los registrados en RENIEC.`);
     }
-  }, [apiData, dni, consultedDNI, isManualMode]);
+  }, [apiData, dni, consultedDNI, isManualMode, type]);
 
   // Limpiar todos los datos
   const cleanDNI = useCallback((): void => {

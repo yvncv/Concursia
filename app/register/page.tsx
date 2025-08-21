@@ -20,6 +20,7 @@ import { encryptValue, hashValue } from "@/app/utils/security/securityHelpers";
 // Import steps
 import Step1BasicInfo from "./steps/Step1BasicInfo";
 import Step2PersonalInfo from "./steps/Step2PersonalInfo";
+import StepGuardianInfo from "./steps/StepGuardianInfo";
 import Step3ProfileImage from "./steps/Step3ProfileImage";
 
 interface FormData {
@@ -36,6 +37,15 @@ interface FormData {
   phoneNumber: string;
   location: User['location'];
   
+  // NUEVO: Datos del apoderado para menores
+  guardian?: {
+    dni: string;
+    firstName: string;
+    lastName: string;
+    relationship: string;
+    authorized: boolean;
+  };
+  
   // Step 3
   profileImage: string | null;
   acceptedTerms: boolean;
@@ -45,7 +55,21 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<FormData>>({});
   const [loading, setLoading] = useState(false);
+  const [isMinor, setIsMinor] = useState(false); // Nuevo estado para rastrear si es menor
   const router = useRouter();
+
+  // Función para calcular edad
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const handleStep1Complete = (data: { email: string; password: string }) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -62,6 +86,28 @@ export default function RegisterPage() {
     location: User['location'];
   }) => {
     setFormData(prev => ({ ...prev, ...data }));
+    
+    // Verificar si es menor de edad
+    const age = calculateAge(data.birthDate);
+    const isUnder16 = age < 16;
+    setIsMinor(isUnder16);
+    
+    // Si es menor, ir al step del apoderado, sino al step 3
+    if (isUnder16) {
+      setStep(2.5); // Step intermedio para apoderado
+    } else {
+      setStep(3);
+    }
+  };
+
+  const handleGuardianComplete = (guardianData: {
+    dni: string;
+    firstName: string;
+    lastName: string;
+    relationship: string;
+    authorized: boolean;
+  }) => {
+    setFormData(prev => ({ ...prev, guardian: guardianData }));
     setStep(3);
   };
 
@@ -125,8 +171,8 @@ export default function RegisterPage() {
       // Upload profile image
       const profileImageUrl = await uploadProfileImage(completeData.profileImage, user.uid);
 
-      // Save user data to Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      // Preparar datos del usuario
+      const userData: any = {
         id: user.uid,
         roleId: "user",
         dni: encryptValue(completeData.dni),
@@ -137,7 +183,6 @@ export default function RegisterPage() {
         gender: completeData.gender,
         marinera: {
           participant: {
-            // Eliminamos category - ahora se calcula dinámicamente
             level: "",
             participatedEvents: [],
           },
@@ -151,7 +196,23 @@ export default function RegisterPage() {
         },
         profileImage: profileImageUrl,
         createdAt: new Date(),
-      });
+      };
+
+      // Agregar datos del apoderado si existe
+      if (completeData.guardian) {
+        userData.guardian = {
+          dni: encryptValue(completeData.guardian.dni),
+          dniHash: hashValue(completeData.guardian.dni),
+          firstName: completeData.guardian.firstName,
+          lastName: completeData.guardian.lastName,
+          relationship: completeData.guardian.relationship,
+          authorized: completeData.guardian.authorized,
+          authorizedAt: Timestamp.now(),
+        };
+      }
+
+      // Save user data to Firestore
+      await setDoc(doc(db, "users", user.uid), userData);
 
       // Dismiss loading toast y mostrar éxito
       toast.dismiss(loadingToast);
@@ -189,7 +250,21 @@ export default function RegisterPage() {
   };
 
   const handleBackToStep = (targetStep: number) => {
-    setStep(targetStep);
+    // Si están tratando de volver desde el step del apoderado al step 2
+    if (targetStep === 2 && step === 2.5) {
+      setStep(2);
+    }
+    // Si están tratando de volver desde step 3 y es menor, ir al step del apoderado
+    else if (targetStep === 2 && step === 3 && isMinor) {
+      setStep(2.5);
+    }
+    // Si están tratando de volver desde step 3 y es mayor, ir directamente al step 2
+    else if (targetStep === 2 && step === 3 && !isMinor) {
+      setStep(2);
+    }
+    else {
+      setStep(targetStep);
+    }
   };
 
   return (
@@ -202,12 +277,16 @@ export default function RegisterPage() {
             {[1, 2, 3].map((num) => (
               <button
                 key={num}
-                onClick={() => step >= num && handleBackToStep(num)}
+                onClick={() => {
+                  // Lógica especial para navegación
+                  if (num === 2 && step === 2.5) return; // No permitir click en 2 si está en apoderado
+                  if (num <= step || (num === 2 && step === 3)) handleBackToStep(num);
+                }}
                 className={`w-8 h-8 flex items-center justify-center rounded-full font-semibold text-white 
-                  ${step >= num ? "bg-red-500" : "bg-gray-400"} 
-                  ${step < num ? "cursor-not-allowed" : "cursor-pointer hover:opacity-80"}
+                  ${(step >= num || (num === 2 && step === 2.5) || (num === 2 && step === 3)) ? "bg-red-500" : "bg-gray-400"} 
+                  ${(step < num && !(num === 2 && step === 2.5)) ? "cursor-not-allowed" : "cursor-pointer hover:opacity-80"}
                   transition-all`}
-                disabled={step < num}
+                disabled={step < num && !(num === 2 && step === 2.5)}
               >
                 {num}
               </button>
@@ -226,11 +305,24 @@ export default function RegisterPage() {
             />
           )}
 
+          {step === 2.5 && (
+            <StepGuardianInfo
+              participantData={{
+                dni: formData.dni || "",
+                firstName: formData.firstName || "",
+                lastName: formData.lastName || "",
+                birthDate: formData.birthDate || "",
+              }}
+              onNext={handleGuardianComplete}
+              onBack={() => setStep(2)}
+            />
+          )}
+
           {step === 3 && (
             <Step3ProfileImage 
               formData={formData as FormData}
               onComplete={handleRegistrationComplete}
-              onBack={() => setStep(2)}
+              onBack={() => isMinor ? setStep(2.5) : setStep(2)}
             />
           )}
 
