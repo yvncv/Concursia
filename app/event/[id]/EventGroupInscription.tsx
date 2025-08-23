@@ -9,10 +9,12 @@ import useCreateGroupTicket from "@/app/hooks/tickets/useCreateGroupTicket";
 import { useGroupInscriptionsValidation } from "@/app/hooks/tickets/useAcademyAffiliationValidation";
 import { determineCategory } from "@/app/utils/category/determineCategory";
 import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
+import { useGrupalInscriptionPersistence } from "@/app/hooks/sessionStorage/useGrupalInscription";
 
 import InscriptionForm from "./inscription-group/InscriptionForm";
 import InscriptionList from "./inscription-group/components/InscriptionList";
 import TicketComponent from "./inscription-group/components/TicketComponent";
+import GroupTicketsList from "./inscription-group/components/GroupTicketList";
 
 // Definición de tipos
 interface Participante {
@@ -46,6 +48,18 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
   // Hook para categorías globales
   const { categorias } = useGlobalCategories();
 
+  // Hook de persistencia - NUEVO
+  const {
+    inscripciones,
+    agregarInscripcion: agregarInscripcionPersistent,
+    eliminarInscripcion: eliminarInscripcionPersistent,
+    editarInscripcion,
+    limpiarInscripciones,
+    limpiarDraft,
+    lastSaved,
+    hasStoredData
+  } = useGrupalInscriptionPersistence(event.id);
+
   // Función para obtener categoría de un participante
   const getParticipantCategory = (participante: Participante): string => {
     if (!participante.birthDate || categorias.length === 0) {
@@ -78,11 +92,12 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     return modalidadesDisponibles.length > 0 ? modalidadesDisponibles[0] : "";
   });
 
-  const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [ticketId, setTicketId] = useState<string>("");
-  const [montoTotal, setMontoTotal] = useState<number>(0);
+  
+  // Calcular monto total basado en inscripciones persistentes
+  const montoTotal = inscripciones.reduce((total, insc) => total + (insc.precio || 0), 0);
 
   // Hooks de datos
   const { academies, loadingAcademies } = useAcademies();
@@ -145,7 +160,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     return adaptedEvent;
   };
 
-  // Agregar inscripción a la lista
+  // Agregar inscripción a la lista - ACTUALIZADO para usar persistencia
   const agregarInscripcion = (nuevaInscripcion: Inscripcion): void => {
     // Validar antes de agregar
     const errorMsg = validateInscriptions([...inscripciones, nuevaInscripcion], user);
@@ -168,13 +183,10 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
       return;
     }
 
-    // Agregar a la lista de inscripciones
-    setInscripciones([...inscripciones, nuevaInscripcion]);
+    // Agregar usando el hook de persistencia
+    agregarInscripcionPersistent(nuevaInscripcion);
 
-    // Actualizar monto total
-    setMontoTotal(montoTotal + (nuevaInscripcion.precio || 0));
-
-    // Toast de éxito
+    // Toast de éxito (solo aquí, no duplicado)
     toast.success("✅ Inscripción agregada correctamente", {
       duration: 3000
     });
@@ -187,23 +199,11 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
       return;
     }
 
-    const inscripcionAEliminar = inscripciones[index];
-    const nuevasInscripciones = [...inscripciones];
-    
-    // Restar el precio de esta inscripción del total
-    setMontoTotal(montoTotal - inscripcionAEliminar.precio);
-    
-    // Eliminar la inscripción
-    nuevasInscripciones.splice(index, 1);
-    setInscripciones(nuevasInscripciones);
-
-    // Toast informativo
-    toast("🗑️ Inscripción eliminada", {
-      duration: 2000
-    });
+    // Eliminar usando el hook de persistencia (sin toast aquí)
+    eliminarInscripcionPersistent(index);
   };
 
-  // Confirmar todas las inscripciones
+  // Confirmar todas las inscripciones - ACTUALIZADO para limpiar draft
   const confirmarInscripciones = async (): Promise<void> => {
     // Validaciones previas
     if (inscripciones.length === 0) {
@@ -237,6 +237,10 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
       if (newTicketId) {
         setTicketId(newTicketId);
         setIsSuccess(true);
+        
+        // Limpiar el draft después del éxito - NUEVO
+        limpiarDraft();
+        
         // El toast de éxito se maneja dentro del hook
       } else {
         // El toast de error se maneja dentro del hook
@@ -252,10 +256,9 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     }
   };
 
-  // Reiniciar después de éxito
+  // Reiniciar después de éxito - ACTUALIZADO para usar persistencia
   const nuevaInscripcion = (): void => {
-    setInscripciones([]);
-    setMontoTotal(0);
+    limpiarInscripciones();
     setIsSuccess(false);
     setTicketId("");
     
@@ -269,12 +272,30 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     toast.success("Formulario reiniciado para nueva inscripción grupal");
   };
 
+  // NUEVA función para limpiar inscripciones sin confirmación (para ser llamada desde InscriptionList)
+  const limpiarInscripcionesSilent = (): void => {
+    limpiarInscripciones();
+  };
+
   // Validación de usuario y evento
   useEffect(() => {
     if (!user.marinera?.academyId) {
       toast.error("Tu usuario no tiene una academia asignada. Contacta al administrador.");
     }
   }, [user]);
+
+  // Mostrar notificación de datos guardados al cargar - NUEVO
+  useEffect(() => {
+    if (hasStoredData && lastSaved) {
+      const timeAgo = Math.floor((new Date().getTime() - lastSaved.getTime()) / (1000 * 60));
+      if (timeAgo < 60) {
+        toast.success(
+          `Datos guardados automáticamente hace ${timeAgo} minutos`,
+          { duration: 3000 }
+        );
+      }
+    }
+  }, [hasStoredData, lastSaved]);
 
   // Calcular estadísticas para mostrar
   const estadisticas = {
@@ -302,26 +323,56 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               Academia: <span className="font-medium text-blue-600">{user.marinera.academyName}</span>
             </p>
           )}
+          
+          {/* Indicador de guardado automático - NUEVO */}
+          {lastSaved && inscripciones.length > 0 && (
+            <div className="mt-2 inline-flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+              Guardado automáticamente a las {lastSaved.toLocaleTimeString()}
+            </div>
+          )}
         </div>
 
-        {/* Estadísticas rápidas */}
+        {/* Estadísticas rápidas - ACTUALIZADO con botón para limpiar */}
         {inscripciones.length > 0 && (
-          <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-              <p className="text-2xl font-bold text-blue-600">{estadisticas.totalParticipantes}</p>
-              <p className="text-xs text-gray-600">Participantes</p>
+          <div className="mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
+                <p className="text-2xl font-bold text-blue-600">{estadisticas.totalParticipantes}</p>
+                <p className="text-xs text-gray-600">Participantes</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
+                <p className="text-2xl font-bold text-green-600">{estadisticas.totalInscripciones}</p>
+                <p className="text-xs text-gray-600">Inscripciones</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                <p className="text-2xl font-bold text-purple-600">{estadisticas.modalidadesUnicas}</p>
+                <p className="text-xs text-gray-600">Modalidades</p>
+              </div>
+              <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-200">
+                <p className="text-2xl font-bold text-orange-600">S/. {montoTotal}</p>
+                <p className="text-xs text-gray-600">Total</p>
+              </div>
             </div>
-            <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-              <p className="text-2xl font-bold text-green-600">{estadisticas.totalInscripciones}</p>
-              <p className="text-xs text-gray-600">Inscripciones</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
-              <p className="text-2xl font-bold text-purple-600">{estadisticas.modalidadesUnicas}</p>
-              <p className="text-xs text-gray-600">Modalidades</p>
-            </div>
-            <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-200">
-              <p className="text-2xl font-bold text-orange-600">S/. {montoTotal}</p>
-              <p className="text-xs text-gray-600">Total</p>
+            
+            {/* Botón para limpiar inscripciones - NUEVO */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  if (inscripciones.length === 0) {
+                    toast.error("No hay inscripciones para limpiar");
+                    return;
+                  }
+
+                  if (window.confirm(`¿Estás seguro de que deseas eliminar todas las ${inscripciones.length} inscripciones? Esta acción no se puede deshacer.`)) {
+                    limpiarInscripciones();
+                    toast.success("Todas las inscripciones han sido eliminadas");
+                  }
+                }}
+                className="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-red-200 hover:border-red-300"
+              >
+                🗑️ Limpiar todas las inscripciones
+              </button>
             </div>
           </div>
         )}
@@ -345,12 +396,15 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
             <InscriptionList
               inscripciones={inscripciones}
               eliminarInscripcion={eliminarInscripcion}
+              editarInscripcion={editarInscripcion}
               confirmarInscripciones={confirmarInscripciones}
               isSubmitting={isSubmitting || isCreating}
               montoTotal={montoTotal}
               event={adaptEventForComponents(event)}
               groupValidation={groupValidation}
               getParticipantCategory={getParticipantCategory}
+              lastSaved={lastSaved}
+              limpiarInscripciones={limpiarInscripcionesSilent}
             />
           </div>
         ) : (
@@ -368,6 +422,8 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
             getParticipantCategory={getParticipantCategory}
           />
         )}
+        
+        <GroupTicketsList academyId={user.marinera?.academyId} />
         
         {/* Modal para mapa */}
         {showMapModal && event?.location?.coordinates && (
