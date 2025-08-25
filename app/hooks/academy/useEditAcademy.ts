@@ -37,7 +37,7 @@ export const useEditAcademy = () => {
     setError(null);
 
     try {
-      const academyRef = doc(db, 'academias', academyId); // 👈 Cambiar 'academies' por 'academias'
+      const academyRef = doc(db, 'academias', academyId);
       
       // Preparar los datos a actualizar
       const updateData: any = {
@@ -116,7 +116,7 @@ export const useEditAcademy = () => {
     setError(null);
 
     try {
-      const academyRef = doc(db, 'academias', academyId); // 👈 Cambiar aquí también
+      const academyRef = doc(db, 'academias', academyId);
       const updateData: any = {
         updatedAt: Timestamp.now()
       };
