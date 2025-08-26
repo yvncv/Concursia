@@ -41,5 +41,6 @@ export type User = FirebaseUser & {
     whatsapp?: string;
     twitter?: string;
   };
+  showContactInfo: boolean; // Mostrar información de contacto públicamente
   createdAt: Timestamp;
 };

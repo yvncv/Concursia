@@ -9,18 +9,26 @@ import {
   EmailAuthProvider
 } from 'firebase/auth';
 import { User } from '@/app/types/userType';
-import { Mail, Phone, Globe, MessageCircle, Facebook, Instagram, Youtube, GraduationCap } from 'lucide-react';
+import { Mail, Phone, MessageCircle, Facebook, Instagram, Youtube, GraduationCap } from 'lucide-react';
 
 interface Props {
   foundUser: User;
   canEdit: boolean;
+  showContactInfo: boolean;
 }
 
-const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
+const ContactInformation: React.FC<Props> = ({ foundUser, canEdit, showContactInfo }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const { academy, loadingAcademy } = useAcademy(foundUser?.marinera?.academyId);
+  const [isContactInfoPublic, setIsContactInfoPublic] = useState(foundUser?.showContactInfo ?? false);
+
+  useEffect(() => {
+    if (foundUser) {
+      setIsContactInfoPublic(foundUser.showContactInfo ?? false);
+    }
+  }, [foundUser]);
 
   const [contactInfo, setContactInfo] = useState({
     emailSecondary: '',
@@ -138,33 +146,6 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
     setContactInfo(prev => ({ ...prev, [id]: value }));
   };
 
-  const contactFields = [
-    {
-      id: 'emailSecondary',
-      label: 'Correo Secundario',
-      type: 'email',
-      icon: Mail,
-      placeholder: 'correo.secundario@email.com',
-      color: 'blue'
-    },
-    {
-      id: 'phonePrimary',
-      label: 'Teléfono Principal',
-      type: 'tel',
-      icon: Phone,
-      placeholder: '+51 999 999 999',
-      color: 'green'
-    },
-    {
-      id: 'phoneSecondary',
-      label: 'Teléfono Secundario',
-      type: 'tel',
-      icon: Phone,
-      placeholder: '+51 888 888 888',
-      color: 'green'
-    }
-  ];
-
   const socialMediaFields = [
     {
       id: 'facebook',
@@ -216,17 +197,20 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
     }
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-50 border-blue-100 text-blue-700',
-      green: 'bg-green-50 border-green-100 text-green-700',
-      purple: 'bg-purple-50 border-purple-100 text-purple-700',
-      pink: 'bg-pink-50 border-pink-100 text-pink-700',
-      red: 'bg-red-50 border-red-100 text-red-700',
-      gray: 'bg-gray-50 border-gray-100 text-gray-700'
-    };
-    return colors[color] || colors.blue;
+  const handleToggleContactInfo = async () => {
+    if (!foundUser?.id) return;
+    try {
+      const userRef = doc(db, "users", foundUser.id);
+      await updateDoc(userRef, { showContactInfo: !isContactInfoPublic });
+      setIsContactInfoPublic(!isContactInfoPublic);
+    } catch (error) {
+      console.error("Error al actualizar la visibilidad:", error);
+      alert("No se pudo actualizar la visibilidad de la información.");
+    }
   };
+
+
+  if (!showContactInfo) return null;
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
@@ -235,10 +219,45 @@ const ContactInformation: React.FC<Props> = ({ foundUser, canEdit }) => {
         <h2 className="text-2xl font-semibold text-gray-800 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-1 after:bg-blue-500 after:-bottom-2">
           Información de Contacto
         </h2>
-        <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-          {canEdit ? 'Editable' : 'Solo Lectura'}
-        </span>
+
+        {canEdit && (
+          <div
+            className="flex items-center gap-4 bg-white/60 backdrop-blur-sm p-2 rounded-2xl border border-gray-200 shadow-sm"
+            title="Controla quién ve tu información de contacto"
+            aria-live="polite"
+          >
+            {/* Icon + small label */}
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${isContactInfoPublic ? 'bg-green-50' : 'bg-red-50'}`}>
+              <Mail className={`${isContactInfoPublic ? 'text-green-600' : 'text-red-500'} w-5 h-5`} />
+            </div>
+
+            {/* Texts */}
+            <div className="flex flex-col min-w-[170px]">
+              <span className="text-sm font-medium text-gray-800">Privacidad — información de contacto</span>
+              <span className={`text-xs ${isContactInfoPublic ? 'text-green-600' : 'text-red-500'}`}>
+                {isContactInfoPublic ? 'Público — visible para todos' : 'Privado — solo visible para ti'}
+              </span>
+            </div>
+
+            {/* Toggle */}
+            <button
+              onClick={handleToggleContactInfo}
+              aria-pressed={isContactInfoPublic}
+              aria-label={isContactInfoPublic ? 'Hacer privado' : 'Hacer público'}
+              className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                isContactInfoPublic ? 'bg-green-500 focus:ring-green-300' : 'bg-gray-300 focus:ring-gray-200'
+              }`}
+            >
+              <span
+                className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transform transition-transform ${
+                  isContactInfoPublic ? 'translate-x-7' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        )}
       </div>
+
 
       {/* Privacy notice for visitors */}
       {!canEdit && (
