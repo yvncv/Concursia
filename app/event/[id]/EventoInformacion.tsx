@@ -101,8 +101,8 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     });
 
     return (
-        <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px] bg-gray-50">
-            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 mb-20">
+        <div className="w-full flex flex-col items-center justify-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
                 <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col gap-5">
                     {/* Nombre del evento */}
                     <div className="bg-red-600 p-4 rounded-lg">
@@ -330,8 +330,8 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         </div>
 
                         <div className="mb-4">
-                            <p className="text-sm font-medium text-gray-600 mb-3 pl-7">Precios por modalidad:</p>
-                            <div className="space-y-2 pl-7">
+                            <p className="text-sm font-medium text-gray-600 mb-3">Precios por modalidad:</p>
+                            <div className="space-y-2">
                                 {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
                                     Object.entries(event.dance.levels).map(([levelName, levelData], index) => {
                                         const getPriceColor = (index: number) => {
@@ -365,7 +365,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="space-y-3 pl-7">
+                        <div className="space-y-3">
                             {!isOrganizer && (
                                 <button
                                     onClick={onInscribir}
@@ -406,8 +406,8 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         </div>
 
                         <div className="mb-4">
-                            <p className="text-sm font-medium text-gray-600 mb-3 pl-7">Precios por entrada:</p>
-                            <div className="space-y-2 pl-7">
+                            <p className="text-sm font-medium text-gray-600 mb-3">Precios por entrada:</p>
+                            <div className="space-y-2">
                                 {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
                                     Object.entries(event.dance.levels).map(([levelName, levelData], index) => {
                                         const getTicketColor = (index: number) => {
@@ -440,7 +440,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             </div>
                         </div>
 
-                        <div className="pl-7">
+                        <div>
                             <button
                                 onClick={openPurchaseModal}
                                 className="w-full bg-amber-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md hover:bg-amber-700 flex items-center justify-center gap-2"

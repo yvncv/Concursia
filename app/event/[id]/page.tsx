@@ -132,10 +132,10 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="absolute top-4 left-4 z-20">
         <Link href="/calendario" passHref>
           <div
-            className="rounded-xl p-1 shadow cursor-pointer"
+            className="rounded-xl bg-white/80 p-1 shadow cursor-pointer"
             aria-label="Ir a calendario"
           >
-            <ArrowLeftCircle className="bg-white rounded-xl text-rojo w-6 h-6 border-red transition" />
+            <ArrowLeftCircle className="rounded-xl text-rojo w-6 h-6 border-red transition" />
           </div>
         </Link>
       </div>
@@ -154,6 +154,19 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
           {/* Imagen principal con efecto hover */}
           <div className="relative w-full h-full transition-transform duration-500 hover:scale-105">
+          {/* Imagen para celulares */}
+          <div className="sm:hidden">
+            <Image
+              src={event.smallImage}
+              fill
+              className="object-contain w-full h-full"
+              alt={`Small banner of ${event.smallImage}`}
+              loader={({ src }) => src}
+            />
+          </div>
+
+          {/* Imagen para pantallas medianas y grandes */}
+          <div className="hidden sm:block">
             <Image
               src={event.bannerImage}
               fill
@@ -163,130 +176,135 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             />
           </div>
         </div>
+        </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center space-x-2 mb-2">
-              <Calendar className="w-5 h-5" />
-              <span className="text-sm font-medium">{event.eventType}</span>
-            </div>
-            <h1 className="text-4xl font-bold mb-2">{event.name}</h1>
-            <div className="flex items-center space-x-2">
-              <MapPin className="w-5 h-5" />
-              <span>{event.location.province}, {event.location.department}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="md:max-w-6xl text-sm md:text-lg md:mx-auto md:px-4 md:py-8">
-        <div className="bg-white/80 md:rounded-xl shadow-sm mb-8">
-          <div className="flex border-b">
+        <div className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm md:rounded-2xl shadow-xl mb-8">
+          <div className="flex border-b border-gray-200/50">
             {/* Tab de Información - siempre visible para todos */}
             <button
-              className={`flex-1 p-2 md:px-6 md:py-4 text-center font-medium transition-colors
+              className={`flex-1 p-3 md:px-6 md:py-4 text-center font-medium transition-all duration-300 relative
                 ${activeTab === "informacion"
-                  ? "text-yellow-600 border-b-2 border-yellow-600"
-                  : "text-gray-500 hover:text-gray-700"}`}
+                  ? "text-white bg-gradient-to-r from-yellow-400 to-amber-500 shadow-lg md:rounded-t-xl border-b-4 border-yellow-600"
+                  : "text-gray-600"}`}
               onClick={() => setActiveTab("informacion")}
             >
-              Información
+              <span className="relative z-10">Información</span>
+              {activeTab === "informacion" && (
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-amber-600 animate-pulse" />
+              )}
             </button>
 
             {/* Tab de Inscripción - visible solo si individualWeb está habilitado */}
             <div className="flex-1 relative">
               <button
-                className={`w-full p-2 md:px-6 md:py-4 text-center font-medium transition-colors
-                  ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed" : ""}
+                className={`w-full p-3 md:px-6 md:py-4 text-center font-medium transition-all duration-300 relative
+                  ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed opacity-50" : ""}
                   ${activeTab === "inscripcion"
-                    ? "text-red-600 border-b-2 border-red-600"
-                    : "text-gray-500 hover:text-gray-700"}`}
+                    ? "text-white bg-gradient-to-r from-red-400 to-rose-500 shadow-lg md:rounded-t-xl border-b-4 border-red-600"
+                    : "text-gray-600"}`}
                 onClick={() => isIndividualWebEnabled && setActiveTab("inscripcion")}
                 disabled={!isIndividualWebEnabled}
               >
-                Inscripción
-              </button>
-              {!isIndividualWebEnabled && (
-                <span className="absolute -bottom-[0.05px] left-1/2 transform -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap">
-                  (Deshabilitado)
+                <span className="relative z-10">
+                  Inscripción{!isIndividualWebEnabled && " (Deshabilitado)"}
                 </span>
-              )}
+                {activeTab === "inscripcion" && (
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600 animate-pulse" />
+                )}
+              </button>
             </div>
 
             {/* Tab de Inscripción de Alumnos - solo visible para organizadores y si grupalCSV está habilitado */}
             {isOrganizer && (
               <div className="flex-1 relative">
                 <button
-                  className={`w-full p-2 md:px-6 md:py-4 text-center font-medium transition-colors
-                    ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
+                  className={`w-full p-3 md:px-6 md:py-4 text-center font-medium transition-all duration-300 relative
+                    ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed opacity-50" : ""}
                     ${activeTab === "inscripcionAlumnos"
-                      ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500 hover:text-gray-700"}`}
+                      ? "text-white bg-gradient-to-r from-blue-400 to-indigo-500 shadow-lg md:rounded-t-xl border-b-4 border-blue-600"
+                      : "text-gray-600"}`}
                   onClick={() => isGrupalCSVEnabled && setActiveTab("inscripcionAlumnos")}
                   disabled={!isGrupalCSVEnabled}
                 >
-                  Inscribir Alumnos
-                </button>
-                {!isGrupalCSVEnabled && (
-                  <span className="absolute -bottom-[0.05px] left-1/2 transform -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap">
-                    (Deshabilitado)
+                  <span className="relative z-10">
+                    Inscribir Alumnos{!isGrupalCSVEnabled && " (Deshabilitado)"}
                   </span>
-                )}
+                  {activeTab === "inscripcionAlumnos" && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" />
+                  )}
+                </button>
               </div>
             )}
           </div>
 
           <div className="lg:p-6">
             {activeTab === "informacion" ? (
-              <EventoInformacion
-                event={event}
-                openModal={() => setIsModalOpen(true)}
-                onInscribir={handleInscribirClick}
-                onInscribirAlumnos={handleInscribirAlumnosClick}
-                user={user}
-                isEventOrganizer={isEventOrganizer}
-                loading={loadingSettings}
-                error={error_settings}
-                isIndividualWebEnabled={isIndividualWebEnabled}
-                isGrupalCSVEnabled={isGrupalCSVEnabled}
-              />
+              <div className="p-1">
+                <EventoInformacion
+                  event={event}
+                  openModal={() => setIsModalOpen(true)}
+                  onInscribir={handleInscribirClick}
+                  onInscribirAlumnos={handleInscribirAlumnosClick}
+                  user={user}
+                  isEventOrganizer={isEventOrganizer}
+                  loading={loadingSettings}
+                  error={error_settings}
+                  isIndividualWebEnabled={isIndividualWebEnabled}
+                  isGrupalCSVEnabled={isGrupalCSVEnabled}
+                />
+              </div>
             ) : activeTab === "inscripcion" ? (
-              user ? (
-                isIndividualWebEnabled ? (
-                  <EventoInscripcion
-                    event={event}
-                    openModal={() => setIsAcademyModalOpen(true)}
-                    user={user} 
-                  />
+              <div className="p-1">
+                {user ? (
+                  isIndividualWebEnabled ? (
+                    <EventoInscripcion
+                      event={event}
+                      openModal={() => setIsAcademyModalOpen(true)}
+                      user={user} 
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center py-16 text-gray-500">
+                      <div className="bg-red-100/50 p-6 rounded-full mb-6">
+                        <User className="w-16 h-16 text-red-400" />
+                      </div>
+                      <p className="text-lg font-medium text-center">La inscripción web individual no está habilitada para este evento.</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="flex flex-col items-center py-12 text-gray-500">
-                    <User className="w-12 h-12 mb-4" />
-                    <p className="text-lg">La inscripción web individual no está habilitada para este evento.</p>
+                  <div className="flex flex-col items-center py-16 text-gray-500">
+                    <div className="bg-red-100/50 p-6 rounded-full mb-6 animate-pulse">
+                      <User className="w-16 h-16 text-red-400" />
+                    </div>
+                    <p className="text-lg font-medium text-center">Debes iniciar sesión para inscribirte.</p>
                   </div>
-                )
-              ) : (
-                <div className="flex flex-col items-center py-12 text-gray-500">
-                  <User className="w-12 h-12 mb-4" />
-                  <p className="text-lg">Debes iniciar sesión para inscribirte.</p>
-                </div>
-              )
+                )}
+              </div>
             ) : activeTab === "inscripcionAlumnos" ? (
-              user ? (
-                isGrupalCSVEnabled ? (
-                  <EventoInscripcionAlumnos event={adaptedEvent} user={user} />
+              <div className="p-1">
+                {user ? (
+                  isGrupalCSVEnabled ? (
+                    <EventoInscripcionAlumnos event={adaptedEvent} user={user} />
+                  ) : (
+                    <div className="flex flex-col items-center py-16 text-gray-500">
+                      <div className="bg-blue-100/50 p-6 rounded-full mb-6">
+                        <User className="w-16 h-16 text-blue-400" />
+                      </div>
+                      <p className="text-lg font-medium text-center">La inscripción grupal CSV no está habilitada para este evento.</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="flex flex-col items-center py-12 text-gray-500">
-                    <User className="w-12 h-12 mb-4" />
-                    <p className="text-lg">La inscripción grupal CSV no está habilitada para este evento.</p>
+                  <div className="flex flex-col items-center py-16 text-gray-500">
+                    <div className="bg-blue-100/50 p-6 rounded-full mb-6 animate-pulse">
+                      <User className="w-16 h-16 text-blue-400" />
+                    </div>
+                    <p className="text-lg font-medium text-center">Debes iniciar sesión para inscribir alumnos.</p>
                   </div>
-                )
-              ) : (
-                <div className="flex flex-col items-center py-12 text-gray-500">
-                  <User className="w-12 h-12 mb-4" />
-                  <p className="text-lg">Debes iniciar sesión para inscribir alumnos.</p>
-                </div>
-              )
+                )}
+              </div>
             ) : null}
           </div>
         </div>

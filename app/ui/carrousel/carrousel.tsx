@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CustomEvent } from "@/app/types/eventType"
 
-const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent[], showIndicators?: boolean }) => {
+const CarruselEvento = ({ events, showIndicators = events.length > 1 }: { events: CustomEvent[], showIndicators?: boolean }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -41,16 +41,30 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Botones de anterior */}
-            {showIndicators &&
+            {/* Animación de brillo superior */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-60 z-20">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400 to-transparent animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 animate-shimmer"></div>
+            </div>
+
+            {/* Animación de brillo inferior */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-60 z-20">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400 to-transparent animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 animate-shimmer"></div>
+            </div>
+
+            {/* Botón anterior con gradiente */}
+            {showIndicators && (
                 <button
                     onClick={prevSlide}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-red-700 p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                    className="absolute left-0 top-0 bottom-0 z-10 w-16 md:w-20 bg-gradient-to-r from-black/50 via-black/30 to-transparent hover:from-black/70 hover:via-black/50 transition-all duration-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-start pl-2 md:pl-3"
                     aria-label="Previous slide"
                 >
-                    <ChevronLeft className="w-6 h-6" />
+                    <div className="text-white hover:text-red-400 p-2 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300">
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                    </div>
                 </button>
-            }
+            )}
 
             {/* Contenedor de imágenes */}
             <Link href={`/event/${ids[currentIndex]}`}>
@@ -62,7 +76,6 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                     >
                         {imagenes.map((imagen, index) => (
                             <div key={index} className="w-full h-full flex-shrink-0 relative">
-                                {/* Fondo desenfocado */}
                                 {/* Fondo desenfocado */}
                                 <div className="absolute inset-0 -z-10">
                                     <Image
@@ -94,16 +107,18 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                 <div className="absolute inset-0 bg-black/50 z-0"></div>
             </Link>
 
-            {/* Botón siguiente */}
-            {showIndicators &&
+            {/* Botón siguiente con gradiente */}
+            {showIndicators && (
                 <button
                     onClick={nextSlide}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-red-700 p-1 md:p-2 rounded-full transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm"
+                    className="absolute right-0 top-0 bottom-0 z-10 w-16 md:w-20 bg-gradient-to-l from-black/50 via-black/30 to-transparent hover:from-black/70 hover:via-black/50 transition-all duration-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-end pr-2 md:pr-3"
                     aria-label="Next slide"
                 >
-                    <ChevronRight className="w-6 h-6" />
+                    <div className="text-white hover:text-red-400 p-2 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300">
+                        <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                    </div>
                 </button>
-            }
+            )}
 
             {/* Indicadores */}
             {showIndicators &&
@@ -113,7 +128,7 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                             key={index}
                             onClick={() => setCurrentIndex(index)}
                             className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                                ? "bg-white w-4"
+                                ? "bg-white w-4 shadow-lg shadow-red-500/30"
                                 : "bg-white/50 hover:bg-white/75"
                                 }`}
                             aria-label={`Go to slide ${index + 1}`}
@@ -121,6 +136,21 @@ const CarruselEvento = ({ events, showIndicators = true }: { events: CustomEvent
                     ))}
                 </div>
             }
+
+            <style jsx>{`
+                @keyframes shimmer {
+                    0% {
+                        transform: translateX(-100%);
+                    }
+                    100% {
+                        transform: translateX(100%);
+                    }
+                }
+                
+                .animate-shimmer {
+                    animation: shimmer 3s linear infinite;
+                }
+            `}</style>
         </div>
     );
 };
