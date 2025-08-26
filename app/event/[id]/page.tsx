@@ -195,11 +195,11 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
             </button>
 
             {/* Tab de Inscripción - visible solo si individualWeb está habilitado */}
-            <div className="flex flex-col text-center flex-1 p-2 md:px-6 md:py-4 font-medium transition-colors">
+            <div className="flex-1 relative">
               <button
-                className={`
-                ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed" : ""}
-                ${activeTab === "inscripcion"
+                className={`w-full p-2 md:px-6 md:py-4 text-center font-medium transition-colors
+                  ${!isIndividualWebEnabled ? "text-gray-400 cursor-not-allowed" : ""}
+                  ${activeTab === "inscripcion"
                     ? "text-red-600 border-b-2 border-red-600"
                     : "text-gray-500 hover:text-gray-700"}`}
                 onClick={() => isIndividualWebEnabled && setActiveTab("inscripcion")}
@@ -207,20 +207,20 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
               >
                 Inscripción
               </button>
-              <div>
-                {!isIndividualWebEnabled && (
-                  <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
-                )}
-              </div>
+              {!isIndividualWebEnabled && (
+                <span className="absolute -bottom-[0.05px] left-1/2 transform -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap">
+                  (Deshabilitado)
+                </span>
+              )}
             </div>
 
             {/* Tab de Inscripción de Alumnos - solo visible para organizadores y si grupalCSV está habilitado */}
             {isOrganizer && (
-              <div className="flex flex-col text-center flex-1 p-2 md:px-6 md:py-4 font-medium transition-colors">
+              <div className="flex-1 relative">
                 <button
-                  className={`
-                  ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
-                  ${activeTab === "inscripcionAlumnos"
+                  className={`w-full p-2 md:px-6 md:py-4 text-center font-medium transition-colors
+                    ${!isGrupalCSVEnabled ? "text-gray-400 cursor-not-allowed" : ""}
+                    ${activeTab === "inscripcionAlumnos"
                       ? "text-blue-600 border-b-2 border-blue-600"
                       : "text-gray-500 hover:text-gray-700"}`}
                   onClick={() => isGrupalCSVEnabled && setActiveTab("inscripcionAlumnos")}
@@ -228,11 +228,11 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
                 >
                   Inscribir Alumnos
                 </button>
-                <div>
-                  {!isGrupalCSVEnabled && (
-                    <span className="ml-2 text-xs text-gray-400">(Deshabilitado)</span>
-                  )}
-                </div>
+                {!isGrupalCSVEnabled && (
+                  <span className="absolute -bottom-[0.05px] left-1/2 transform -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap">
+                    (Deshabilitado)
+                  </span>
+                )}
               </div>
             )}
           </div>
