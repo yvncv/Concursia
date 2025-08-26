@@ -7,6 +7,7 @@ import { useAcademyMembershipManagement } from '@/app/hooks/academy/useAcademyMe
 interface AcademyJoinRequestButtonProps {
   academyId: string;
   academyName: string;
+  academyEmail: string;
   userId?: string;
   userAlreadyHasAcademy?: boolean;
   userCurrentAcademyId?: string;
@@ -15,7 +16,7 @@ interface AcademyJoinRequestButtonProps {
 
 export default function AcademyJoinRequestButton({ 
   academyId, 
-  academyName, 
+  academyName,academyEmail,
   userId, 
   userAlreadyHasAcademy = false,
   userCurrentAcademyId,
@@ -45,6 +46,19 @@ export default function AcademyJoinRequestButton({
 
     try {
       await createRequest(userId, academyId, message.trim());
+
+      // Enviar notificación por correo a la academia
+      await fetch('/api/send-emails/sendAcademyJoinEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          academyName,
+          message: message.trim(),
+          academyEmail // Debes tener este dato disponible
+        })
+      });
+
       setMessage('');
       setTimeout(() => {
         setIsModalOpen(false);

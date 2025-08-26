@@ -1,4 +1,3 @@
-// app/register/steps/Step1BasicInfo.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,6 +20,8 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [emailExistsError, setEmailExistsError] = useState("");
@@ -187,28 +188,50 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Contraseña
           </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              evaluatePassword(e.target.value);
-            }}
-            className={`w-full border-1 ${
-              password !== "" && (
-                passwordStrength.level === "Fuerte" 
-                  ? "text-green-700 shadow-[0_0_10px_#22c55e]" 
-                  : passwordStrength.level === "Muy fuerte"
-                    ? "text-cyan-700 shadow-[0_0_10px_#06b6d4]"
-                    : passwordStrength.level === "Media" 
-                      ? "text-yellow-700 shadow-[0_0_10px_#facc14]" 
-                      : "text-red-700 shadow-[0_0_10px_#ef4444]"
-              )
-            } mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
-            placeholder="Contraseña"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                evaluatePassword(e.target.value);
+              }}
+              className={`w-full border-1 ${
+                password !== "" && (
+                  passwordStrength.level === "Fuerte" 
+                    ? "text-green-700 shadow-[0_0_10px_#22c55e]" 
+                    : passwordStrength.level === "Muy fuerte"
+                      ? "text-cyan-700 shadow-[0_0_10px_#06b6d4]"
+                      : passwordStrength.level === "Media" 
+                        ? "text-yellow-700 shadow-[0_0_10px_#facc14]" 
+                        : "text-red-700 shadow-[0_0_10px_#ef4444]"
+                )
+              } mt-1 mb-1 px-4 py-4 pr-12 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none [&::-ms-reveal]:hidden [&::-webkit-password-reveal-button]:hidden`}
+              style={{
+                WebkitAppearance: 'none',
+                MozAppearance: 'textfield'
+              }}
+              placeholder="Contraseña"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {showPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
           
           {/* Indicador de seguridad */}
           {password && (
@@ -261,23 +284,45 @@ export default function Step1BasicInfo({ onNext }: Step1Props) {
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
             Confirmar Contraseña
           </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className={`w-full border-1 ${
-              confirmPassword !== "" && confirmPassword === password && (
-                passwordStrength.level === "Fuerte" 
-                  ? "text-green-500 shadow-[0_0_10px_#22c55e]" 
-                  : passwordStrength.level === "Muy fuerte"
-                    ? "text-cyan-500 shadow-[0_0_10px_#06b6d4]"
-                    : "text-red-500 shadow-[0_0_10px_#ef4444]"
-              )
-            } mt-1 mb-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none`}
-            placeholder="Confirmar Contraseña"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`w-full border-1 ${
+                confirmPassword !== "" && confirmPassword === password && (
+                  passwordStrength.level === "Fuerte" 
+                    ? "text-green-500 shadow-[0_0_10px_#22c55e]" 
+                    : passwordStrength.level === "Muy fuerte"
+                      ? "text-cyan-500 shadow-[0_0_10px_#06b6d4]"
+                      : "text-red-500 shadow-[0_0_10px_#ef4444]"
+                )
+              } mt-1 mb-1 px-4 py-4 pr-12 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 transition-all outline-none [&::-ms-reveal]:hidden [&::-webkit-password-reveal-button]:hidden`}
+              style={{
+                WebkitAppearance: 'none',
+                MozAppearance: 'textfield'
+              }}
+              placeholder="Confirmar Contraseña"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {showConfirmPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         {passwordError && <p className="text-red-500 text-center">{passwordError}</p>}

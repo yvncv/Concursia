@@ -7,6 +7,7 @@ import EventComponent from "../ui/event/eventComponent";
 import CarruselEvento from "../ui/carrousel/carrousel";
 import Pagination from "../ui/pagination/Pagination";
 import { ParticipantsModal } from "../ui/event/components/modals/participantsModal";
+import {Participant} from "@/app/types/participantType";
 
 export default function TodosEventos() {
   const { user, loadingUser } = useUser();

@@ -29,6 +29,13 @@ interface Step3Props {
     gender: string;
     phoneNumber: string;
     location: User['location'];
+    guardian?: {
+      dni: string;
+      firstName: string;
+      lastName: string;
+      relationship: string;
+      authorized: boolean;
+    };
   };
   onComplete: (data: { 
     profileImage: string | null;
@@ -56,6 +63,21 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Calcular si es menor de edad
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const isMinor = calculateAge(formData.birthDate) < 18;
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -82,6 +104,8 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
         Foto de Perfil
       </h1>
 
+
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="text-center mb-6">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -89,6 +113,11 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           </h2>
           <p className="text-gray-600 text-sm">
             Sube una foto clara para tu perfil
+            {isMinor && (
+              <span className="block mt-1 text-orange-600 font-medium">
+                La foto debe ser del participante (menor de edad), no del apoderado
+              </span>
+            )}
           </p>
           <div className="mt-2 flex items-center justify-center gap-2 text-sm text-red-600">
             <AlertCircle size={16} />
@@ -184,6 +213,8 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           </div>
         </div>
 
+
+
         {/* Checkbox de términos y condiciones */}
         <div className="flex items-start space-x-4 mt-6 mb-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200 transition-all duration-300 hover:shadow-md">
           {/* Custom Checkbox */}
@@ -263,30 +294,30 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           </div>
         </div>
 
-                  {/* Indicador de estado del formulario */}
-          {!croppedImage && (
-            <div className="text-center mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm font-medium">
-                  Sube tu foto de perfil para continuar
-                </span>
-              </div>
+        {/* Indicador de estado del formulario */}
+        {!croppedImage && (
+          <div className="text-center mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2 text-red-600">
+              <AlertCircle size={16} />
+              <span className="text-sm font-medium">
+                Sube tu foto de perfil para continuar
+              </span>
             </div>
-          )}
+          </div>
+        )}
 
-          {croppedImage && acceptedTerms && (
-            <div className="text-center mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-green-600">
-                <Check size={16} />
-                <span className="text-sm font-medium">
-                  ¡Todo listo para completar tu registro!
-                </span>
-              </div>
+        {croppedImage && acceptedTerms && (
+          <div className="text-center mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <Check size={16} />
+              <span className="text-sm font-medium">
+                ¡Todo listo para completar tu registro!
+              </span>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Botones de navegación */}
+        {/* Botones de navegación */}
         <div className="flex justify-between mt-8">
           <button
             type="button"

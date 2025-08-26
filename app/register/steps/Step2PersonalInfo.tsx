@@ -25,7 +25,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
   // Hook para categorías globales
   const { categorias } = useGlobalCategories();
 
-  // Hook para validación de DNI con nuevas funcionalidades
+  // Hook para validación de DNI del participante
   const {
     dni,
     loading: loadingDni,
@@ -43,9 +43,9 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
     cleanDNI,
     enableManualMode,
     handleKeyPress: handleDniKeyPress
-  } = useDNIValidation();
+  } = useDNIValidation({ type: 'participant' });
 
-  // Estados locales del formulario
+  // Estados locales del formulario del participante
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -70,6 +70,19 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
   const validateLastNames = (lastName: string) => {
     const apellidos = lastName.trim().split(/\s+/);
     return apellidos.length >= 2 && apellidos.every(apellido => apellido.length > 0);
+  };
+
+  // Función para calcular edad
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
   };
 
   // Función para obtener categoría dinámicamente
@@ -103,7 +116,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       .join(' ');
   };
 
-  // Auto-rellenar datos cuando se valida la identidad (solo en modo automático)
+  // Auto-rellenar datos cuando se valida la identidad del participante (solo en modo automático)
   useEffect(() => {
     if (isValidated && apiData && !isManualMode) {
       setBirthDate(apiData.birthDate);
@@ -162,7 +175,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       return;
     }
 
-    // Verificar declaración jurada solo en modo manual
+    // Verificar declaración jurada solo en modo manual del participante
     if (isManualMode && !acceptDataResponsibility) {
       setError("Debes aceptar la declaración de veracidad de datos para continuar.");
       return;
@@ -193,7 +206,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-red-500 text-center">{error}</p>}
 
-        {/* DNI section */}
+        {/* DNI section del participante */}
         <div>
           <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
             DNI
@@ -268,7 +281,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
           )}
         </div>
 
-        {/* Campos de nombre y apellido */}
+        {/* Campos de nombre y apellido del participante */}
         <div className={apiData == null ? "hidden" : ""}>
           <div className="flex gap-x-2">
             <div>
@@ -307,7 +320,7 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
           </p>
         </div>
 
-        {/* Botón de validación */}
+        {/* Botón de validación del participante */}
         <button
           type="button"
           onClick={!apiData ? searchDNI : handleValidateIdentity}
@@ -343,8 +356,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
           </p>
         )}
 
-
-
         {/* El resto de los campos solo son accesibles si los datos están validados */}
         {isValidated && (
           <>
@@ -366,20 +377,6 @@ export default function Step2PersonalInfo({ onNext, onBack }: Step2Props) {
                 className="w-full mt-1 px-4 py-4 rounded-2xl bg-[var(--gris-claro)] placeholder:text-[var(--gris-oscuro)] focus:ring-0 focus:shadow-[0_0_20px_var(--rosado-claro)] transition-all outline-none"
                 required
               />
-              {birthDate && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Edad: {(() => {
-                    const today = new Date();
-                    const birth = new Date(birthDate);
-                    let age = today.getFullYear() - birth.getFullYear();
-                    const monthDiff = today.getMonth() - birth.getMonth();
-                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                      age--;
-                    }
-                    return age;
-                  })()} años - Categoría: {getUserCategory(birthDate)}
-                </p>
-              )}
             </div>
 
             <div>

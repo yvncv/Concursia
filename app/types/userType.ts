@@ -42,5 +42,15 @@ export type User = FirebaseUser & {
     twitter?: string;
   };
   showContactInfo: boolean; // Mostrar información de contacto públicamente
+  // NUEVO: Información del apoderado para menores de edad
+  guardian?: {
+    dni: string;
+    dniHash: string;
+    firstName: string;
+    lastName: string;
+    relationship: string; // "Padre", "Madre", "Tutor", "Abuelo/a", etc.
+    authorized: boolean;
+    authorizedAt: Timestamp;
+  };
   createdAt: Timestamp;
 };
