@@ -170,6 +170,7 @@ export default function AcademyPage({ params }: { params: Promise<{ id: string }
                 <AcademyJoinRequestButton
                   academyId={foundAcademy.id!}
                   academyName={foundAcademy.name}
+                  academyEmail={foundAcademy.email[0]}
                   userId={user?.uid}
                   userAlreadyHasAcademy={userAlreadyHasAcademy}
                   userCurrentAcademyId={currentUserData?.marinera?.academyId}

@@ -14,12 +14,6 @@ import {
   MapPin,
   Award,
   Calendar,
-  Building2,
-  ExternalLink,
-  Mail,
-  Phone,
-  Globe,
-  Users
 } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ImageCropModal from '@/app/register/modals/ImageCropModal';
@@ -29,7 +23,6 @@ import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
 import UserAchievements from './components/UserAchievements';
-import { decryptValue } from '@/app/utils/security/securityHelpers';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();
@@ -40,6 +33,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   // FIXED: Usar uid en lugar de id para la comparación con Firebase Auth
   const canEdit = Boolean(foundUser && user && foundUser.id === user?.uid);
+  const showContactInfo = foundUser?.showContactInfo || (user?.uid && foundUser?.id === user.uid);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -125,11 +119,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       setSelectedImage(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
-
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    // child components handle their own submits
   };
 
   // Función para ir al perfil de la academia
@@ -392,7 +381,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             {/* Left Column - Main Info */}
             <div className="lg:col-span-2 space-y-6 md:space-y-8">
               <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
-              <ContactInformation foundUser={foundUser} canEdit={canEdit} />
+              <ContactInformation foundUser={foundUser} canEdit={canEdit} showContactInfo={showContactInfo} />
               <PlaceInformation foundUser={safeUser} />
             </div>
 

@@ -41,6 +41,7 @@ export type User = FirebaseUser & {
     whatsapp?: string;
     twitter?: string;
   };
+  showContactInfo: boolean; // Mostrar información de contacto públicamente
   // NUEVO: Información del apoderado para menores de edad
   guardian?: {
     dni: string;

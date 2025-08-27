@@ -101,242 +101,364 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     });
 
     return (
-        <div className="w-full flex flex-col items-center justify-start pt-[15px] sm:pt-[40px] pb-[20px] min-h-[350px]">
-            <div className="w-[90%] md:w-[60%] lg:w-[90%] grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 mb-20">
-                <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md flex flex-col gap-6">
+        <div className="w-full flex flex-col items-center justify-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
+                <article className="order-1 lg:order-1 w-full bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col gap-5">
                     {/* Nombre del evento */}
-                    <h1 className="text-2xl font-bold text-gray-800">{event.eventType}: {event.name}</h1>
+                    <div className="bg-red-600 p-4 rounded-lg">
+                        <h1 className="text-2xl md:text-2xl font-bold text-white">
+                            {event.eventType}: {event.name}
+                        </h1>
+                    </div>
 
                     {/* Descripción del evento */}
-                    <section className="text-gray-700 text-base md:text-lg leading-relaxed">
-                        {event.description}
+                    <section className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-gray-700 text-base leading-relaxed">
+                            {event.description}
+                        </p>
                     </section>
 
-                    <section
-                        className="flex flex-col md:flex-row md:items-center md:space-x-6 text-gray-600 space-y-3 md:space-y-0">
-                        <div className="flex items-center space-x-3">
-                            <Calendar className="text-green-600 w-6 h-6 shrink-0" />
-                            <span className="text-sm md:text-base leading-tight">
-                                <strong>Inicio:</strong> {formattedStartDate} - {formattedStartTime}
-                            </span>
+                    {/* Fechas */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-red-600 p-1.5 rounded-full">
+                                    <Calendar className="text-white w-4 h-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Inicio</p>
+                                    <p className="text-sm font-semibold text-gray-800">{formattedStartDate}</p>
+                                    <p className="text-sm text-gray-600">{formattedStartTime}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                            <Calendar className="text-rojo w-6 h-6 shrink-0" />
-                            <span className="text-sm md:text-base leading-tight">
-                                <strong>Fin:</strong> {formattedEndDate} - {formattedEndTime}
-                            </span>
+
+                        <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-red-600 p-1.5 rounded-full">
+                                    <Calendar className="text-white w-4 h-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Fin</p>
+                                    <p className="text-sm font-semibold text-gray-800">{formattedEndDate}</p>
+                                    <p className="text-sm text-gray-600">{formattedEndTime}</p>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
-                    <section className="flex items-center space-x-3 text-gray-600">
-                        <MapPin className={`${iconClass} text-blue-600`} />
-                        <span className="text-sm md:text-base">Nombre del lugar: {event.location.placeName}.</span>
-                    </section>
-
-                    <section className="flex items-center space-x-3 text-gray-600">
-                        <MapIcon className={`${iconClass} text-orange-600`} />
-                        {event.location.coordinates ? (
-                            <button
-                                onClick={openModal}
-                                className="text-sm md:text-base text-red-900 hover:text-purple-900 underline underline-offset-4 ml-2 text-start"
-                            >
-                                Dirección: {event.location.street}, {event.location.district},{" "}
-                                {event.location.province}, {event.location.department}.
-                            </button>
-                        ) : (
-                            <span className="text-sm md:text-base">
-                                Dirección: {event.location.street}, {event.location.district},{" "}
-                                {event.location.province}, {event.location.department}
-                            </span>
-                        )}
+                    {/* Ubicación */}
+                    <section className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-3 mb-3">
+                            <div className="bg-red-700 p-1.5 rounded-full">
+                                <MapPin className="text-white w-4 h-4" />
+                            </div>
+                            <h3 className="font-semibold text-gray-800 text-base">Ubicación</h3>
+                        </div>
+                        <div className="pl-10">
+                            <p className="text-gray-700 font-medium text-sm mb-1">{event.location.placeName}</p>
+                            <div className="flex items-center space-x-2">
+                                <MapIcon className="text-gray-500 w-4 h-4" />
+                                {event.location.coordinates ? (
+                                    <button
+                                        onClick={openModal}
+                                        className="text-sm text-red-700 hover:text-red-800 underline font-medium"
+                                    >
+                                        {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}
+                                    </button>
+                                ) : (
+                                    <span className="text-sm text-gray-600">
+                                        {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </section>
 
                     {/* Sección de Categorías por Nivel */}
-                    <section className="w-full bg-[#fef6ff] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        <div className="flex items-center space-x-3">
-                            <ChartBarStacked className="text-purple-600 w-6 h-6" />
-                            <span className="text-sm md:text-base font-medium">Categorías por Modalidad:</span>
-                        </div>
-
-                        {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
-                            <div className="space-y-4">
-                                {Object.entries(event.dance.levels).map(([levelName, levelData]) => (
-                                    <div key={levelName} className="border-b border-purple-100 pb-3 last:border-0">
-                                        <h3 className="font-medium text-purple-800 mb-2">
-                                            {capitalizeFirstLetter(levelName)}
-                                        </h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {levelData.categories && levelData.categories.length > 0 ? (
-                                                levelData.categories.map((category: string) => (
-                                                    <span
-                                                        key={`${levelName}-${category}`}
-                                                        className="px-3 py-1 bg-gradient-to-t from-purple-500 bg-blue-600 text-white rounded-full text-xs md:text-sm font-medium"
-                                                    >
-                                                        {capitalizeFirstLetter(category)}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-sm text-gray-500">Sin categorías definidas para este nivel.</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                    <section className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-red-500 p-1.5 rounded-full">
+                                <ChartBarStacked className="text-white w-4 h-4" />
                             </div>
-                        ) : (
-                            <span className="text-sm md:text-base text-gray-500">Sin niveles ni categorías establecidas.</span>
-                        )}
-                    </section>
-
-                    <section className="w-full bg-[#fef6f2] p-6 rounded-lg shadow-md h-fit flex flex-col space-y-4">
-                        <div className="flex items-center space-x-3">
-                            <AlertCircle className="text-yellow-600 w-6 h-6" />
-                            <span className="text-sm md:text-base">Información adicional:</span>
+                            <h3 className="font-semibold text-gray-800 text-base">
+                                Categorías por Modalidad
+                            </h3>
                         </div>
-                        {loading ? (
-                            <span className="text-sm md:text-base text-gray-500">Cargando Información adicional...</span>
-                        ) : error ? (
-                            <span
-                                className="text-sm md:text-base text-red-500">Error al cargar Información adicional: {error}</span>
-                        ) : event.settings && typeof event.settings === 'object' ? (
-                            (event.settings.inscription?.groupEnabled ||
-                                event.settings.inscription?.individualEnabled ||
-                                event.settings.inscription?.onSiteEnabled ||
-                                event.settings.pullCouple?.enabled) ? (
-                                <div className="flex flex-wrap gap-2">
-                                    {event.settings.inscription?.groupEnabled && (
-                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Grupal</span>
-                                    )}
-                                    {event.settings.inscription?.individualEnabled && (
-                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción Individual Web</span>
-                                    )}
-                                    {event.settings.inscription?.onSiteEnabled && (
-                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">Inscripción el Mismo Día</span>
-                                    )}
-                                    {event.settings.pullCouple?.enabled && (
-                                        <span className="px-3 py-1 bg-gradient-to-t from-yellow-500 bg-orange-500 text-white rounded-full text-xs md:text-sm font-medium">
-                                            Se puede jalar pareja con diferencia máxima de {event.settings.pullCouple.difference}{" "}
-                                            {event.settings.pullCouple.criteria === "Age" ? "años." : "categorías."}
-                                        </span>
-                                    )}
+
+                        <div className="pl-10">
+                            {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
+                                <div className="space-y-3">
+                                    {Object.entries(event.dance.levels).map(([levelName, levelData]) => (
+                                        <div key={levelName} className="bg-white border border-gray-200 rounded-lg p-3">
+                                            <h4 className="font-medium text-gray-800 text-sm mb-2">
+                                                {capitalizeFirstLetter(levelName)}
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {levelData.categories && levelData.categories.length > 0 ? (
+                                                    levelData.categories.map((category: string, catIndex: number) => {
+                                                        // Colores inspirados en la marinera y bandera peruana
+                                                        const getCategoryColor = (index: number) => {
+                                                            const colors = [
+                                                                'bg-red-600',      // Rojo de la bandera peruana
+                                                                'bg-white border-2 border-red-600 text-red-600', // Blanco con borde rojo
+                                                                'bg-red-700',      // Rojo más intenso
+                                                                'bg-red-500',      // Rojo más claro
+                                                                'bg-gray-700',     // Color tierra/carbón de la marinera
+                                                                'bg-amber-600',    // Dorado/oro de los adornos
+                                                                'bg-red-800'       // Rojo oscuro elegante
+                                                            ];
+                                                            return colors[index % colors.length];
+                                                        };
+
+                                                        const colorClass = getCategoryColor(catIndex);
+                                                        const isWhite = colorClass.includes('bg-white');
+
+                                                        return (
+                                                            <span
+                                                                key={`${levelName}-${category}`}
+                                                                className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass} ${isWhite ? '' : 'text-white'
+                                                                    }`}
+                                                            >
+                                                                {capitalizeFirstLetter(category)}
+                                                            </span>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                                        Sin categorías definidas
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
-                                <span className="text-sm text-gray-500">No se encontraron configuraciones.</span>
-                            )
-                        ) : (
-                            <span className="text-sm text-gray-500">No se encontraron configuraciones.</span>
-                        )}
+                                <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                                    <span className="text-gray-500 text-sm">Sin niveles ni categorías establecidas</span>
+                                </div>
+                            )}
+                        </div>
                     </section>
 
-                    <section
-                        className="flex items-center space-x-3 text-gray-600 p-2 bg-gradient-to-tr from-red-500 to-yellow-600 rounded-full w-auto justify-center">
-                        <BadgeCheck className={`${iconClass} text-white`} />
-                        <span className="text-sm md:text-base text-white">Academia: {event.academyName}.</span>
+                    {/* Información adicional */}
+                    <section className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-amber-600 p-1.5 rounded-full">
+                                <AlertCircle className="text-white w-4 h-4" />
+                            </div>
+                            <h3 className="font-semibold text-gray-800 text-base">
+                                Información Adicional
+                            </h3>
+                        </div>
+
+                        <div className="pl-10">
+                            {loading ? (
+                                <div className="flex items-center space-x-3 bg-white p-3 rounded-lg">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                                    <span className="text-gray-600 text-sm">Cargando información adicional...</span>
+                                </div>
+                            ) : error ? (
+                                <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                                    <span className="text-red-600 text-sm">Error al cargar información: {error}</span>
+                                </div>
+                            ) : event.settings && typeof event.settings === 'object' ? (
+                                (event.settings.inscription?.groupEnabled ||
+                                    event.settings.inscription?.individualEnabled ||
+                                    event.settings.inscription?.onSiteEnabled ||
+                                    event.settings.pullCouple?.enabled) ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        {event.settings.inscription?.groupEnabled && (
+                                            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg">
+                                                <span className="text-sm font-medium">Inscripción Grupal</span>
+                                            </div>
+                                        )}
+                                        {event.settings.inscription?.individualEnabled && (
+                                            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg">
+                                                <span className="text-sm font-medium">Inscripción Individual Web</span>
+                                            </div>
+                                        )}
+                                        {event.settings.inscription?.onSiteEnabled && (
+                                            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg">
+                                                <span className="text-sm font-medium">Inscripción el Mismo Día</span>
+                                            </div>
+                                        )}
+                                        {event.settings.pullCouple?.enabled && (
+                                            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg md:col-span-2">
+                                                <span className="text-sm font-medium">
+                                                    Se puede jalar pareja con diferencia máxima de {event.settings.pullCouple.difference}{" "}
+                                                    {event.settings.pullCouple.criteria === "Age" ? "años" : "categorías"}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-white border border-gray-200 p-3 rounded-lg text-center">
+                                        <span className="text-gray-500 text-sm">No se encontraron configuraciones</span>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="bg-white border border-gray-200 p-3 rounded-lg text-center">
+                                    <span className="text-gray-500 text-sm">No se encontraron configuraciones</span>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Academia */}
+                    <section className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                            <div className="bg-gray-700 p-1.5 rounded-full">
+                                <BadgeCheck className="text-white w-4 h-4" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Academia</p>
+                                <p className="text-base font-semibold text-gray-800">{event.academyName}</p>
+                            </div>
+                        </div>
                     </section>
                 </article>
 
-                <div className="order-2 h-full flex flex-col space-y-6 justify-between">
-                    {/* Sección de Precios - Diseño Mejorado */}
-                    <div className="w-full bg-gradient-to-br from-white to-[#FFF6F6] p-6 rounded-2xl shadow-lg border border-red-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-800">Inscripción</h3>
-                            <Coins className="text-yellow-600 w-6 h-6" />
+                <div className="order-2 h-full flex flex-col space-y-5 justify-between">
+                    {/* Sección de Precios */}
+                    <div className="bg-white p-5 rounded-lg shadow-md border border-gray-200">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-red-800 p-1.5 rounded-full">
+                                <Coins className="text-white w-4 h-4" />
+                            </div>
+                            <h3 className="font-semibold text-gray-800 text-base">Inscripción</h3>
                         </div>
 
                         <div className="mb-4">
-                            <p className="text-base font-medium text-gray-700 mb-3">Precios por modalidad:</p>
-                            <div className="flex flex-wrap gap-2">
+                            <p className="text-sm font-medium text-gray-600 mb-3">Precios por modalidad:</p>
+                            <div className="space-y-2">
                                 {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
-                                    Object.entries(event.dance.levels).map(([levelName, levelData]) => (
-                                        <span
-                                            key={levelName}
-                                            className="px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-red-500 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
-                                        >
-                                            {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
-                                        </span>
-                                    ))
+                                    Object.entries(event.dance.levels).map(([levelName, levelData], index) => {
+                                        const getPriceColor = (index: number) => {
+                                            const colors = [
+                                                'bg-red-600',
+                                                'bg-red-700',
+                                                'bg-red-500',
+                                                'bg-red-800'
+                                            ];
+                                            return colors[index % colors.length];
+                                        };
+
+                                        return (
+                                            <div
+                                                key={levelName}
+                                                className={`${getPriceColor(index)} text-white p-3 rounded-lg font-medium text-center text-sm`}
+                                            >
+                                                <span className="block mb-1">
+                                                    {levelName.charAt(0).toUpperCase() + levelName.slice(1)}
+                                                </span>
+                                                <span className="text-base">S/. {levelData.price}</span>
+                                            </div>
+                                        );
+                                    })
                                 ) : (
-                                    <span className="text-gray-500">Sin niveles definidos.</span>
+                                    <div className="bg-gray-100 border border-gray-200 p-3 rounded-lg text-center">
+                                        <span className="text-gray-500 text-sm">Sin niveles definidos</span>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="mt-6 flex flex-col gap-3">
-                            {/* Botón de inscripción individual */}
+                        <div className="space-y-3">
                             {!isOrganizer && (
                                 <button
                                     onClick={onInscribir}
                                     disabled={!individualEnabled}
-                                    className={`w-full py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 flex items-center justify-center gap-2
-                        ${individualEnabled
-                                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-98 shadow-md hover:shadow-lg"
+                                    className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2
+                    ${individualEnabled
+                                            ? "bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    {individualEnabled ? <UserPlus className="w-5 h-5" /> : null}
-                                    {individualEnabled ? "Inscribir" : "Inscripción web no disponible"}
+                                    {individualEnabled ? <UserPlus className="w-4 h-4" /> : null}
+                                    {individualEnabled ? "Inscribirse" : "Inscripción web no disponible"}
                                 </button>
                             )}
 
-                            {/* Botón de inscripción grupal */}
                             {user?.roleId === "organizer" && !isOrganizer && (
                                 <button
                                     onClick={onInscribirAlumnos}
                                     disabled={!groupEnabled}
-                                    className={`w-full py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 flex items-center justify-center gap-2
-                        ${groupEnabled
-                                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:scale-98 shadow-md hover:shadow-lg"
+                                    className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2
+                    ${groupEnabled
+                                            ? "bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                                 >
-                                    {groupEnabled ? <Users className="w-5 h-5" /> : null}
+                                    {groupEnabled ? <Users className="w-4 h-4" /> : null}
                                     {groupEnabled ? "Inscribir alumnos" : "Inscripción grupal no disponible"}
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* Sección de Espectador - Diseño Mejorado */}
-                    <div className="w-full bg-gradient-to-br from-white to-[#FFF6F6] p-6 rounded-2xl shadow-lg border border-red-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-800">Espectador</h3>
-                            <Ticket className="text-green-600 w-6 h-6" />
+                    {/* Sección de Espectador */}
+                    <div className="bg-white p-5 rounded-lg shadow-md border border-gray-200">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-amber-600 p-1.5 rounded-full">
+                                <Ticket className="text-white w-4 h-4" />
+                            </div>
+                            <h3 className="font-semibold text-gray-800 text-base">Espectador</h3>
                         </div>
 
                         <div className="mb-4">
-                            <p className="text-base font-medium text-gray-700 mb-3">Precios por entrada:</p>
-                            <div className="flex flex-wrap gap-2">
+                            <p className="text-sm font-medium text-gray-600 mb-3">Precios por entrada:</p>
+                            <div className="space-y-2">
                                 {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
-                                    Object.entries(event.dance.levels).map(([levelName, levelData]) => (
-                                        <span
-                                            key={levelName}
-                                            className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
-                                        >
-                                            {levelName.charAt(0).toUpperCase() + levelName.slice(1)} - S/. {levelData.price}
-                                        </span>
-                                    ))
+                                    Object.entries(event.dance.levels).map(([levelName, levelData], index) => {
+                                        const getTicketColor = (index: number) => {
+                                            const colors = [
+                                                'bg-amber-600',
+                                                'bg-amber-700',
+                                                'bg-amber-500',
+                                                'bg-amber-800'
+                                            ];
+                                            return colors[index % colors.length];
+                                        };
+
+                                        return (
+                                            <div
+                                                key={levelName}
+                                                className={`${getTicketColor(index)} text-white p-3 rounded-lg font-medium text-center text-sm`}
+                                            >
+                                                <span className="block mb-1">
+                                                    {levelName.charAt(0).toUpperCase() + levelName.slice(1)}
+                                                </span>
+                                                <span className="text-base">S/. {levelData.price}</span>
+                                            </div>
+                                        );
+                                    })
                                 ) : (
-                                    <span className="text-gray-500">Sin niveles definidos.</span>
+                                    <div className="bg-gray-100 border border-gray-200 p-3 rounded-lg text-center">
+                                        <span className="text-gray-500 text-sm">Sin niveles definidos</span>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Botón de compra */}
-                        <div className="mt-6">
+                        <div>
                             <button
                                 onClick={openPurchaseModal}
-                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 px-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 active:scale-98 flex items-center justify-center gap-2"
+                                className="w-full bg-amber-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md hover:bg-amber-700 flex items-center justify-center gap-2"
                             >
-                                <ShoppingCart className="w-5 h-5" />
+                                <ShoppingCart className="w-4 h-4" />
                                 Comprar mi entrada
                             </button>
                         </div>
                     </div>
 
                     {/* Sección del Mapa */}
-                    <div className="rounded-2xl overflow-hidden flex-grow hidden md:block shadow-xl border border-gray-200">
-                        <div className="p-4 bg-gray-50 border-b border-gray-200">
+                    <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-md border border-gray-200">
+                        <div className="p-3 bg-gray-50 border-b border-gray-200">
                             <div className="flex items-center gap-2">
-                                <MapPin className="text-red-500 w-5 h-5" />
-                                <h3 className="text-base font-medium text-gray-700">Ubicación del evento</h3>
+                                <div className="bg-red-700 p-1.5 rounded-full">
+                                    <MapPin className="text-white w-4 h-4" />
+                                </div>
+                                <h3 className="text-sm font-semibold text-gray-800">Ubicación del evento</h3>
                             </div>
                         </div>
                         <Map

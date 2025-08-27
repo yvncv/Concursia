@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import NavbarControl from "./ui/navbar/navbar-control";
 import Footer from "./ui/footer/footer";
 import { withRoleProtection } from "./utils/withRoleProtection";
+import WhatsAppSVGButton from "./ui/whatsapp/Globe";
 
 function RootLayoutClient({ children }: { children: React.ReactNode }) {
   const brandName = "CONCURSIA";
@@ -36,6 +37,8 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
       {children}
 
       {showFooter && <Footer brandName={brandName} />}
+      
+      <WhatsAppSVGButton />
 
       {/* Toast Container - Extremo derecho superior */}
       <Toaster
