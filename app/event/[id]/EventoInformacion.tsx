@@ -155,19 +155,18 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             </div>
                             <h3 className="font-semibold text-gray-800 text-base">Ubicación</h3>
                         </div>
-                        <div className="pl-10">
+                        <div className="">
                             <p className="text-gray-700 font-medium text-sm mb-1">{event.location.placeName}</p>
                             <div className="flex items-center space-x-2">
-                                <MapIcon className="text-gray-500 w-4 h-4" />
                                 {event.location.coordinates ? (
                                     <button
                                         onClick={openModal}
-                                        className="text-sm text-red-700 hover:text-red-800 underline font-medium"
+                                        className="text-sm text-red-700 hover:text-red-800 underline font-medium text-start"
                                     >
                                         {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}
                                     </button>
                                 ) : (
-                                    <span className="text-sm text-gray-600">
+                                    <span className="text-sm text-gray-600 text-start">
                                         {event.location.street}, {event.location.district}, {event.location.province}, {event.location.department}
                                     </span>
                                 )}
@@ -186,7 +185,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             </h3>
                         </div>
 
-                        <div className="pl-10">
+                        <div className="">
                             {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
                                 <div className="space-y-3">
                                     {Object.entries(event.dance.levels).map(([levelName, levelData]) => (
@@ -252,7 +251,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             </h3>
                         </div>
 
-                        <div className="pl-10">
+                        <div className="">
                             {loading ? (
                                 <div className="flex items-center space-x-3 bg-white p-3 rounded-lg">
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
