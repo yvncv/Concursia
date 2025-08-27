@@ -207,7 +207,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           <div className="flex flex-col sm:flex-row sm:items-end space-y-2 sm:space-y-0 sm:space-x-6">
             {/* Profile Image */}
             <div className="relative group self-center sm:self-auto">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-2 sm:border-4 border-white shadow-lg overflow-hidden bg-white">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 relative rounded-full border-2 sm:border-4 border-white shadow-lg overflow-hidden bg-white">
                 {croppedImage ? (
                   <Image
                     src={croppedImage}
@@ -217,11 +217,13 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     className="object-cover w-full h-full"
                     unoptimized
                   />
-                ) : foundUser.profileImage ? (
+                ) : foundUser.profileImage && (foundUser === user || age > 14) ? (
                   <Image
-                    src={typeof foundUser.profileImage === 'string'
-                      ? foundUser.profileImage
-                      : URL.createObjectURL(foundUser.profileImage as File)}
+                    src={
+                      typeof foundUser.profileImage === "string"
+                        ? foundUser.profileImage
+                        : URL.createObjectURL(foundUser.profileImage as File)
+                    }
                     alt="Foto de perfil"
                     width={128}
                     height={128}
@@ -236,13 +238,20 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
                 {canEdit && (
                   <div
-                    className="absolute rounded-full inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                    className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                     onClick={() => setIsChangeImageModalOpen(true)}
                   >
                     <LucideImage className="text-white w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
                 )}
               </div>
+
+              {/* Mensaje visible solo si es menor de 14 y viendo su propia foto */}
+              {foundUser === user && age <= 14 && foundUser.profileImage && (
+                <p className="mt-2 text-[10px] sm:text-xs text-gray-500 text-center">
+                  Menor de edad: Solo tú puedes ver tu foto de perfil.
+                </p>
+              )}
 
               {/* Academy Badge - Pequeño ícono debajo de la foto */}
               {foundUser.marinera?.academyId && academy && !loadingAcademy && (
@@ -281,7 +290,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             {/* User Info */}
             <div className="text-white flex-1 text-center sm:text-left">
               <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
-                {capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)}
+                {capitalizeName(foundUser.firstName.split(" ")[0])} {capitalizeName(foundUser.lastName.split(" ")[0])}
               </h1>
               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-6 text-xs sm:text-base md:text-lg">
                 <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">

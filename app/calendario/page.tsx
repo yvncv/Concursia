@@ -101,7 +101,7 @@ export default function TodosEventos() {
         <div className="w-full flex flex-col items-center justify-start max-w-[1400px]">
           {currentEvents.length > 0 ? (
             <div
-              className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[400px]">
+              className="w-[90%] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[188px]">
               {currentEvents.map((event) => (
                 <EventComponent event={event} key={event.id} onShowParticipants={handleShowParticipants} />
               ))}
