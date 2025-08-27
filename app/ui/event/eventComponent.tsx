@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Calendar, Clock, MapPin, Star, Users } from "lucide-react";
+import { BadgeCheck, Calendar, MapPin, Star } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEventParticipants from "@/app/hooks/useEventParticipants";
 import { CustomEvent } from "../../types/eventType";
@@ -48,18 +48,18 @@ export default function EventComponent({ event, onShowParticipants }: EventCompo
   const formatDate = (date: Date): string => {
     return date
       .toLocaleDateString("es-PE", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
       })
-      .replace(/^\w/, (c) => c.toUpperCase());
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
   const formatTime = (timestamp: number): string =>
     new Date(timestamp * 1000).toLocaleTimeString("es-PE", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
+      hour12: false,
     });
 
   const formattedStartTime = event.startDate?.seconds
@@ -184,17 +184,7 @@ export default function EventComponent({ event, onShowParticipants }: EventCompo
               <Calendar className="text-red-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </div>
             <span className="text-gray-700 font-medium text-[10px] sm:text-xs flex-1 truncate">
-              {formatDate(event.startDate.toDate())}
-            </span>
-          </div>
-
-          {/* Hora */}
-          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100/80 hover:shadow-md transition-all duration-300">
-            <div className="p-1 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg shadow-sm">
-              <Clock className="text-emerald-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            </div>
-            <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
-              {formattedStartTime}
+              {formatDate(event.startDate.toDate())} {formattedStartTime}
             </span>
           </div>
 
@@ -217,18 +207,6 @@ export default function EventComponent({ event, onShowParticipants }: EventCompo
               {event.academyName}
             </span>
           </div>
-
-          {/* Participantes de tu academia (solo si hay) */}
-          {showAcademyParticipants && (
-            <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100/80 hover:shadow-md transition-all duration-300">
-              <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-sm">
-                <Users className="text-blue-600 w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              </div>
-              <span className="text-gray-700 font-medium text-[10px] sm:text-xs truncate flex-1">
-                {academyParticipantCount} de {userAcademyName}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Botón CTA mejorado */}
