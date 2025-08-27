@@ -530,7 +530,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-800">Email</h4>
-                        <p className="text-gray-600">contacto@empresa.com</p>
+                        <p className="text-gray-600">concursia1@gmail.com</p>
                         <p className="text-sm text-gray-500">Respuesta en 24 horas</p>
                       </div>
                     </div>
@@ -541,7 +541,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-800">Teléfono</h4>
-                        <p className="text-gray-600">+51 123 456 789</p>
+                        <p className="text-gray-600">+51 916 886 591</p>
                         <p className="text-sm text-gray-500">Lun - Vie: 9:00 - 18:00</p>
                       </div>
                     </div>
@@ -551,8 +551,8 @@ export default function LandingPage() {
                         <MapPin className="w-6 h-6 text-green-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">Dirección</h4>
-                        <p className="text-gray-600">San Isidro, Lima</p>
+                        <h4 className="font-semibold text-gray-800">Ubicados en</h4>
+                        <p className="text-gray-600">Lima</p>
                         <p className="text-sm text-gray-500">Perú</p>
                       </div>
                     </div>
