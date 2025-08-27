@@ -290,7 +290,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             {/* User Info */}
             <div className="text-white flex-1 text-center sm:text-left">
               <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
-                {capitalizeName(foundUser.firstName.split(" ")[0])} {capitalizeName(foundUser.lastName.split(" ")[0])}
+                {
+                  age && age < 14 ? 
+                    capitalizeName(foundUser.firstName.split(" ")[0]) + ' ' + capitalizeName(foundUser.lastName.split(" ")[0])
+                    : capitalizeName(foundUser.firstName + ' ' + foundUser.lastName)
+                }
               </h1>
               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-6 text-xs sm:text-base md:text-lg">
                 <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
