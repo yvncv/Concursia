@@ -396,7 +396,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                     </div>
 
                     {/* Sección de Espectador */}
-                    <div className="bg-white p-5 rounded-lg shadow-md border border-gray-200">
+                    {/* <div className="bg-white p-5 rounded-lg shadow-md border border-gray-200">
                         <div className="flex items-center space-x-3 mb-4">
                             <div className="bg-amber-600 p-1.5 rounded-full">
                                 <Ticket className="text-white w-4 h-4" />
@@ -448,7 +448,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                                 Comprar mi entrada
                             </button>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Sección del Mapa */}
                     <div className="rounded-lg overflow-hidden flex-grow hidden md:block shadow-md border border-gray-200">

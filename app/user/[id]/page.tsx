@@ -23,6 +23,8 @@ import ContactInformation from './components/ContactInformation';
 import PlaceInformation from './components/PlaceInformation';
 import AcademyHistory from './components/AcademyHistory';
 import UserAchievements from './components/UserAchievements';
+import { determineCategory } from '@/app/utils/category/determineCategory';
+import { useGlobalCategories } from '@/app/hooks/useGlobalCategories';
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { users, loadingUsers } = useUsers();
@@ -30,10 +32,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const foundUser = users.find(u => u.id === id);
   const { academy, loadingAcademy } = useAcademy(foundUser?.marinera?.academyId);
+  const { categorias, loading: loadingCategories } = useGlobalCategories();
 
-  // FIXED: Usar uid en lugar de id para la comparación con Firebase Auth
+  // Usar uid en lugar de id para la comparación con Firebase Auth
   const canEdit = Boolean(foundUser && user && foundUser.id === user?.uid);
   const showContactInfo = foundUser?.showContactInfo || (user?.uid && foundUser?.id === user.uid);
+  const showPlaceInfo = foundUser?.showPlaceInfo || (user?.uid && foundUser?.id === user.uid);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -142,9 +146,9 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  // Calcular edad si existe fecha de nacimiento
-  const calculateAge = () => {
-    if (!foundUser.birthDate) return null;
+  // Función para obtener edad y categoría
+  const getAgeAndCategory = () => {
+    if (!foundUser.birthDate || loadingCategories) return { age: null, category: 'N/A' };
 
     let birthDate: Date;
 
@@ -157,16 +161,21 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     }
 
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
+    
+    // Calcular edad
+    let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      return age - 1;
+      age--;
     }
-    return age;
+
+    // Determinar categoría
+    const category = determineCategory(birthDate, today, categorias) || 'N/A';
+
+    return { age, category };
   };
 
-  const age = calculateAge();
+  const { age, category: userCategory } = getAgeAndCategory();
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
@@ -279,7 +288,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
                     {/* Tooltip */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 sm:px-3 py-1 bg-black bg-opacity-80 text-white text-xs rounded-lg opacity-0 group-hover/academy:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
-                      Academia: {academy.name}
+                      {academy.name}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-2 border-transparent border-t-black border-t-opacity-80"></div>
                     </div>
                   </div>
@@ -299,7 +308,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-6 text-xs sm:text-base md:text-lg">
                 <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
                   <Trophy className="w-3 h-3 sm:w-5 sm:h-5" />
-                  <span className="text-xs sm:text-base">{foundUser.marinera?.participant?.category || 'Participante'}</span>
+                  <span className="text-xs sm:text-base">{userCategory}</span>
                 </div>
                 {age && (
                   <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
@@ -309,13 +318,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 )}
                 <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
                   <MapPin className="w-3 h-3 sm:w-5 sm:h-5" />
-                  <span className="text-xs sm:text-sm md:text-base">{foundUser.location?.district || 'Ubicación'}, {foundUser.location?.department || 'Perú'}</span>
+                  <span className="text-xs sm:text-sm md:text-base">{foundUser.location?.department || 'Perú'}</span>
                 </div>
               </div>
               <div className="mt-1 sm:mt-2 flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
-                <span className="bg-white bg-opacity-20 px-2 py-1 sm:px-3 rounded-full text-xs self-center sm:self-auto">
-                  {foundUser.roleId?.toUpperCase() || 'USUARIO'}
-                </span>
                 {foundUser.marinera?.academyId && (
                   <span className="text-blue-200 text-xs sm:text-sm">
                     Academia: {loadingAcademy ? 'Cargando...' : academy?.name || 'No disponible'}
@@ -339,7 +345,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {foundUser.marinera?.participant?.category || 'N/A'}
+                    {userCategory}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">Categoría</p>
                 </div>
@@ -353,7 +359,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {foundUser.gender === 'Masculino' ? 'M' : foundUser.gender === 'Femenino' ? 'F' : '-'}
+                    {foundUser.gender === 'Masculino' ? 'Masculino' : foundUser.gender === 'Femenino' ? 'Femenino' : '-'}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">Género</p>
                 </div>
@@ -367,7 +373,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {foundUser.roleId === 'organizer' ? 'Org.' : foundUser.roleId === 'participant' ? 'Part.' : 'User'}
+                    {foundUser.roleId === 'organizer' ? 'Org.' : foundUser.roleId === 'participant' ? 'Part.' : 'Usuario'}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">Rol</p>
                 </div>
@@ -395,7 +401,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <div className="lg:col-span-2 space-y-6 md:space-y-8">
               <PersonalInformation foundUser={foundUser} canEdit={canEdit} />
               <ContactInformation foundUser={foundUser} canEdit={canEdit} showContactInfo={showContactInfo} />
-              <PlaceInformation foundUser={safeUser} />
+              <PlaceInformation foundUser={safeUser} canEdit={canEdit} showPlaceInfo={showPlaceInfo}/>
             </div>
 
             {/* Right Column - Additional Info */}
