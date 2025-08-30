@@ -31,6 +31,31 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
     isGrupalCSVEnabled
 }) => {
     const { isPurchaseOpen, openPurchaseModal, closePurchaseModal } = useTicketPurchaseModal();
+
+    // Orden específico de modalidades (mismo que en InscriptionForm)
+    const ordenModalidades = [
+        "Seriado",
+        "Individual", 
+        "Novel Novel", 
+        "Noveles", 
+        "Novel Abierto",
+        "Novel Abierto A",
+        "Novel Abierto B", 
+        "Nacional"
+    ];
+
+    // Función para ordenar modalidades según el orden definido
+    const getOrderedLevels = (): Array<[string, any]> => {
+        if (!event?.dance?.levels) return [];
+        
+        const modalidadesDisponibles = Object.keys(event.dance.levels);
+        const modalidadesOrdenadas = ordenModalidades.filter(modalidad => 
+            modalidadesDisponibles.includes(modalidad)
+        );
+        
+        return modalidadesOrdenadas.map(modalidad => [modalidad, event.dance.levels[modalidad]] as [string, any]);
+    };
+
     // Función para capitalizar la primera letra de una cadena
     const capitalizeFirstLetter = (text: string): string =>
         text.charAt(0).toUpperCase() + text.slice(1);
@@ -188,7 +213,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                         <div className="">
                             {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
                                 <div className="space-y-3">
-                                    {Object.entries(event.dance.levels).map(([levelName, levelData]) => (
+                                    {getOrderedLevels().map(([levelName, levelData]: [string, any]) => (
                                         <div key={levelName} className="bg-white border border-gray-200 rounded-lg p-3">
                                             <h4 className="font-medium text-gray-800 text-sm mb-2">
                                                 {capitalizeFirstLetter(levelName)}
@@ -332,7 +357,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                             <p className="text-sm font-medium text-gray-600 mb-3">Precios por modalidad:</p>
                             <div className="space-y-2">
                                 {event?.dance?.levels && Object.keys(event.dance.levels).length > 0 ? (
-                                    Object.entries(event.dance.levels).map(([levelName, levelData], index) => {
+                                    getOrderedLevels().map(([levelName, levelData]: [string, any], index: number) => {
                                         const getPriceColor = (index: number) => {
                                             const colors = [
                                                 'bg-red-600',

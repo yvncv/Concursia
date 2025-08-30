@@ -297,32 +297,12 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     }
   }, [hasStoredData, lastSaved]);
 
-  // Calcular estadísticas para mostrar
-  const estadisticas = {
-    totalParticipantes: inscripciones.reduce((total, insc) => 
-      total + (insc.pareja ? 2 : 1), 0),
-    totalInscripciones: inscripciones.length,
-    modalidadesUnicas: new Set(inscripciones.map(insc => insc.modalidad)).size,
-    academiasParticipantes: new Set([
-      ...inscripciones.map(insc => insc.participante.academyName),
-      ...inscripciones.filter(insc => insc.pareja).map(insc => insc.pareja!.academyName)
-    ]).size
-  };
-
   return (
     <>
       <div className="w-full max-w-6xl mx-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-6 border border-gray-100">
         {/* Header */}
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Inscripción Grupal de Alumnos</h2>
-          <p className="text-lg text-gray-700">
-            Inscribe alumnos de tu academia al evento <span className="font-semibold">{event.name}</span>
-          </p>
-          {user.marinera?.academyName && (
-            <p className="text-sm text-gray-600 mt-1">
-              Academia: <span className="font-medium text-blue-600">{user.marinera.academyName}</span>
-            </p>
-          )}
           
           {/* Indicador de guardado automático - NUEVO */}
           {lastSaved && inscripciones.length > 0 && (
@@ -332,50 +312,6 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
             </div>
           )}
         </div>
-
-        {/* Estadísticas rápidas - ACTUALIZADO con botón para limpiar */}
-        {inscripciones.length > 0 && (
-          <div className="mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                <p className="text-2xl font-bold text-blue-600">{estadisticas.totalParticipantes}</p>
-                <p className="text-xs text-gray-600">Participantes</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-                <p className="text-2xl font-bold text-green-600">{estadisticas.totalInscripciones}</p>
-                <p className="text-xs text-gray-600">Inscripciones</p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
-                <p className="text-2xl font-bold text-purple-600">{estadisticas.modalidadesUnicas}</p>
-                <p className="text-xs text-gray-600">Modalidades</p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-200">
-                <p className="text-2xl font-bold text-orange-600">S/. {montoTotal}</p>
-                <p className="text-xs text-gray-600">Total</p>
-              </div>
-            </div>
-            
-            {/* Botón para limpiar inscripciones - NUEVO */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  if (inscripciones.length === 0) {
-                    toast.error("No hay inscripciones para limpiar");
-                    return;
-                  }
-
-                  if (window.confirm(`¿Estás seguro de que deseas eliminar todas las ${inscripciones.length} inscripciones? Esta acción no se puede deshacer.`)) {
-                    limpiarInscripciones();
-                    toast.success("Todas las inscripciones han sido eliminadas");
-                  }
-                }}
-                className="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-red-200 hover:border-red-300"
-              >
-                🗑️ Limpiar todas las inscripciones
-              </button>
-            </div>
-          </div>
-        )}
 
         {!isSuccess ? (
           <div className="space-y-8">

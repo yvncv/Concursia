@@ -91,7 +91,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
     toast((t) => (
       <div className="flex flex-col">
         <p className="font-medium">¿Eliminar inscripción?</p>
-        <p className="text-sm text-gray-600">{participanteName} - {inscripcion.modalidad}</p>
+        <p className="text-sm text-white-600">{participanteName} - {inscripcion.modalidad}</p>
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => {
@@ -164,7 +164,7 @@ const InscriptionList: React.FC<InscriptionListProps> = ({
           <AlertTriangle className="w-5 h-5 text-orange-500 mr-2" />
           <p className="font-medium">¿Eliminar todas las inscripciones?</p>
         </div>
-        <p className="text-sm text-gray-600 mb-3">
+        <p className="text-sm text-white-600 mb-3">
           Se eliminarán {inscripciones.length} inscripciones ({inscripciones.reduce((total, insc) => total + (insc.pareja ? 2 : 1), 0)} participantes).
           Esta acción no se puede deshacer.
         </p>

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { UserPlus, Award, CheckCircle } from "lucide-react";
+import { UserPlus, Award, CheckCircle, Users, User as UserIcon } from "lucide-react";
 import { Timestamp } from "firebase/firestore";
-import { User } from "@/app/types/userType";
+import type { User } from "@/app/types/userType";
 import { Participante } from "@/app/hooks/useParticipantSearch";
 import { LevelData } from "@/app/types/eventType";
 import ParticipantSearch from "./ParticipantSearch";
@@ -83,7 +83,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   const [parejaEncontrada, setParejaEncontrada] = useState<Participante | null>(null);
   const [academiaParticipante, setAcademiaParticipante] = useState<string>("");
   const [academiaPareja, setAcademiaPareja] = useState<string>("");
-  const [esParejLibre, setEsParejLibre] = useState<boolean>(false); // NUEVO ESTADO
+  const [esParejLibre, setEsParejLibre] = useState<boolean>(false);
   const [formularioValido, setFormularioValido] = useState<boolean>(false);
   const [pullCoupleData, setPullCoupleData] = useState<{
     aplicar: boolean;
@@ -91,14 +91,29 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   }>({ aplicar: false, categoriaFinal: "" });
   const [participantSearchKey, setParticipantSearchKey] = useState<number>(0);
 
+  // Orden específico de modalidades
+  const ordenModalidades = [
+    "Seriado",
+    "Individual", 
+    "Novel Novel", 
+    "Noveles", 
+    "Novel Abierto",
+    "Novel Abierto A",
+    "Novel Abierto B", 
+    "Nacional"
+  ];
+
+  // Obtener modalidades disponibles en el orden correcto
+  const modalidadesDisponibles = Object.keys(event.settings.levels || {});
+  const modalidades: string[] = ordenModalidades.filter(modalidad => 
+    modalidadesDisponibles.includes(modalidad)
+  );
+
   // Determinar si la modalidad requiere pareja
   const requierePareja: boolean = event.settings.levels[modalidad]?.couple || false;
 
   // Obtener categorías disponibles para la modalidad actual
   const categoriasDisponibles: string[] = event.settings.levels[modalidad]?.categories || [];
-
-  // Opciones de modalidades
-  const modalidades: string[] = Object.keys(event.settings.levels || {});
 
   // Helper para convertir cualquier tipo de fecha a Date
   const convertToDate = useCallback((dateValue: any): Date => {
@@ -145,8 +160,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
   }, [getParticipantCategory, convertToDate]);
 
   // Manejar cambio de modalidad
-  const handleModalidadChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>): void => {
-    const nuevaModalidad = e.target.value;
+  const handleModalidadChange = useCallback((nuevaModalidad: string): void => {
     setModalidad(nuevaModalidad);
 
     // Limpiar estado al cambiar modalidad
@@ -171,7 +185,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setAcademiaParticipante(academia);
   }, []);
 
-  // CORREGIDO: Manejar pareja encontrada con flag de "Libre"
+  // Manejar pareja encontrada con flag de "Libre"
   const handleCoupleFound = useCallback((pareja: Participante, academia: string, esLibre: boolean = false) => {
     setParejaEncontrada(pareja);
     setAcademiaPareja(academia);
@@ -188,7 +202,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
     setPullCoupleData(data);
   }, []);
 
-  // CORREGIDO: Manejar envío del formulario
+  // Manejar envío del formulario
   const handleSubmit = useCallback((): void => {
     console.log("🔍 DEBUGGING handleSubmit:");
     console.log("formularioValido:", formularioValido);
@@ -204,13 +218,13 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
       return;
     }
 
-    // CORREGIDO: Validación de pareja
+    // Validación de pareja
     if (requierePareja) {
       if (!parejaEncontrada) {
         console.log("❌ Falta pareja");
         return;
       }
-      
+
       // Permitir si es "Libre" O si tiene academia asignada
       if (!academiaPareja && !esParejLibre) {
         console.log("❌ Pareja sin academia y no es Libre");
@@ -226,7 +240,7 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
       ? pullCoupleData.categoriaFinal
       : getParticipantCategoryFromBirthDate(participanteEncontrado.birthDate);
 
-    // CORREGIDO: Crear objeto de inscripción
+    // Crear objeto de inscripción
     const nuevaInscripcion: Inscripcion = {
       modalidad,
       level: modalidad,
@@ -291,84 +305,79 @@ const InscriptionForm: React.FC<InscriptionFormProps> = ({
       </h3>
 
       <div className="space-y-6">
-        {/* Selección de modalidad */}
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <label className="block text-sm font-medium text-blue-800 mb-3 flex items-center">
-            <Award className="w-4 h-4 mr-2" />
-            Modalidad de Competencia
-          </label>
-
-          <select
-            value={modalidad}
-            onChange={handleModalidadChange}
-            className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-base font-medium"
-          >
-            {modalidades.map(mod => (
-              <option key={mod} value={mod}>{mod}</option>
-            ))}
-          </select>
-
-          {/* Información de la modalidad en cards horizontales */}
-          {modalidad && (
-            <div className="space-y-3">
-              {/* Primera fila: Precio y Tipo */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Card de Precio */}
-                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Precio</span>
-                    <div className="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
-                      <div className="w-3 h-3 bg-green-500 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <span className="text-xl font-bold text-gray-900">
-                      S/. {event.settings.levels[modalidad]?.price || 0}
+        {/* Tabs de modalidades */}
+        <div className="bg-gray-50 rounded-lg p-1 border border-gray-200">
+          <div className="flex flex-wrap gap-1">
+            {modalidades.map(mod => {
+              const isPareja = event.settings.levels[mod]?.couple || false;
+              const precio = event.settings.levels[mod]?.price || 0;
+              const isActive = modalidad === mod;
+              
+              return (
+                <button
+                  key={mod}
+                  onClick={() => handleModalidadChange(mod)}
+                  className={`
+                    flex-1 min-w-0 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200
+                    flex items-center justify-center gap-2
+                    ${isActive
+                      ? 'bg-blue-600 text-white shadow-md transform scale-105'
+                      : 'bg-white text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-gray-200'
+                    }
+                  `}
+                >
+                  {/* Icono según tipo */}
+                  {isPareja ? (
+                    <Users className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <UserIcon className="w-4 h-4 flex-shrink-0" />
+                  )}
+                  
+                  {/* Nombre y precio */}
+                  <div className="flex flex-col items-center min-w-0">
+                    <span className="truncate max-w-full">{mod}</span>
+                    <span className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
+                      S/. {precio}
                     </span>
                   </div>
-                </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                {/* Card de Tipo */}
-                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Tipo</span>
-                    <div className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center">
-                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <span className="text-xl font-semibold text-purple-600">
-                      {requierePareja ? 'Parejas' : 'Individual'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Segunda fila: Categorías (ocupando todo el ancho) */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Categorías disponibles:</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
+        {/* Información de la modalidad seleccionada */}
+        {modalidad && (
+          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <div className="flex items-center justify-between">
+              {/* Categorías disponibles */}
+              <div className="flex items-center gap-2">
+                <span className="text-blue-700 text-sm font-medium">Categorías:</span>
+                <div className="flex gap-1 flex-wrap">
                   {categoriasDisponibles.length > 0 ? (
                     categoriasDisponibles.map((categoria, index) => (
                       <span
                         key={index}
-                        className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200"
                       >
                         {categoria}
                       </span>
                     ))
                   ) : (
-                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                      Todas
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      Todas las categorías
                     </span>
                   )}
                 </div>
               </div>
+
+              {/* Precio */}
+              <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                S/. {event.settings.levels[modalidad]?.price || 0}
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Componente de búsqueda de participantes */}
         <ParticipantSearch
