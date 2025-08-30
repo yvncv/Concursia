@@ -4,6 +4,7 @@ import { CustomEvent } from "@/app/types/eventType";
 import { Calendar, MapPin, Map as MapIcon, BadgeCheck, ChartBarStacked, Coins, AlertCircle, UserPlus, Users, ShoppingCart, Ticket } from "lucide-react";
 import Map from "@/app/ui/map/mapa";
 import TicketPurchaseModal, { useTicketPurchaseModal } from "./purchase-modal/TicketPurchaseModal";
+import IzipayButton from "@/app/ui/payment/izipay-button";
 
 interface EventoInformacionProps {
     event: CustomEvent;
@@ -82,23 +83,23 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
         ? isGrupalCSVEnabled            // Usar valores de props (de useSettings)
         : (event?.settings?.inscription?.groupEnabled || false);
 
-    console.log("DEBUG - Event settings:", {
-        eventId: event.id,
-        inscriptionFromProps: {
-            individualEnabled: isIndividualWebEnabled,
-            groupEnabled: isGrupalCSVEnabled
-        },
-        inscriptionFromEvent: {
-            individualEnabled: event?.settings?.inscription?.individualEnabled,
-            groupEnabled: event?.settings?.inscription?.groupEnabled
-        },
-        calculatedValues: {
-            individualEnabled,
-            groupEnabled,
-            isOrganizer,
-            userRole: user?.roleId
-        }
-    });
+    // console.log("DEBUG - Event settings:", {
+    //     eventId: event.id,
+    //     inscriptionFromProps: {
+    //         individualEnabled: isIndividualWebEnabled,
+    //         groupEnabled: isGrupalCSVEnabled
+    //     },
+    //     inscriptionFromEvent: {
+    //         individualEnabled: event?.settings?.inscription?.individualEnabled,
+    //         groupEnabled: event?.settings?.inscription?.groupEnabled
+    //     },
+    //     calculatedValues: {
+    //         individualEnabled,
+    //         groupEnabled,
+    //         isOrganizer,
+    //         userRole: user?.roleId
+    //     }
+    // });
 
     return (
         <div className="w-full flex flex-col items-center justify-start">
@@ -438,16 +439,7 @@ const EventoInformacion: React.FC<EventoInformacionProps> = ({
                                 )}
                             </div>
                         </div>
-
-                        <div>
-                            <button
-                                onClick={openPurchaseModal}
-                                className="w-full bg-amber-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md hover:bg-amber-700 flex items-center justify-center gap-2"
-                            >
-                                <ShoppingCart className="w-4 h-4" />
-                                Comprar mi entrada
-                            </button>
-                        </div>
+                        <IzipayButton />
                     </div>
 
                     {/* Sección del Mapa */}
