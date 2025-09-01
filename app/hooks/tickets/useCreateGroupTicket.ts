@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Timestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { User } from '@/app/types/userType';
 import { CustomEvent } from '@/app/types/eventType';
-import { TicketEntry, TicketData } from '@/app/types/ticketType';
-import useTicket from '@/app/hooks/useTicket';
+import { TicketEntry } from '@/app/types/ticketType';
+import useProcessTicket from '@/app/hooks/tickets/useProcessTicket';
 
 // Tipos para inscripción grupal
 interface Participante {
@@ -38,7 +37,14 @@ interface CreateGroupTicketParams {
 export const useCreateGroupTicket = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { saveTicket } = useTicket('');
+  
+  // Usar el hook de tickets "En Proceso"
+  const {
+    findProcessTicket,
+    createProcessTicket,
+    addEntryToProcessTicket,
+    isLoading: processLoading
+  } = useProcessTicket();
 
   const createGroupTicket = async (params: CreateGroupTicketParams): Promise<string | null> => {
     const { event, user, inscripciones } = params;
@@ -80,8 +86,11 @@ export const useCreateGroupTicket = () => {
     const loadingToastId = toast.loading('Procesando inscripciones...');
 
     try {
-      // Crear entries para cada inscripción
-      const entries: TicketEntry[] = inscripciones.map(inscripcion => {
+      // Buscar ticket "En Proceso" existente para esta academia/evento
+      const existingTicket = await findProcessTicket(userAcademyId, event.id);
+
+      // Convertir inscripciones a entries
+      const newEntries: TicketEntry[] = inscripciones.map(inscripcion => {
         const usersId = inscripcion.pareja
           ? [inscripcion.participante.id, inscripcion.pareja.id]
           : [inscripcion.participante.id];
@@ -108,47 +117,64 @@ export const useCreateGroupTicket = () => {
         };
       });
 
-      // Calcular monto total
-      const totalAmount = entries.reduce((sum, entry) => sum + entry.amount, 0);
+      let ticketId: string;
 
-      // Calcular fecha de expiración (24 horas)
-      const expirationDate = new Date();
-      expirationDate.setHours(expirationDate.getHours() + 24);
-
-      // Crear ticket data según el tipo TicketData válido
-      const ticketData: TicketData = {
-        status: 'Pendiente',
-        eventId: event.id,
-        registrationDate: Timestamp.fromDate(new Date()),
-        expirationDate: Timestamp.fromDate(expirationDate),
-        inscriptionType: 'Grupal',
-        totalAmount,
-        entries,
-        createdBy: user.id,
-      };
-
-      // Validar que el monto total sea mayor a 0
-      if (totalAmount <= 0) {
-        throw new Error('El monto total debe ser mayor a 0');
-      }
-
-      // Guardar en Firebase
-      const docRef = await saveTicket(ticketData);
-      
-      if (!docRef?.id) {
-        throw new Error('Error al guardar en Firebase');
-      }
-
-      // Toast de éxito
-      toast.success(
-        `¡Ticket grupal creado exitosamente! ${inscripciones.length} inscripción${inscripciones.length > 1 ? 'es' : ''} procesada${inscripciones.length > 1 ? 's' : ''}`,
-        { 
-          id: loadingToastId,
-          duration: 5000 
+      if (existingTicket) {
+        // CASO 1: Ya existe un ticket "En Proceso" - Agregar entries
+        console.log('Agregando inscripciones a ticket existente:', existingTicket.id);
+        
+        // Agregar cada entry al ticket existente
+        for (const entry of newEntries) {
+          const success = await addEntryToProcessTicket(existingTicket.id, entry);
+          if (!success) {
+            throw new Error('Error al agregar inscripción al ticket existente');
+          }
         }
-      );
+        
+        ticketId = existingTicket.id;
+        
+        // Toast de éxito para entries agregados
+        toast.success(
+          `¡${inscripciones.length} inscripción${inscripciones.length > 1 ? 'es' : ''} agregada${inscripciones.length > 1 ? 's' : ''} al ticket en proceso!`,
+          { 
+            id: loadingToastId,
+            duration: 5000 
+          }
+        );
 
-      return docRef.id;
+      } else {
+        // CASO 2: No existe ticket - Crear nuevo ticket "En Proceso"
+        console.log('Creando nuevo ticket en proceso');
+        
+        // Crear ticket con el primer entry
+        const firstEntry = newEntries[0];
+        const newTicketId = await createProcessTicket(event.id, user.id, firstEntry);
+        
+        if (!newTicketId) {
+          throw new Error('Error al crear nuevo ticket en proceso');
+        }
+
+        // Si hay más entries, agregarlos uno por uno
+        for (let i = 1; i < newEntries.length; i++) {
+          const success = await addEntryToProcessTicket(newTicketId, newEntries[i]);
+          if (!success) {
+            throw new Error(`Error al agregar inscripción ${i + 1} al ticket`);
+          }
+        }
+        
+        ticketId = newTicketId;
+        
+        // Toast de éxito para ticket nuevo
+        toast.success(
+          `¡Nuevo ticket en proceso creado! ${inscripciones.length} inscripción${inscripciones.length > 1 ? 'es' : ''} agregada${inscripciones.length > 1 ? 's' : ''}`,
+          { 
+            id: loadingToastId,
+            duration: 5000 
+          }
+        );
+      }
+
+      return ticketId;
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido al crear ticket grupal';
@@ -203,7 +229,7 @@ export const useCreateGroupTicket = () => {
   return {
     createGroupTicket,
     validateInscriptions,
-    isCreating,
+    isCreating: isCreating || processLoading,
     error,
     clearError,
   };
