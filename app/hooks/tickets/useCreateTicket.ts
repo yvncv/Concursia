@@ -87,8 +87,7 @@ export const useCreateTicket = () => {
         status: 'Pendiente',
         eventId: event.id,
         registrationDate: Timestamp.fromDate(new Date()),
-        expirationDate: Timestamp.fromDate(expirationDate),
-        inscriptionType: 'Individual', // Siempre Individual porque es un usuario registrándose por la web
+        inscriptionType: 'Individual',
         totalAmount: entry.amount,
         entries: [entry],
         createdBy: user.id,
