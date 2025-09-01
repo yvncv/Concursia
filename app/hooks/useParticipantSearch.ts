@@ -2,7 +2,9 @@
 import { useState, useCallback, useRef } from "react";
 import { Timestamp } from "firebase/firestore";
 import { findUserByHashedDni } from "@/app/utils/security/dni/findUserByHashedDni";
-import { CategoryLevel } from "../types/categoriesType";
+import { CategoryLevel, AgeCategory } from "../types/categoriesType";
+import { determineCategory } from "@/app/utils/category/determineCategory";
+import { useGlobalCategories } from "./useGlobalCategories";
 
 export interface Participante {
   id: string;
@@ -22,8 +24,15 @@ interface ParticipantSearchResult {
   isSearching: boolean;
   searchError: string;
   participantInfo: Participante | null;
-  searchParticipant: (dni: string, otherParticipantDni?: string) => Promise<Participante | null>;
+  searchParticipant: (
+    dni: string, 
+    otherParticipantDni?: string, 
+    referenceDate?: Date
+  ) => Promise<Participante | null>;
   clearParticipant: () => void;
+  clearCache: () => void;
+  categoriesLoading: boolean;
+  categoriesError: Error | null;
 }
 
 export function useParticipantSearch(): ParticipantSearchResult {
@@ -31,12 +40,16 @@ export function useParticipantSearch(): ParticipantSearchResult {
   const [searchError, setSearchError] = useState<string>("");
   const [participantInfo, setParticipantInfo] = useState<Participante | null>(null);
   
+  // Usar el hook de categorías existente
+  const { categorias, loading: categoriesLoading, error: categoriesError } = useGlobalCategories();
+  
   // Usar useRef para mantener el caché entre renderizados
   const participantsCache = useRef<Map<string, Participante>>(new Map());
   
   const searchParticipant = useCallback(async (
     dni: string, 
-    otherParticipantDni: string = ""
+    otherParticipantDni: string = "",
+    referenceDate: Date = new Date()
   ): Promise<Participante | null> => {
     // Validar formato de DNI
     const sanitizedDni = dni.trim();
@@ -54,6 +67,22 @@ export function useParticipantSearch(): ParticipantSearchResult {
     // Verificar que no sea el mismo que otro participante ya buscado
     if (otherParticipantDni && sanitizedDni === otherParticipantDni.trim()) {
       setSearchError("No puede ser el mismo participante");
+      return null;
+    }
+    
+    // Verificar que se hayan cargado las categorías
+    if (categoriesLoading) {
+      setSearchError("Cargando categorías, espere un momento...");
+      return null;
+    }
+    
+    if (categoriesError) {
+      setSearchError("Error al cargar categorías. Intente nuevamente.");
+      return null;
+    }
+    
+    if (!categorias || categorias.length === 0) {
+      setSearchError("No se han cargado las categorías. Intente nuevamente.");
       return null;
     }
     
@@ -78,9 +107,34 @@ export function useParticipantSearch(): ParticipantSearchResult {
         return null;
       }
       
-      // Verificar que el usuario tenga los campos necesarios para participar
-      if (!user.marinera?.participant?.category) {
-        setSearchError("El usuario no tiene categoría de participante asignada");
+      // Convertir Timestamp a Date para calcular la categoría
+      let birthDate: Date;
+      
+      // Validar que existe la fecha de nacimiento
+      if (!user.birthDate) {
+        setSearchError("El usuario no tiene fecha de nacimiento registrada");
+        return null;
+      }
+      
+      // Convertir Timestamp a Date
+      try {
+        birthDate = user.birthDate.toDate();
+        
+        // Validar que la fecha sea válida
+        if (isNaN(birthDate.getTime())) {
+          throw new Error("Fecha inválida");
+        }
+      } catch (error) {
+        console.error("Error al procesar fecha de nacimiento:", error);
+        setSearchError("Fecha de nacimiento inválida");
+        return null;
+      }
+      
+      // Determinar la categoría basándose en la fecha de nacimiento
+      const calculatedCategory = determineCategory(birthDate, referenceDate, categorias);
+      
+      if (!calculatedCategory) {
+        setSearchError("No se pudo determinar la categoría para la edad del participante");
         return null;
       }
       
@@ -92,10 +146,10 @@ export function useParticipantSearch(): ParticipantSearchResult {
         birthDate: user.birthDate,
         gender: user.gender,
         phoneNumber: user.phoneNumber,
-        category: user.marinera.participant.category as CategoryLevel,
+        category: calculatedCategory, // ✅ Ahora se calcula dinámicamente
         academyId: user.marinera?.academyId || undefined,
         academyName: user.marinera?.academyName || undefined,
-        profileImage: typeof user.profileImage === 'string' ? user.profileImage : undefined // ✅ Manejar string y File
+        profileImage: typeof user.profileImage === 'string' ? user.profileImage : undefined
       };
       
       // Guardar en caché para futuras búsquedas
@@ -112,14 +166,14 @@ export function useParticipantSearch(): ParticipantSearchResult {
     } finally {
       setIsSearching(false);
     }
-  }, []);
+      }, [categorias, categoriesLoading, categoriesError]);
   
   const clearParticipant = useCallback((): void => {
     setParticipantInfo(null);
     setSearchError("");
   }, []);
   
-  // Función auxiliar para limpiar el caché si es necesario
+  // Función para limpiar el caché
   const clearCache = useCallback((): void => {
     participantsCache.current.clear();
   }, []);
@@ -130,6 +184,8 @@ export function useParticipantSearch(): ParticipantSearchResult {
     participantInfo,
     searchParticipant,
     clearParticipant,
-    // clearCache // Opcional, por si necesitas limpiar el caché
+    clearCache,
+    categoriesLoading,
+    categoriesError
   };
 }

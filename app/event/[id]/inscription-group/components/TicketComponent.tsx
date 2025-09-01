@@ -68,6 +68,7 @@ interface TicketComponentProps {
   openModal: () => void;
   onNewInscription?: () => void;
   getParticipantCategory: (participante: { birthDate: Date }) => string;
+  usersMap: Record<string, User>;
 }
 
 const TicketComponent: React.FC<TicketComponentProps> = ({

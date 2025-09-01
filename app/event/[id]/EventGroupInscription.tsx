@@ -195,35 +195,40 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
 
   // Función para convertir TicketEntry a Inscripcion (para compatibilidad con componentes)
   const convertEntriesToInscripciones = (entries: any[]): Inscripcion[] => {
-    return entries.map(entry => ({
-      modalidad: entry.level,
-      level: entry.level,
-      category: entry.category,
-      isPullCouple: false, // Por ahora asumimos false, se puede mejorar
-      participante: {
-        id: entry.usersId[0] || '',
-        nombre: `Usuario ${entry.usersId[0]?.substring(0, 8) || 'N/A'}`,
-        dni: 'N/A',
-        edad: 'N/A',
-        genero: 'N/A',
-        telefono: 'N/A',
-        academyId: entry.academiesId[0] || '',
-        academyName: entry.academiesName[0] || 'N/A',
-        birthDate: new Date()
-      },
-      pareja: entry.usersId.length > 1 ? {
-        id: entry.usersId[1] || '',
-        nombre: `Usuario ${entry.usersId[1]?.substring(0, 8) || 'N/A'}`,
-        dni: 'N/A',
-        edad: 'N/A',
-        genero: 'N/A',
-        telefono: 'N/A',
-        academyId: entry.academiesId[1] || '',
-        academyName: entry.academiesName[1] || 'N/A',
-        birthDate: new Date()
-      } : null,
-      precio: entry.amount
-    }));
+    return entries.map(entry => {
+      const firstUser = usersMap[entry.usersId[0]];
+      const secondUser = entry.usersId.length > 1 ? usersMap[entry.usersId[1]] : null;
+
+      return {
+        modalidad: entry.level,
+        level: entry.level,
+        category: entry.category,
+        isPullCouple: false,
+        participante: {
+          id: entry.usersId[0] || '',
+          nombre: firstUser ? `${firstUser.firstName} ${firstUser.lastName}` : `Usuario ${entry.usersId[0]?.substring(0, 8) || 'N/A'}`,
+          dni: firstUser?.dni || 'N/A',
+          edad: 'N/A',
+          genero: 'N/A',
+          telefono: 'N/A',
+          academyId: entry.academiesId[0] || '',
+          academyName: firstUser?.marinera?.academyName || entry.academiesName[0] || 'N/A',
+          birthDate: new Date()
+        },
+        pareja: secondUser ? {
+          id: entry.usersId[1] || '',
+          nombre: `${secondUser.firstName} ${secondUser.lastName}`,
+          dni: secondUser.dni || 'N/A',
+          edad: 'N/A',
+          genero: 'N/A',
+          telefono: 'N/A',
+          academyId: entry.academiesId[1] || '',
+          academyName: secondUser?.marinera?.academyName || entry.academiesName[1] || 'N/A',
+          birthDate: new Date()
+        } : null,
+        precio: entry.amount
+      };
+    });
   };
   const validateSingleInscription = (inscripcion: Inscripcion): string | null => {
     const userAcademyId = user.marinera?.academyId;
@@ -469,8 +474,8 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               getParticipantCategory={getParticipantCategory}
               user={user}
               academies={academies}
-              usersMap={usersMap}        // <- Nueva prop
-              getUserById={getUserById}  // <- Nueva prop
+              usersMap={usersMap}
+              getUserById={getUserById}
             />
           </div>
         ) : (
@@ -486,6 +491,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
             openModal={handleOpenModal}
             onNewInscription={nuevaInscripcion}
             getParticipantCategory={getParticipantCategory}
+            usersMap={usersMap}
           />
         )}
 
