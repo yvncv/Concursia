@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import useAcademies from "@/app/hooks/useAcademies";
 import useAssignOrganizer from "@/app/hooks/useAssignOrganizer";
+import { useEditAcademy } from "@/app/hooks/academy/useEditAcademy";
 import { Academy } from "@/app/types/academyType";
 import { Timestamp } from "firebase/firestore";
-import { Plus, Edit2, Trash2, Eye, X, Check, AlertCircle, UserPlus } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, X, Check, AlertCircle, UserPlus, Camera } from "lucide-react";
+import ImageUploadModal from "./ImageUploadModal";
 
 export default function ListaAcademias() {
     const { academies, loadingAcademies, errorAcademies, saveAcademy, deleteAcademy, updateAcademy } = useAcademies();
     const { assignOrganizerToAcademy, validateUserId, loading: assignLoading, error: assignError, clearError } = useAssignOrganizer();
+    const { updateAcademyImages, loading: imageLoading, error: imageError } = useEditAcademy();
     
     const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [editingAcademy, setEditingAcademy] = useState<Academy | null>(null);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [imageEditingAcademy, setImageEditingAcademy] = useState<Academy | null>(null);
     
     // Estados para la validación de organizador
     const [validatingUser, setValidatingUser] = useState(false);
@@ -257,6 +262,32 @@ export default function ListaAcademias() {
         }
     };
 
+    const handleImageEdit = (academy: Academy) => {
+        setImageEditingAcademy(academy);
+        setShowImageModal(true);
+    };
+
+    const handleImageSave = async (profileImage: File | null, coverImage: File | null) => {
+        if (!imageEditingAcademy || (!profileImage && !coverImage)) return;
+
+        try {
+            await updateAcademyImages(
+                imageEditingAcademy.id,
+                profileImage || undefined,
+                coverImage || undefined,
+                typeof imageEditingAcademy.profileImage === 'string' ? imageEditingAcademy.profileImage : undefined,
+                typeof imageEditingAcademy.coverImage === 'string' ? imageEditingAcademy.coverImage : undefined
+            );
+            
+            alert('Imágenes actualizadas exitosamente');
+            setShowImageModal(false);
+            setImageEditingAcademy(null);
+        } catch (error) {
+            console.error('Error actualizando imágenes:', error);
+            alert(`Error al actualizar las imágenes: ${imageError || 'Error desconocido'}`);
+        }
+    };
+
     const exportToCSV = () => {
         const exportData = academies.map(academy => ({
             id: academy.id,
@@ -380,6 +411,14 @@ export default function ListaAcademias() {
                                             <Eye className="w-4 h-4" />
                                         </button>
                                         <button
+                                            onClick={() => handleImageEdit(academy)}
+                                            className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg text-sm transition-colors"
+                                            title="Gestionar imágenes"
+                                            disabled={imageLoading}
+                                        >
+                                            <Camera className="w-4 h-4" />
+                                        </button>
+                                        <button
                                             onClick={() => handleEditAcademy(academy)}
                                             className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg text-sm transition-colors"
                                             title="Editar"
@@ -435,6 +474,35 @@ export default function ListaAcademias() {
                                     {selectedAcademy.socialMedia?.whatsapp && <p>WhatsApp: <a href={selectedAcademy.socialMedia.whatsapp} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{selectedAcademy.socialMedia.whatsapp}</a></p>}
                                     {selectedAcademy.socialMedia?.twitter && <p>Twitter: <a href={selectedAcademy.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{selectedAcademy.socialMedia.twitter}</a></p>}
                                     {!selectedAcademy.socialMedia || (!selectedAcademy.socialMedia.facebook && !selectedAcademy.socialMedia.instagram && !selectedAcademy.socialMedia.tiktok && !selectedAcademy.socialMedia.youtube && !selectedAcademy.socialMedia.whatsapp && !selectedAcademy.socialMedia.twitter) && <p className="text-gray-500">No hay redes sociales registradas</p>}
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Imágenes:</strong>
+                                <div className="ml-4 space-y-2 mt-2">
+                                    {selectedAcademy.profileImage && typeof selectedAcademy.profileImage === 'string' && (
+                                        <div>
+                                            <p className="text-sm">Imagen de perfil:</p>
+                                            <img 
+                                                src={selectedAcademy.profileImage} 
+                                                alt="Perfil" 
+                                                className="w-20 h-20 object-cover rounded-lg border"
+                                            />
+                                        </div>
+                                    )}
+                                    {selectedAcademy.coverImage && typeof selectedAcademy.coverImage === 'string' && (
+                                        <div>
+                                            <p className="text-sm">Imagen de portada:</p>
+                                            <img 
+                                                src={selectedAcademy.coverImage} 
+                                                alt="Portada" 
+                                                className="w-32 h-16 object-cover rounded-lg border"
+                                            />
+                                        </div>
+                                    )}
+                                    {(!selectedAcademy.profileImage || typeof selectedAcademy.profileImage !== 'string') && 
+                                     (!selectedAcademy.coverImage || typeof selectedAcademy.coverImage !== 'string') && (
+                                        <p className="text-gray-500">No hay imágenes cargadas</p>
+                                    )}
                                 </div>
                             </div>
                             <p><strong>Creada:</strong> {selectedAcademy.createdAt.toDate().toLocaleString()}</p>
@@ -748,6 +816,18 @@ export default function ListaAcademias() {
                     </div>
                 </div>
             )}
+
+            {/* Modal para gestionar imágenes */}
+            <ImageUploadModal
+                academy={imageEditingAcademy}
+                isOpen={showImageModal}
+                onClose={() => {
+                    setShowImageModal(false);
+                    setImageEditingAcademy(null);
+                }}
+                onSave={handleImageSave}
+                loading={imageLoading}
+            />
         </div>
     );
 }

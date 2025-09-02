@@ -1,20 +1,19 @@
 "use client"
-import { useState, useEffect } from "react";
-import toast, { Toaster } from 'react-hot-toast';
+import { useState, useEffect, useCallback } from "react";
+import toast from 'react-hot-toast';
 import { User } from '@/app/types/userType';
 import useAcademies from "@/app/hooks/useAcademies";
 import { CustomEvent, LevelData } from "@/app/types/eventType";
+import { Ticket } from "@/app/types/ticketType";
 import useAcademy from "@/app/hooks/useAcademy";
-import useCreateGroupTicket from "@/app/hooks/tickets/useCreateGroupTicket";
-import { useGroupInscriptionsValidation } from "@/app/hooks/tickets/useAcademyAffiliationValidation";
+import useProcessTicket from "@/app/hooks/tickets/useProcessTicket";
+import useUsers from "@/app/hooks/useUsers";
 import { determineCategory } from "@/app/utils/category/determineCategory";
 import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
-import { useGrupalInscriptionPersistence } from "@/app/hooks/sessionStorage/useGrupalInscription";
 
 import InscriptionForm from "./inscription-group/InscriptionForm";
 import InscriptionList from "./inscription-group/components/InscriptionList";
 import TicketComponent from "./inscription-group/components/TicketComponent";
-import GroupTicketsList from "./inscription-group/components/GroupTicketList";
 
 // Definición de tipos
 interface Participante {
@@ -48,29 +47,94 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
   // Hook para categorías globales
   const { categorias } = useGlobalCategories();
 
-  // Hook de persistencia - NUEVO
+  // Hook para manejar ticket en proceso
   const {
-    inscripciones,
-    agregarInscripcion: agregarInscripcionPersistent,
-    eliminarInscripcion: eliminarInscripcionPersistent,
-    editarInscripcion,
-    limpiarInscripciones,
-    limpiarDraft,
-    lastSaved,
-    hasStoredData
-  } = useGrupalInscriptionPersistence(event.id);
+    findProcessTicket,
+    createProcessTicket,
+    addEntryToProcessTicket,
+    removeEntryFromProcessTicket,
+    submitProcessTicket,
+    isLoading: processLoading
+  } = useProcessTicket();
+
+  // Estados principales
+  const [processTicket, setProcessTicket] = useState<Ticket | null>(null);
+  const [loadingTicket, setLoadingTicket] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [ticketId, setTicketId] = useState<string>("");
+
+  const [modalidad, setModalidad] = useState<string>(() => {
+    if (!event.dance || !event.dance.levels) {
+      console.error("El evento no tiene modalidades definidas");
+      return "";
+    }
+
+    const modalidadesDisponibles = Object.keys(event.dance.levels);
+    return modalidadesDisponibles.length > 0 ? modalidadesDisponibles[0] : "";
+  });
+
+  // Hooks de datos
+  const { academies, loadingAcademies } = useAcademies();
+  const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
+
+  const allUserIds = processTicket?.entries.flatMap(entry => entry.usersId) || [];
+  const { usersMap, getUserById } = useUsers(allUserIds);
+
+  // Validación simple para ticket en proceso
+  const groupValidation = {
+    isValid: processTicket ? processTicket.entries.length > 0 : false,
+    message: processTicket
+      ? (processTicket.entries.length === 0 ? "No hay inscripciones en el ticket" : "Ticket válido")
+      : "No hay ticket en proceso"
+  };
+
+  // State para modal de mapa
+  const [showMapModal, setShowMapModal] = useState<boolean>(false);
 
   // Función para obtener categoría de un participante
   const getParticipantCategory = (participante: Participante): string => {
     if (!participante.birthDate || categorias.length === 0) {
       return "Sin categoría";
     }
-    
+
     return determineCategory(
       participante.birthDate,
       new Date(),
       categorias
     ) || "Categoría no encontrada";
+  };
+
+  // Cargar ticket en proceso al inicio
+  useEffect(() => {
+    const loadProcessTicket = async () => {
+      if (!user.marinera?.academyId || !event.id) return;
+
+      setLoadingTicket(true);
+      try {
+        const ticket = await findProcessTicket(user.marinera.academyId, event.id);
+        setProcessTicket(ticket);
+      } catch (error) {
+        console.error('Error loading process ticket:', error);
+        toast.error('Error al cargar ticket en proceso');
+      } finally {
+        setLoadingTicket(false);
+      }
+    };
+
+    loadProcessTicket();
+  }, [user.marinera?.academyId, event.id]); // ELIMINADO findProcessTicket de dependencias
+
+  // Recargar ticket después de operaciones
+  const refreshProcessTicket = async () => {
+    if (!user.marinera?.academyId || !event.id) return;
+
+    try {
+      const ticket = await findProcessTicket(user.marinera.academyId, event.id);
+      setProcessTicket(ticket);
+    } catch (error) {
+      console.error('Error refreshing process ticket:', error);
+    }
   };
 
   // Verificación inicial de la estructura del evento
@@ -81,48 +145,18 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     }
   }, [event]);
 
-  // Estados principales
-  const [modalidad, setModalidad] = useState<string>(() => {
-    if (!event.dance || !event.dance.levels) {
-      console.error("El evento no tiene modalidades definidas");
-      return "";
+  // Validación de usuario y evento
+  useEffect(() => {
+    if (!user.marinera?.academyId) {
+      toast.error("Tu usuario no tiene una academia asignada. Contacta al administrador.");
     }
-    
-    const modalidadesDisponibles = Object.keys(event.dance.levels);
-    return modalidadesDisponibles.length > 0 ? modalidadesDisponibles[0] : "";
-  });
+  }, [user]);
 
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const [ticketId, setTicketId] = useState<string>("");
-  
-  // Calcular monto total basado en inscripciones persistentes
-  const montoTotal = inscripciones.reduce((total, insc) => total + (insc.precio || 0), 0);
-
-  // Hooks de datos
-  const { academies, loadingAcademies } = useAcademies();
-  const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
-  
-  // Hook para crear ticket grupal
-  const { createGroupTicket, validateInscriptions, isCreating } = useCreateGroupTicket();
-  
-  // Hook para validar inscripciones grupales
-  const groupValidation = useGroupInscriptionsValidation(
-    inscripciones.map(insc => ({
-      participante: insc.participante,
-      pareja: insc.pareja
-    })),
-    user
-  );
-
-  // State para modal de mapa
-  const [showMapModal, setShowMapModal] = useState<boolean>(false);
-  
   // Funciones para modal de mapa
   const handleOpenModal = (): void => {
     setShowMapModal(true);
   };
-  
+
   const handleCloseModal = (): void => {
     setShowMapModal(false);
   };
@@ -138,7 +172,7 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
         }
       };
     }
-    
+
     const adaptedEvent = {
       ...event,
       settings: {
@@ -146,7 +180,6 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
       }
     };
 
-    // Convertir cada nivel al formato LevelData esperado
     Object.keys(event.dance.levels).forEach(key => {
       const level = event.dance.levels[key];
       adaptedEvent.settings.levels[key] = {
@@ -160,153 +193,245 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
     return adaptedEvent;
   };
 
-  // Agregar inscripción a la lista - ACTUALIZADO para usar persistencia
-  const agregarInscripcion = (nuevaInscripcion: Inscripcion): void => {
+  // Función para convertir TicketEntry a Inscripcion (para compatibilidad con componentes)
+  const convertEntriesToInscripciones = (entries: any[]): Inscripcion[] => {
+    return entries.map(entry => {
+      const firstUser = usersMap[entry.usersId[0]];
+      const secondUser = entry.usersId.length > 1 ? usersMap[entry.usersId[1]] : null;
+
+      return {
+        modalidad: entry.level,
+        level: entry.level,
+        category: entry.category,
+        isPullCouple: false,
+        participante: {
+          id: entry.usersId[0] || '',
+          nombre: firstUser ? `${firstUser.firstName} ${firstUser.lastName}` : `Usuario ${entry.usersId[0]?.substring(0, 8) || 'N/A'}`,
+          dni: firstUser?.dni || 'N/A',
+          edad: 'N/A',
+          genero: 'N/A',
+          telefono: 'N/A',
+          academyId: entry.academiesId[0] || '',
+          academyName: firstUser?.marinera?.academyName || entry.academiesName[0] || 'N/A',
+          birthDate: new Date()
+        },
+        pareja: secondUser ? {
+          id: entry.usersId[1] || '',
+          nombre: `${secondUser.firstName} ${secondUser.lastName}`,
+          dni: secondUser.dni || 'N/A',
+          edad: 'N/A',
+          genero: 'N/A',
+          telefono: 'N/A',
+          academyId: entry.academiesId[1] || '',
+          academyName: secondUser?.marinera?.academyName || entry.academiesName[1] || 'N/A',
+          birthDate: new Date()
+        } : null,
+        precio: entry.amount
+      };
+    });
+  };
+  const validateSingleInscription = (inscripcion: Inscripcion): string | null => {
+    const userAcademyId = user.marinera?.academyId;
+    if (!userAcademyId) {
+      return 'El usuario no tiene una academia asignada';
+    }
+
+    const hasValidAffiliation =
+      inscripcion.participante.academyId === userAcademyId ||
+      (inscripcion.pareja && inscripcion.pareja.academyId === userAcademyId);
+
+    if (!hasValidAffiliation) {
+      return 'Al menos un participante debe ser de tu academia';
+    }
+
+    if (!inscripcion.precio || inscripcion.precio <= 0) {
+      return 'La inscripción no tiene un precio válido';
+    }
+
+    return null;
+  };
+
+  // Agregar inscripción directamente al ticket en proceso
+  const agregarInscripcion = async (nuevaInscripcion: Inscripcion): Promise<void> => {
     // Validar antes de agregar
-    const errorMsg = validateInscriptions([...inscripciones, nuevaInscripcion], user);
+    const errorMsg = validateSingleInscription(nuevaInscripcion);
     if (errorMsg) {
       toast.error(errorMsg);
       return;
     }
 
-    // Verificar inscripciones duplicadas
-    const isDuplicate = inscripciones.some(insc => 
-      insc.modalidad === nuevaInscripcion.modalidad && 
-      (insc.participante.id === nuevaInscripcion.participante.id || 
-       (insc.pareja && nuevaInscripcion.pareja && insc.pareja.id === nuevaInscripcion.pareja.id) ||
-       (insc.pareja && insc.pareja.id === nuevaInscripcion.participante.id) ||
-       (nuevaInscripcion.pareja && insc.participante.id === nuevaInscripcion.pareja.id))
-    );
+    // Verificar inscripciones duplicadas en ticket existente
+    if (processTicket) {
+      const isDuplicate = processTicket.entries.some(entry =>
+        entry.level === nuevaInscripcion.level &&
+        (entry.usersId.includes(nuevaInscripcion.participante.id) ||
+          (nuevaInscripcion.pareja && entry.usersId.includes(nuevaInscripcion.pareja.id)))
+      );
 
-    if (isDuplicate) {
-      toast.error("Ya existe una inscripción para este participante en esta modalidad");
-      return;
+      if (isDuplicate) {
+        toast.error("Ya existe una inscripción para este participante en esta modalidad");
+        return;
+      }
     }
 
-    // Agregar usando el hook de persistencia
-    agregarInscripcionPersistent(nuevaInscripcion);
+    const loadingToastId = toast.loading('Guardando inscripción...');
 
-    // Toast de éxito (solo aquí, no duplicado)
-    toast.success("✅ Inscripción agregada correctamente", {
-      duration: 3000
-    });
+    try {
+      // Convertir inscripción a entry
+      const usersId = nuevaInscripcion.pareja
+        ? [nuevaInscripcion.participante.id, nuevaInscripcion.pareja.id]
+        : [nuevaInscripcion.participante.id];
+
+      const academiesId = [
+        nuevaInscripcion.participante.academyId,
+        ...(nuevaInscripcion.pareja ? [nuevaInscripcion.pareja.academyId] : [])
+      ].filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+      const academiesName = [
+        nuevaInscripcion.participante.academyName,
+        ...(nuevaInscripcion.pareja ? [nuevaInscripcion.pareja.academyName] : [])
+      ].filter((name, index, arr) => name && arr.indexOf(name) === index);
+
+      const newEntry = {
+        usersId,
+        academiesId,
+        academiesName,
+        category: nuevaInscripcion.category,
+        level: nuevaInscripcion.level,
+        amount: nuevaInscripcion.precio,
+      };
+
+      if (processTicket) {
+        // Agregar a ticket existente
+        const success = await addEntryToProcessTicket(processTicket.id, newEntry);
+        if (!success) {
+          throw new Error('Error al agregar inscripción al ticket');
+        }
+      } else {
+        // Crear nuevo ticket
+        const newTicketId = await createProcessTicket(event.id, user.id, newEntry);
+        if (!newTicketId) {
+          throw new Error('Error al crear nuevo ticket');
+        }
+      }
+
+      // Recargar ticket
+      await refreshProcessTicket();
+
+      toast.success("Inscripción guardada correctamente", {
+        id: loadingToastId,
+        duration: 3000
+      });
+
+    } catch (error) {
+      console.error("Error al agregar inscripción:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Error: ${errorMessage}`, {
+        id: loadingToastId,
+        duration: 5000
+      });
+    }
   };
 
-  // Eliminar una inscripción
-  const eliminarInscripcion = (index: number): void => {
-    if (index < 0 || index >= inscripciones.length) {
-      toast.error("Índice de inscripción inválido");
+  // Eliminar entrada del ticket en proceso
+  const eliminarInscripcion = async (entryIndex: number): Promise<void> => {
+    if (!processTicket) {
+      toast.error("No hay ticket en proceso");
       return;
     }
 
-    // Eliminar usando el hook de persistencia (sin toast aquí)
-    eliminarInscripcionPersistent(index);
+    if (entryIndex < 0 || entryIndex >= processTicket.entries.length) {
+      toast.error("Índice de entry inválido");
+      return;
+    }
+
+    const loadingToastId = toast.loading('Eliminando inscripción...');
+
+    try {
+      const success = await removeEntryFromProcessTicket(processTicket.id, entryIndex);
+      if (success) {
+        await refreshProcessTicket();
+        toast.success("Inscripción eliminada correctamente", {
+          id: loadingToastId,
+          duration: 3000
+        });
+      } else {
+        throw new Error('Error al eliminar entry');
+      }
+    } catch (error) {
+      console.error("Error al eliminar inscripción:", error);
+      toast.error("Error al eliminar inscripción", {
+        id: loadingToastId,
+        duration: 5000
+      });
+    }
   };
 
-  // Confirmar todas las inscripciones - ACTUALIZADO para limpiar draft
-  const confirmarInscripciones = async (): Promise<void> => {
-    // Validaciones previas
-    if (inscripciones.length === 0) {
-      toast.error("Debe agregar al menos una inscripción");
+  // Enviar ticket a "Pendiente"
+  const confirmarTicket = async (): Promise<void> => {
+    if (!processTicket) {
+      toast.error("No hay ticket en proceso para enviar");
       return;
     }
 
-    // Validar afiliación de academias
+    if (processTicket.entries.length === 0) {
+      toast.error("El ticket no tiene inscripciones");
+      return;
+    }
+
     if (!groupValidation.isValid) {
       toast.error(groupValidation.message);
       return;
     }
 
-    // Validación adicional usando el hook
-    const errorMsg = validateInscriptions(inscripciones, user);
-    if (errorMsg) {
-      toast.error(errorMsg);
-      return;
-    }
-
     setIsSubmitting(true);
 
-    try {
-      // Crear el ticket grupal usando el hook
-      const newTicketId = await createGroupTicket({
-        event,
-        user,
-        inscripciones
-      });
+    const loadingToastId = toast.loading('Enviando ticket a pago...');
 
-      if (newTicketId) {
-        setTicketId(newTicketId);
+    try {
+      const success = await submitProcessTicket(processTicket.id);
+
+      if (success) {
+        setTicketId(processTicket.id);
         setIsSuccess(true);
-        
-        // Limpiar el draft después del éxito - NUEVO
-        limpiarDraft();
-        
-        // El toast de éxito se maneja dentro del hook
+
+        toast.success(
+          `Ticket enviado para pago! ${processTicket.entries.length} inscripciones - S/. ${processTicket.totalAmount}`,
+          {
+            id: loadingToastId,
+            duration: 5000
+          }
+        );
       } else {
-        // El toast de error se maneja dentro del hook
-        throw new Error("No se pudo crear el ticket");
+        throw new Error("No se pudo enviar el ticket");
       }
 
     } catch (error) {
-      console.error("Error al confirmar inscripciones:", error);
+      console.error("Error al enviar ticket:", error);
       const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-      toast.error(`Error al procesar inscripciones: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`, {
+        id: loadingToastId,
+        duration: 6000
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Reiniciar después de éxito - ACTUALIZADO para usar persistencia
+  // Reiniciar después de éxito
   const nuevaInscripcion = (): void => {
-    limpiarInscripciones();
+    setProcessTicket(null);
     setIsSuccess(false);
     setTicketId("");
-    
+
     if (!event.dance || !event.dance.levels) {
       console.error("El evento no tiene modalidades definidas");
       setModalidad("");
       return;
     }
-    
+
     setModalidad(Object.keys(event.dance.levels)[0] || "");
     toast.success("Formulario reiniciado para nueva inscripción grupal");
-  };
-
-  // NUEVA función para limpiar inscripciones sin confirmación (para ser llamada desde InscriptionList)
-  const limpiarInscripcionesSilent = (): void => {
-    limpiarInscripciones();
-  };
-
-  // Validación de usuario y evento
-  useEffect(() => {
-    if (!user.marinera?.academyId) {
-      toast.error("Tu usuario no tiene una academia asignada. Contacta al administrador.");
-    }
-  }, [user]);
-
-  // Mostrar notificación de datos guardados al cargar - NUEVO
-  useEffect(() => {
-    if (hasStoredData && lastSaved) {
-      const timeAgo = Math.floor((new Date().getTime() - lastSaved.getTime()) / (1000 * 60));
-      if (timeAgo < 60) {
-        toast.success(
-          `Datos guardados automáticamente hace ${timeAgo} minutos`,
-          { duration: 3000 }
-        );
-      }
-    }
-  }, [hasStoredData, lastSaved]);
-
-  // Calcular estadísticas para mostrar
-  const estadisticas = {
-    totalParticipantes: inscripciones.reduce((total, insc) => 
-      total + (insc.pareja ? 2 : 1), 0),
-    totalInscripciones: inscripciones.length,
-    modalidadesUnicas: new Set(inscripciones.map(insc => insc.modalidad)).size,
-    academiasParticipantes: new Set([
-      ...inscripciones.map(insc => insc.participante.academyName),
-      ...inscripciones.filter(insc => insc.pareja).map(insc => insc.pareja!.academyName)
-    ]).size
   };
 
   return (
@@ -315,67 +440,13 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
         {/* Header */}
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold text-blue-600 mb-2">Inscripción Grupal de Alumnos</h2>
-          <p className="text-lg text-gray-700">
-            Inscribe alumnos de tu academia al evento <span className="font-semibold">{event.name}</span>
-          </p>
-          {user.marinera?.academyName && (
-            <p className="text-sm text-gray-600 mt-1">
-              Academia: <span className="font-medium text-blue-600">{user.marinera.academyName}</span>
-            </p>
-          )}
-          
-          {/* Indicador de guardado automático - NUEVO */}
-          {lastSaved && inscripciones.length > 0 && (
-            <div className="mt-2 inline-flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              Guardado automáticamente a las {lastSaved.toLocaleTimeString()}
+          {processTicket && (
+            <div className="inline-flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+              Ticket en proceso - {processTicket.entries.length} inscripciones - S/. {processTicket.totalAmount}
             </div>
           )}
         </div>
-
-        {/* Estadísticas rápidas - ACTUALIZADO con botón para limpiar */}
-        {inscripciones.length > 0 && (
-          <div className="mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                <p className="text-2xl font-bold text-blue-600">{estadisticas.totalParticipantes}</p>
-                <p className="text-xs text-gray-600">Participantes</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-                <p className="text-2xl font-bold text-green-600">{estadisticas.totalInscripciones}</p>
-                <p className="text-xs text-gray-600">Inscripciones</p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
-                <p className="text-2xl font-bold text-purple-600">{estadisticas.modalidadesUnicas}</p>
-                <p className="text-xs text-gray-600">Modalidades</p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-200">
-                <p className="text-2xl font-bold text-orange-600">S/. {montoTotal}</p>
-                <p className="text-xs text-gray-600">Total</p>
-              </div>
-            </div>
-            
-            {/* Botón para limpiar inscripciones - NUEVO */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  if (inscripciones.length === 0) {
-                    toast.error("No hay inscripciones para limpiar");
-                    return;
-                  }
-
-                  if (window.confirm(`¿Estás seguro de que deseas eliminar todas las ${inscripciones.length} inscripciones? Esta acción no se puede deshacer.`)) {
-                    limpiarInscripciones();
-                    toast.success("Todas las inscripciones han sido eliminadas");
-                  }
-                }}
-                className="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-red-200 hover:border-red-300"
-              >
-                🗑️ Limpiar todas las inscripciones
-              </button>
-            </div>
-          </div>
-        )}
 
         {!isSuccess ? (
           <div className="space-y-8">
@@ -387,51 +458,50 @@ const EventGroupInscription: React.FC<EventGroupInscriptionProps> = ({ event, us
               setModalidad={setModalidad}
               agregarInscripcion={agregarInscripcion}
               academies={academies}
-              inscripcionesExistentes={inscripciones}
               loadingAcademies={loadingAcademies}
               getParticipantCategory={getParticipantCategory}
+              processTicket={processTicket}
             />
 
-            {/* Lista de inscripciones */}
+            {/* Lista unificada de inscripciones */}
             <InscriptionList
-              inscripciones={inscripciones}
+              processTicket={processTicket}
               eliminarInscripcion={eliminarInscripcion}
-              editarInscripcion={editarInscripcion}
-              confirmarInscripciones={confirmarInscripciones}
-              isSubmitting={isSubmitting || isCreating}
-              montoTotal={montoTotal}
+              confirmarTicket={confirmarTicket}
+              isSubmitting={isSubmitting || processLoading || loadingTicket}
               event={adaptEventForComponents(event)}
               groupValidation={groupValidation}
               getParticipantCategory={getParticipantCategory}
-              lastSaved={lastSaved}
-              limpiarInscripciones={limpiarInscripcionesSilent}
+              user={user}
+              academies={academies}
+              usersMap={usersMap}
+              getUserById={getUserById}
             />
           </div>
         ) : (
-          // Pantalla de éxito - Usando el componente TicketComponent
+          // Pantalla de éxito - Ticket enviado a "Pendiente"
           <TicketComponent
             event={adaptEventForComponents(event)}
             user={user}
             academy={academy}
             ticketId={ticketId}
-            inscripciones={inscripciones}
+            inscripciones={convertEntriesToInscripciones(processTicket?.entries || [])}
             loadingAcademy={loadingAcademy}
             errorAcademy={errorAcademy}
             openModal={handleOpenModal}
             onNewInscription={nuevaInscripcion}
             getParticipantCategory={getParticipantCategory}
+            usersMap={usersMap}
           />
         )}
-        
-        <GroupTicketsList academyId={user.marinera?.academyId} />
-        
+
         {/* Modal para mapa */}
         {showMapModal && event?.location?.coordinates && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden">
               <div className="flex justify-between items-center p-4 border-b">
                 <h3 className="text-lg font-semibold">Ubicación del evento</h3>
-                <button 
+                <button
                   onClick={handleCloseModal}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                 >

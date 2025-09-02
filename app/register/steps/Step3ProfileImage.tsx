@@ -37,7 +37,7 @@ interface Step3Props {
       authorized: boolean;
     };
   };
-  onComplete: (data: { 
+  onComplete: (data: {
     profileImage: string | null;
     acceptedTerms: boolean;
   }) => void;
@@ -81,6 +81,11 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!isMinor && !croppedImage) {
+      toast.error('La foto de perfil es obligatoria para completar el registro');
+      return;
+    }
+
     if (!acceptedTerms) {
       alert('Debes aceptar los términos y condiciones para continuar');
       return;
@@ -88,7 +93,6 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
 
     setLoading(true);
 
-    // Simular delay para UX
     setTimeout(() => {
       onComplete({
         profileImage: croppedImage,
@@ -121,7 +125,9 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           </p>
           <div className="mt-2 flex items-center justify-center gap-2 text-sm text-red-600">
             <AlertCircle size={16} />
-            <span className="font-medium">La foto de perfil es obligatoria</span>
+            <span className="font-medium">
+              {isMinor ? 'La foto de perfil es opcional para menores' : 'La foto de perfil es obligatoria'}
+            </span>
           </div>
         </div>
 
@@ -228,11 +234,10 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
             />
             <label
               htmlFor="terms"
-              className={`flex items-center justify-center w-5 h-5 rounded cursor-pointer transition-all duration-300 ${
-                acceptedTerms
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg scale-110'
-                  : 'bg-white border-2 border-orange-300 hover:border-orange-400 hover:shadow-md'
-              }`}
+              className={`flex items-center justify-center w-5 h-5 rounded cursor-pointer transition-all duration-300 ${acceptedTerms
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg scale-110'
+                : 'bg-white border-2 border-orange-300 hover:border-orange-400 hover:shadow-md'
+                }`}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
@@ -265,11 +270,10 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
               <button
                 type="button"
                 onClick={() => setShowTermsModal(true)}
-                className={`font-semibold underline decoration-2 underline-offset-2 transition-all duration-300 ${
-                  isHovered || acceptedTerms
-                    ? 'text-red-600 decoration-red-400 hover:decoration-red-600'
-                    : 'text-orange-600 decoration-orange-400 hover:decoration-orange-600'
-                } hover:scale-105 hover:text-red-700`}
+                className={`font-semibold underline decoration-2 underline-offset-2 transition-all duration-300 ${isHovered || acceptedTerms
+                  ? 'text-red-600 decoration-red-400 hover:decoration-red-600'
+                  : 'text-orange-600 decoration-orange-400 hover:decoration-orange-600'
+                  } hover:scale-105 hover:text-red-700`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
@@ -295,7 +299,7 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
         </div>
 
         {/* Indicador de estado del formulario */}
-        {!croppedImage && (
+        {!isMinor && !croppedImage && (
           <div className="text-center mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center justify-center gap-2 text-red-600">
               <AlertCircle size={16} />
@@ -306,7 +310,18 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           </div>
         )}
 
-        {croppedImage && acceptedTerms && (
+        {isMinor && !croppedImage && (
+          <div className="text-center mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2 text-blue-600">
+              <AlertCircle size={16} />
+              <span className="text-sm font-medium">
+                Como eres menor de edad, la foto es opcional. Puedes continuar sin ella.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {((croppedImage && acceptedTerms) || (isMinor && acceptedTerms)) && (
           <div className="text-center mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center justify-center gap-2 text-green-600">
               <Check size={16} />
@@ -326,11 +341,11 @@ export default function Step3ProfileImage({ formData, onComplete, onBack }: Step
           >
             Atrás
           </button>
-          
+
           <button
             type="submit"
             className="w-1/2 bg-gradient-to-r from-rojo to-pink-500 text-white py-4 px-4 rounded-2xl hover:shadow-2xl hover:cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500"
-            disabled={loading || !acceptedTerms || !croppedImage}
+            disabled={loading || !acceptedTerms || (!isMinor && !croppedImage)}
           >
             {loading ? "Registrando..." : "Completar Registro"}
           </button>

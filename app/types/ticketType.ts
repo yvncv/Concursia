@@ -19,11 +19,10 @@ export interface TicketEntry {
 // Ticket principal
 export interface Ticket {
   id: string;                                // Autogenerado por Firebase
-  status: 'Pendiente' | 'Pagado' | 'Anulado';
+  status: 'En Proceso' | 'Pendiente' | 'Pagado' | 'Anulado';
   eventId: string;
   registrationDate: Timestamp;
   paymentDate?: Timestamp;
-  expirationDate: Timestamp;
   inscriptionType: 'Individual' | 'Grupal' | 'Presencial';
   totalAmount: number;
   entries: TicketEntry[];                    // Aquí está toda la info

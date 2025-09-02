@@ -1,17 +1,42 @@
 import React from 'react';
 import { User } from '@/app/types/userType';
 import { decryptValue } from '@/app/utils/security/securityHelpers';
+import { determineCategory } from '@/app/utils/category/determineCategory';
+import { useGlobalCategories } from '@/app/hooks/useGlobalCategories';
 
 interface Props {
   foundUser: User;
-  canEdit?: boolean; // Agregar esta prop
+  canEdit?: boolean;
 }
 
 const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) => {
-  // Safely format birth date (if exists)
-  const formattedBirthDate = foundUser.birthDate
-    ? new Date(foundUser.birthDate.toDate()).toISOString().split('T')[0]
+  const { categorias, loading: loadingCategories } = useGlobalCategories();
+
+  // Safely format birth year (if exists)
+  const formattedBirthYear = foundUser.birthDate
+    ? new Date(foundUser.birthDate.toDate()).getFullYear().toString()
     : 'N/A';
+
+  // Función para determinar la categoría basada en la edad
+  const getUserCategory = () => {
+    if (!foundUser.birthDate || loadingCategories) return 'N/A';
+
+    let birthDate: Date;
+
+    // Verificar si es un Timestamp de Firebase
+    if (foundUser.birthDate && typeof foundUser.birthDate === 'object' && 'toDate' in foundUser.birthDate) {
+      birthDate = foundUser.birthDate.toDate();
+    } else {
+      // Si no es un Timestamp, intentar convertir directamente
+      birthDate = new Date(foundUser.birthDate as any);
+    }
+
+    const today = new Date();
+    const category = determineCategory(birthDate, today, categorias);
+    return category || 'N/A';
+  };
+
+  const userCategory = getUserCategory();
 
   // Construir array de información personal
   const infoItems = [];
@@ -23,15 +48,15 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
   
   // Siempre mostrar estos campos
   infoItems.push(
-    { label: 'Fecha de Nacimiento', value: formattedBirthDate },
+    { label: 'Año de Nacimiento', value: formattedBirthYear },
     { label: 'Género', value: foundUser.gender || 'N/A' },
-    { label: 'Categoría', value: foundUser.marinera?.participant?.category || 'N/A' }
+    { label: 'Categoría', value: userCategory }
   );
 
   // Definir iconos para diferentes tipos de información
   const icons = [
     "M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2", // DNI
-    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", // Fecha de nacimiento
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", // Año de nacimiento
     "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", // Género
     "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z", // Categoría
   ];
@@ -91,7 +116,7 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
                 {/* Badge for specific items */}
                 {label === 'Categoría' && (
                   <span className="absolute top-0 right-0 -mt-2 -mr-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full shadow-md">
-                    Nuevo
+                    Dinámico
                   </span>
                 )}
                 {label === 'DNI' && (
@@ -107,13 +132,6 @@ const PersonalInformation: React.FC<Props> = ({ foundUser, canEdit = false }) =>
 
       {/* Footer with additional information */}
       <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-between text-sm text-gray-500">
-        <div className="flex items-center mb-2 sm:mb-0">
-          {/* Role information - can be public */}
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span>Rol: {foundUser.roleId?.toString() || 'Usuario'}</span>
-        </div>
         <div className="flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

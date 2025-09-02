@@ -27,7 +27,7 @@ interface FormData {
   // Step 1
   email: string;
   password: string;
-  
+
   // Step 2
   dni: string;
   firstName: string;
@@ -36,7 +36,7 @@ interface FormData {
   gender: string;
   phoneNumber: string;
   location: User['location'];
-  
+
   // NUEVO: Datos del apoderado para menores
   guardian?: {
     dni: string;
@@ -45,7 +45,7 @@ interface FormData {
     relationship: string;
     authorized: boolean;
   };
-  
+
   // Step 3
   profileImage: string | null;
   acceptedTerms: boolean;
@@ -86,12 +86,12 @@ export default function RegisterPage() {
     location: User['location'];
   }) => {
     setFormData(prev => ({ ...prev, ...data }));
-    
+
     // Verificar si es menor de edad
     const age = calculateAge(data.birthDate);
     const isUnder16 = age < 16;
     setIsMinor(isUnder16);
-    
+
     // Si es menor, ir al step del apoderado, sino al step 3
     if (isUnder16) {
       setStep(2.5); // Step intermedio para apoderado
@@ -136,20 +136,24 @@ export default function RegisterPage() {
     }
   };
 
-  const handleRegistrationComplete = async (data: { 
-    profileImage: string | null; 
-    acceptedTerms: boolean; 
+  const handleRegistrationComplete = async (data: {
+    profileImage: string | null;
+    acceptedTerms: boolean;
   }) => {
-    if (!data.profileImage) {
+    // Calcular si es menor para la validación
+    const age = calculateAge(formData.birthDate || "");
+    const isMinor = age < 18;
+    // Solo validar foto si no es menor de edad
+    if (!isMinor && !data.profileImage) {
       toast.error('La foto de perfil es obligatoria para completar el registro');
       return;
     }
 
     setLoading(true);
-    
+
     // Toast de carga
     const loadingToast = toast.loading('Creando tu cuenta...');
-    
+
     try {
       const completeData = { ...formData, ...data } as FormData;
 
@@ -169,7 +173,10 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       // Upload profile image
-      const profileImageUrl = await uploadProfileImage(completeData.profileImage, user.uid);
+      let profileImageUrl = "";
+      if (completeData.profileImage) {
+        profileImageUrl = await uploadProfileImage(completeData.profileImage, user.uid);
+      }
 
       // Preparar datos del usuario
       const userData: any = {
@@ -220,7 +227,7 @@ export default function RegisterPage() {
         duration: 5000,
         icon: '🎉',
       });
-      
+
       // Esperar un poco antes de redirigir para que el usuario vea el toast
       setTimeout(() => {
         router.push("/calendario");
@@ -229,7 +236,7 @@ export default function RegisterPage() {
     } catch (error) {
       console.error("Error al registrarse:", error);
       toast.dismiss(loadingToast);
-      
+
       // Manejar diferentes tipos de errores
       if (error instanceof Error) {
         if (error.message.includes('email-already-in-use')) {
@@ -299,7 +306,7 @@ export default function RegisterPage() {
           )}
 
           {step === 2 && (
-            <Step2PersonalInfo 
+            <Step2PersonalInfo
               onNext={handleStep2Complete}
               onBack={() => setStep(1)}
             />
@@ -319,7 +326,7 @@ export default function RegisterPage() {
           )}
 
           {step === 3 && (
-            <Step3ProfileImage 
+            <Step3ProfileImage
               formData={formData as FormData}
               onComplete={handleRegistrationComplete}
               onBack={() => isMinor ? setStep(2.5) : setStep(2)}
