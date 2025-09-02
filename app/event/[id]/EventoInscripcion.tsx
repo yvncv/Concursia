@@ -10,6 +10,7 @@ import useCreateTicket from '@/app/hooks/tickets/useCreateTicket';
 import { Ticket } from "@/app/types/ticketType";
 import TicketComponent from './inscription/components/TicketComponent';
 import InscriptionForm from './inscription/components/InscriptionForm';
+import IzipayButton from '@/app/ui/payment/izipay-button';
 import { findUserByHashedDni } from '@/app/utils/security/dni/findUserByHashedDni';
 import { determineCategory } from "@/app/utils/category/determineCategory";
 import { useGlobalCategories } from "@/app/hooks/useGlobalCategories";
@@ -127,12 +128,13 @@ const EventoInscripcion = ({ event, openModal, user }: {
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [isCoupleRequired, setIsCoupleRequired] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { users } = useUsers();
   const { academy, loadingAcademy, errorAcademy } = useAcademy(event.academyId);
   const { tickets } = useTicket(event.id);
 
-  // ← USAR EL NUEVO HOOK
+  // Hook para crear ticket
   const { createTicket, isCreating, error: createError, clearError } = useCreateTicket();
 
   // Función para obtener categoría de un usuario
@@ -194,15 +196,15 @@ const EventoInscripcion = ({ event, openModal, user }: {
     setCoupleSelectedAcademyName(academyName);
   };
 
-  // ← FUNCIÓN PRINCIPAL MODIFICADA
-  const handleNextAndSave = async () => {
+  // Función para validar antes de proceder al pago
+  const validateBeforePayment = (): boolean => {
     clearError();
 
     // Validaciones de pareja si es requerida
     if (event.settings?.pullCouple?.enabled && pareja != null) {
       if (pareja.gender === user?.gender) {
         alert("La pareja debe ser de género opuesto al tuyo.");
-        return;
+        return false;
       }
 
       const categories: string[] = ["Baby", "Pre-Infante", "Infante", "Infantil", "Junior", "Juvenil", "Adulto", "Senior", "Master", "Oro"];
@@ -231,41 +233,62 @@ const EventoInscripcion = ({ event, openModal, user }: {
         if (event.settings.pullCouple.criteria === "Age") {
           if (!checkAgeDifference()) {
             alert("La diferencia de edad no es la correcta");
-            return;
+            return false;
           }
         } else {
           if (!checkCategoryDifference()) {
             alert("La diferencia de categoría no es la correcta");
-            return;
+            return false;
           }
         }
       }
     }
 
-    console.log('=== VALORES ANTES DE CREAR TICKET ===');
+    return true;
+  };
+
+  // Función que se ejecuta después del pago exitoso - CORREGIDA
+  const handlePaymentSuccess = async () => {
+    console.log('=== INICIANDO PROCESO POST-PAGO ===');
     console.log('selectedAcademy:', selectedAcademy);
     console.log('selectedAcademyName:', selectedAcademyName);
     console.log('coupleSelectedAcademy:', coupleSelectedAcademy);
     console.log('coupleSelectedAcademyName:', coupleSelectedAcademyName);
-    console.log('====================================');
 
-    // ← CREAR TICKET CON EL NUEVO HOOK
-    const newTicketId = await createTicket({
-      event,
-      user,
-      pareja,
-      selectedCategory,
-      selectedAcademy,
-      selectedAcademyName,
-      coupleSelectedAcademy,
-      coupleSelectedAcademyName,
-    });
+    try {
+      // Crear ticket después del pago exitoso
+      const newTicketId = await createTicket({
+        event,
+        user,
+        pareja,
+        selectedCategory,
+        selectedAcademy,
+        selectedAcademyName,
+        coupleSelectedAcademy,
+        coupleSelectedAcademyName,
+      });
 
-    if (newTicketId) {
-      setTicketId(newTicketId);
-      setCurrentStep(2);
+      console.log('Ticket creado con ID:', newTicketId);
+
+      if (newTicketId) {
+        setTicketId(newTicketId);
+        setCurrentStep(2); // Avanzar al paso del ticket
+        setRefreshKey(prev => prev + 1);
+        console.log('✅ Avanzando a paso 2 - Mostrar ticket');
+      } else {
+        console.error('❌ Error: No se pudo crear el ticket');
+        alert('Error al crear el ticket. Por favor, contacta al soporte.');
+      }
+    } catch (error) {
+      console.error('❌ Error en handlePaymentSuccess:', error);
+      alert('Error al procesar la inscripción. Por favor, contacta al soporte.');
     }
-    // Si hay error, ya lo maneja el hook automáticamente
+  };
+
+  // Obtener el precio del nivel seleccionado
+  const getSelectedLevelPrice = (): number => {
+    if (!selectedCategory || !event?.dance?.levels) return 0;
+    return event.dance.levels[selectedCategory]?.price || 0;
   };
 
   return (
@@ -315,7 +338,7 @@ const EventoInscripcion = ({ event, openModal, user }: {
         )}
 
         {/* Botones de navegación */}
-        {currentStep == 1 && (
+        {currentStep === 1 && (
           <div className="flex justify-between py-6">
             <button
               onClick={() => setCurrentStep(s => s - 1)}
@@ -324,26 +347,36 @@ const EventoInscripcion = ({ event, openModal, user }: {
             >
               Anterior
             </button>
-            <button
-              disabled={!canProceed || isCreating}
-              onClick={handleNextAndSave}
-              className={`px-6 py-2 rounded-lg text-white flex items-center ${canProceed && !isCreating
-                ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
-                : 'bg-gray-400 cursor-not-allowed'
-                }`}
-            >
-              {isCreating ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creando...
-                </>
+            
+            {/* Botón de pago personalizado con validación y callback mejorado */}
+            <div className="relative">
+              {canProceed ? (
+                <IzipayButton
+                  levelName={selectedCategory}
+                  price={getSelectedLevelPrice()}
+                  eventId={event.id}
+                  eventName={event.name}
+                  refreshKey={refreshKey}
+                  onGlobalRefresh={handlePaymentSuccess}
+                  className="min-w-[200px]"
+                  validateBeforePayment={validateBeforePayment}
+                />
               ) : (
-                'Guardar Inscripción'
+                <button
+                  disabled={true}
+                  className="px-6 py-2 rounded-lg text-white bg-gray-400 cursor-not-allowed min-w-[200px]"
+                >
+                  Completa los datos requeridos
+                </button>
               )}
-            </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mostrar errores si los hay */}
+        {createError && (
+          <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p><strong>Error:</strong> {createError}</p>
           </div>
         )}
       </div>

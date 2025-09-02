@@ -12,13 +12,14 @@ import { MapPin, Calendar, User, ArrowLeftCircle } from "lucide-react";
 import useAcademy from "@/app/hooks/useAcademy";
 import Link from "next/link";
 import Image from "next/image";
+import IzipayScriptWrapper from "@/app/wrappers/IzipayButtonWrapper";
 
 const Map = dynamic(() => import("@/app/ui/map/mapa"), { ssr: false });
 
 // Type adapter for converting coordinates from string to number for EventoInscripcionAlumnos
 const adaptEventForInscripcionAlumnos = (event: any): any => {
   if (!event) return null;
-  
+
   // Create a deep copy of the event to avoid modifying the original
   const adaptedEvent = {
     ...event,
@@ -27,16 +28,16 @@ const adaptEventForInscripcionAlumnos = (event: any): any => {
       coordinates: {
         ...event.location.coordinates,
         // Convert string coordinates to numbers if they're strings
-        latitude: typeof event.location.coordinates.latitude === 'string' 
-          ? parseFloat(event.location.coordinates.latitude) 
+        latitude: typeof event.location.coordinates.latitude === 'string'
+          ? parseFloat(event.location.coordinates.latitude)
           : event.location.coordinates.latitude,
-        longitude: typeof event.location.coordinates.longitude === 'string' 
-          ? parseFloat(event.location.coordinates.longitude) 
+        longitude: typeof event.location.coordinates.longitude === 'string'
+          ? parseFloat(event.location.coordinates.longitude)
           : event.location.coordinates.longitude,
       }
     }
   };
-  
+
   return adaptedEvent;
 };
 
@@ -71,7 +72,7 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
   // Determine if individual web inscription is enabled
   const isIndividualWebEnabled = settings?.inscription?.individualEnabled || false;
-  
+
   // Determine if group CSV inscription is enabled
   const isGrupalCSVEnabled = settings?.inscription?.groupEnabled || false;
 
@@ -154,28 +155,28 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
 
           {/* Imagen principal con efecto hover */}
           <div className="relative w-full h-full transition-transform duration-500 hover:scale-105">
-          {/* Imagen para celulares */}
-          <div className="sm:hidden">
-            <Image
-              src={event.smallImage}
-              fill
-              className="object-contain w-full h-full"
-              alt={`Small banner of ${event.smallImage}`}
-              loader={({ src }) => src}
-            />
-          </div>
+            {/* Imagen para celulares */}
+            <div className="sm:hidden">
+              <Image
+                src={event.smallImage}
+                fill
+                className="object-contain w-full h-full"
+                alt={`Small banner of ${event.smallImage}`}
+                loader={({ src }) => src}
+              />
+            </div>
 
-          {/* Imagen para pantallas medianas y grandes */}
-          <div className="hidden sm:block">
-            <Image
-              src={event.bannerImage}
-              fill
-              className="object-contain w-full h-full"
-              alt={`Main banner of ${event.bannerImage}`}
-              loader={({ src }) => src}
-            />
+            {/* Imagen para pantallas medianas y grandes */}
+            <div className="hidden sm:block">
+              <Image
+                src={event.bannerImage}
+                fill
+                className="object-contain w-full h-full"
+                alt={`Main banner of ${event.bannerImage}`}
+                loader={({ src }) => src}
+              />
+            </div>
           </div>
-        </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -244,28 +245,30 @@ const EventoDetalle = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="lg:p-6">
             {activeTab === "informacion" ? (
               <div className="p-1">
-                <EventoInformacion
-                  event={event}
-                  openModal={() => setIsModalOpen(true)}
-                  onInscribir={handleInscribirClick}
-                  onInscribirAlumnos={handleInscribirAlumnosClick}
-                  user={user}
-                  isEventOrganizer={isEventOrganizer}
-                  loading={loadingSettings}
-                  error={error_settings}
-                  isIndividualWebEnabled={isIndividualWebEnabled}
-                  isGrupalCSVEnabled={isGrupalCSVEnabled}
-                />
+                  <EventoInformacion
+                    event={event}
+                    openModal={() => setIsModalOpen(true)}
+                    onInscribir={handleInscribirClick}
+                    onInscribirAlumnos={handleInscribirAlumnosClick}
+                    user={user}
+                    isEventOrganizer={isEventOrganizer}
+                    loading={loadingSettings}
+                    error={error_settings}
+                    isIndividualWebEnabled={isIndividualWebEnabled}
+                    isGrupalCSVEnabled={isGrupalCSVEnabled}
+                  />
               </div>
             ) : activeTab === "inscripcion" ? (
               <div className="p-1">
                 {user ? (
                   isIndividualWebEnabled ? (
-                    <EventoInscripcion
-                      event={event}
-                      openModal={() => setIsAcademyModalOpen(true)}
-                      user={user} 
-                    />
+                    <IzipayScriptWrapper>
+                      <EventoInscripcion
+                        event={event}
+                        openModal={() => setIsAcademyModalOpen(true)}
+                        user={user}
+                      />
+                    </IzipayScriptWrapper>
                   ) : (
                     <div className="flex flex-col items-center py-16 text-gray-500">
                       <div className="bg-red-100/50 p-6 rounded-full mb-6">
