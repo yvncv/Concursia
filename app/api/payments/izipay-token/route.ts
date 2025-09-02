@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const paymentData = {
       amount: amount || (price * 100), // Convertir a centavos
       currency: 'PEN', // Soles peruanos
-      orderId: `${eventId}-${levelName.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+      orderId: `${eventId}-${levelName?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
       customer: {
         email: 'customer@example.com', // Deberías obtener esto del usuario autenticado
       },

@@ -15,6 +15,7 @@ export default function IzipayScriptWrapper({ children }: IzipayScriptWrapperPro
       <Script
         src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
         kr-public-key={process.env.NEXT_PUBLIC_IZIPAY_PUBLIC_KEY}
+        
       />
       {/* Scripts que Izipay requiere */}
       <link

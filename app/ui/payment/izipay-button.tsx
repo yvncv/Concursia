@@ -5,6 +5,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { auth } from "@/app/firebase/config";
 import ReactDOM from "react-dom";
+import toast from "react-hot-toast";
 
 interface IzipayButtonProps {
   levelName: string;
@@ -154,16 +155,24 @@ export default function IzipayButton({
           if (!destroyed) { setIsFormReady(true); setIsRenderingForm(false); }
         };
 
-        // Callback para pago exitoso
-        KR.onFormReady = () => {
-          KR.onFormSuccess = () => {
-            // Ejecutar callback de éxito después del pago
-            if (onGlobalRefresh) {
-              onGlobalRefresh();
-            }
-            handleCloseForm();
-          };
-        };
+        // 👉 Aquí usamos onSubmit
+        KR.onSubmit((kr: any, event: any) => {
+          console.log("Pago autorizado:", event);
+
+          // Notificar pago exitoso
+          toast.success("¡Pago realizado con éxito!");
+
+          // Cerrar formulario
+          handleCloseForm();
+
+          // Avanzar al siguiente paso desde el componente padre
+          if (onGlobalRefresh) {
+            onGlobalRefresh();
+          }
+
+          // Evitar que KR haga el POST a kr-post-success-url
+          return false;
+        });
 
         await KR.renderElements(`#${formElementId}`);
 
@@ -196,6 +205,7 @@ export default function IzipayButton({
       try { KR.removeEventCallbacks?.(); KR.removeForms?.(); } catch (_) { }
     };
   }, [showForm, formToken, formElementId, onGlobalRefresh]);
+
 
   // invalidar si cambian props
   useEffect(() => {
