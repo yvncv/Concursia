@@ -30,10 +30,10 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
 
     // Función para obtener información del usuario por ID
     const getUserInfo = (userId: string) => {
-        const user = users.find(u => u.id === userId);
+        const user = users.users.find(u => u.id === userId);
         return {
-            name: user?.name || `Usuario ${userId.slice(0, 8)}`,
-            photo: user?.photo || null,
+            name: user?.firstName + ' ' + user?.lastName || `Usuario ${userId.slice(0, 8)}`,
+            photo: user?.profileImage || null,
             email: user?.email || '',
         };
     };
