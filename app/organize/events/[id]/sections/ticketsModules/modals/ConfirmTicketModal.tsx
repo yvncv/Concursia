@@ -5,6 +5,7 @@ import { db } from "@/app/firebase/config";
 import { Participant } from "@/app/types/participantType";
 import { CheckCircle, X, AlertCircle, Users, CreditCard, Hash } from "lucide-react";
 import toast from "react-hot-toast";
+import useUsers from "@/app/hooks/useUsers";
 
 interface ConfirmTicketModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
     const [loading, setLoading] = useState(false);
     const [previewCodes, setPreviewCodes] = useState<Record<string, number>>({});
     const [loadingPreview, setLoadingPreview] = useState(true);
+    const users = useUsers();
 
     // Cargar preview al abrir el modal
     useEffect(() => {
@@ -35,14 +37,14 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                 where("level", "==", level),
                 where("eventId", "==", eventId)
             );
-            
+
             const snapshot = await getDocs(participantsQuery);
-            
+
             if (snapshot.empty) {
                 // No hay participantes en este level, empezar desde 1
                 return "1";
             }
-            
+
             // Obtener todos los códigos y encontrar el máximo
             let maxCode = 0;
             snapshot.docs.forEach(doc => {
@@ -52,7 +54,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                     maxCode = code;
                 }
             });
-            
+
             const nextCode = maxCode + 1;
             return nextCode.toString();
         } catch (error) {
@@ -68,12 +70,12 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
         try {
             const uniqueLevels = [...new Set(ticket.entries.map(entry => entry.level))];
             const codes: Record<string, number> = {};
-            
+
             for (const level of uniqueLevels) {
                 const nextCode = await getNextCodeForLevel(level, ticket.eventId);
                 codes[level] = parseInt(nextCode);
             }
-            
+
             setPreviewCodes(codes);
         } catch (error) {
             console.error("Error cargando preview de códigos:", error);
@@ -113,34 +115,30 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
             // Crear participantes según las entries del ticket
             for (let i = 0; i < ticket.entries.length; i++) {
                 const entry = ticket.entries[i];
-                
-                // Crear un participante por cada userId en la entry
-                for (let j = 0; j < entry.usersId.length; j++) {
-                    const userId = entry.usersId[j];
-                    
-                    // Generar código secuencial para este level (SIEMPRE NÚMERO)
-                    const participantCode = codeCounterByLevel[entry.level];
-                    codeCounterByLevel[entry.level]++; // Incrementar para el próximo participante de este level
-                    
-                    const participantData: Omit<Participant, 'id'> = {
-                        code: participantCode.toString(), // Convertir a string para almacenar
-                        usersId: [userId], // Cada participante tiene solo un userId
-                        academiesId: entry.academiesId,
-                        academiesName: entry.academiesName,
-                        eventId: ticket.eventId,
-                        category: entry.category,
-                        level: entry.level,
-                        scoreIds: [],
-                        ticketId: ticket.id,
-                        phase: "",
-                        status: "Pagado",
-                        createdAt: Timestamp.fromDate(new Date()),
-                        updatedAt: Timestamp.fromDate(new Date())
-                    };
 
-                    await addDoc(collection(db, "participants"), participantData);
-                    totalParticipantsCreated++;
-                }
+                // Generar código secuencial para este level (SIEMPRE NÚMERO)
+                const participantCode = codeCounterByLevel[entry.level];
+                codeCounterByLevel[entry.level]++; // Incrementar para la próxima entry de este level
+
+                // Crear UN SOLO participante con TODOS los usersId de la entry
+                const participantData: Omit<Participant, 'id'> = {
+                    code: participantCode.toString(), // Convertir a string para almacenar
+                    usersId: entry.usersId, // TODOS los usuarios de la entry comparten el mismo código
+                    academiesId: entry.academiesId,
+                    academiesName: entry.academiesName,
+                    eventId: ticket.eventId,
+                    category: entry.category,
+                    level: entry.level,
+                    scoreIds: [],
+                    ticketId: ticket.id,
+                    phase: "",
+                    status: "Pagado",
+                    createdAt: Timestamp.fromDate(new Date()),
+                    updatedAt: Timestamp.fromDate(new Date())
+                };
+
+                await addDoc(collection(db, "participants"), participantData);
+                totalParticipantsCreated++;
             }
 
             // Toast de éxito
@@ -163,11 +161,11 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
 
             // Cerrar el loading toast
             toast.dismiss(loadingToast);
-            
+
             onClose();
         } catch (error) {
             console.error("Error confirmando el pago del ticket:", error);
-            
+
             // Toast de error
             toast.error(
                 "Error al confirmar el pago del ticket. Por favor, intenta de nuevo.",
@@ -196,7 +194,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-                
+
                 {/* Header con gradiente verde */}
                 <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white">
                     <div className="flex justify-between items-center">
@@ -209,8 +207,8 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                                 <p className="text-green-100 text-sm">Procesar pago y crear participantes</p>
                             </div>
                         </div>
-                        <button 
-                            onClick={onClose} 
+                        <button
+                            onClick={onClose}
                             className="text-white hover:text-red-200 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
                         >
                             <X className="w-5 h-5" />
@@ -221,7 +219,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                 {/* Contenido scrolleable */}
                 <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
                     <div className="p-4 space-y-4">
-                        
+
                         {/* Información del ticket */}
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
                             <div className="grid grid-cols-3 gap-3 text-center">
@@ -267,7 +265,7 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                                 Inscripciones
                                 <span className="text-sm font-normal text-gray-500">({ticket.entries.length})</span>
                             </h3>
-                            
+
                             {/* Tabla compacta de inscripciones */}
                             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <div className="overflow-x-auto">
@@ -275,56 +273,80 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                                         <thead className="bg-gray-50 border-b border-gray-200">
                                             <tr>
                                                 <th className="text-left p-2 font-semibold text-gray-700">#</th>
+                                                <th className="text-left p-2 font-semibold text-gray-700">Participante</th>
                                                 <th className="text-left p-2 font-semibold text-gray-700">Modalidad</th>
                                                 <th className="text-left p-2 font-semibold text-gray-700">Categoría</th>
-                                                <th className="text-center p-2 font-semibold text-gray-700">Part.</th>
-                                                <th className="text-right p-2 font-semibold text-gray-700">Monto</th>
                                                 <th className="text-center p-2 font-semibold text-gray-700">Código</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
-                                            {ticket.entries.map((entry, index) => (
-                                                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="p-2 font-medium text-gray-600">
-                                                        {String(index + 1).padStart(2, '0')}
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <span className="font-medium text-gray-800">{entry.level}</span>
-                                                    </td>
-                                                    <td className="p-2 text-gray-700">{entry.category}</td>
-                                                    <td className="p-2 text-center">
-                                                        <div className="flex items-center justify-center gap-1">
-                                                            <Users className="w-3 h-3 text-gray-500" />
-                                                            <span className="font-medium">{entry.usersId.length}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2 text-right font-semibold text-green-600">
-                                                        S/ {entry.amount.toFixed(2)}
-                                                    </td>
-                                                    <td className="p-2 text-center">
-                                                        {loadingPreview ? (
-                                                            <div className="flex items-center justify-center">
-                                                                <div className="w-3 h-3 border border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex flex-col items-center gap-1">
-                                                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                                                    {(() => {
-                                                                        const startCode = previewCodes[entry.level] || 1;
-                                                                        const endCode = startCode + entry.usersId.length - 1;
-                                                                        return entry.usersId.length === 1 
-                                                                            ? startCode.toString()
-                                                                            : `${startCode}-${endCode}`;
-                                                                    })()}
-                                                                </span>
-                                                                <span className="text-xs text-gray-500">
-                                                                    {entry.usersId.length} cod.
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {(() => {
+                                                let participantNumber = 1;
+                                                let codesByLevel: Record<string, number> = {};
+
+                                                // Inicializar códigos por level
+                                                Object.keys(previewCodes).forEach(level => {
+                                                    codesByLevel[level] = previewCodes[level];
+                                                });
+
+                                                return ticket.entries.map((entry, entryIndex) => {
+                                                    const participantCode = codesByLevel[entry.level];
+                                                    // Incrementar código para la próxima entry de este level
+                                                    codesByLevel[entry.level]++;
+
+                                                    return entry.usersId.map((userId, userIndex) => {
+                                                        const currentParticipantNumber = participantNumber++;
+
+                                                        return (
+                                                            <tr key={`${entryIndex}-${userIndex}`} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="p-2 font-medium text-gray-600">
+                                                                    {String(currentParticipantNumber).padStart(2, '0')}
+                                                                </td>
+                                                                <td className="p-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-xs text-gray-500">ID:</span>
+                                                                        <span className="font-mono text-xs text-gray-700">
+                                                                            {userId.slice(0, 8)}...
+                                                                        </span>
+                                                                        {entry.usersId.length > 1 && (
+                                                                            <span className="text-xs text-blue-600 bg-blue-100 px-1 rounded">
+                                                                                {userIndex + 1}/{entry.usersId.length}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="p-2">
+                                                                    <span className="font-medium text-gray-800">{entry.level}</span>
+                                                                    {entry.usersId.length > 1 && (
+                                                                        <span className="ml-1 text-xs text-blue-600 bg-blue-100 px-1 rounded">
+                                                                            Pareja
+                                                                        </span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="p-2 text-gray-700">{entry.category}</td>
+                                                                <td className="p-2 text-center">
+                                                                    {loadingPreview ? (
+                                                                        <div className="flex items-center justify-center">
+                                                                            <div className="w-3 h-3 border border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex flex-col items-center gap-1">
+                                                                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                                                                #{participantCode}
+                                                                            </span>
+                                                                            {entry.usersId.length > 1 && (
+                                                                                <span className="text-xs text-blue-600">
+                                                                                    Compartido
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    });
+                                                }).flat();
+                                            })()}
                                         </tbody>
                                     </table>
                                 </div>
@@ -364,33 +386,6 @@ const ConfirmTicketModal: React.FC<ConfirmTicketModalProps> = ({ isOpen, onClose
                                 </div>
                             </div>
                         </div>
-
-                        {/* Preview detallado de códigos por level */}
-                        {!loadingPreview && Object.keys(previewCodes).length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <h4 className="font-semibold text-gray-800 text-sm mb-2">Preview de códigos por modalidad:</h4>
-                                <div className="grid grid-cols-1 gap-2">
-                                    {Object.entries(previewCodes).map(([level, startCode]) => {
-                                        const levelEntries = ticket.entries.filter(entry => entry.level === level);
-                                        const totalParticipants = levelEntries.reduce((sum, entry) => sum + entry.usersId.length, 0);
-                                        const endCode = startCode + totalParticipants - 1;
-                                        
-                                        return (
-                                            <div key={level} className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-200">
-                                                <span className="font-medium text-gray-700 text-sm">{level}:</span>
-                                                <span className="font-mono text-sm text-gray-800">
-                                                    {totalParticipants === 1 
-                                                        ? `#${startCode}`
-                                                        : `#${startCode} - #${endCode}`
-                                                    } 
-                                                    <span className="text-gray-500 ml-1">({totalParticipants} part.)</span>
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 
