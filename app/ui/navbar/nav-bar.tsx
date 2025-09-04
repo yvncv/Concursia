@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown, BookMarked } from "lucide-react";
+import { Home, LogIn, Ticket, User, Menu, X, Shield, LogOutIcon, Search, ChevronDown, BookMarked, MessageSquare } from "lucide-react";
 import useUser from "@/app/hooks/useUser";
 import useEvents from "@/app/hooks/useEvents";
 import useAcademies from "@/app/hooks/useAcademies";
@@ -71,9 +71,9 @@ export default function Navbar({ brandName }: { brandName: string }) {
       requiresAuth: false,
     },
     {
-      href: "/organize",
-      label: "Eventos",
-      icon: Shield,
+      href: "/organize/academy",
+      label: "Solicitudes",
+      icon: MessageSquare,
       requiresAuth: true,
       requiresRole: "organizer",
     },
@@ -121,11 +121,11 @@ export default function Navbar({ brandName }: { brandName: string }) {
     },
   ];
 
-  if (isStaffOfAnyEvent && user.roleId !== "organizer" && !enlaces.some(e => e.href === "/organize/")) {
+  if (isStaffOfAnyEvent && user.roleId !== "organizer" && !enlaces.some(e => e.href === "/organize/academy")) {
     enlaces.unshift({
-      href: "/organize/",
-      label: "Eventos",
-      icon: Shield,
+      href: "/organize/academy",
+      label: "Solicitudes",
+      icon: MessageSquare,
       requiresAuth: true,
     });
   }
@@ -349,13 +349,12 @@ export default function Navbar({ brandName }: { brandName: string }) {
         </div>
 
         {/* Menú para Mobile */}
-        <div className={`md:hidden bg-white border-t border-gray-100 transition-all duration-300 ease-in-out ${
-          isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-        }`}>
+        <div className={`md:hidden bg-white border-t border-gray-100 transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+          }`}>
           <ul className="space-y-1 px-4 pb-4 pt-3">
             <li>
-              <Link 
-                href="/calendario" 
+              <Link
+                href="/calendario"
                 className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
               >
                 <span>📅</span>
@@ -363,8 +362,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </Link>
             </li>
             <li>
-              <Link 
-                href="#eventos" 
+              <Link
+                href="#eventos"
                 className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
               >
                 <span>🎉</span>
@@ -372,8 +371,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </Link>
             </li>
             <li>
-              <Link 
-                href="#galeria" 
+              <Link
+                href="#galeria"
                 className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
               >
                 <span>🖼️</span>
@@ -381,8 +380,8 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </Link>
             </li>
             <li>
-              <Link 
-                href="#acerca" 
+              <Link
+                href="#acerca"
                 className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
               >
                 <span>ℹ️</span>
@@ -390,15 +389,15 @@ export default function Navbar({ brandName }: { brandName: string }) {
               </Link>
             </li>
             <li>
-              <Link 
-                href="#contacto" 
+              <Link
+                href="#contacto"
                 className="flex items-center space-x-3 py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
               >
                 <span>📞</span>
                 <span>Contacto</span>
               </Link>
             </li>
-            
+
             <li className="pt-3 border-t border-gray-100 mt-3">
               {user ? (
                 <Link
@@ -410,14 +409,14 @@ export default function Navbar({ brandName }: { brandName: string }) {
                 </Link>
               ) : (
                 <div className="space-y-2">
-                  <Link 
-                    href="/login" 
+                  <Link
+                    href="/login"
                     className="block py-3 px-3 text-gray-700 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
                   >
                     Iniciar Sesión
                   </Link>
-                  <Link 
-                    href="/register" 
+                  <Link
+                    href="/register"
                     className="block py-3 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 text-center font-medium"
                   >
                     Registrarse
@@ -522,16 +521,16 @@ export default function Navbar({ brandName }: { brandName: string }) {
                 {(isStaffOfAnyEvent || user?.roleId === "organizer") && (
                   <li>
                     <Link
-                      href="/organize"
+                      href="/organize/academy"
                       className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors duration-200 text-sm
-              ${pathname.includes("/organize")
+              ${pathname.includes("/organize/academy")
                           ? "bg-red-100 text-red-700 font-bold"
                           : "hover:bg-gray-100 hover:text-black text-red-700"
                         }`}
                       onClick={handleLinkClick}
                     >
-                      <Shield className="w-4 h-4" />
-                      <span className="hidden xl:block">Eventos</span>
+                      <MessageSquare className="w-4 h-4" />
+                      <span className="hidden xl:block">Solicitudes</span>
                     </Link>
                   </li>
                 )}

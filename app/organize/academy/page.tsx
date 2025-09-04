@@ -137,7 +137,7 @@ const OrganizeAcademyPage = () => {
 
           <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
             {/* Contenido principal*/}
-            <div className="lg:col-span-3 order-2 lg:order-1">
+            <div className="lg:col-span-3 order-1 lg:order-1">
               <AcademyTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -175,7 +175,7 @@ const OrganizeAcademyPage = () => {
             </div>
 
             {/* Sidebar - más compacto*/}
-            <div className="lg:col-span-1 order-1 lg:order-2 space-y-4 sm:space-y-6">
+            <div className="lg:col-span-1 order-2 lg:order-2 space-y-4 sm:space-y-6">
               <AcademyProfileCard 
                 academy={academy} 
                 organizer={organizer}
