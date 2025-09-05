@@ -20,20 +20,40 @@ const CarruselEvento = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
     const [isPlaying, setIsPlaying] = useState(true);
-    const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+    const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
+    const [isMobile, setIsMobile] = useState(false);
 
     const ids = events.map((event) => event.id);
-    const imagenes = events.map((event) => event.bannerImage);
+    
+    // Función para obtener la imagen correcta según el dispositivo
+    const getImageForDevice = (event: CustomEvent, mobile: boolean) => {
+        return mobile ? event.smallImage : event.bannerImage;
+    };
+
+    // Detectar si es móvil
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // md breakpoint
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Obtener las imágenes actuales según el dispositivo
+    const currentImages = events.map(event => getImageForDevice(event, isMobile));
 
     const nextSlide = useCallback(() => {
         setCurrentIndex((prevIndex) =>
-            prevIndex === imagenes.length - 1 ? 0 : prevIndex + 1
+            prevIndex === currentImages.length - 1 ? 0 : prevIndex + 1
         );
-    }, [imagenes.length]);
+    }, [currentImages.length]);
 
     const prevSlide = () => {
         setCurrentIndex((prevIndex) =>
-            prevIndex === 0 ? imagenes.length - 1 : prevIndex - 1
+            prevIndex === 0 ? currentImages.length - 1 : prevIndex - 1
         );
     };
 
@@ -45,24 +65,34 @@ const CarruselEvento = ({
 
     // Control del auto-play
     useEffect(() => {
-        if (!isHovered && isPlaying && imagenes.length > 1) {
+        if (!isHovered && isPlaying && currentImages.length > 1) {
             const intervalId = setInterval(nextSlide, 5000);
             return () => clearInterval(intervalId);
         }
-    }, [nextSlide, isHovered, isPlaying, imagenes.length]);
+    }, [nextSlide, isHovered, isPlaying, currentImages.length]);
 
     // Precargar imágenes para evitar el resize
     useEffect(() => {
-        imagenes.forEach((src, index) => {
-            const img = new window.Image();
-            img.onload = () => {
-                setImagesLoaded(prev => ({ ...prev, [index]: true }));
+        events.forEach((event, index) => {
+            // Precargar imagen para desktop
+            const desktopImg = new window.Image();
+            const desktopKey = `desktop-${index}`;
+            desktopImg.onload = () => {
+                setImagesLoaded(prev => ({ ...prev, [desktopKey]: true }));
             };
-            img.src = src;
-        });
-    }, [imagenes]);
+            desktopImg.src = event.bannerImage;
 
-    if (imagenes.length === 0) return null;
+            // Precargar imagen para móvil
+            const mobileImg = new window.Image();
+            const mobileKey = `mobile-${index}`;
+            mobileImg.onload = () => {
+                setImagesLoaded(prev => ({ ...prev, [mobileKey]: true }));
+            };
+            mobileImg.src = event.smallImage;
+        });
+    }, [events]);
+
+    if (currentImages.length === 0) return null;
 
     return (
         <div
@@ -77,9 +107,9 @@ const CarruselEvento = ({
             </div>
 
             {/* Contenedor principal con esquinas redondeadas */}
-            <div className="relative w-full h-full verflow-hidden bg-gray-900">
+            <div className="relative w-full h-full overflow-hidden bg-gray-900">
                 {/* Botón anterior mejorado */}
-                {showIndicators && imagenes.length > 1 && (
+                {showIndicators && currentImages.length > 1 && (
                     <button
                         onClick={prevSlide}
                         className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 transform sm:-translate-x-2 sm:group-hover:translate-x-0"
@@ -99,51 +129,57 @@ const CarruselEvento = ({
                             className="flex transition-transform duration-700 ease-in-out h-full"
                             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                         >
-                            {imagenes.map((imagen, index) => (
-                                <div key={index} className="w-full h-full flex-shrink-0 relative">
-                                    {/* Fondo desenfocado con mejor efecto */}
-                                    <div className="absolute inset-0">
-                                        <Image
-                                            src={imagen}
-                                            fill
-                                            className="object-cover w-full h-full blur-2xl brightness-30 scale-110"
-                                            alt={`Background ${index + 1}`}
-                                            priority={index === 0}
-                                            loader={({ src }) => src}
-                                            sizes="(max-width: 768px) 100vw, 100vw"
-                                        />
-                                        {/* Gradiente overlay para mejor contraste */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
-                                    </div>
+                            {events.map((event, index) => {
+                                const currentImage = getImageForDevice(event, isMobile);
+                                const imageKey = `${isMobile ? 'mobile' : 'desktop'}-${index}`;
+                                const isImageLoaded = imagesLoaded[imageKey];
 
-                                    {/* Imagen principal con placeholder */}
-                                    <div className="relative w-full h-full flex items-center justify-center">
-                                        {!imagesLoaded[index] && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
-                                                <div className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 border-2 sm:border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                                            </div>
-                                        )}
-                                        <div className="relative w-full h-full transition-all duration-500 hover:scale-[1.02]">
+                                return (
+                                    <div key={index} className="w-full h-full flex-shrink-0 relative">
+                                        {/* Fondo desenfocado con mejor efecto */}
+                                        <div className="absolute inset-0">
                                             <Image
-                                                src={imagen}
+                                                src={currentImage}
                                                 fill
-                                                className={`object-contain w-full h-full transition-opacity duration-500 ${imagesLoaded[index] ? 'opacity-100' : 'opacity-0'}`}
-                                                alt={`Slide ${index + 1}`}
+                                                className="object-cover w-full h-full blur-2xl brightness-30 scale-110"
+                                                alt={`Background ${index + 1}`}
                                                 priority={index === 0}
                                                 loader={({ src }) => src}
                                                 sizes="(max-width: 768px) 100vw, 100vw"
-                                                onLoad={() => setImagesLoaded(prev => ({ ...prev, [index]: true }))}
                                             />
+                                            {/* Gradiente overlay para mejor contraste */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+                                        </div>
+
+                                        {/* Imagen principal con placeholder */}
+                                        <div className="relative w-full h-full flex items-center justify-center">
+                                            {!isImageLoaded && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                                                    <div className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 border-2 sm:border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
+                                            <div className="relative w-full h-full transition-all duration-500 hover:scale-[1.02]">
+                                                <Image
+                                                    src={currentImage}
+                                                    fill
+                                                    className={`object-contain w-full h-full transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                                    alt={`${event.name} - Slide ${index + 1}`}
+                                                    priority={index === 0}
+                                                    loader={({ src }) => src}
+                                                    sizes="(max-width: 768px) 100vw, 100vw"
+                                                    onLoad={() => setImagesLoaded(prev => ({ ...prev, [imageKey]: true }))}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </Link>
 
                 {/* Botón siguiente mejorado */}
-                {showIndicators && imagenes.length > 1 && (
+                {showIndicators && currentImages.length > 1 && (
                     <button
                         onClick={nextSlide}
                         className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 transform sm:translate-x-2 sm:group-hover:translate-x-0"
@@ -156,7 +192,7 @@ const CarruselEvento = ({
                 )}
 
                 {/* Control de play/pause */}
-                {showIndicators && imagenes.length > 1 && (
+                {showIndicators && currentImages.length > 1 && (
                     <button
                         onClick={togglePlay}
                         className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300"
@@ -173,10 +209,10 @@ const CarruselEvento = ({
                 )}
 
                 {/* Indicadores mejorados */}
-                {showIndicators && imagenes.length > 1 && (
+                {showIndicators && currentImages.length > 1 && (
                     <div className="absolute bottom-3 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-20">
                         <div className="flex space-x-1.5 sm:space-x-2 bg-black/40 backdrop-blur-md rounded-full px-2 py-1.5 sm:px-4 sm:py-2 border border-white/10">
-                            {imagenes.map((_, index) => (
+                            {currentImages.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={() => setCurrentIndex(index)}
@@ -199,10 +235,10 @@ const CarruselEvento = ({
                 )}
 
                 {/* Información del slide actual */}
-                {showIndicators && imagenes.length > 1 && (
+                {showIndicators && currentImages.length > 1 && (
                     <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <div className="bg-black/60 backdrop-blur-md rounded-lg px-2 py-1 sm:px-3 sm:py-1 border border-white/10 text-white text-xs sm:text-sm">
-                            {currentIndex + 1} / {imagenes.length}
+                            {currentIndex + 1} / {currentImages.length}
                         </div>
                     </div>
                 )}
